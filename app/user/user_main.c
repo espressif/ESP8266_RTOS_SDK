@@ -68,7 +68,7 @@ void task2(void *pvParameters)
         free(pbuf);
 
         char *recv_buf = (char *)zalloc(128);
-        while ((recbytes = read(sta_socket , recv_buf, 128)) > 0) {
+        while ((recbytes = read(sta_socket , recv_buf, 127)) > 0) {
         	recv_buf[recbytes] = 0;
             printf("C > read data success %d!\nC > %s\n", recbytes, recv_buf);
         }
@@ -128,7 +128,7 @@ void task3(void *pvParameters)
                 printf("S > Client from %s %d\n", inet_ntoa(client_addr.sin_addr), htons(client_addr.sin_port));
 
                 char *recv_buf = (char *)zalloc(128);
-                while ((recbytes = read(client_sock , recv_buf, 128)) > 0) {
+                while ((recbytes = read(client_sock , recv_buf, 127)) > 0) {
                 	recv_buf[recbytes] = 0;
                     printf("S > read data success %d!\nS > %s\n", recbytes, recv_buf);
                 }
