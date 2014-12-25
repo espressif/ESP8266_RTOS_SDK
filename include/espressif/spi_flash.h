@@ -12,15 +12,6 @@ typedef enum {
     SPI_FLASH_RESULT_TIMEOUT
 } SpiFlashOpResult;
 
-typedef struct{
-	uint32	deviceId;
-	uint32	chip_size;    // chip size in byte
-	uint32	block_size;
-	uint32  sector_size;
-	uint32  page_size;
-	uint32  status_mask;
-} SpiFlashChip;
-
 #define SPI_FLASH_SEC_SIZE      4096
 
 SpiFlashOpResult spi_flash_erase_sector(uint16 sec);
