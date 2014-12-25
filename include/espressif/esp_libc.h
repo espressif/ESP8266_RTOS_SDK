@@ -37,6 +37,8 @@ void srand(unsigned int i);
 int printf(const char *format, ...);
 int sprintf(char *out, const char *format, ...);
 int snprintf(char *buf, unsigned int count, const char *format, ...);
+int puts(const char *str);
+int putchar(int c);
 
 void *malloc(size_t n);
 void free(void *p);
