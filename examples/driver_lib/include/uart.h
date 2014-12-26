@@ -60,4 +60,6 @@ typedef struct {
     UartFlowCtrl     flow_ctrl;
 } UartDevice;
 
+void uart_init();
+
 #endif
