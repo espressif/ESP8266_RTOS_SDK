@@ -1,16 +1,27 @@
-How to Use:
-===========
+esp_iot_rtos_sdk
+================
 
-To create a virtual machine ready to code, type the following commands on
-the command line:
+ESP8266 new SDK based on FreeRTOS
 
-    cd vagrant
-    vagrant up
-    # this will take a few minutes
+   
+Note
 
-    vagrant ssh
+APIs of "esp_iot_rtos_sdk" are same as "esp_iot_sdk"
 
+Libs which are not open source in “esp_iot_rtos_sdk_lib”. Please copy them to "\esp_iot_rtos_sdk\lib", then compile .
 
-more info: https://github.com/esp8266/esp8266-wiki/wiki/Toolchain
+More details in "Wiki" !
 
+   
+Compile
 
+using command： ./gen_misc.sh
+   
+
+Download
+
+eagle.app.v6.flash.bin, downloads to flash 0x00000
+
+eagle.app.v6.irom0text.bin, downloads to flash 0x40000
+
+blank.bin, downloads to flash 0x7E000

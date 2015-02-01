@@ -169,8 +169,8 @@ $(foreach image,$(GEN_IMAGES),$(eval $(call MakeImage,$(basename $(image)))))
 # Required for each makefile to inherit from the parent
 #
 
-INCLUDES := $(INCLUDES) -I $(PDIR)include -I $(PDIR)include/$(TARGET)
-INCLUDES += -I ./ -I $(PDIR)include/lwip -I $(PDIR)include/lwip/ipv4 -I $(PDIR)include/lwip/ipv6
+INCLUDES := $(INCLUDES) -I $(PDIR)include -I $(PDIR)extra_include
+INCLUDES += -I $(PDIR)include/lwip -I $(PDIR)include/lwip/ipv4 -I $(PDIR)include/lwip/ipv6
 INCLUDES += -I $(PDIR)include/espressif
 PDIR := ../$(PDIR)
 sinclude $(PDIR)Makefile

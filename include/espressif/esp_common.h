@@ -15,12 +15,9 @@
 #include "esp_timer.h"
 #include "esp_wifi.h"
 
-#include "esp8266/ets_sys.h"
-#include "esp8266/eagle_soc.h"
-#include "esp8266/uart_register.h"
+#include "esp8266/esp8266.h"
 
-#include "esp8266/uart.h"
-#include "esp8266/spi_flash.h"
+#include "spi_flash.h"
 
 #include "version.h"
 #endif
