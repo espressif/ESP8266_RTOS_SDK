@@ -2,7 +2,8 @@
 
 apt-get update
 apt-get install -y git autoconf build-essential gperf bison flex texinfo libtool libncurses5-dev wget gawk libc6-dev python-serial libexpat-dev unzip
-
+apt-get install linux-headers-$( uname -r )
+apt-get install -y virtualbox-fuse
 
 mkdir -p /opt/Espressif
 chown vagrant:vagrant -R /opt/Espressif
