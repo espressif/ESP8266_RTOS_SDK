@@ -5,6 +5,9 @@ apt-get install -y git autoconf build-essential gperf bison flex texinfo libtool
 apt-get install linux-headers-$( uname -r )
 apt-get install -y virtualbox-fuse
 apt-get install -y dstat htop python-setuptools debhelper
+apt-get install -y linux-image-extra-virtual
+sudo usermod -a -G dialout vagrant
+
 
 mkdir -p /opt/Espressif
 chown vagrant:vagrant -R /opt/Espressif
