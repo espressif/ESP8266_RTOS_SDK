@@ -4,6 +4,7 @@ apt-get update
 apt-get install -y git autoconf build-essential gperf bison flex texinfo libtool libncurses5-dev wget gawk libc6-dev python-serial libexpat-dev unzip
 apt-get install linux-headers-$( uname -r )
 apt-get install -y virtualbox-fuse
+apt-get install -y dstat htop python-setuptools debhelper
 
 mkdir -p /opt/Espressif
 chown vagrant:vagrant -R /opt/Espressif
@@ -40,12 +41,23 @@ wget -O include.tgz https://github.com/esp8266/esp8266-wiki/raw/master/include.t
 tar -xvzf include.tgz
 
 cd /opt/Espressif
-wget -O esptool_0.0.2-1_i386.deb https://github.com/esp8266/esp8266-wiki/raw/master/deb/esptool_0.0.2-1_i386.deb
-sudo dpkg -i esptool_0.0.2-1_i386.deb
+mkdir esptool
+cd esptool
+wget https://github.com/esp8266/esp8266-wiki/blob/master/deb/src/esptool_0.0.2-1.debian.tar.gz
+wget https://github.com/esp8266/esp8266-wiki/blob/master/deb/src/esptool_0.0.2-1.dsc
+wget https://github.com/esp8266/esp8266-wiki/raw/master/deb/src/esptool_0.0.2.orig.tar.gz
+dpkg-source -x esptool_0.0.2-1.dsc
+cd esptool-0.0.2
+dpkg-buildpackage -rfakeroot -b
+sudo dpkg -i ../esptool_0.0.2-1_amd64.deb
+
 
 cd /opt/Espressif
 git clone https://github.com/themadinventor/esptool esptool-py
 sudo ln -s $PWD/esptool-py/esptool.py crosstool-NG/builds/xtensa-lx106-elf/bin/
+cd esptool-py
+python setup.py build
+sudo python setup.py install
 
 cd /opt/Espressif
 git clone https://github.com/esp8266/source-code-examples.git
