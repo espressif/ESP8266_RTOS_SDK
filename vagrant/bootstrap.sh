@@ -46,8 +46,8 @@ tar -xvzf include.tgz
 cd /opt/Espressif
 mkdir esptool
 cd esptool
-wget https://github.com/esp8266/esp8266-wiki/blob/master/deb/src/esptool_0.0.2-1.debian.tar.gz
-wget https://github.com/esp8266/esp8266-wiki/blob/master/deb/src/esptool_0.0.2-1.dsc
+wget https://github.com/esp8266/esp8266-wiki/raw/master/deb/src/esptool_0.0.2-1.debian.tar.gz
+wget https://github.com/esp8266/esp8266-wiki/raw/master/deb/src/esptool_0.0.2-1.dsc
 wget https://github.com/esp8266/esp8266-wiki/raw/master/deb/src/esptool_0.0.2.orig.tar.gz
 dpkg-source -x esptool_0.0.2-1.dsc
 cd esptool-0.0.2
