@@ -24,6 +24,10 @@ cd crosstool-NG
 
 echo "export PATH=$PWD/builds/xtensa-lx106-elf/bin:\$PATH" | sudo tee -a /root/.bashrc
 echo "export PATH=$PWD/builds/xtensa-lx106-elf/bin:\$PATH" >> ~/.bashrc
+echo "export XTENSA_TOOLS_ROOT==$PWD/builds/xtensa-lx106-elf/bin" >> ~/.bashrc
+echo "export SDK_BASE=$PWD/esp_iot_sdk_v0.9.3" >> ~/.bashrc
+
+#export SDK_EXTRA_INCLUDES=${PWD}/esp_iot_sdk_novm_unpacked/usr/xtensa/XtDevTools/install/builds/RC-2010.1-win32/lx106/xtensa-elf/include/
 
 cd /opt/Espressif
 wget -O esp_iot_sdk_v0.9.3_14_11_21.zip https://github.com/esp8266/esp8266-wiki/raw/master/sdk/esp_iot_sdk_v0.9.3_14_11_21.zip
@@ -53,6 +57,17 @@ dpkg-source -x esptool_0.0.2-1.dsc
 cd esptool-0.0.2
 dpkg-buildpackage -rfakeroot -b
 sudo dpkg -i ../esptool_0.0.2-1_amd64.deb
+
+
+cd /opt/Espressif
+git clone http://git.spritesserver.nl/esphttpd.git/
+cd esphttpd
+git submodule init
+git submodule update
+
+cd /opt/Espressif
+unzip esp_iot_sdk_v0.9.3_14_11_21.zip 
+unzip -u -o esp_iot_sdk_v0.9.3_14_11_21_patch1.zip
 
 
 cd /opt/Espressif
