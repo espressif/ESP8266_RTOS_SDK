@@ -4,12 +4,20 @@ ifndef PDIR
 
 endif
 
-AR = xt-ar
-CC = xt-xcc
-NM = xt-nm
-CPP = xt-cpp
-OBJCOPY = xt-objcopy
-#MAKE = xt-make
+CROSS_COMPILE_xtensa-lx106 := $(shell xtensa-lx106-elf-cc --version 2>/dev/null)
+ifdef CROSS_COMPILE_xtensa-lx106
+CROSS_COMPILE := xtensa-lx106-elf-
+endif
+
+CROSS_COMPILE ?= xt-
+export CROSS_COMPILE
+
+AR = $(CROSS_COMPILE)ar
+CC = $(CROSS_COMPILE)gcc
+NM = $(CROSS_COMPILE)nm
+CPP = $(CROSS_COMPILE)cpp
+OBJCOPY = $(CROSS_COMPILE)objcopy
+#MAKE = $(CROSS_COMPILE)make
 
 CSRCS ?= $(wildcard *.c)
 ASRCs ?= $(wildcard *.s)
@@ -47,7 +55,7 @@ CCFLAGS += 			\
 	-nostdlib       \
 	-mlongcalls	\
 	-mtext-section-literals
-#	-Wall			
+#	-Wall
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
 DFLAGS = $(CCFLAGS) $(DDEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
