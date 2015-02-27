@@ -26,6 +26,13 @@ SUBDIRS=    \
 
 endif # } PDIR
 
+CROSS_COMPILE_xtensa-lx106 := $(shell xtensa-lx106-elf-cc --version 2>/dev/null)
+ifdef CROSS_COMPILE_xtensa-lx106
+CROSS_COMPILE := xtensa-lx106-elf-
+endif
+CROSS_COMPILE ?= xt-
+export CROSS_COMPILE
+
 APPDIR = .
 LDDIR = ../ld
 

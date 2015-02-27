@@ -9,6 +9,7 @@ import string
 import sys
 import os
 import re
+import subprocess
 
 if len(sys.argv) != 3:
     print 'Usage: gen_appbin.py eagle.app.out version'
@@ -18,7 +19,15 @@ elf_file = sys.argv[1]
 ver = sys.argv[2]
 #print elf_file
 
-cmd = 'xt-nm -g ' + elf_file + ' > eagle.app.sym'
+try:
+    cross_compile_prefix = os.environ['CROSS_COMPILE']
+except KeyError:
+    if subprocess.call("xtensa-lx106-elf-nm --version", shell=True) == 0:
+        cross_compile_prefix = 'xtensa-lx106-elf-'
+    else:
+        cross_compile_prefix = 'xt-'
+
+cmd = '%snm -g ' %(cross_compile_prefix) + elf_file + ' > eagle.app.sym'
 #print cmd
 os.system(cmd)
 
@@ -60,7 +69,7 @@ for line in lines:
         rodata_start_addr = m.group(1)
         print rodata_start_addr
 
-cmd = 'genflashbin%s eagle.app.%s.text.bin '%(ver, ver)+entry_addr+' eagle.app.%s.data.bin '%(ver)+ data_start_addr+' eagle.app.%s.rodata.bin '%(ver)+rodata_start_addr
+cmd = 'esptool.py make_image -f eagle.app.%s.text.bin '%(ver)+' -a 0x' + entry_addr + ' -f eagle.app.%s.data.bin'%(ver) + ' -a 0x' + data_start_addr +' -f eagle.app.%s.rodata.bin'%(ver)+ ' -a 0x' + rodata_start_addr + ' eagle.app.flash.bin'
 
 print cmd
 os.system(cmd)
