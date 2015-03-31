@@ -100,7 +100,7 @@ vListInitialiseItem( xListItem * const pxItem )
 }
 /*-----------------------------------------------------------*/
 
-void ICACHE_FLASH_ATTR
+void
 vListInsertEnd( xList * const pxList, xListItem * const pxNewListItem )
 {
 xListItem * pxIndex;

@@ -9,20 +9,26 @@
 #include "c_types.h"
 
 enum rst_reason {
-	DEFAULT_RST_FLAG	= 0,
-	WDT_RST_FLAG	= 1,
-	EXP_RST_FLAG    = 2
+	DEFAULT_RST	  = 0,
+	WDT_RST	      = 1,
+	EXCEPTION_RST = 2,
+	SOFT_RST      = 3
 };
 
 struct rst_info{
-	uint32 flag;
+	uint32 reason;
 	uint32 exccause;
 	uint32 epc1;
 	uint32 epc2;
 	uint32 epc3;
 	uint32 excvaddr;
 	uint32 depc;
+	uint32 rtn_addr;
 };
+
+struct rst_info* system_get_rst_info(void);
+
+const char* system_get_sdk_version(void);
 
 void system_restore(void);
 void system_restart(void);

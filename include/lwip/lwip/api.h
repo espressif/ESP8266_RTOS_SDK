@@ -80,6 +80,9 @@ extern "C" {
 #define NETCONN_FLAG_IPV6_V6ONLY              0x20
 #endif /* LWIP_IPV6 */
 
+  //***********Code for WIFI_BLOCK from upper**************
+#define NETCONN_FLAG_RECV_HOLD         0x80
+
 
 /* Helpers to process several netconn_types by the same code */
 #define NETCONNTYPE_GROUP(t)         ((t)&0xF0)
@@ -208,6 +211,8 @@ struct netconn {
   /** flags holding more netconn-internal state, see NETCONN_FLAG_* defines */
   u8_t flags;
 #if LWIP_TCP
+  //***********Code for WIFI_BLOCK from upper**************
+  u32_t recv_holded_buf_Len;
   /** TCP: when data passed to netconn_write doesn't fit into the send buffer,
       this temporarily stores how much is already sent. */
   size_t write_offset;

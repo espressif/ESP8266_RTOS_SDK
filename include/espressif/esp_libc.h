@@ -49,4 +49,16 @@ void *realloc(void *p, size_t n);
 int atoi(const char *s);
 long atol(const char *s);
 
+/* NOTE: don't use printf_opt in irq handler, for test */
+#define printf_opt(fmt, ...) do {	\
+	static const char flash_str[] ICACHE_RODATA_ATTR = fmt;	\
+	printf(flash_str, ##__VA_ARGS__);	\
+	} while(0)
+
+/* NOTE: don't use printf_opt in irq handler, for test */
+#define sprintf_opt(out, fmt, ...) do {	\
+	static const char flash_str[] ICACHE_RODATA_ATTR = fmt;	\
+	sprintf(out, flash_str, ##__VA_ARGS__);	\
+	} while(0)
+
 #endif /* __LIBC_H__ */

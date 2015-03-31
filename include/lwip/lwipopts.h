@@ -107,6 +107,34 @@
    ---------- IP options ----------
    --------------------------------
 */
+/**
+ * IP_REASSEMBLY==1: Reassemble incoming fragmented IP packets. Note that
+ * this option does not affect outgoing packet sizes, which can be controlled
+ * via IP_FRAG.
+ */
+#define IP_REASSEMBLY                   0
+
+/**
+ * IP_FRAG==1: Fragment outgoing IP packets if their size exceeds MTU. Note
+ * that this option does not affect incoming packet sizes, which can be
+ * controlled via IP_REASSEMBLY.
+ */
+#define IP_FRAG                         1
+
+/**
+ * IP_REASS_MAXAGE: Maximum time (in multiples of IP_TMR_INTERVAL - so seconds, normally)
+ * a fragmented IP packet waits for all fragments to arrive. If not all fragments arrived
+ * in this time, the whole packet is discarded.
+ */
+#define IP_REASS_MAXAGE                 3
+
+/**
+ * IP_REASS_MAX_PBUFS: Total maximum amount of pbufs waiting to be reassembled.
+ * Since the received pbufs are enqueued, be sure to configure
+ * PBUF_POOL_SIZE > IP_REASS_MAX_PBUFS so that the stack is still able to receive
+ * packets even if the maximum amount of fragments is enqueued for reassembly!
+ */
+#define IP_REASS_MAX_PBUFS              10
 
 /*
    ----------------------------------
@@ -182,7 +210,7 @@
  *     LWIP_CALLBACK_API==1: The PCB callback function is called directly
  *         for the event. This is the default.
 */
-#define TCP_MSS                         1024
+#define TCP_MSS                         1460
 
 /**
  * TCP_MAXRTX: Maximum number of retransmissions of data segments.
@@ -246,7 +274,7 @@
  * The priority value itself is platform-dependent, but is passed to
  * sys_thread_new() when the thread is created.
  */
-#define TCPIP_THREAD_PRIO               (configMAX_PRIORITIES-4)
+#define TCPIP_THREAD_PRIO               (configMAX_PRIORITIES-5)
 
 /**
  * TCPIP_MBOX_SIZE: The mailbox size for the tcpip thread messages

@@ -107,7 +107,6 @@ typedef unsigned int INT32U;
 
 /* Scheduler utilities. */
 extern void PendSV(char req);
-extern char ClosedLv1Isr;
 //#define portYIELD()	vPortYield()
 #define portYIELD()	PendSV(1)
 
@@ -116,42 +115,6 @@ extern char ClosedLv1Isr;
 //	if(xSwitchRequired) PendSV(1)
 
 #define HDL_MAC_SIG_IN_LV1_ISR() PendSV(2)
-/*-----------------------------------------------------------*/
-
-/* Critical section management. */
-extern void portDISABLE_INTERRUPTS( void );
-extern void portENABLE_INTERRUPTS( void );
-extern void vPortEnterCritical( void );
-extern void vPortExitCritical( void );
-
-extern unsigned cpu_sr;
-
-/* Don't modify these lines. This port requires OS_CRITICAL_METHOD 3. */
-#define  OS_CRITICAL_METHOD    3
-
-#if      OS_CRITICAL_METHOD == 3
-
-/* Disable interrupts, saving previous state in cpu_sr */
-#define  portDISABLE_INTERRUPTS() \
-            __asm__ volatile ("rsil %0, " XTSTR(XCHAL_EXCM_LEVEL) : "=a" (cpu_sr) :: "memory")
-
-/* Restore interrupts to previous level saved in cpu_sr */
-#define  portENABLE_INTERRUPTS() __asm__ volatile ("wsr %0, ps" :: "a" (cpu_sr) : "memory")
-#endif
-//DYC_ISR_DBG
-void ICACHE_FLASH_ATTR vPortEnterCritical1( void );
-void ICACHE_FLASH_ATTR vPortExitCritical1( void );
-#define  portSET_INTERRUPT_MASK_FROM_ISR()		vPortEnterCritical1()
-#define  portCLEAR_INTERRUPT_MASK_FROM_ISR(x)	vPortExitCritical1()
-
-//#define  portDISABLE_INTERRUPTS()   ets_intr_lock()
-//#define  portENABLE_INTERRUPTS()    ets_intr_unlock()
-
-//#define  portDISABLE_INTERRUPTS()
-//#define  portENABLE_INTERRUPTS()
-
-#define portENTER_CRITICAL()                vPortEnterCritical()
-#define portEXIT_CRITICAL()                 vPortExitCritical()
 
 /* Task utilities. */
 #define portEND_SWITCHING_ISR( xSwitchRequired ) 	\
@@ -163,6 +126,33 @@ extern void vTaskSwitchContext( void );				\
 		vTaskSwitchContext();						\
 	}												\
 }
+
+
+/*-----------------------------------------------------------*/
+extern unsigned cpu_sr;
+
+/* Critical section management. */
+extern void vPortEnterCritical( void );
+extern void vPortExitCritical( void );
+
+//DYC_ISR_DBG
+void PortDisableInt_NoNest( void );
+void PortEnableInt_NoNest( void );
+
+/* Disable interrupts, saving previous state in cpu_sr */
+#define  portDISABLE_INTERRUPTS() \
+            __asm__ volatile ("rsil %0, " XTSTR(XCHAL_EXCM_LEVEL) : "=a" (cpu_sr) :: "memory")
+
+/* Restore interrupts to previous level saved in cpu_sr */
+#define  portENABLE_INTERRUPTS() __asm__ volatile ("wsr %0, ps" :: "a" (cpu_sr) : "memory")
+
+#define portENTER_CRITICAL()                vPortEnterCritical()
+#define portEXIT_CRITICAL()                 vPortExitCritical()
+
+// no need to disable/enable lvl1 isr again in ISR
+//#define  portSET_INTERRUPT_MASK_FROM_ISR()		PortDisableInt_NoNest()
+//#define  portCLEAR_INTERRUPT_MASK_FROM_ISR(x)		PortEnableInt_NoNest()
+
 
 /*-----------------------------------------------------------*/
 

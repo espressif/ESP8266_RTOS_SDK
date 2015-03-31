@@ -14,6 +14,15 @@ enum {
 	MAX_MODE
 };
 
+typedef enum _auth_mode {
+    AUTH_OPEN           = 0,
+    AUTH_WEP,
+    AUTH_WPA_PSK,
+    AUTH_WPA2_PSK,
+    AUTH_WPA_WPA2_PSK,
+    AUTH_MAX
+} AUTH_MODE;
+
 uint8 wifi_get_opmode(void);
 bool wifi_set_opmode(uint8 opmode);
 

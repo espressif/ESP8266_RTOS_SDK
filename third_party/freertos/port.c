@@ -86,8 +86,8 @@ unsigned cpu_sr;
 variable. */
 static unsigned portBASE_TYPE uxCriticalNesting = 0;
 
-void ICACHE_FLASH_ATTR vPortEnterCritical( void );
-void ICACHE_FLASH_ATTR vPortExitCritical( void );
+void vPortEnterCritical( void );
+void vPortExitCritical( void );
 /*
  * See header file for description.
  */
@@ -123,23 +123,23 @@ pxPortInitialiseStack( portSTACK_TYPE *pxTopOfStack, pdTASK_CODE pxCode, void *p
 }
 
 
-
-
-
-
 void PendSV( char req )
 {
-char tmp=0;
-if(ClosedLv1Isr == 0)
-{
-	vPortEnterCritical();
-	tmp = 1;
-}
+	char tmp=0;
+//ETS_INTR_LOCK();
+
+	if( NMIIrqIsOn == 0 )
+	{
+		vPortEnterCritical();
+		//PortDisableInt_NoNest();
+		tmp = 1;
+	}
+
 	if(req ==1)
 	{
 		SWReq = 1;
 	}
-	else
+	else if(req ==2)
 		HdlMacSig= 1;
 #if 0
 	GPIO_REG_WRITE(GPIO_STATUS_W1TS_ADDRESS, 0x40);	
@@ -188,20 +188,20 @@ void SoftIsrHdl(void)
 {
 //if(DbgVal5==1)
 	//printf("GP_%d,",SWReq);
+	PendSvIsPosted = 0;
 	portBASE_TYPE xHigherPriorityTaskWoken=pdFALSE ;
 	if(HdlMacSig == 1)
 	{
-		HdlMacSig = 0;
 		xHigherPriorityTaskWoken = MacIsrSigPostDefHdl();
+		HdlMacSig = 0;
 	}
 	if( xHigherPriorityTaskWoken || (SWReq==1)) 
 	{
 //if( DbgVal5==1 || DbgVal10==1 )
 	//printf("_x_s,");
-		SWReq = 0;
 		_xt_timer_int1();
+		SWReq = 0;
 	}
-	PendSvIsPosted = 0;
 }
 #endif
 
@@ -244,6 +244,7 @@ xPortStartScheduler( void )
 
 //    REG_SET_BIT(0x3ff2006c, BIT(4));
 	/* Restore the context of the first task that is going to run. */
+
 	XT_RTOS_INT_EXIT();
 
 	/* Should not get here as the tasks are now running! */
@@ -262,14 +263,13 @@ vPortEndScheduler( void )
 /*-----------------------------------------------------------*/
 
 static unsigned int tick_lock=0;
-char ClosedLv1Isr = 0;
+static char ClosedLv1Isr = 0;
 
-void ICACHE_FLASH_ATTR
-vPortEnterCritical( void )
+void vPortEnterCritical( void )
 {
 	if(NMIIrqIsOn == 0)
 	{	
-		if( uxCriticalNesting == 0 )
+		//if( uxCriticalNesting == 0 )
 		{
 			if( ClosedLv1Isr !=1 )
 			{
@@ -283,8 +283,7 @@ vPortEnterCritical( void )
 }
 /*-----------------------------------------------------------*/
 
-void ICACHE_FLASH_ATTR
-vPortExitCritical( void )
+void vPortExitCritical( void )
 {
 	if(NMIIrqIsOn == 0)
 	{
@@ -302,10 +301,11 @@ vPortExitCritical( void )
 	}
 }
 
-static unsigned int tick_lock1=0;
-void ICACHE_FLASH_ATTR
-vPortEnterCritical1( void )
+
+void 
+PortDisableInt_NoNest( void )
 {
+//os_printf("ERRRRRRR\n");
 	if(NMIIrqIsOn == 0)	
 	{
 		if( ClosedLv1Isr !=1 )
@@ -316,9 +316,10 @@ vPortEnterCritical1( void )
 	}
 }
 
-void ICACHE_FLASH_ATTR
-vPortExitCritical1( void )
+void 
+PortEnableInt_NoNest( void )
 {
+os_printf("ERRRRR\n");
 	if(NMIIrqIsOn == 0)
 	{		
 		if( ClosedLv1Isr ==1 )

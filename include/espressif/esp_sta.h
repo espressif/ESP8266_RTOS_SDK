@@ -35,7 +35,7 @@ struct bss_info {
     uint8 ssid[32];
     uint8 channel;
     sint8 rssi;
-    uint8 authmode;
+    AUTH_MODE authmode;
     uint8 is_hidden;
 };
 

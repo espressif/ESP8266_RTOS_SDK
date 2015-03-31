@@ -45,16 +45,6 @@ ifeq ($(FLAVOR),release)
     TARGET_LDFLAGS += -g -O0
 endif
 
-LD_FILE = $(LDDIR)/eagle.app.v6.ld
-
-ifeq ($(APP), 1)
-	LD_FILE = $(LDDIR)/eagle.app.v6.app1.ld
-endif
-
-ifeq ($(APP), 2)
-	LD_FILE = $(LDDIR)/eagle.app.v6.app2.ld
-endif
-
 COMPONENTS_eagle.app.v6 = \
 	user/libuser.a
 
@@ -123,15 +113,6 @@ DDEFINES +=				\
 INCLUDES := $(INCLUDES) -I $(PDIR)include
 PDIR := ../$(PDIR)
 sinclude $(PDIR)Makefile
-
-#########################################################################
-#
-#  generate bin file
-#
-
-$(BINODIR)/%.bin: $(IMAGEODIR)/%.out
-	@mkdir -p $(BINODIR)
-	$(OBJCOPY) -O binary $< $@
 
 .PHONY: FORCE
 FORCE:

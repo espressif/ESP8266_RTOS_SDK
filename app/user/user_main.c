@@ -152,10 +152,7 @@ void task3(void *pvParameters)
 void ICACHE_FLASH_ATTR
 user_init(void)
 {
-    printf("SDK version:%d.%d.%d\n",
-    		SDK_VERSION_MAJOR,
-    		SDK_VERSION_MINOR,
-    		SDK_VERSION_REVISION);
+    printf("SDK version:%s\n", system_get_sdk_version());
 
     /* need to set opmode before you set config */
     wifi_set_opmode(STATIONAP_MODE);

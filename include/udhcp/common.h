@@ -388,7 +388,7 @@ void udhcp_dump_packet(struct dhcp_packet *packet) FAST_FUNC;
 #ifdef UDHCP_DBG
 #define UDHCP_DEBUG os_printf
 #else
-#define UDHCP_DEBUG
+#define UDHCP_DEBUG(...)
 #endif
 
 /*** Other shared functions ***/

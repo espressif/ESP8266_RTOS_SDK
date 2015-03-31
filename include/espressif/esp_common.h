@@ -9,15 +9,13 @@
 #include "c_types.h"
 #include "esp_libc.h"
 #include "esp_misc.h"
+#include "esp_wifi.h"
 #include "esp_softap.h"
 #include "esp_sta.h"
 #include "esp_system.h"
 #include "esp_timer.h"
-#include "esp_wifi.h"
 
 #include "esp8266/esp8266.h"
 
 #include "spi_flash.h"
-
-#include "version.h"
 #endif

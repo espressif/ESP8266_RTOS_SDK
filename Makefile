@@ -4,12 +4,131 @@ ifndef PDIR
 
 endif
 
-AR = xt-ar
-CC = xt-xcc
-NM = xt-nm
-CPP = xt-cpp
-OBJCOPY = xt-objcopy
-#MAKE = xt-make
+ifeq ($(COMPILE), gcc)
+	AR = xtensa-lx106-elf-ar
+	CC = xtensa-lx106-elf-gcc
+	NM = xtensa-lx106-elf-nm
+	CPP = xtensa-lx106-elf-cpp
+	OBJCOPY = xtensa-lx106-elf-objcopy
+	OBJDUMP = xtensa-lx106-elf-objdump
+else
+	AR = xt-ar
+	CC = xt-xcc
+	NM = xt-nm
+	CPP = xt-cpp
+	OBJCOPY = xt-objcopy
+	OBJDUMP = xt-objdump
+endif
+
+BOOT?=none
+APP?=0
+SPI_SPEED?=40
+SPI_MODE?=QIO
+SPI_SIZE?=512
+
+ifeq ($(BOOT), new)
+    boot = new
+else
+    ifeq ($(BOOT), old)
+        boot = old
+    else
+        boot = none
+    endif
+endif
+
+ifeq ($(APP), 1)
+    app = 1
+else
+    ifeq ($(APP), 2)
+        app = 2
+    else
+        app = 0
+    endif
+endif
+
+ifeq ($(SPI_SPEED), 26.7)
+    freqdiv = 1
+else
+    ifeq ($(SPI_SPEED), 20)
+        freqdiv = 2
+    else
+        ifeq ($(SPI_SPEED), 80)
+            freqdiv = 15
+        else
+            freqdiv = 0
+        endif
+    endif
+endif
+
+
+ifeq ($(SPI_MODE), QOUT)
+    mode = 1
+else
+    ifeq ($(SPI_MODE), DIO)
+        mode = 2
+    else
+        ifeq ($(SPI_MODE), DOUT)
+            mode = 3
+        else
+            mode = 0
+        endif
+    endif
+endif
+
+# flash larger than 1024KB only use 1024KB to storage user1.bin and user2.bin
+ifeq ($(SPI_SIZE), 256)
+    size = 1
+    flash = 256
+else
+    ifeq ($(SPI_SIZE), 1024)
+        size = 2
+        flash = 1024
+    else
+        ifeq ($(SPI_SIZE), 2048)
+            size = 3
+            flash = 1024
+        else
+            ifeq ($(SPI_SIZE), 4096)
+                size = 4
+                flash = 1024
+            else
+                size = 0
+                flash = 512
+            endif
+        endif
+    endif
+endif
+
+ifeq ($(flash), 512)
+  ifeq ($(app), 1)
+    addr = 0x01000
+  else
+    ifeq ($(app), 2)
+      addr = 0x41000
+    endif
+  endif
+else
+  ifeq ($(flash), 1024)
+    ifeq ($(app), 1)
+      addr = 0x01000
+    else
+      ifeq ($(app), 2)
+        addr = 0x81000
+      endif
+    endif
+  endif
+endif
+        
+LD_FILE = $(LDDIR)/eagle.app.v6.ld
+
+ifneq ($(boot), none)
+ifneq ($(app),0)
+	LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).$(flash).app$(app).ld
+	BIN_NAME = user$(app).$(flash).$(boot)
+endif
+else
+    app = 0
+endif
 
 CSRCS ?= $(wildcard *.c)
 ASRCs ?= $(wildcard *.s)
@@ -82,7 +201,51 @@ endef
 
 $(BINODIR)/%.bin: $(IMAGEODIR)/%.out
 	@mkdir -p $(BINODIR)
-	$(OBJCOPY) -O binary $< $@
+	
+ifeq ($(APP), 0)
+	@$(RM) -r ../bin/eagle.S ../bin/eagle.dump
+	@$(OBJDUMP) -x -s $< > ../bin/eagle.dump
+	@$(OBJDUMP) -S $< > ../bin/eagle.S
+else
+	@$(RM) -r ../bin/upgrade/$(BIN_NAME).S ../bin/upgrade/$(BIN_NAME).dump
+	@$(OBJDUMP) -x -s $< > ../bin/upgrade/$(BIN_NAME).dump
+	@$(OBJDUMP) -S $< > ../bin/upgrade/$(BIN_NAME).S
+endif
+
+	@$(OBJCOPY) --only-section .text -O binary $< eagle.app.v6.text.bin
+	@$(OBJCOPY) --only-section .data -O binary $< eagle.app.v6.data.bin
+	@$(OBJCOPY) --only-section .rodata -O binary $< eagle.app.v6.rodata.bin
+	@$(OBJCOPY) --only-section .irom0.text -O binary $< eagle.app.v6.irom0text.bin
+
+	@echo ""
+	@echo "!!!"
+	
+ifeq ($(app), 0)
+	@python ../tools/gen_appbin.py $< 0 $(mode) $(freqdiv) $(size)
+	@mv eagle.app.flash.bin ../bin/eagle.flash.bin
+	@mv eagle.app.v6.irom0text.bin ../bin/eagle.irom0text.bin
+	@rm eagle.app.v6.*
+	@echo "No boot needed."
+	@echo "Generate eagle.flash.bin and eagle.irom0text.bin successully in folder bin."
+	@echo "eagle.flash.bin-------->0x00000"
+	@echo "eagle.irom0text.bin---->0x40000"
+else
+    ifeq ($(boot), new)
+		@python ../tools/gen_appbin.py $< 2 $(mode) $(freqdiv) $(size)
+		@echo "Support boot_v1.2 and +"
+    else
+		@python ../tools/gen_appbin.py $< 1 $(mode) $(freqdiv) $(size)
+		@echo "Support boot_v1.1 and +"
+    endif
+
+	@mv eagle.app.flash.bin ../bin/upgrade/$(BIN_NAME).bin
+	@rm eagle.app.v6.*
+	@echo "Generate $(BIN_NAME).bin successully in folder bin/upgrade."
+	@echo "boot.bin------------>0x00000"
+	@echo "$(BIN_NAME).bin--->$(addr)"
+endif
+
+	@echo "!!!"
 
 #############################################################
 # Rules base

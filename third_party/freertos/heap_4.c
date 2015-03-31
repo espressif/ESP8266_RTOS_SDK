@@ -156,7 +156,8 @@ void *pvReturn = NULL;
 
 //    printf("%s %d %d\n", __func__, xWantedSize, xFreeBytesRemaining);
 
-	vTaskSuspendAll();
+//	vTaskSuspendAll();
+	ETS_INTR_LOCK();
 	{
 		/* If this is the first call to malloc then the heap will require
 		initialisation to setup the list of free blocks. */
@@ -239,7 +240,8 @@ void *pvReturn = NULL;
 			}
 		}
 	}
-	xTaskResumeAll();
+//	xTaskResumeAll();
+	ETS_INTR_UNLOCK();
 
 	#if( configUSE_MALLOC_FAILED_HOOK == 1 )
 	{
@@ -287,13 +289,15 @@ xBlockLink *pxLink;
 				allocated. */
 				pxLink->xBlockSize &= ~xBlockAllocatedBit;
 
-				vTaskSuspendAll();
+//				vTaskSuspendAll();
+				ETS_INTR_LOCK();
 				{
 					/* Add this block to the list of free blocks. */
 					xFreeBytesRemaining += pxLink->xBlockSize;
 					prvInsertBlockIntoFreeList( ( ( xBlockLink * ) pxLink ) );
 				}
-				xTaskResumeAll();
+//				xTaskResumeAll();
+				ETS_INTR_UNLOCK();
 			}
 		}
 	}
