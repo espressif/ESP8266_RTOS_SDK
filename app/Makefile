@@ -11,6 +11,7 @@
 #     subdir/lib to be extracted and rolled up into
 #     a generated lib/image xxx.a ()
 #
+PATH:=/home/src/esp8266/esp-open-sdk/xtensa-lx106-elf/bin:$(PATH)
 TARGET = eagle
 #FLAVOR = release
 FLAVOR = debug

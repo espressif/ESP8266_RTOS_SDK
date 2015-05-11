@@ -4,6 +4,7 @@ ifndef PDIR
 
 endif
 
+COMPILE?=gcc
 ifeq ($(COMPILE), gcc)
 	AR = xtensa-lx106-elf-ar
 	CC = xtensa-lx106-elf-gcc
@@ -221,7 +222,7 @@ endif
 	@echo "!!!"
 	
 ifeq ($(app), 0)
-	@python ../tools/gen_appbin.py $< 0 $(mode) $(freqdiv) $(size)
+	COMPILE=$(COMPILE) python ../tools/gen_appbin.py $< 0 $(mode) $(freqdiv) $(size)
 	@mv eagle.app.flash.bin ../bin/eagle.flash.bin
 	@mv eagle.app.v6.irom0text.bin ../bin/eagle.irom0text.bin
 	@rm eagle.app.v6.*
