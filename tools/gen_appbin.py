@@ -97,14 +97,14 @@ def gen_appbin():
     global chk_sum
     global blocks
     if len(sys.argv) != 6:
-        print 'Usage: gen_appbin.py eagle.app.out boot_mode flash_mode flash_clk_div flash_size'
+        print 'Usage: gen_appbin.py eagle.app.out boot_mode flash_mode flash_clk_div flash_size_map'
         sys.exit(0)
 
     elf_file = sys.argv[1]
     boot_mode = sys.argv[2]
     flash_mode = sys.argv[3]
     flash_clk_div = sys.argv[4]
-    flash_size = sys.argv[5]
+    flash_size_map = sys.argv[5]
 
     flash_data_line  = 16
     data_line_bits = 0xf
@@ -179,17 +179,19 @@ def gen_appbin():
     #     2 :  80m / 4
     #    0xf:  80m / 1
     #-------------------
-    #flash_size=
-    #     0 : 512 KB
+    #flash_size_map=
+    #     0 : 512 KB (256 KB + 256 KB)
     #     1 : 256 KB
-    #     2 : 1024 KB
-    #     3 : 2048 KB
-    #     4 : 4096 KB
+    #     2 : 1024 KB (512 KB + 512 KB)
+    #     3 : 2048 KB (512 KB + 512 KB)
+    #     4 : 4096 KB (512 KB + 512 KB)
+    #     5 : 2048 KB (1024 KB + 1024 KB)
+    #     6 : 4096 KB (1024 KB + 1024 KB)
     #-------------------
     #   END OF SPI FLASH PARAMS
     #============================
     byte2=int(flash_mode)&0xff
-    byte3=(((int(flash_size)<<4)| int(flash_clk_div))&0xff)
+    byte3=(((int(flash_size_map)<<4)| int(flash_clk_div))&0xff)
 	
     if boot_mode == '2':
         # write irom bin head

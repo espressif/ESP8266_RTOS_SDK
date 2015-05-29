@@ -219,7 +219,7 @@ enum {
 #define DHCP_PADDING            0x00
 #define DHCP_SUBNET             0x01
 //#define DHCP_TIME_OFFSET      0x02 /* (localtime - UTC_time) in seconds. signed */
-//#define DHCP_ROUTER           0x03
+#define DHCP_ROUTER             0x03
 //#define DHCP_TIME_SERVER      0x04 /* RFC 868 time server (32-bit, 0 = 1.1.1900) */
 //#define DHCP_NAME_SERVER      0x05 /* IEN 116 _really_ ancient kind of NS */
 //#define DHCP_DNS_SERVER       0x06

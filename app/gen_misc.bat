@@ -1,5 +1,8 @@
 @echo off
 
+echo gen_misc.bat version 20150511
+echo .
+
 echo Please follow below steps(1-5) to generate specific bin(s):
 echo STEP 1: choose boot version(0=boot_v1.1, 1=boot_v1.2+, 2=none)
 set input=default
@@ -90,26 +93,49 @@ if %input% equ 3 (
 echo spi mode: %spi_mode%
 echo.
 
-echo STEP 5: choose spi size(0=256KB, 1=512KB, 2=1024KB, 3=2048KB, 4=4096KB)
+echo STEP 5: choose flash size and map
+echo     0= 512KB( 256KB+ 256KB)
+echo     2=1024KB( 512KB+ 512KB)
+echo     3=2048KB( 512KB+ 512KB)
+echo     4=4096KB( 512KB+ 512KB)
+echo     5=2048KB(1024KB+1024KB)
+echo     6=4096KB(1024KB+1024KB)
 set input=default
-set /p input=enter (0/1/2/3/4, default 1):
+set /p input=enter (0/1/2/3/4/5/6, default 0):
 
-if %input% equ 0 (
-    set spi_size=256
-) else (
 if %input% equ 2 (
-    set spi_size=1024
+  set spi_size_map=2
+  echo spi size: 1024KB
+  echo spi ota map: 512KB + 512KB
 ) else (
-if %input% equ 3 (
-    set spi_size=2048
-) else (
-if %input% equ 4 (
-    set spi_size=4096
-) else (
-    set spi_size=512
-))))
-
-echo spi size: %spi_size% KB
+  if %input% equ 3 (
+    set spi_size_map=3
+    echo spi size: 2048KB
+    echo spi ota map: 512KB + 512KB
+  ) else (
+    if %input% equ 4 (
+      set spi_size_map=4
+      echo spi size: 4096KB
+      echo spi ota map: 512KB + 512KB
+    ) else (
+      if %input% equ 5 (
+        set spi_size_map=5
+        echo spi size: 2048KB
+        echo spi ota map: 1024KB + 1024KB
+      ) else (
+        if %input% equ 6 (
+          set spi_size_map=6
+          echo spi size: 4096KB
+          echo spi ota map: 1024KB + 1024KB
+        ) else (
+          set spi_size_map=0
+          echo spi size: 512KB
+          echo spi ota map: 256KB + 256KB
+        )
+      )
+    )
+  )
+)
 
 touch user/user_main.c
 
@@ -117,5 +143,5 @@ echo.
 echo start...
 echo.
 
-make BOOT=%boot% APP=%app% SPI_SPEED=%spi_speed% SPI_MODE=%spi_mode% SPI_SIZE=%spi_size%
+make BOOT=%boot% APP=%app% SPI_SPEED=%spi_speed% SPI_MODE=%spi_mode% SPI_SIZE=%spi_size_map%
 

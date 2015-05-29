@@ -30,9 +30,7 @@ void *memset(void *dst, int c, size_t n);
 int memcmp(const void *m1, const void *m2, size_t n);
 void *memmove(void *dst, const void *src, size_t n);
 
-int rand_r(unsigned int *seed);
 int rand(void);
-void srand(unsigned int i);
 
 int printf(const char *format, ...);
 int sprintf(char *out, const char *format, ...);

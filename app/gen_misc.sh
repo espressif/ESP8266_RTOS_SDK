@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "gen_misc.sh version 20150511"
+echo ""
+
 echo "Please follow below steps(1-5) to generate specific bin(s):"
 echo "STEP 1: choose boot version(0=boot_v1.1, 1=boot_v1.2+, 2=none)"
 echo "enter(0/1/2, default 2):"
@@ -96,25 +99,46 @@ fi
 echo "spi mode: $spi_mode"
 echo ""
 
-echo "STEP 5: choose spi size(0=256KB, 1=512KB, 2=1024KB, 3=2048KB, 4=4096KB)"
-echo "enter (0/1/2/3/4, default 1):"
+echo "STEP 5: choose spi size and map"
+echo "    0= 512KB( 256KB+ 256KB)"
+echo "    2=1024KB( 512KB+ 512KB)"
+echo "    3=2048KB( 512KB+ 512KB)"
+echo "    4=4096KB( 512KB+ 512KB)"
+echo "    5=2048KB(1024KB+1024KB)"
+echo "    6=4096KB(1024KB+1024KB)"
+echo "enter (0/2/3/4/5/6, default 0):"
 read input
 
 if [ -z "$input" ]; then
-    spi_size=512
-elif [ $input == 0 ]; then
-    spi_size=256
+    spi_size_map=0
+    echo "spi size: 512KB"
+    echo "spi ota map:  256KB + 256KB"
 elif [ $input == 2 ]; then
-    spi_size=1024
+    spi_size_map=2
+    echo "spi size: 1024KB"
+    echo "spi ota map:  512KB + 512KB"
 elif [ $input == 3 ]; then
-    spi_size=2048
+    spi_size_map=3
+    echo "spi size: 2048KB"
+    echo "spi ota map:  512KB + 512KB"
 elif [ $input == 4 ]; then
-    spi_size=4096
+    spi_size_map=4
+    echo "spi size: 4096KB"
+    echo "spi ota map:  512KB + 512KB"
+elif [ $input == 5 ]; then
+    spi_size_map=5
+    echo "spi size: 2048KB"
+    echo "spi ota map:  1024KB + 1024KB"
+elif [ $input == 6 ]; then
+    spi_size_map=6
+    echo "spi size: 4096KB"
+    echo "spi ota map:  1024KB + 1024KB"
 else
-    spi_size=512
+    spi_size_map=0
+    echo "spi size: 512KB"
+    echo "spi ota map:  256KB + 256KB"
 fi
 
-echo "spi size: $spi_size KB"
 echo ""
 
 touch user/user_main.c
@@ -123,4 +147,4 @@ echo ""
 echo "start..."
 echo ""
 
-make COMPILE=gcc BOOT=$boot APP=$app SPI_SPEED=$spi_speed SPI_MODE=$spi_mode SPI_SIZE=$spi_size
+make COMPILE=gcc BOOT=$boot APP=$app SPI_SPEED=$spi_speed SPI_MODE=$spi_mode SPI_SIZE_MAP=$spi_size_map

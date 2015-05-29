@@ -24,7 +24,7 @@ BOOT?=none
 APP?=0
 SPI_SPEED?=40
 SPI_MODE?=QIO
-SPI_SIZE?=512
+SPI_SIZE_MAP?=0
 
 ifeq ($(BOOT), new)
     boot = new
@@ -75,56 +75,87 @@ else
     endif
 endif
 
-# flash larger than 1024KB only use 1024KB to storage user1.bin and user2.bin
-ifeq ($(SPI_SIZE), 256)
-    size = 1
-    flash = 256
-else
-    ifeq ($(SPI_SIZE), 1024)
-        size = 2
-        flash = 1024
-    else
-        ifeq ($(SPI_SIZE), 2048)
-            size = 3
-            flash = 1024
-        else
-            ifeq ($(SPI_SIZE), 4096)
-                size = 4
-                flash = 1024
-            else
-                size = 0
-                flash = 512
-            endif
-        endif
-    endif
-endif
+addr = 0x01000
 
-ifeq ($(flash), 512)
-  ifeq ($(app), 1)
-    addr = 0x01000
-  else
-    ifeq ($(app), 2)
-      addr = 0x41000
-    endif
-  endif
+ifeq ($(SPI_SIZE_MAP), 1)
+  size_map = 1
+  flash = 256
 else
-  ifeq ($(flash), 1024)
-    ifeq ($(app), 1)
-      addr = 0x01000
-    else
+  ifeq ($(SPI_SIZE_MAP), 2)
+    size_map = 2
+    flash = 1024
+    ifeq ($(app), 2)
+      addr = 0x81000
+    endif
+  else
+    ifeq ($(SPI_SIZE_MAP), 3)
+      size_map = 3
+      flash = 2048
       ifeq ($(app), 2)
         addr = 0x81000
+      endif
+    else
+      ifeq ($(SPI_SIZE_MAP), 4)
+        size_map = 4
+        flash = 4096
+        ifeq ($(app), 2)
+          addr = 0x81000
+        endif
+      else
+        ifeq ($(SPI_SIZE_MAP), 5)
+          size_map = 5
+          flash = 2048
+          ifeq ($(app), 2)
+            addr = 0x101000
+          endif
+        else
+          ifeq ($(SPI_SIZE_MAP), 6)
+            size_map = 6
+            flash = 4096
+            ifeq ($(app), 2)
+              addr = 0x101000
+            endif
+          else
+            size_map = 0
+            flash = 512
+            ifeq ($(app), 2)
+              addr = 0x41000
+            endif
+          endif
+        endif
       endif
     endif
   endif
 endif
-        
+
 LD_FILE = $(LDDIR)/eagle.app.v6.ld
 
 ifneq ($(boot), none)
 ifneq ($(app),0)
-	LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).$(flash).app$(app).ld
-	BIN_NAME = user$(app).$(flash).$(boot)
+    ifeq ($(size_map), 6)
+      LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).2048.ld
+    else
+      ifeq ($(size_map), 5)
+        LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).2048.ld
+      else
+        ifeq ($(size_map), 4)
+          LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).1024.app$(app).ld
+        else
+          ifeq ($(size_map), 3)
+            LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).1024.app$(app).ld
+          else
+            ifeq ($(size_map), 2)
+              LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).1024.app$(app).ld
+            else
+              ifeq ($(size_map), 0)
+                LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).512.app$(app).ld
+              endif
+            endif
+	      endif
+	    endif
+	  endif
+	endif
+	BIN_NAME = user$(app).$(flash).$(boot).$(size_map)
 endif
 else
     app = 0
@@ -221,7 +252,7 @@ endif
 	@echo "!!!"
 	
 ifeq ($(app), 0)
-	@python ../tools/gen_appbin.py $< 0 $(mode) $(freqdiv) $(size)
+	@python ../tools/gen_appbin.py $< 0 $(mode) $(freqdiv) $(size_map)
 	@mv eagle.app.flash.bin ../bin/eagle.flash.bin
 	@mv eagle.app.v6.irom0text.bin ../bin/eagle.irom0text.bin
 	@rm eagle.app.v6.*
@@ -230,12 +261,21 @@ ifeq ($(app), 0)
 	@echo "eagle.flash.bin-------->0x00000"
 	@echo "eagle.irom0text.bin---->0x40000"
 else
-    ifeq ($(boot), new)
-		@python ../tools/gen_appbin.py $< 2 $(mode) $(freqdiv) $(size)
-		@echo "Support boot_v1.2 and +"
-    else
-		@python ../tools/gen_appbin.py $< 1 $(mode) $(freqdiv) $(size)
+    ifneq ($(boot), new)
+		@python ../tools/gen_appbin.py $< 1 $(mode) $(freqdiv) $(size_map)
 		@echo "Support boot_v1.1 and +"
+    else
+		@python ../tools/gen_appbin.py $< 2 $(mode) $(freqdiv) $(size_map)
+
+    	ifeq ($(size_map), 6)
+		@echo "Support boot_v1.4 and +"
+        else
+            ifeq ($(size_map), 5)
+		@echo "Support boot_v1.4 and +"
+            else
+		@echo "Support boot_v1.2 and +"
+            endif
+        endif
     endif
 
 	@mv eagle.app.flash.bin ../bin/upgrade/$(BIN_NAME).bin

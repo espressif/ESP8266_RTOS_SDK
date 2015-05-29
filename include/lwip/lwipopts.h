@@ -32,6 +32,7 @@
 #ifndef __LWIPOPTS_H__
 #define __LWIPOPTS_H__
 
+#define LWIP_ESP8266
 /*
    -----------------------------------------------
    ---------- Platform specific locking ----------
@@ -87,6 +88,21 @@
    ---------- Internal Memory Pool Sizes ----------
    ------------------------------------------------
 */
+/**
+ * MEMP_NUM_TCP_PCB: the number of simulatenously active TCP connections.
+ * (requires the LWIP_TCP option)
+ */
+#ifndef MEMP_NUM_TCP_PCB
+#define MEMP_NUM_TCP_PCB                11
+#endif
+
+/**
+ * MEMP_NUM_NETCONN: the number of struct netconns.
+ * (only needed if you use the sequential API, like api_lib.c)
+ */
+#ifndef MEMP_NUM_NETCONN
+#define MEMP_NUM_NETCONN                10
+#endif
 
 /*
    --------------------------------
