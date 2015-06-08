@@ -75,6 +75,7 @@ void task2(void *pvParameters)
         free(recv_buf);
 
         if (recbytes <= 0) {
+		    close(sta_socket);
             printf("C > read data fail!\n");
         }
     }
@@ -159,8 +160,8 @@ user_init(void)
 
     {
         struct station_config *config = (struct station_config *)zalloc(sizeof(struct station_config));
-        sprintf(config->ssid, "CVR100W_T");
-        sprintf(config->password, "justfortest");
+        sprintf(config->ssid, "ZTE_5560");
+        sprintf(config->password, "espressif");
 
         /* need to sure that you are in station mode first,
          * otherwise it will be failed. */
