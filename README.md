@@ -8,8 +8,6 @@ Note
 
 APIs of "esp_iot_rtos_sdk" are same as "esp_iot_sdk"
 
-Libs which are not open source in “esp_iot_rtos_sdk_lib”. Please copy them to "\esp_iot_rtos_sdk\lib", then compile .
-
 More details in "Wiki" !
 
    
