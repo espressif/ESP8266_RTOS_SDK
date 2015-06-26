@@ -168,34 +168,6 @@ user_init(void)
         wifi_station_set_config(config);
         free(config);
     }
-    
-    {
-        struct ip_info ipinfo;
-    	    
-        ipinfo.gw.addr = ipaddr_addr("192.168.145.253");
-    	ipinfo.ip.addr = ipaddr_addr("192.168.145.253");
-    	ipinfo.netmask.addr = ipaddr_addr("255.255.255.0");
-    	
-    	wifi_set_ip_info(SOFTAP_IF, &ipinfo);
-    }
-
-    {
-        struct dhcp_info *pdhcp_info = NULL;
-    
-        pdhcp_info = (struct dhcp_info *)zalloc(sizeof(struct dhcp_info));
-        pdhcp_info->start_ip = ipaddr_addr("192.168.145.100");
-        pdhcp_info->end_ip = ipaddr_addr("192.168.145.110");    // don't set the range too large, because it will cost memory.
-        pdhcp_info->max_leases = 10;
-        pdhcp_info->auto_time = 60;
-        pdhcp_info->decline_time = 60;
-        pdhcp_info->conflict_time = 60;
-        pdhcp_info->offer_time = 60;
-        pdhcp_info->min_lease_sec = 60;
-        dhcp_set_info(pdhcp_info);
-        free(pdhcp_info);
-    }
-    
-    udhcpd_start();
 
     xTaskCreate(task2, "tsk2", 256, NULL, 2, NULL);
     xTaskCreate(task3, "tsk3", 256, NULL, 2, NULL);
