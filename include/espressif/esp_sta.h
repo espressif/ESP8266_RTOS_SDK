@@ -16,7 +16,9 @@ struct station_config {
 };
 
 bool wifi_station_get_config(struct station_config *config);
+bool wifi_station_get_config_default(struct station_config *config);
 bool wifi_station_set_config(struct station_config *config);
+bool wifi_station_set_config_current(struct station_config *config);
 
 bool wifi_station_connect(void);
 bool wifi_station_disconnect(void);
@@ -46,6 +48,9 @@ bool wifi_station_scan(struct scan_config *config, scan_done_cb_t cb);
 uint8 wifi_station_get_auto_connect(void);
 bool wifi_station_set_auto_connect(uint8 set);
 
+bool wifi_station_set_reconnect_policy(bool set);
+bool wifi_station_get_reconnect_policy(void);
+
 enum {
     STATION_IDLE = 0,
     STATION_CONNECTING,
@@ -56,5 +61,14 @@ enum {
 };
 
 uint8 wifi_station_get_connect_status(void);
+
+uint8 wifi_station_get_current_ap_id(void);
+bool wifi_station_ap_change(uint8 current_ap_id);
+bool wifi_station_ap_number_set(uint8 ap_number);
+uint8 wifi_station_get_ap_info(struct station_config config[]);
+
+bool wifi_station_dhcpc_start(void);
+bool wifi_station_dhcpc_stop(void);
+enum dhcp_status wifi_station_dhcpc_status(void);
 
 #endif

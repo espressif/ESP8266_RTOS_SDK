@@ -24,7 +24,9 @@ typedef enum _auth_mode {
 } AUTH_MODE;
 
 uint8 wifi_get_opmode(void);
+uint8 wifi_get_opmode_default(void);
 bool wifi_set_opmode(uint8 opmode);
+bool wifi_set_opmode_current(uint8 opmode);
 
 enum {
 	STATION_IF = 0,
@@ -48,6 +50,7 @@ uint8 wifi_get_channel(void);
 bool wifi_set_channel(uint8 channel);
 
 void wifi_status_led_install(uint8 gpio_id, uint32 gpio_name, uint8 gpio_func);
+void wifi_status_led_uninstall(void);
 
 bool wifi_promiscuous_set_mac(const uint8_t *address);
 

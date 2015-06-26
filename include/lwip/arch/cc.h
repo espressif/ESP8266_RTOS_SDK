@@ -38,6 +38,7 @@
 
 #define EFAULT 14
 
+#define ERRNO
 #define LWIP_PROVIDE_ERRNO
 
 #if (1)

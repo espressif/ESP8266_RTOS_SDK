@@ -23,4 +23,19 @@ void os_delay_us(uint16 us);
 void os_install_putc1(void (*p)(char c));
 void os_putc(char c);
 
+enum dhcp_status{
+	DHCP_STOPPED,
+	DHCP_STARTED
+};
+
+struct dhcps_lease {
+	struct ip_addr start_ip;
+	struct ip_addr end_ip;
+};
+
+enum dhcps_offer_option{
+	OFFER_START = 0x00,
+	OFFER_ROUTER = 0x01,
+	OFFER_END
+};
 #endif
