@@ -17,8 +17,6 @@
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
 
-#include "udhcp/dhcpd.h"
-
 #define server_ip "192.168.101.142"
 #define server_port 9669
 

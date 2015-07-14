@@ -43,7 +43,7 @@
 #endif
 
 #ifndef WIN32
-static int rng_fd = -1;
+//static int rng_fd = -1;
 #elif defined(CONFIG_WIN32_USE_CRYPTO_LIB)
 static HCRYPTPROV gCryptProv;
 #endif
@@ -108,7 +108,7 @@ int get_file(const char *filename, uint8_t **buf)
 EXP_FUNC void STDCALL ICACHE_FLASH_ATTR RNG_initialize()
 {
 #if !defined(WIN32) && defined(CONFIG_USE_DEV_URANDOM)
-    rng_fd = ax_open("/dev/urandom", O_RDONLY);
+//    rng_fd = ax_open("/dev/urandom", O_RDONLY);
 #elif defined(WIN32) && defined(CONFIG_WIN32_USE_CRYPTO_LIB)
     if (!CryptAcquireContext(&gCryptProv, 
                       NULL, NULL, PROV_RSA_FULL, 0))
@@ -161,10 +161,12 @@ EXP_FUNC void STDCALL ICACHE_FLASH_ATTR RNG_terminate(void)
  * Set a series of bytes with a random number. Individual bytes can be 0
  */
 EXP_FUNC void STDCALL ICACHE_FLASH_ATTR get_random(int num_rand_bytes, uint8_t *rand_data)
-{   
+{
 #if !defined(WIN32) && defined(CONFIG_USE_DEV_URANDOM)
-    /* use the Linux default */
-    read(rng_fd, rand_data, num_rand_bytes);    /* read from /dev/urandom */
+//    /* use the Linux default */
+//    read(rng_fd, rand_data, num_rand_bytes);    /* read from /dev/urandom */
+	os_get_random(rand_data, num_rand_bytes);
+
 #elif defined(WIN32) && defined(CONFIG_WIN32_USE_CRYPTO_LIB)
     /* use Microsoft Crypto Libraries */
     CryptGenRandom(gCryptProv, num_rand_bytes, rand_data);

@@ -6,6 +6,8 @@
 #ifndef __ESP_SOFTAP_H__
 #define __ESP_SOFTAP_H__
 
+#include "queue.h"
+
 struct softap_config {
     uint8 ssid[32];
     uint8 password[64];
@@ -15,6 +17,13 @@ struct softap_config {
     uint8 ssid_hidden;
     uint8 max_connection;
     uint16 beacon_interval;
+};
+
+struct station_info {
+    STAILQ_ENTRY(station_info)     next;
+
+	u8 bssid[6];
+	struct ip_addr ip;
 };
 
 bool wifi_softap_get_config(struct softap_config *config);

@@ -96,6 +96,7 @@
 
 #define configCHECK_FOR_STACK_OVERFLOW  2
 #define configUSE_MUTEXES  1
+#define configUSE_RECURSIVE_MUTEXES  1
 #define configUSE_TIMERS    1
 
 #if configUSE_TIMERS

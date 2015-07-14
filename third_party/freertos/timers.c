@@ -212,7 +212,7 @@ portBASE_TYPE xReturn = pdFAIL;
 			/* Create the timer task, storing its handle in xTimerTaskHandle so
 			it can be returned by the xTimerGetTimerDaemonTaskHandle() function. */
 			xReturn = xTaskCreate( prvTimerTask, ( const signed char * ) "Tmr Svc", ( unsigned short ) configTIMER_TASK_STACK_DEPTH, NULL, ( ( unsigned portBASE_TYPE ) configTIMER_TASK_PRIORITY ) | portPRIVILEGE_BIT, &xTimerTaskHandle );
-printf("tim_task_hdl : %x\n", xTimerTaskHandle);
+os_printf("tim_task_hdl : %x\n", xTimerTaskHandle);
 		}
 		#else
 		{

@@ -127,7 +127,7 @@ static void prvHeapInit( void );
 
 /* The size of the structure placed at the beginning of each allocated memory
 block must by correctly byte aligned. */
-static const unsigned short heapSTRUCT_SIZE	= ( ( sizeof ( xBlockLink ) + ( portBYTE_ALIGNMENT - 1 ) ) & ~portBYTE_ALIGNMENT_MASK );
+static const size_t heapSTRUCT_SIZE	ICACHE_RODATA_ATTR = ( ( sizeof ( xBlockLink ) + ( portBYTE_ALIGNMENT - 1 ) ) & ~portBYTE_ALIGNMENT_MASK );
 
 /* Ensure the pxEnd pointer will end up on the correct byte alignment. */
 //static const size_t xTotalHeapSize = ( ( size_t ) heapADJUSTED_HEAP_SIZE ) & ( ( size_t ) ~portBYTE_ALIGNMENT_MASK );
@@ -317,7 +317,7 @@ void *pvPortCalloc(size_t count, size_t size)
   p = pvPortMalloc(count * size);
   if (p) {
     /* zero the memory */
-    memset(p, 0, count * size);
+    ets_memset(p, 0, count * size);
   }
   return p;
 }
@@ -341,7 +341,7 @@ void *pvPortRealloc(void *mem, size_t newsize)
      p = pvPortMalloc(newsize);
      if (p) {
        /* zero the memory */
-       memcpy(p, mem, newsize);
+       ets_memcpy(p, mem, newsize);
        vPortFree(mem);
      }
      return p;     
@@ -351,13 +351,15 @@ void *realloc(void *ptr, size_t nbytes) __attribute__((alias("pvPortRealloc")));
 
 /*-----------------------------------------------------------*/
 
-size_t xPortGetFreeHeapSize( void )
+size_t ICACHE_FLASH_ATTR
+xPortGetFreeHeapSize( void )
 {
 	return xFreeBytesRemaining;
 }
 /*-----------------------------------------------------------*/
 
-void vPortInitialiseBlocks( void )
+void ICACHE_FLASH_ATTR
+vPortInitialiseBlocks( void )
 {
 	/* This just exists to keep the linker quiet. */
 }

@@ -184,7 +184,7 @@ GPIOIntrHdl(void)
 	}
 }
 #else
-void SoftIsrHdl(void)
+void SoftIsrHdl(void *arg)
 {
 //if(DbgVal5==1)
 	//printf("GP_%d,",SWReq);
@@ -228,18 +228,18 @@ xPortStartScheduler( void )
 	//pendsv setting
 			/*******GPIO sdio_clk isr*********/
 #if 0
-    _xt_isr_attach(ETS_GPIO_INUM, GPIOIntrHdl);
+    _xt_isr_attach(ETS_GPIO_INUM, GPIOIntrHdl, NULL);
     _xt_isr_unmask(1<<ETS_GPIO_INUM);
 #else
 			/*******software isr*********/
-   	_xt_isr_attach(ETS_SOFT_INUM, SoftIsrHdl);
+   	_xt_isr_attach(ETS_SOFT_INUM, SoftIsrHdl, NULL);
     _xt_isr_unmask(1<<ETS_SOFT_INUM);
 #endif
 
     /* Initialize system tick timer interrupt and schedule the first tick. */
     _xt_tick_timer_init();
 
-    printf("xPortStartScheduler\n");
+    os_printf("xPortStartScheduler\n");
     vTaskSwitchContext();
 
 //    REG_SET_BIT(0x3ff2006c, BIT(4));
@@ -305,7 +305,8 @@ void vPortExitCritical( void )
 void 
 PortDisableInt_NoNest( void )
 {
-//os_printf("ERRRRRRR\n");
+//	printf("ERRRRRRR\n");
+
 	if(NMIIrqIsOn == 0)	
 	{
 		if( ClosedLv1Isr !=1 )
@@ -319,7 +320,8 @@ PortDisableInt_NoNest( void )
 void 
 PortEnableInt_NoNest( void )
 {
-os_printf("ERRRRR\n");
+	printf("ERRRRR\n");
+
 	if(NMIIrqIsOn == 0)
 	{		
 		if( ClosedLv1Isr ==1 )
@@ -332,11 +334,13 @@ os_printf("ERRRRR\n");
 
 /*-----------------------------------------------------------*/
 
-_xt_isr isr[16];
+_xt_isr_entry isr[16];
 
-void _xt_isr_attach(uint8 i, _xt_isr func)
+void ICACHE_FLASH_ATTR
+_xt_isr_attach(uint8 i, _xt_isr func, void *arg)
 {
-    isr[i] = func;
+    isr[i].handler = func;
+    isr[i].arg = arg;
 }
 
 uint16 _xt_isr_handler(uint16 i)
@@ -360,7 +364,7 @@ uint16 _xt_isr_handler(uint16 i)
 
     _xt_clear_ints(1<<index);
 
-    isr[index]();
+    isr[index].handler(isr[index].arg);
 
     return i & ~(1 << index);
 }

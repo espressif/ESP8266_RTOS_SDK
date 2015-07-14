@@ -1172,7 +1172,7 @@ tskTCB * pxNewTCB;
 
 #if ( ( INCLUDE_xTaskResumeFromISR == 1 ) && ( INCLUDE_vTaskSuspend == 1 ) )
 
-	portBASE_TYPE 
+	portBASE_TYPE ICACHE_FLASH_ATTR
 	xTaskResumeFromISR( xTaskHandle xTaskToResume )
 	{
 	portBASE_TYPE xYieldRequired = pdFALSE;
@@ -1241,7 +1241,7 @@ portBASE_TYPE xReturn;
 		/* Create the idle task, storing its handle in xIdleTaskHandle so it can
 		be returned by the xTaskGetIdleTaskHandle() function. */
 		xReturn = xTaskCreate( prvIdleTask, ( signed char * ) "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), &xIdleTaskHandle ); /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
-printf("idle_task_hdl : %x\n", xIdleTaskHandle);
+os_printf("idle_task_hdl : %x\n", xIdleTaskHandle);
 	}
 	#else
 	{
@@ -1441,7 +1441,7 @@ portTickType xTicks;
 }
 /*-----------------------------------------------------------*/
 
-portTickType 
+portTickType ICACHE_FLASH_ATTR
 xTaskGetTickCountFromISR( void )
 {
 portTickType xReturn;
@@ -1974,7 +1974,7 @@ portTickType xTimeToWake;
 #endif /* configUSE_TIMERS */
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE
+signed portBASE_TYPE ICACHE_FLASH_ATTR
 xTaskRemoveFromEventList( const xList * const pxEventList )
 {
 tskTCB *pxUnblockedTCB;

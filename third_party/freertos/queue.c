@@ -930,7 +930,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 #endif /* configUSE_ALTERNATIVE_API */
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE
+signed portBASE_TYPE ICACHE_FLASH_ATTR
 xQueueGenericSendFromISR( xQueueHandle xQueue, const void * const pvItemToQueue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portBASE_TYPE xCopyPosition )
 {
 signed portBASE_TYPE xReturn;
@@ -1201,7 +1201,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 }
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE 
+signed portBASE_TYPE ICACHE_FLASH_ATTR
 xQueueReceiveFromISR( xQueueHandle xQueue, const void * const pvBuffer, signed portBASE_TYPE *pxHigherPriorityTaskWoken )
 {
 signed portBASE_TYPE xReturn;
@@ -1279,7 +1279,7 @@ xQUEUE * const pxQueue = ( xQUEUE * ) xQueue;
 }
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE 
+signed portBASE_TYPE ICACHE_FLASH_ATTR
 xQueuePeekFromISR( xQueueHandle xQueue, const void * const pvBuffer )
 {
 signed portBASE_TYPE xReturn;
@@ -1350,7 +1350,7 @@ unsigned portBASE_TYPE uxReturn;
 } /*lint !e818 Pointer cannot be declared const as xQueue is a typedef not pointer. */
 /*-----------------------------------------------------------*/
 
-unsigned portBASE_TYPE 
+unsigned portBASE_TYPE ICACHE_FLASH_ATTR
 uxQueueMessagesWaitingFromISR( const xQueueHandle xQueue )
 {
 unsigned portBASE_TYPE uxReturn;
@@ -1602,7 +1602,7 @@ signed portBASE_TYPE xReturn;
 }
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE 
+signed portBASE_TYPE ICACHE_FLASH_ATTR
 xQueueIsQueueEmptyFromISR( const xQueueHandle xQueue )
 {
 signed portBASE_TYPE xReturn;
@@ -1643,7 +1643,7 @@ signed portBASE_TYPE xReturn;
 }
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE 
+signed portBASE_TYPE ICACHE_FLASH_ATTR
 xQueueIsQueueFullFromISR( const xQueueHandle xQueue )
 {
 signed portBASE_TYPE xReturn;
