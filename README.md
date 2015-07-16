@@ -23,3 +23,8 @@ eagle.app.v6.flash.bin, downloads to flash 0x00000
 eagle.app.v6.irom0text.bin, downloads to flash 0x40000
 
 blank.bin, downloads to flash 0x7E000
+
+-
+To build using gcc, type:
+
+`make COMPILE=gcc`
