@@ -17,6 +17,8 @@
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
 
+#include "ssid_config.h"
+
 #define server_ip "192.168.101.142"
 #define server_port 9669
 
@@ -158,8 +160,8 @@ user_init(void)
 
     {
         struct station_config *config = (struct station_config *)zalloc(sizeof(struct station_config));
-        sprintf(config->ssid, "ZTE_5560");
-        sprintf(config->password, "espressif");
+        sprintf(config->ssid, SSID_NAME);
+        sprintf(config->password, SSID_PASS);
 
         /* need to sure that you are in station mode first,
          * otherwise it will be failed. */
