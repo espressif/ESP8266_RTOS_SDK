@@ -20,8 +20,6 @@
 #define server_ip "192.168.101.142"
 #define server_port 9669
 
-sc_type SC_Type = 0;
-
 void ICACHE_FLASH_ATTR
 smartconfig_done(sc_status status, void *pdata)
 {
@@ -34,6 +32,12 @@ smartconfig_done(sc_status status, void *pdata)
             break;
         case SC_STATUS_GETTING_SSID_PSWD:
             printf("SC_STATUS_GETTING_SSID_PSWD\n");
+            sc_type *type = pdata;
+            if (*type == SC_TYPE_ESPTOUCH) {
+                printf("SC_TYPE:SC_TYPE_ESPTOUCH\n");
+            } else {
+                printf("SC_TYPE:SC_TYPE_AIRKISS\n");
+            }
             break;
         case SC_STATUS_LINK:
             printf("SC_STATUS_LINK\n");
@@ -45,7 +49,7 @@ smartconfig_done(sc_status status, void *pdata)
             break;
         case SC_STATUS_LINK_OVER:
             printf("SC_STATUS_LINK_OVER\n");
-            if (SC_Type == SC_TYPE_ESPTOUCH) {
+            if (pdata != NULL) {
                 uint8 phone_ip[4] = {0};
 
                 memcpy(phone_ip, (uint8*)pdata, 4);
@@ -60,10 +64,8 @@ smartconfig_done(sc_status status, void *pdata)
 void ICACHE_FLASH_ATTR
 smartconfig_task(void *pvParameters)
 {
-    SC_Type = SC_TYPE_ESPTOUCH;
-	
-	smartconfig_start(SC_Type, smartconfig_done);//SC_TYPE_AIRKISS
-
+    smartconfig_start(smartconfig_done);
+    
     vTaskDelete(NULL);
 }
 

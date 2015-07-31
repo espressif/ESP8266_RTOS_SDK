@@ -36,7 +36,6 @@ int printf(const char *format, ...);
 int sprintf(char *out, const char *format, ...);
 int snprintf(char *buf, unsigned int count, const char *format, ...);
 int puts(const char *str);
-int putchar(int c);
 
 void *malloc(size_t n);
 void free(void *p);
@@ -47,16 +46,13 @@ void *realloc(void *p, size_t n);
 int atoi(const char *s);
 long atol(const char *s);
 
-/* NOTE: don't use printf_opt in irq handler, for test */
-#define printf_opt(fmt, ...) do {	\
-	static const char flash_str[] ICACHE_RODATA_ATTR = fmt;	\
-	printf(flash_str, ##__VA_ARGS__);	\
-	} while(0)
+unsigned long os_random(void);
+int os_get_random(unsigned char *buf, size_t len);
 
 /* NOTE: don't use printf_opt in irq handler, for test */
-#define sprintf_opt(out, fmt, ...) do {	\
-	static const char flash_str[] ICACHE_RODATA_ATTR = fmt;	\
-	sprintf(out, flash_str, ##__VA_ARGS__);	\
+#define os_printf(fmt, ...) do {	\
+	static const char flash_str[] ICACHE_RODATA_ATTR STORE_ATTR = fmt;	\
+	printf(flash_str, ##__VA_ARGS__);	\
 	} while(0)
 
 #endif /* __LIBC_H__ */

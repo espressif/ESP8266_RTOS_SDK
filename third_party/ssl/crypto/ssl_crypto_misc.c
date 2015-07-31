@@ -217,7 +217,7 @@ void ICACHE_FLASH_ATTR get_random_NZ(int num_rand_bytes, uint8_t *rand_data)
     for (i = 0; i < num_rand_bytes; i++)
     {
         while (rand_data[i] == 0)  /* can't be 0 */
-            rand_data[i] = (uint8_t)(rand());
+            rand_data[i] = (uint8_t)(os_random());
     }
 }
 

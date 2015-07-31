@@ -8,7 +8,7 @@ ifeq ($(COMPILE), gcc)
 	AR = xtensa-lx106-elf-ar
 	CC = xtensa-lx106-elf-gcc
 	NM = xtensa-lx106-elf-nm
-	CPP = xtensa-lx106-elf-cpp
+	CPP = xtensa-lx106-elf-g++
 	OBJCOPY = xtensa-lx106-elf-objcopy
 	OBJDUMP = xtensa-lx106-elf-objdump
 else
@@ -162,6 +162,7 @@ else
 endif
 
 CSRCS ?= $(wildcard *.c)
+CPPSRCS ?= $(wildcard *.cpp)
 ASRCs ?= $(wildcard *.s)
 ASRCS ?= $(wildcard *.S)
 SUBDIRS ?= $(patsubst %/,%,$(dir $(wildcard */Makefile)))
@@ -170,10 +171,12 @@ ODIR := .output
 OBJODIR := $(ODIR)/$(TARGET)/$(FLAVOR)/obj
 
 OBJS := $(CSRCS:%.c=$(OBJODIR)/%.o) \
+        $(CPPSRCS:%.cpp=$(OBJODIR)/%.o) \
         $(ASRCs:%.s=$(OBJODIR)/%.o) \
         $(ASRCS:%.S=$(OBJODIR)/%.o)
 
 DEPS := $(CSRCS:%.c=$(OBJODIR)/%.d) \
+        $(CPPSRCS:%.cpp=$(OBJODIR)/%.d) \
         $(ASRCs:%.s=$(OBJODIR)/%.d) \
         $(ASRCS:%.S=$(OBJODIR)/%.d)
 
@@ -188,7 +191,6 @@ OBINS := $(GEN_BINS:%=$(BINODIR)/%)
 
 CCFLAGS += 			\
 	-g			\
-	-O2			\
 	-Wpointer-arith		\
 	-Wundef			\
 	-Werror			\
@@ -196,7 +198,9 @@ CCFLAGS += 			\
 	-fno-inline-functions	\
 	-nostdlib       \
 	-mlongcalls	\
-	-mtext-section-literals
+	-mtext-section-literals \
+	-ffunction-sections \
+	-fdata-sections
 #	-Wall			
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
@@ -325,6 +329,18 @@ $(OBJODIR)/%.d: %.c
 	@echo DEPEND: $(CC) -M $(CFLAGS) $<
 	@set -e; rm -f $@; \
 	$(CC) -M $(CFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\.o\)[ :]*,$(OBJODIR)/\1 $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+	
+$(OBJODIR)/%.o: %.cpp
+	@mkdir -p $(OBJODIR);
+	$(CPP) $(if $(findstring $<,$(DSRCS)),$(DFLAGS),$(CFLAGS)) $(COPTS_$(*F)) -o $@ -c $<
+
+$(OBJODIR)/%.d: %.cpp
+	@mkdir -p $(OBJODIR);
+	@echo DEPEND: $(CPP) -M $(CFLAGS) $<
+	@set -e; rm -f $@; \
+	$(CPP) -M $(CFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\.o\)[ :]*,$(OBJODIR)/\1 $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 

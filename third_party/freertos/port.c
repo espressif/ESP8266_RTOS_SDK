@@ -320,7 +320,7 @@ PortDisableInt_NoNest( void )
 void 
 PortEnableInt_NoNest( void )
 {
-	printf("ERRRRR\n");
+//	printf("ERRRRR\n");
 
 	if(NMIIrqIsOn == 0)
 	{		
@@ -335,6 +335,7 @@ PortEnableInt_NoNest( void )
 /*-----------------------------------------------------------*/
 
 _xt_isr_entry isr[16];
+char _xt_isr_status = 0;
 
 void ICACHE_FLASH_ATTR
 _xt_isr_attach(uint8 i, _xt_isr func, void *arg)
@@ -364,7 +365,9 @@ uint16 _xt_isr_handler(uint16 i)
 
     _xt_clear_ints(1<<index);
 
+    _xt_isr_status = 1;
     isr[index].handler(isr[index].arg);
+    _xt_isr_status = 0;
 
     return i & ~(1 << index);
 }

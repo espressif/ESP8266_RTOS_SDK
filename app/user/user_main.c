@@ -148,8 +148,7 @@ void task3(void *pvParameters)
  * Parameters   : none
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-user_init(void)
+void user_init(void)
 {
     printf("SDK version:%s\n", system_get_sdk_version());
 
