@@ -26,6 +26,7 @@ import os
 import re
 import binascii
 import struct
+import zlib
 
 
 TEXT_ADDRESS = 0x40100000
@@ -93,8 +94,25 @@ def combine_bin(file_name,dest_file_name,start_offset_addr,need_chk):
         else:
         	print '!!!Open %s fail!!!'%(file_name)
 
+
+def getFileCRC(_path): 
+    try: 
+        blocksize = 1024 * 64 
+        f = open(_path,"rb") 
+        str = f.read(blocksize) 
+        crc = 0 
+        while(len(str) != 0): 
+            crc = binascii.crc32(str, crc) 
+            str = f.read(blocksize) 
+        f.close() 
+    except: 
+        print 'get file crc error!' 
+        return 0 
+    return crc
+
 def gen_appbin():
     global chk_sum
+    global crc_sum
     global blocks
     if len(sys.argv) != 6:
         print 'Usage: gen_appbin.py eagle.app.out boot_mode flash_mode flash_clk_div flash_size_map'
@@ -239,7 +257,14 @@ def gen_appbin():
         else :
             print '!!!Open %s fail!!!'%(flash_bin_name)
             sys.exit(0)
-
+    if boot_mode == '1' or boot_mode == '2':
+        all_bin_crc = getFileCRC(flash_bin_name)
+        if all_bin_crc < 0:
+            all_bin_crc = abs(all_bin_crc) - 1
+        else :
+            all_bin_crc = abs(all_bin_crc) + 1
+        print "bin crc: %x"%all_bin_crc
+        write_file(flash_bin_name,chr((all_bin_crc & 0x000000FF))+chr((all_bin_crc & 0x0000FF00) >> 8)+chr((all_bin_crc & 0x00FF0000) >> 16)+chr((all_bin_crc & 0xFF000000) >> 24))
     cmd = 'rm eagle.app.sym'
     os.system(cmd)
 

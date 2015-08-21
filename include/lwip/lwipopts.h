@@ -239,6 +239,11 @@
  */
 #define TCP_SYNMAXRTX                   3
 
+/**
+ * TCP_LISTEN_BACKLOG: Enable the backlog option for tcp listen pcb.
+ */
+#define TCP_LISTEN_BACKLOG              1
+
 /*
    ----------------------------------
    ---------- Pbuf options ----------
@@ -377,7 +382,7 @@
 /**
  * SO_REUSE==1: Enable SO_REUSEADDR option.
  */
-#define SO_REUSE                        1
+#define SO_REUSE                        0
 
 /*
    ----------------------------------------

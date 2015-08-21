@@ -1,22 +1,11 @@
 #!/bin/bash
 
-echo "gen_misc.sh version 20150511"
+echo "gen_misc.sh version 20150819"
 echo ""
 
 echo "Please follow below steps(1-5) to generate specific bin(s):"
-echo "STEP 1: choose boot version(0=boot_v1.1, 1=boot_v1.2+, 2=none)"
-echo "enter(0/1/2, default 2):"
-read input
-
-if [ -z "$input" ]; then
-    boot=none
-elif [ $input == 0 ]; then
-	boot=old
-elif [ $input == 1 ]; then
-    boot=new
-else
-    boot=none
-fi
+echo "STEP 1: use boot_v1.2+ by default"
+boot=new
 
 echo "boot mode: $boot"
 echo ""

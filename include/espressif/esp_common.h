@@ -19,5 +19,6 @@
 
 #include "smartconfig.h"
 #include "spi_flash.h"
+#include "pwm.h"
 
 #endif

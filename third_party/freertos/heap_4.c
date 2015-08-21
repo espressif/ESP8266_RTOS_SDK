@@ -127,7 +127,7 @@ static void prvHeapInit( void );
 
 /* The size of the structure placed at the beginning of each allocated memory
 block must by correctly byte aligned. */
-static const size_t heapSTRUCT_SIZE	ICACHE_RODATA_ATTR = ( ( sizeof ( xBlockLink ) + ( portBYTE_ALIGNMENT - 1 ) ) & ~portBYTE_ALIGNMENT_MASK );
+static const size_t heapSTRUCT_SIZE  = ( ( sizeof ( xBlockLink ) + ( portBYTE_ALIGNMENT - 1 ) ) & ~portBYTE_ALIGNMENT_MASK );
 
 /* Ensure the pxEnd pointer will end up on the correct byte alignment. */
 //static const size_t xTotalHeapSize = ( ( size_t ) heapADJUSTED_HEAP_SIZE ) & ( ( size_t ) ~portBYTE_ALIGNMENT_MASK );
@@ -148,6 +148,21 @@ space. */
 static size_t xBlockAllocatedBit = 0;
 
 /*-----------------------------------------------------------*/
+
+size_t xPortWantedSizeAlign(size_t xWantedSize)
+{
+	xWantedSize += heapSTRUCT_SIZE;
+
+	/* Ensure that blocks are always aligned to the required number
+	of bytes. */
+	if( ( xWantedSize & portBYTE_ALIGNMENT_MASK ) != 0x00 )
+	{
+		/* Byte alignment required. */
+		xWantedSize += ( portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK ) );
+	}
+
+	return xWantedSize;
+}
 
 void *pvPortMalloc( size_t xWantedSize )
 {
@@ -176,15 +191,7 @@ void *pvReturn = NULL;
 			structure in addition to the requested amount of bytes. */
 			if( xWantedSize > 0 )
 			{
-				xWantedSize += heapSTRUCT_SIZE;
-
-				/* Ensure that blocks are always aligned to the required number 
-				of bytes. */
-				if( ( xWantedSize & portBYTE_ALIGNMENT_MASK ) != 0x00 )
-				{
-					/* Byte alignment required. */
-					xWantedSize += ( portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK ) );
-				}
+				xWantedSize = xPortWantedSizeAlign(xWantedSize);
 			}
 
 			if( ( xWantedSize > 0 ) && ( xWantedSize <= xFreeBytesRemaining ) )

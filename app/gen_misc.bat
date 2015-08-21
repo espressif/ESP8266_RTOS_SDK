@@ -1,22 +1,11 @@
 @echo off
 
-echo gen_misc.bat version 20150511
+echo gen_misc.bat version 20150819
 echo .
 
 echo Please follow below steps(1-5) to generate specific bin(s):
-echo STEP 1: choose boot version(0=boot_v1.1, 1=boot_v1.2+, 2=none)
-set input=default
-set /p input=enter(0/1/2, default 2):
-
-if %input% equ 0 (
-    set boot=old
-) else (
-if %input% equ 1 (
-    set boot=new
-) else (
-    set boot=none
-)
-)
+echo STEP 1: use boot_v1.2+ by default
+set boot=new
 
 echo boot mode: %boot%
 echo.
