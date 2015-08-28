@@ -138,10 +138,10 @@ def gen_appbin():
     data_str = ''
     sum_size = 0
 
-    if os.getenv('COMPILE')=='gcc' :
-        cmd = 'xtensa-lx106-elf-nm -g ' + elf_file + ' > eagle.app.sym'
-    else :
+    if os.getenv('COMPILE')=='xcc' :
         cmd = 'xt-nm -g ' + elf_file + ' > eagle.app.sym'
+    else :
+        cmd = 'xtensa-lx106-elf-nm -g ' + elf_file + ' > eagle.app.sym'
 
     os.system(cmd)
 

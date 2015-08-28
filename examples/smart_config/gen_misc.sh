@@ -1,6 +1,33 @@
 #!/bin/bash
 
-echo "gen_misc.sh version 20150819"
+echo "gen_misc.sh version 20150826"
+echo ""
+
+if [ $SDK_PATH ]; then
+    echo "SDK_PATH:"
+    echo "$SDK_PATH"
+    echo ""
+else
+    echo "ERROR: Please export SDK_PATH firstly, exit!!!"
+    exit
+fi
+
+if [ $BIN_PATH ]; then
+    echo "BIN_PATH:"
+    echo "$BIN_PATH"
+    echo ""
+else
+    echo "ERROR: Please export BIN_PATH firstly, exit!!!"
+    exit
+fi
+
+echo "Please check SDK_PATH & BIN_PATH, enter (Y/y) to continue:"
+read input
+
+if [[ $input != Y ]] && [[ $input != y ]]; then
+    exit
+fi
+
 echo ""
 
 echo "Please follow below steps(1-5) to generate specific bin(s):"
@@ -130,10 +157,9 @@ fi
 
 echo ""
 
-touch user/user_main.c
-
-echo ""
 echo "start..."
 echo ""
 
-make COMPILE=gcc BOOT=$boot APP=$app SPI_SPEED=$spi_speed SPI_MODE=$spi_mode SPI_SIZE_MAP=$spi_size_map
+make clean
+
+make BOOT=$boot APP=$app SPI_SPEED=$spi_speed SPI_MODE=$spi_mode SPI_SIZE_MAP=$spi_size_map

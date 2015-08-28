@@ -58,7 +58,8 @@ typedef enum {
   PBUF_TRANSPORT,
   PBUF_IP,
   PBUF_LINK,
-  PBUF_RAW
+  PBUF_RAW,
+  PBUF_MAC
 } pbuf_layer;
 
 typedef enum {

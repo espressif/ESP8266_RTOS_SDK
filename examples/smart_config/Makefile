@@ -26,8 +26,7 @@ SUBDIRS=    \
 
 endif # } PDIR
 
-APPDIR = .
-LDDIR = ../ld
+LDDIR = $(SDK_PATH)/ld
 
 CCFLAGS += -Os
 
@@ -49,7 +48,8 @@ COMPONENTS_eagle.app.v6 = \
 	user/libuser.a
 
 LINKFLAGS_eagle.app.v6 = \
-	-L../lib        \
+	-L$(SDK_PATH)/lib        \
+	-Wl,--gc-sections   \
 	-nostdlib	\
     -T$(LD_FILE)   \
 	-Wl,--no-check-sections	\
@@ -112,8 +112,7 @@ DDEFINES +=				\
 #
 
 INCLUDES := $(INCLUDES) -I $(PDIR)include
-PDIR := ../$(PDIR)
-sinclude $(PDIR)Makefile
+sinclude $(SDK_PATH)/Makefile
 
 .PHONY: FORCE
 FORCE:

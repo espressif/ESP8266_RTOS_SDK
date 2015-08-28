@@ -1,16 +1,16 @@
 1¡¢compile options
 
 (1) COMPILE
-    Possible value: gcc
-    Default value: 
-    If not set, use xt-xcc by default.
+    Possible value: xcc
+    Default value:
+    If not set, use gcc by default.
 
 (2) BOOT
     Possible value: none/old/new
       none: no need boot
       old: use boot_v1.1
       new: use boot_v1.2
-    Default value: none
+    Default value: new
 
 (3) APP
     Possible value: 0/1/2
