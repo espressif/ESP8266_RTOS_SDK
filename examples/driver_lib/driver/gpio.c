@@ -107,9 +107,9 @@ gpio_input_get(void)
  * to check for any additional pending interrupts before it returns.
  */
 void ICACHE_FLASH_ATTR
-gpio_intr_handler_register(void *fn)
+gpio_intr_handler_register(void *fn, void *arg)
 {
-    _xt_isr_attach(ETS_GPIO_INUM, fn);
+    _xt_isr_attach(ETS_GPIO_INUM, fn, arg);
 }
 
 /*

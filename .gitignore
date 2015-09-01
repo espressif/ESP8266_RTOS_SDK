@@ -1,0 +1,8 @@
+.output/
+*.swp
+*.S
+*.dump
+*.patch
+bin/eagle.flash.bin
+bin/eagle.irom0text.bin
+tags

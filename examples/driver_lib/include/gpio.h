@@ -112,7 +112,7 @@ void gpio16_input_conf(void);
 uint8 gpio16_input_get(void);
 
 void gpio_output_conf(uint32 set_mask, uint32 clear_mask, uint32 enable_mask, uint32 disable_mask);
-void gpio_intr_handler_register(void *fn);
+void gpio_intr_handler_register(void *fn, void *arg);
 void gpio_pin_wakeup_enable(uint32 i, GPIO_INT_TYPE intr_state);
 void gpio_pin_wakeup_disable();
 void gpio_pin_intr_state_set(uint32 i, GPIO_INT_TYPE intr_state);
