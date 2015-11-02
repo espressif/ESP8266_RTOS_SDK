@@ -70,7 +70,8 @@
 extern "C" {
 #endif
 
-#include "esp_common.h"
+#include "c_types.h"
+#include "espressif/esp_libc.h"
 
 #include    <xtensa/xtruntime.h>
 #include    "xtensa_rtos.h"

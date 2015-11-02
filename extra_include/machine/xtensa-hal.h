@@ -1,2 +1,0 @@
-#include <xtensa/hal.h>
-

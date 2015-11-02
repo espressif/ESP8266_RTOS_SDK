@@ -35,7 +35,7 @@
  */
 
 #include "ssl/ssl_os_port.h"
-
+#include "lwip/sockets.h"
 #ifdef WIN32
 /**
  * gettimeofday() not in Win32 
@@ -154,7 +154,7 @@ void exit_now(const char *format, ...)
     abort();
 }
 
-
+#endif
 /**
  * gettimeofday() not in Win32 
  */
@@ -165,9 +165,55 @@ EXP_FUNC void STDCALL gettimeofday(struct timeval* t, void* timezone)
     t->tv_usec = 0;                         /* 1sec precision only */ 
 #else
     /* wujg : pass compile first */
-    t->tv_sec = 0;
+    if (timezone != NULL)
+    	t->tv_sec = *(time_t*)timezone + system_get_time()/1000000;
+    else
+    	t->tv_sec = system_get_time() + system_get_time()/1000000;
     t->tv_usec = 0; /* 1ms precision */
 #endif
 }
-#endif
 
+unsigned int def_private_key_len = 0;
+unsigned char *def_private_key = NULL;
+unsigned char *def_certificate = NULL;
+unsigned int def_certificate_len = 0;
+
+/**
+ * Load the certificates in memory depending on compile-time
+ * @Parameters certificate  	Load the certificate
+ * @Parameters length 			Load the certificate length
+ * @Returns						result true or false
+*/
+bool ICACHE_FLASH_ATTR ssl_set_default_certificate(const uint8* certificate, uint16 length)
+{
+	if (certificate == NULL)
+		return false;
+
+	def_certificate = (uint8*) zalloc(length);
+	if (def_certificate == NULL)
+		return false;
+
+	memcpy(def_certificate, certificate, length);
+	def_certificate_len = length;
+	return true;
+}
+
+/**
+ * Load the key in memory depending on compile-time and user options.
+ * @Parameters private_key  	Load the key
+ * @Parameters length 			Load the key length
+ * @Returns						result true or false
+*/
+bool ICACHE_FLASH_ATTR ssl_set_default_private_key(const uint8* private_key, uint16 length)
+{
+	if (private_key == NULL)
+		return false;
+
+	def_private_key = (uint8*) zalloc(length);
+	if (def_private_key == NULL)
+		return false;
+
+	memcpy(def_private_key, private_key, length);
+	def_private_key_len = length;
+	return true;
+}

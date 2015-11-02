@@ -49,14 +49,15 @@
  * MEMCPY: override this if you have a faster implementation at hand than the
  * one included in your C library
  */
-#define MEMCPY(dst,src,len)             ets_memcpy(dst,src,len)
+#define MEMCPY(dst,src,len)             memcpy(dst,src,len)
 
 /**
  * SMEMCPY: override this with care! Some compilers (e.g. gcc) can inline a
  * call to memcpy() if the length is known at compile time and is small.
  */
-#define SMEMCPY(dst,src,len)            ets_memcpy(dst,src,len)
+#define SMEMCPY(dst,src,len)            memcpy(dst,src,len)
 
+#define LWIP_RAND	os_random
 /*
    ------------------------------------
    ---------- Memory options ----------
@@ -92,17 +93,13 @@
  * MEMP_NUM_TCP_PCB: the number of simulatenously active TCP connections.
  * (requires the LWIP_TCP option)
  */
-#ifndef MEMP_NUM_TCP_PCB
-#define MEMP_NUM_TCP_PCB                11
-#endif
+#define MEMP_NUM_TCP_PCB                (*(volatile uint32*)0x600011FC)
 
 /**
  * MEMP_NUM_NETCONN: the number of struct netconns.
  * (only needed if you use the sequential API, like api_lib.c)
  */
-#ifndef MEMP_NUM_NETCONN
 #define MEMP_NUM_NETCONN                10
-#endif
 
 /*
    --------------------------------
@@ -176,6 +173,11 @@
 
 #define LWIP_DHCP_BOOTP_FILE            0
 
+/**
+ * DHCP_MAXRTX: Maximum number of retries of current request.
+ */
+#define DHCP_MAXRTX						(*(volatile uint32*)0x600011E0)
+
 /*
    ------------------------------------
    ---------- AUTOIP options ----------
@@ -200,9 +202,7 @@
  * LWIP_DNS==1: Turn on DNS module. UDP must be available for DNS
  * transport.
  */
-#ifndef LWIP_DNS
 #define LWIP_DNS                        1
-#endif
 
 /*
    ---------------------------------
@@ -214,6 +214,12 @@
    ---------- TCP options ----------
    ---------------------------------
 */
+/**
+ * TCP_WND: The size of a TCP window.  This must be at least
+ * (2 * TCP_MSS) for things to work well
+ */
+#define TCP_WND                         (*(volatile uint32*)0x600011F0)
+
 /**
  * TCP_QUEUE_OOSEQ==1: TCP will queue segments that arrive out of order.
  * Define to 0 if your device is low on memory.
@@ -231,13 +237,12 @@
 /**
  * TCP_MAXRTX: Maximum number of retransmissions of data segments.
  */
-#define TCP_MAXRTX                      6
-
+#define TCP_MAXRTX                      (*(volatile uint32*)0x600011E8)
 
 /**
  * TCP_SYNMAXRTX: Maximum number of retransmissions of SYN segments.
  */
-#define TCP_SYNMAXRTX                   3
+#define TCP_SYNMAXRTX                   (*(volatile uint32*)0x600011E4)
 
 /**
  * TCP_LISTEN_BACKLOG: Enable the backlog option for tcp listen pcb.
@@ -293,9 +298,7 @@
 /**
  * TCPIP_THREAD_NAME: The name assigned to the main tcpip thread.
  */
-#ifndef TCPIP_THREAD_NAME
 #define TCPIP_THREAD_NAME              "tiT"
-#endif
 
 /**
  * TCPIP_THREAD_STACKSIZE: The stack size used by the main tcpip thread.
@@ -392,9 +395,7 @@
 /**
  * LWIP_STATS==1: Enable statistics collection in lwip_stats.
  */
-#ifndef LWIP_STATS
 #define LWIP_STATS                      0
-#endif
 
 /*
    ---------------------------------
@@ -413,6 +414,10 @@
    ---------- IPv6 options ---------------
    ---------------------------------------
 */
+/**
+ * LWIP_IPV6==1: Enable IPv6
+ */
+#define LWIP_IPV6                       1
 
 /*
    ---------------------------------------

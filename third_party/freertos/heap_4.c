@@ -81,6 +81,8 @@ task.h is included from an application file. */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "espressif/esp8266/ets_sys.h"
+
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 extern char _heap_start;
@@ -324,7 +326,7 @@ void *pvPortCalloc(size_t count, size_t size)
   p = pvPortMalloc(count * size);
   if (p) {
     /* zero the memory */
-    ets_memset(p, 0, count * size);
+    memset(p, 0, count * size);
   }
   return p;
 }
@@ -348,8 +350,10 @@ void *pvPortRealloc(void *mem, size_t newsize)
      p = pvPortMalloc(newsize);
      if (p) {
        /* zero the memory */
-       ets_memcpy(p, mem, newsize);
-       vPortFree(mem);
+       if (mem != NULL) {
+		   memcpy(p, mem, newsize);
+		   vPortFree(mem);
+       }
      }
      return p;     
 }

@@ -212,7 +212,8 @@ portBASE_TYPE xReturn = pdFAIL;
 			/* Create the timer task, storing its handle in xTimerTaskHandle so
 			it can be returned by the xTimerGetTimerDaemonTaskHandle() function. */
 			xReturn = xTaskCreate( prvTimerTask, ( const signed char * ) "Tmr Svc", ( unsigned short ) configTIMER_TASK_STACK_DEPTH, NULL, ( ( unsigned portBASE_TYPE ) configTIMER_TASK_PRIORITY ) | portPRIVILEGE_BIT, &xTimerTaskHandle );
-os_printf("tim_task_hdl : %x\n", xTimerTaskHandle);
+os_printf("tim_task_hdl : %x, prio:%d,stack:%d\n",
+		 xTimerTaskHandle,configTIMER_TASK_PRIORITY,configTIMER_TASK_STACK_DEPTH);
 		}
 		#else
 		{
@@ -352,8 +353,8 @@ portBASE_TYPE xResult;
 	}
 
 	/* Call the timer callback. */
-	//pxTimer->pxCallbackFunction( ( xTimerHandle ) pxTimer );
-	pxTimer->pxCallbackFunction( ( void * ) (pxTimer->pvTimerID) );
+	pxTimer->pxCallbackFunction( ( xTimerHandle ) pxTimer );
+	//pxTimer->pxCallbackFunction( ( void * ) (pxTimer->pvTimerID) );
 
 }
 /*-----------------------------------------------------------*/
@@ -562,8 +563,8 @@ portTickType xTimeNow;
 				{
 					/* The timer expired before it was added to the active timer
 					list.  Process it now. */
-					//pxTimer->pxCallbackFunction( ( xTimerHandle ) pxTimer );
-					pxTimer->pxCallbackFunction( ( void * ) (pxTimer->pvTimerID) );
+					pxTimer->pxCallbackFunction( ( xTimerHandle ) pxTimer );
+					//pxTimer->pxCallbackFunction( ( void * ) (pxTimer->pvTimerID) );
 
 					if( pxTimer->uxAutoReload == ( unsigned portBASE_TYPE ) pdTRUE )
 					{
@@ -625,8 +626,8 @@ portBASE_TYPE xResult;
 		/* Execute its callback, then send a command to restart the timer if
 		it is an auto-reload timer.  It cannot be restarted here as the lists
 		have not yet been switched. */
-		//pxTimer->pxCallbackFunction( ( xTimerHandle ) pxTimer );
-		pxTimer->pxCallbackFunction( ( void * ) (pxTimer->pvTimerID) );
+		pxTimer->pxCallbackFunction( ( xTimerHandle ) pxTimer );
+		//pxTimer->pxCallbackFunction( ( void * ) (pxTimer->pvTimerID) );
 
 		if( pxTimer->uxAutoReload == ( unsigned portBASE_TYPE ) pdTRUE )
 		{

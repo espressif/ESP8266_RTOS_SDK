@@ -150,6 +150,8 @@ typedef err_t (*netif_igmp_mac_filter_fn)(struct netif *netif,
 typedef err_t (*netif_mld_mac_filter_fn)(struct netif *netif,
        ip6_addr_t *group, u8_t action);
 #endif /* LWIP_IPV6 && LWIP_IPV6_MLD */
+/*add DHCP event processing by LiuHan*/
+typedef void (*dhcp_event_fn)(void);
 
 /** Generic data structure used for all lwIP network interfaces.
  *  The following fields should be filled in by the initialization
@@ -162,6 +164,8 @@ struct netif {
   ip_addr_t ip_addr;
   ip_addr_t netmask;
   ip_addr_t gw;
+
+  ipX_addr_t link_local_addr;
 
 #if LWIP_IPV6
   /** Array of IPv6 addresses for this netif. */
@@ -208,6 +212,7 @@ struct netif {
   /** the DHCP client state information for this netif */
   struct dhcp *dhcp;
   struct udp_pcb *dhcps_pcb;	//dhcps
+  dhcp_event_fn dhcp_event;
 #endif /* LWIP_DHCP */
 #if LWIP_AUTOIP
   /** the AutoIP client state information for this netif */

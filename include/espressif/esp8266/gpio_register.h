@@ -1,5 +1,24 @@
 /*
- * copyright (c) Espressif System 2014
+ * ESPRSSIF MIT License
+ *
+ * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
+ *
+ * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
+ * it is free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
@@ -24,7 +43,7 @@
 #define GPIO_OUT_DATA_MASK                      0x0000ffff
 
 #define GPIO_ENABLE_ADDRESS                 0x0c
-#define GPIO_SDIO_SEL                      	    0x0000003f
+#define GPIO_SDIO_SEL                           0x0000003f
 #define GPIO_SDIO_SEL_S                         16
 #define GPIO_ENABLE_DATA                        0x0000ffff
 #define GPIO_ENABLE_DATA_S                      0
@@ -36,7 +55,7 @@
 #define GPIO_ENABLE_W1TC_ADDRESS            0x14
 #define GPIO_ENABLE_DATA_W1TC                   0x0000ffff
 #define GPIO_ENABLE_DATA_W1TC_S                 0
-#define GPIO_ENABLE_DATA_DATA_MASK              0x0000ffff 
+#define GPIO_ENABLE_DATA_DATA_MASK              0x0000ffff
 
 #define GPIO_IN_ADDRESS                     0x18
 #define GPIO_STRAPPING                          0x0000ffff
@@ -55,7 +74,7 @@
 #define GPIO_STATUS_W1TC_ADDRESS            0x24
 #define GPIO_STATUS_INTERRUPT_W1TC              0x0000ffff
 #define GPIO_STATUS_INTERRUPT_W1TC_S            0
-#define GPIO_STATUS_INTERRUPT_DATA_MASK         0x0000ffff 
+#define GPIO_STATUS_INTERRUPT_DATA_MASK         0x0000ffff
 
 //Region1: used for gpio config for GPIO_PIN0_ADDRESS~GPIO_PIN15_ADDRESS
 #define GPIO_ID_PIN0                        0
@@ -95,7 +114,7 @@
 #define GPIO_PIN_SOURCE_MSB                 0
 #define GPIO_PIN_SOURCE_LSB                 0
 #define GPIO_PIN_SOURCE_MASK                (0x00000001<<GPIO_PIN_SOURCE_LSB)
-#define GPIO_PIN_SOURCE_GET(x)   `          (((x) & GPIO_PIN_INT_TYPE_MASK) >> GPIO_PIN_INT_TYPE_LSB)
+#define GPIO_PIN_SOURCE_GET(x)              (((x) & GPIO_PIN_INT_TYPE_MASK) >> GPIO_PIN_INT_TYPE_LSB)
 #define GPIO_PIN_SOURCE_SET(x)              (((x) << GPIO_PIN_SOURCE_LSB) & GPIO_PIN_SOURCE_MASK)
 //end of region1
 
@@ -254,7 +273,7 @@
 #define GPIO_PIN12_DRIVER_S                     2
 #define GPIO_PIN12_SOURCE                       BIT0
 #define GPIO_PIN12_SOURCE_S                     0
-                                            
+
 #define GPIO_PIN13_ADDRESS                  0x5c
 #define GPIO_PIN13_CONFIG                       0x00000003
 #define GPIO_PIN13_CONFIG_S                     11

@@ -70,6 +70,9 @@ struct sockaddr_in {
 };
 
 #if LWIP_IPV6
+
+#define INET6_ADDRSTRLEN 46
+
 struct sockaddr_in6 {
   u8_t            sin6_len;      /* length of this structure */
   sa_family_t     sin6_family;   /* AF_INET6                 */
@@ -420,6 +423,20 @@ int lwip_fcntl(int s, int cmd, int val);
 #define close(s)              lwip_close(s)
 #define fcntl(a,b,c)          lwip_fcntl(a,b,c)
 #endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
+
+#if LWIP_IPV6
+#define inet_ntop(af,src,dst,size) \
+    (((af) == AF_INET6) ? ip6addr_ntoa_r((const ip6_addr_t *)(src),(dst),(size)) \
+     : (((af) == AF_INET) ? ipaddr_ntoa_r((const ip_addr_t *)(src),(dst),(size)) : NULL))
+#define inet_pton(af,src,dst) \
+    (((af) == AF_INET6) ? inet6_aton((src),(const ip6_addr_t *)(dst)) \
+     : (((af) == AF_INET) ? inet_aton((src),(const ip_addr_t *)(dst)) : 0))
+#else /* LWIP_IPV6 */
+#define inet_ntop(af,src,dst,size) \
+    (((af) == AF_INET) ? ipaddr_ntoa_r((src),(dst),(size)) : NULL)
+#define inet_pton(af,src,dst) \
+    (((af) == AF_INET) ? inet_aton((src),(dst)) : 0)
+#endif /* LWIP_IPV6 */
 
 #endif /* LWIP_COMPAT_SOCKETS */
 

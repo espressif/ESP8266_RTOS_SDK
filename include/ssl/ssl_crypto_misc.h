@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Cameron Rich
+ * Copyright (c) 2007-2015, Cameron Rich
  * 
  * All rights reserved.
  * 
@@ -55,6 +55,7 @@ extern "C" {
 #define X509_VFY_ERROR_INVALID_CHAIN        -7
 #define X509_VFY_ERROR_UNSUPPORTED_DIGEST   -8
 #define X509_INVALID_PRIV_KEY               -9
+#define X509_MAX_CERTS                      -10
 
 /*
  * The Distinguished Name
@@ -112,6 +113,7 @@ const char * x509_display_error(int error);
 #define ASN1_TELETEX_STR        0x14
 #define ASN1_IA5_STR            0x16
 #define ASN1_UTC_TIME           0x17
+#define ASN1_GENERALIZED_TIME   0x18
 #define ASN1_UNICODE_STR        0x1e
 #define ASN1_SEQUENCE           0x30
 #define ASN1_CONTEXT_DNSNAME	0x82
@@ -125,8 +127,11 @@ const char * x509_display_error(int error);
 #define SIG_TYPE_MD2            0x02
 #define SIG_TYPE_MD5            0x04
 #define SIG_TYPE_SHA1           0x05
+#define SIG_TYPE_SHA256         0x0b
+#define SIG_TYPE_SHA384         0x0c
+#define SIG_TYPE_SHA512         0x0d
 
-int get_asn1_length(const uint8_t *buf, int *offset);
+uint32_t get_asn1_length(const uint8_t *buf, int *offset);
 int asn1_get_private_key(const uint8_t *buf, int len, RSA_CTX **rsa_ctx);
 int asn1_next_obj(const uint8_t *buf, int *offset, int obj_type);
 int asn1_skip_obj(const uint8_t *buf, int *offset, int obj_type);
@@ -148,7 +153,7 @@ int asn1_signature_type(const uint8_t *cert,
  **************************************************************************/
 #define SALT_SIZE               8
 
-extern const char * const unsupported_str;
+extern const char unsupported_str[];
 
 typedef void (*crypt_func)(void *, const uint8_t *, uint8_t *, int);
 typedef void (*hmac_func)(const uint8_t *msg, int length, const uint8_t *key, 

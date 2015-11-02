@@ -40,10 +40,10 @@
 /* The session expiry time */
 #define SSL_EXPIRY_TIME     (CONFIG_SSL_EXPIRY_TIME*3600)
 
-static const uint8_t g_hello_request[] = { HS_HELLO_REQUEST, 0, 0, 0 };
-static const uint8_t g_chg_cipher_spec_pkt[] = { 1 };
-static const char * server_finished = "server finished";
-static const char * client_finished = "client finished";
+static const uint8_t g_hello_request[] ICACHE_RODATA_ATTR STORE_ATTR = { HS_HELLO_REQUEST, 0, 0, 0 };
+static const uint8_t g_chg_cipher_spec_pkt[] ICACHE_RODATA_ATTR STORE_ATTR = { 1 };
+static const char server_finished[] ICACHE_RODATA_ATTR STORE_ATTR = "server finished";
+static const char client_finished[] ICACHE_RODATA_ATTR STORE_ATTR = "client finished";
 
 static int do_handshake(SSL *ssl, uint8_t *buf, int read_len);
 static int set_key_block(SSL *ssl, int is_write);
@@ -61,7 +61,7 @@ const uint8_t ssl_prot_prefs[NUM_PROTOCOLS] =
 #else
 static void session_free(SSL_SESSION *ssl_sessions[], int sess_index);
 
-const uint8_t ssl_prot_prefs[NUM_PROTOCOLS] = 
+const uint8_t ssl_prot_prefs[NUM_PROTOCOLS] ICACHE_RODATA_ATTR STORE_ATTR =
 #ifdef CONFIG_SSL_PROT_LOW                  /* low security, fast speed */
 { SSL_RC4_128_SHA, SSL_AES128_SHA, SSL_AES256_SHA, SSL_RC4_128_MD5 };
 #elif CONFIG_SSL_PROT_MEDIUM                /* medium security, medium speed */
@@ -277,7 +277,7 @@ EXP_FUNC void STDCALL ICACHE_FLASH_ATTR ssl_free(SSL *ssl)
 #ifdef CONFIG_SSL_CERT_VERIFICATION
     x509_free(ssl->x509_ctx);
 #endif
-
+    free(ssl->bm_all_data);
     free(ssl);
 }
 
@@ -316,8 +316,8 @@ EXP_FUNC int STDCALL ICACHE_FLASH_ATTR ssl_write(SSL *ssl, const uint8_t *out_da
     {
         nw = n;
 
-        if (nw > RT_MAX_PLAIN_LENGTH)    /* fragment if necessary */
-            nw = RT_MAX_PLAIN_LENGTH;
+        if (nw > ssl->max_fragme_length)    /* fragment if necessary */
+            nw = ssl->max_fragme_length;
 
         if ((i = send_packet(ssl, PT_APP_PROTOCOL_DATA, 
                                             &out_data[tot], nw)) <= 0)
@@ -343,7 +343,7 @@ int ICACHE_FLASH_ATTR add_cert(SSL_CTX *ssl_ctx, const uint8_t *buf, int len)
     X509_CTX *cert = NULL;
     int offset;
 
-    while (ssl_ctx->certs[i].buf && i < CONFIG_SSL_MAX_CERTS) 
+    while (i < CONFIG_SSL_MAX_CERTS && ssl_ctx->certs[i].buf) 
         i++;
 
     if (i == CONFIG_SSL_MAX_CERTS) /* too many certs */
@@ -389,7 +389,7 @@ error:
  */
 int ICACHE_FLASH_ATTR add_cert_auth(SSL_CTX *ssl_ctx, const uint8_t *buf, int len)
 {
-    int ret = SSL_OK; /* ignore errors for now */
+    int ret = X509_OK; /* ignore errors for now */
     int i = 0;
     CA_CERT_CTX *ca_cert_ctx;
 
@@ -411,9 +411,9 @@ int ICACHE_FLASH_ATTR add_cert_auth(SSL_CTX *ssl_ctx, const uint8_t *buf, int le
                     "compile-time configuration required\n", 
                     CONFIG_X509_MAX_CA_CERTS);
 #endif
+            ret = X509_MAX_CERTS;
             break;
         }
-
 
         /* ignore the return code */
         if (x509_new(buf, &offset, &ca_cert_ctx->cert[i]) == X509_OK)
@@ -528,8 +528,11 @@ EXP_FUNC int STDCALL ICACHE_FLASH_ATTR ssl_renegotiate(SSL *ssl)
     else
 #endif
     {
+        uint8 g_hello_request_ram[4];
+        memcpy(g_hello_request_ram, g_hello_request, sizeof(g_hello_request));
+
         send_packet(ssl, PT_HANDSHAKE_PROTOCOL, 
-                g_hello_request, sizeof(g_hello_request));
+                g_hello_request_ram, sizeof(g_hello_request_ram));
         SET_SSL_FLAG(SSL_NEED_RECORD);
     }
 
@@ -564,6 +567,7 @@ static const cipher_info_t *ICACHE_FLASH_ATTR get_cipher_info(uint8_t cipher)
 SSL *ICACHE_FLASH_ATTR ssl_new(SSL_CTX *ssl_ctx, int client_fd)
 {
     SSL *ssl = (SSL *)zalloc(sizeof(SSL));
+    ssl_fragment_length_negotiation(ssl, SSL_MAX_FRAG_LEN_2048);
     ssl->ssl_ctx = ssl_ctx;
     ssl->need_bytes = SSL_RECORD_SIZE;      /* need a record */
     ssl->client_fd = client_fd;
@@ -950,7 +954,7 @@ static void *ICACHE_FLASH_ATTR crypt_new(SSL *ssl, uint8_t *key, uint8_t *iv, in
 /**
  * Send a packet over the socket.
  */
-static int send_raw_packet(SSL *ssl, uint8_t protocol)
+static int ICACHE_FLASH_ATTR send_raw_packet(SSL *ssl, uint8_t protocol)
 {
     uint8_t *rec_buf = ssl->bm_all_data;
     int pkt_size = SSL_RECORD_SIZE+ssl->bm_index;
@@ -1079,7 +1083,8 @@ int ICACHE_FLASH_ATTR send_packet(SSL *ssl, uint8_t protocol, const uint8_t *in,
             uint8_t iv_size = ssl->cipher_info->iv_size;
             uint8_t *t_buf = (uint8_t *)malloc(msg_length + iv_size);
             memcpy(t_buf + iv_size, ssl->bm_data, msg_length);
-            get_random(iv_size, t_buf);
+            if (get_random(iv_size, t_buf) < 0)
+                return SSL_NOT_OK;
             msg_length += iv_size;
             memcpy(ssl->bm_data, t_buf, msg_length);
             free(t_buf); /* add by wujg */
@@ -1174,7 +1179,13 @@ static int ICACHE_FLASH_ATTR set_key_block(SSL *ssl, int is_write)
     /* now initialise the ciphers */
     if (is_client)
     {
-        finished_digest(ssl, server_finished, ssl->dc->final_finish_mac);
+        char *server_finished_ram = (char *)zalloc(24);
+
+        system_get_string_from_flash(server_finished, server_finished_ram, 24);
+
+        finished_digest(ssl, server_finished_ram, ssl->dc->final_finish_mac);
+
+        free(server_finished_ram);
 
         if (is_write)
             ssl->encrypt_ctx = crypt_new(ssl, client_key, client_iv, 0);
@@ -1183,7 +1194,13 @@ static int ICACHE_FLASH_ATTR set_key_block(SSL *ssl, int is_write)
     }
     else
     {
-        finished_digest(ssl, client_finished, ssl->dc->final_finish_mac);
+        char *client_finished_ram = (char *)zalloc(24);
+
+        system_get_string_from_flash(client_finished, client_finished_ram, 24);
+
+        finished_digest(ssl, client_finished_ram, ssl->dc->final_finish_mac);
+
+        free(client_finished_ram);
 
         if (is_write)
             ssl->encrypt_ctx = crypt_new(ssl, server_key, server_iv, 0);
@@ -1203,6 +1220,13 @@ int ICACHE_FLASH_ATTR basic_read(SSL *ssl, uint8_t **in_data)
     int ret = SSL_OK;
     int read_len, is_client = IS_SET_SSL_FLAG(SSL_IS_CLIENT);
     uint8_t *buf = ssl->bm_data;
+
+    /* do we violate the spec with the message size?  */
+	os_printf("basic_read index %u\n", ssl->bm_read_index);
+	if (ssl->bm_read_index > ssl->max_fragme_length + RT_EXTRA) {
+		ret = SSL_ERROR_INVALID_PROT_MSG;
+		goto error;
+	}
 
     read_len = read(ssl->client_fd, &buf[ssl->bm_read_index],
                             ssl->need_bytes-ssl->got_bytes);
@@ -1274,7 +1298,7 @@ int ICACHE_FLASH_ATTR basic_read(SSL *ssl, uint8_t **in_data)
         ssl->need_bytes = (buf[3] << 8) + buf[4];
 
         /* do we violate the spec with the message size?  */
-        if (ssl->need_bytes > RT_MAX_PLAIN_LENGTH+RT_EXTRA-BM_RECORD_OFFSET)
+        if (ssl->need_bytes > ssl->max_fragme_length+RT_EXTRA-BM_RECORD_OFFSET)
         {
             ret = SSL_ERROR_INVALID_PROT_MSG;              
             goto error;
@@ -1340,25 +1364,26 @@ int ICACHE_FLASH_ATTR basic_read(SSL *ssl, uint8_t **in_data)
                 goto error;
             }
 
-            /* all encrypted from now on */
-            SET_SSL_FLAG(SSL_RX_ENCRYPTED);
             if (set_key_block(ssl, 0) < 0)
             {
                 ret = SSL_ERROR_INVALID_HANDSHAKE;
                 goto error;
             }
             
+            /* all encrypted from now on */
+            SET_SSL_FLAG(SSL_RX_ENCRYPTED);
             memset(ssl->read_sequence, 0, 8);
             break;
 
         case PT_APP_PROTOCOL_DATA:
-            if (in_data)
+            if (in_data && ssl->hs_status == SSL_OK)
             {
                 *in_data = buf;   /* point to the work buffer */
                 (*in_data)[read_len] = 0;  /* null terminate just in case */
+                ret = read_len;
             }
-
-            ret = read_len;
+            else
+                ret = SSL_ERROR_INVALID_PROT_MSG;
             break;
 
         case PT_ALERT_PROTOCOL:
@@ -1367,7 +1392,7 @@ int ICACHE_FLASH_ATTR basic_read(SSL *ssl, uint8_t **in_data)
                buf[1] == SSL_ALERT_CLOSE_NOTIFY)
             {
               ret = SSL_CLOSE_NOTIFY;
-              //send_alert(ssl, SSL_ALERT_CLOSE_NOTIFY);
+              send_alert(ssl, SSL_ALERT_CLOSE_NOTIFY);
               SET_SSL_FLAG(SSL_SENT_CLOSE_NOTIFY);
             }
             else 
@@ -1446,12 +1471,19 @@ error:
  */
 int ICACHE_FLASH_ATTR send_change_cipher_spec(SSL *ssl)
 {
+    uint8 g_chg_cipher_spec_pkt_ram[4];
+    memcpy(g_chg_cipher_spec_pkt_ram, g_chg_cipher_spec_pkt, 4);
+
     int ret = send_packet(ssl, PT_CHANGE_CIPHER_SPEC, 
-            g_chg_cipher_spec_pkt, sizeof(g_chg_cipher_spec_pkt));
-    SET_SSL_FLAG(SSL_TX_ENCRYPTED);
+            g_chg_cipher_spec_pkt_ram, sizeof(g_chg_cipher_spec_pkt));
 
     if (ret >= 0 && set_key_block(ssl, 1) < 0)
         ret = SSL_ERROR_INVALID_HANDSHAKE;
+    
+    if (ssl->cipher_info)
+        SET_SSL_FLAG(SSL_TX_ENCRYPTED);
+    if (ssl->cipher_info)
+        SET_SSL_FLAG(SSL_TX_ENCRYPTED);
 
     memset(ssl->write_sequence, 0, 8);
     return ret;
@@ -1465,10 +1497,19 @@ int ICACHE_FLASH_ATTR send_finished(SSL *ssl)
     uint8_t buf[SSL_FINISHED_HASH_SIZE+4] = {
         HS_FINISHED, 0, 0, SSL_FINISHED_HASH_SIZE };
 
+    char *client_finished_ram = (char *)zalloc(24);
+    char *server_finished_ram = (char *)zalloc(24);
+
+    system_get_string_from_flash(client_finished, client_finished_ram, 24);
+    system_get_string_from_flash(server_finished, server_finished_ram, 24);
+
     /* now add the finished digest mac (12 bytes) */
     finished_digest(ssl, 
         IS_SET_SSL_FLAG(SSL_IS_CLIENT) ?
-                    client_finished : server_finished, &buf[4]);
+                client_finished_ram : server_finished_ram, &buf[4]);
+
+    free(client_finished_ram);
+    free(server_finished_ram);
 
 #ifndef CONFIG_SSL_SKELETON_MODE
     /* store in the session cache */
@@ -1900,7 +1941,7 @@ error:
 /**
  * Debugging routine to display SSL states.
  */
-#if 0
+#if CONFIG_SSL_DISPLAY_MODE
 void ICACHE_FLASH_ATTR DISPLAY_STATE(SSL *ssl, int is_send, uint8_t state, int not_ok)
 {
     const char *str;
@@ -2197,4 +2238,49 @@ EXP_FUNC const char * STDCALL ICACHE_FLASH_ATTR ssl_get_cert_subject_alt_dnsname
 #endif  /* CONFIG_SSL_CERT_VERIFICATION */
 
 #endif /* CONFIG_BINDINGS */
+
+/**
+ * Negotiation the maximal fragment length
+ * @Parameters ssl  			The client/server context
+ * @Parameters fragmet_level 	The negotiation level of the fragment
+ * @Returns						result true or false
+*/
+bool ICACHE_FLASH_ATTR ssl_fragment_length_negotiation(SSL* ssl, int fragmet_level)
+{
+	bool nago_flag = true;
+	if (NULL == ssl)
+		return false;
+
+	switch (fragmet_level){
+		case SSL_MAX_FRAG_LEN_512:
+			ssl->max_fragme_length = 512;
+			break;
+		case SSL_MAX_FRAG_LEN_1024:
+			ssl->max_fragme_length = 1024;
+			break;
+		case SSL_MAX_FRAG_LEN_2048:
+			ssl->max_fragme_length = 2048;
+			break;
+		case SSL_MAX_FRAG_LEN_4096:
+			ssl->max_fragme_length = 4096;
+			break;
+		case SSL_MAX_FRAG_LEN_8192:
+			ssl->max_fragme_length = 8192;
+			break;
+		default:
+			nago_flag = false;
+			break;
+	}
+
+	if (nago_flag){
+		if (ssl->bm_all_data != NULL){
+			free(ssl->bm_all_data);
+			ssl->bm_all_data = NULL;
+		}
+		ssl->bm_all_data = (uint8_t*)zalloc(ssl->max_fragme_length + RT_EXTRA);
+		if (NULL == ssl->bm_all_data)
+			nago_flag = false;
+	}
+	return	nago_flag;
+}
 

@@ -1,4 +1,4 @@
-# esp_iot_rtos_sdk #
+# ESP8266_RTOS_SDK #
 
 ----------
 
@@ -6,7 +6,7 @@ ESP8266 SDK based on FreeRTOS.
    
 ## Note ##
 
-APIs of "esp_iot_rtos_sdk" are same as "esp_iot_sdk"
+APIs of "ESP8266_RTOS_SDK" are same as "ESP8266_NONOS_SDK"
 
 More details in "Wiki" !
 
@@ -18,27 +18,31 @@ For gcc, please refer to [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk)
   
 ## Compile ##
 
-Clone esp_iot_rtos_sdk, e.g., to ~/esp_iot_rtos_sdk.
+Clone ESP8266_RTOS_SDK, e.g., to ~/ESP8266_RTOS_SDK.
 
-    $git clone https://github.com/espressif/esp_iot_rtos_sdk.git
+    $git clone https://github.com/espressif/ESP8266_RTOS_SDK.git
 
-Set sdk path:
+Modify gen_misc.sh or gen_misc.bat:
+For Linux£º
 
-	$export SDK_PATH=~/esp_iot_rtos_sdk
+    $export SDK_PATH=~/ESP8266_RTOS_SDK
+    $export BIN_PATH=~/ESP8266_BIN
 
-Set bin path:
+For Windows:
 
-	$export BIN_PATH=~/esp8266_bin
+    set SDK_PATH=/c/ESP8266_RTOS_SDK
+    set BIN_PATH=/c/ESP8266_BIN
 
-Generated bins will be located here.
-
-SDK_PATH and BIN_PATH **MUST** be set firstly, you can write to .bashrc or other shell init sript.
-
-esp_iot_rtos_sdk/examples/project_template is a project template, you can copy this to anywhere, e.g., to ~/workspace/project_template.
+ESP8266_RTOS_SDK/examples/project_template is a project template, you can copy this to anywhere, e.g., to ~/workspace/project_template.
 
 Generate bin: 
-	
-	./gen_misc.sh
+For Linux:
+
+    ./gen_misc.sh
+
+For Windows:
+
+    gen_misc.bat
    
 Just follow the tips and steps.
 

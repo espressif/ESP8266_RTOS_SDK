@@ -45,7 +45,7 @@
 #define CONFIG_SSL_HAS_PEM 1
 #undef CONFIG_SSL_USE_PKCS12
 #define CONFIG_SSL_EXPIRY_TIME 24
-#define CONFIG_X509_MAX_CA_CERTS 150
+#define CONFIG_X509_MAX_CA_CERTS 3
 #define CONFIG_SSL_MAX_CERTS 3
 #undef CONFIG_SSL_CTX_MUTEXING
 #define CONFIG_USE_DEV_URANDOM 1
@@ -55,6 +55,9 @@
 #define CONFIG_SSL_TEST 1
 #undef CONFIG_AXTLSWRAP
 #define CONFIG_AXHTTPD 1
+
+/*add by LiuH for debug at 2015.06.11*/
+#define CONFIG_SSL_DISPLAY_MODE 0
 
 /*
  * Axhttpd Configuration

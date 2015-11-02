@@ -1,6 +1,17 @@
 #!/bin/bash
 
-echo "gen_misc.sh version 20150826"
+:<<!
+******NOTICE******
+MUST set SDK_PATH & BIN_PATH firstly!!!
+example:
+export SDK_PATH=~/esp_iot_sdk_freertos
+export BIN_PATH=~/esp8266_bin
+!
+
+export SDK_PATH=
+export BIN_PATH=
+
+echo "gen_misc.sh version 20150911"
 echo ""
 
 if [ $SDK_PATH ]; then
@@ -8,7 +19,7 @@ if [ $SDK_PATH ]; then
     echo "$SDK_PATH"
     echo ""
 else
-    echo "ERROR: Please export SDK_PATH firstly, exit!!!"
+    echo "ERROR: Please export SDK_PATH in gen_misc.sh firstly, exit!!!"
     exit
 fi
 
@@ -17,7 +28,7 @@ if [ $BIN_PATH ]; then
     echo "$BIN_PATH"
     echo ""
 else
-    echo "ERROR: Please export BIN_PATH firstly, exit!!!"
+    echo "ERROR: Please export BIN_PATH in gen_misc.sh firstly, exit!!!"
     exit
 fi
 

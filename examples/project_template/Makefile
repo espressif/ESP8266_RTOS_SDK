@@ -65,6 +65,7 @@ LINKFLAGS_eagle.app.v6 = \
 	-lpp	\
 	-lnet80211	\
 	-lwpa	\
+	-lcrypto    \
 	-lmain	\
 	-lfreertos	\
 	-llwip	\

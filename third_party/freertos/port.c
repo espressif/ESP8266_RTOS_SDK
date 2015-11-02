@@ -69,11 +69,13 @@
 /* Scheduler includes. */
 #include <xtensa/config/core.h>
 #include <xtensa/tie/xt_interrupt.h>
+#include <xtensa/tie/xt_timer.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/xtensa_rtos.h"
 
+#include "espressif/esp8266/ets_sys.h"
 
 extern char NMIIrqIsOn;
 static char HdlMacSig = 0;
@@ -333,6 +335,11 @@ PortEnableInt_NoNest( void )
 }
 
 /*-----------------------------------------------------------*/
+void ICACHE_FLASH_ATTR ResetCcountVal( unsigned int cnt_val )
+{
+//  XT_WSR_CCOUNT(cnt_val);
+    asm volatile("wsr a2, ccount");
+}
 
 _xt_isr_entry isr[16];
 char _xt_isr_status = 0;

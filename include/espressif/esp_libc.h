@@ -1,10 +1,33 @@
 /*
- *  Copyright (c) 2010 - 2011 Espressif System
+ * ESPRSSIF MIT License
+ *
+ * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
+ *
+ * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
+ * it is free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
 #ifndef __ESP_LIBC_H__
 #define __ESP_LIBC_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 char *strcpy(char *dst, const char *src);
 char *strncpy(char *dst, const char *src, size_t n);
@@ -50,9 +73,13 @@ unsigned long os_random(void);
 int os_get_random(unsigned char *buf, size_t len);
 
 /* NOTE: don't use printf_opt in irq handler, for test */
-#define os_printf(fmt, ...) do {	\
-	static const char flash_str[] ICACHE_RODATA_ATTR STORE_ATTR = fmt;	\
-	printf(flash_str, ##__VA_ARGS__);	\
-	} while(0)
+#define os_printf(fmt, ...) do {    \
+        static const char flash_str[] ICACHE_RODATA_ATTR STORE_ATTR = fmt;  \
+        printf(flash_str, ##__VA_ARGS__);   \
+    } while(0)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __LIBC_H__ */

@@ -1495,6 +1495,8 @@ void vTaskSetTaskNumber( xTaskHandle xTask, unsigned portBASE_TYPE uxHandle );
  */
 void vTaskStepTick( portTickType xTicksToJump );
 
+portTickType prvGetExpectedIdleTime( void );
+
 /*
  * Provided for use within portSUPPRESS_TICKS_AND_SLEEP() to allow the port
  * specific sleep function to determine if it is ok to proceed with the sleep,

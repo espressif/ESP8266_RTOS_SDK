@@ -4,26 +4,27 @@
 #define USE_DNS
 
 typedef struct dhcps_state{
-        sint16_t state;
+        s16_t state;
 } dhcps_state;
 
 // ����dhcpclient�Զ����һ��DHCP msg�ṹ��
 typedef struct dhcps_msg {
-        uint8_t op, htype, hlen, hops;
-        uint8_t xid[4];
-        uint16_t secs, flags;
-        uint8_t ciaddr[4];
-        uint8_t yiaddr[4];
-        uint8_t siaddr[4];
-        uint8_t giaddr[4];
-        uint8_t chaddr[16];
-        uint8_t sname[64];
-        uint8_t file[128];
-        uint8_t options[312];
+        u8_t op, htype, hlen, hops;
+        u8_t xid[4];
+        u16_t secs, flags;
+        u8_t ciaddr[4];
+        u8_t yiaddr[4];
+        u8_t siaddr[4];
+        u8_t giaddr[4];
+        u8_t chaddr[16];
+        u8_t sname[64];
+        u8_t file[128];
+        u8_t options[312];
 }dhcps_msg;
 
 #ifndef LWIP_OPEN_SRC
 struct dhcps_lease {
+	bool enable;
 	struct ip_addr start_ip;
 	struct ip_addr end_ip;
 };
@@ -37,8 +38,8 @@ enum dhcps_offer_option{
 
 struct dhcps_pool{
 	struct ip_addr ip;
-	uint8 mac[6];
-	uint32 lease_timer;
+	u8_t mac[6];
+	u32_t lease_timer;
 };
 
 typedef struct _list_node{
@@ -46,7 +47,8 @@ typedef struct _list_node{
 	struct _list_node *pnext;
 }list_node;
 
-#define DHCPS_LEASE_TIMER 0x05A0
+extern u32_t dhcps_lease_time;
+#define DHCPS_LEASE_TIMER  dhcps_lease_time  //0x05A0
 #define DHCPS_MAX_LEASE 0x64
 #define BOOTP_BROADCAST 0x8000
 
@@ -89,6 +91,7 @@ typedef struct _list_node{
 #define DHCPS_STATE_ACK 3
 #define DHCPS_STATE_NAK 4
 #define DHCPS_STATE_IDLE 5
+#define DHCPS_STATE_RELEASE 6
 
 #define   dhcps_router_enabled(offer)	((offer & OFFER_ROUTER) != 0)
 

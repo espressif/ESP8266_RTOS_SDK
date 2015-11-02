@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Cameron Rich
+ * Copyright (c) 2007-2014, Cameron Rich
  * 
  * All rights reserved.
  * 
@@ -77,14 +77,21 @@ EXP_FUNC int STDCALL ICACHE_FLASH_ATTR ssl_obj_load(SSL_CTX *ssl_ctx, int obj_ty
     if ((char *)strstr((const char *)ssl_obj->buf, begin) != NULL)
     {
 #ifdef CONFIG_SSL_HAS_PEM
+#if CONFIG_SSL_DISPLAY_MODE
+    	os_printf("the file is a PEM file.\n");
+#endif
         ret = ssl_obj_PEM_load(ssl_ctx, obj_type, ssl_obj, password);
 #else
         ssl_printf(unsupported_str);
         ret = SSL_ERROR_NOT_SUPPORTED;
 #endif
     }
-    else
+    else {
+#if CONFIG_SSL_DISPLAY_MODE
+    	os_printf("the file is not a PEM file.\n");
+#endif
         ret = do_obj(ssl_ctx, obj_type, ssl_obj, password);
+    }
 
 error:
     ssl_obj_free(ssl_obj);
@@ -179,7 +186,7 @@ void ICACHE_FLASH_ATTR ssl_obj_free(SSLObjLoader *ssl_obj)
 #define IS_PRIVATE_KEY              2
 #define IS_CERTIFICATE              3
 
-static const char * const begins[NUM_PEM_TYPES] =
+static const char begins[NUM_PEM_TYPES][40] ICACHE_RODATA_ATTR STORE_ATTR =
 {
     "-----BEGIN RSA PRIVATE KEY-----",
     "-----BEGIN ENCRYPTED PRIVATE KEY-----",
@@ -187,7 +194,7 @@ static const char * const begins[NUM_PEM_TYPES] =
     "-----BEGIN CERTIFICATE-----",
 };
 
-static const char * const ends[NUM_PEM_TYPES] =
+static const char ends[NUM_PEM_TYPES][40]  ICACHE_RODATA_ATTR STORE_ATTR =
 {
     "-----END RSA PRIVATE KEY-----",
     "-----END ENCRYPTED PRIVATE KEY-----",
@@ -195,7 +202,7 @@ static const char * const ends[NUM_PEM_TYPES] =
     "-----END CERTIFICATE-----",
 };
 
-static const char * const aes_str[2] =
+static const char aes_str[2][24]  ICACHE_RODATA_ATTR STORE_ATTR =
 {
     "DEK-Info: AES-128-CBC,",
     "DEK-Info: AES-256-CBC," 
@@ -225,14 +232,20 @@ static int ICACHE_FLASH_ATTR pem_decrypt(const char *where, const char *end,
         goto error;
     }
 
-    if ((start = (char *)strstr((const char *)where, aes_str[0])))         /* AES128? */
+    char *aes_str_0_ram = malloc(24);
+    char *aes_str_1_ram = malloc(24);
+
+    system_get_string_from_flash(aes_str[0], aes_str_0_ram, 24);
+    system_get_string_from_flash(aes_str[1], aes_str_1_ram, 24);
+
+    if ((start = (char *)strstr((const char *)where, aes_str_0_ram)))         /* AES128? */
     {
-        start += strlen(aes_str[0]);
+        start += strlen(aes_str_0_ram);
     }
-    else if ((start = (char *)strstr((const char *)where, aes_str[1])))    /* AES256? */
+    else if ((start = (char *)strstr((const char *)where, aes_str_1_ram)))    /* AES256? */
     {
         is_aes_256 = 1;
-        start += strlen(aes_str[1]);
+        start += strlen(aes_str_1_ram);
     }
     else 
     {
@@ -281,6 +294,8 @@ static int ICACHE_FLASH_ATTR pem_decrypt(const char *where, const char *end,
     ret = 0;
 
 error:
+    free(aes_str_0_ram);
+    free(aes_str_1_ram);
     return ret; 
 }
 
@@ -292,6 +307,8 @@ static int ICACHE_FLASH_ATTR new_pem_obj(SSL_CTX *ssl_ctx, int is_cacert, char *
 {
     int ret = SSL_ERROR_BAD_CERTIFICATE;
     SSLObjLoader *ssl_obj = NULL;
+    char *begins_ram = malloc(40);
+    char *ends_ram = malloc(40);
 
     while (remain > 0)
     {
@@ -300,11 +317,13 @@ static int ICACHE_FLASH_ATTR new_pem_obj(SSL_CTX *ssl_ctx, int is_cacert, char *
 
         for (i = 0; i < NUM_PEM_TYPES; i++)
         {
-            if ((start = (char *)strstr(where, begins[i])) &&
-                    (end = (char *)strstr(where, ends[i])))
+            system_get_string_from_flash(begins[i], begins_ram, 40);
+            system_get_string_from_flash(ends[i], ends_ram, 40);
+            if ((start = (char *)strstr(where, begins_ram)) &&
+                    (end = (char *)strstr(where, ends_ram)))
             {
                 remain -= (int)(end-where);
-                start += strlen(begins[i]);
+                start += strlen(begins_ram);
                 pem_size = (int)(end-start);
 
                 ssl_obj = (SSLObjLoader *)zalloc(sizeof(SSLObjLoader));
@@ -360,8 +379,8 @@ static int ICACHE_FLASH_ATTR new_pem_obj(SSL_CTX *ssl_ctx, int is_cacert, char *
                 if ((ret = do_obj(ssl_ctx, obj_type, ssl_obj, password)))
                     goto error;
 
-                end += strlen(ends[i]);
-                remain -= strlen(ends[i]);
+                end += strlen(ends_ram);
+                remain -= strlen(ends_ram);
                 while (remain > 0 && (*end == '\r' || *end == '\n'))
                 {
                     end++;
@@ -379,6 +398,8 @@ static int ICACHE_FLASH_ATTR new_pem_obj(SSL_CTX *ssl_ctx, int is_cacert, char *
            break;
     }
 error:
+    free(begins_ram);
+	free(ends_ram);
     ssl_obj_free(ssl_obj);
     return ret;
 }
@@ -434,10 +455,14 @@ int ICACHE_FLASH_ATTR load_key_certs(SSL_CTX *ssl_ctx)
  //       static const    /* saves a few more bytes */
 //#include "private_key.h"
 		
-		extern unsigned int default_private_key_len;
-		extern unsigned char default_private_key[];
-        ssl_obj_memory_load(ssl_ctx, SSL_OBJ_RSA_KEY, default_private_key,
-                default_private_key_len, NULL); 
+		extern unsigned int def_private_key_len;
+		extern unsigned char *def_private_key;
+		if (def_private_key == NULL){
+			ret = SSL_NOT_OK;
+			goto error;
+		}
+        ssl_obj_memory_load(ssl_ctx, SSL_OBJ_RSA_KEY, def_private_key,
+        		def_private_key_len, NULL);       
 #endif
     }
 
@@ -463,10 +488,14 @@ int ICACHE_FLASH_ATTR load_key_certs(SSL_CTX *ssl_ctx)
 #if defined(CONFIG_SSL_USE_DEFAULT_KEY) || defined(CONFIG_SSL_SKELETON_MODE)
 //        static const    /* saves a few bytes and RAM */
 //#include "cert.h"
-		extern unsigned char default_certificate[];
-		extern unsigned int default_certificate_len;
+		extern unsigned char *def_certificate;
+		extern unsigned int def_certificate_len;
+		if (def_certificate == NULL){
+			ret = SSL_NOT_OK;
+			goto error;
+		}
         ssl_obj_memory_load(ssl_ctx, SSL_OBJ_X509_CERT, 
-                    default_certificate, default_certificate_len, NULL);
+        		def_certificate, def_certificate_len, NULL);
 #endif
     }
 #endif
@@ -482,3 +511,111 @@ error:
     return ret;
 
 }
+
+/********************************start issue by espressif.com********************************/
+typedef struct _extension_head{
+	char name[32];
+	uint16_t length;
+}extension_head;
+
+typedef struct _extension_info{
+	extension_head head;
+	int32 offerset;
+}extension_info;
+
+static int ssl_read_file(const char* file_name, uint8_t **buf, uint32 flash_sector)
+{
+	int32 offerset = 0;
+	int   file_size = 0;
+	extension_info *extension_option = NULL;
+	uint32 start_addr = flash_sector * 4096;
+	extension_option = (extension_info *)zalloc(sizeof(extension_info));
+	if (!extension_option)
+		return -1;
+
+	do {
+		spi_flash_read(start_addr + offerset, (uint32 *)&extension_option->head,	sizeof(extension_head));
+
+#if CONFIG_SSL_DISPLAY_MODE
+		printf("name[%s], length[%d]\n", extension_option->head.name,extension_option->head.length);
+#endif
+		if (extension_option->head.length > system_get_free_heap_size())
+			break;
+
+		offerset += sizeof(extension_head);
+		if (strcmp(file_name, extension_option->head.name) == 0) {
+			*buf = (uint8_t *) zalloc(extension_option->head.length);
+			if (*buf != NULL){
+				spi_flash_read(start_addr + offerset, (uint32 *)*buf, extension_option->head.length);
+				file_size = extension_option->head.length;
+			}
+			break;
+		}
+		offerset += extension_option->head.length;
+	} while (extension_option->head.length < system_get_free_heap_size());
+
+	free(extension_option);
+	extension_option = NULL;
+	return file_size;
+}
+/**
+ * Load the information depending on user options.
+ * @Parameters ssl_ctx  	The client/server context
+ * @Parameters obj_type 	The format of the load data
+ * @Parameters file_name	The location of a file in DER/PEM format.
+ * @Parameters password 	The password used. Can be null if not required.
+ * @Parameters flash_sector	The sector about the information in the flash
+ * @Returns					result true or false
+*/
+int ICACHE_FLASH_ATTR ssl_obj_option_load(SSL_CTX *ssl_ctx, int obj_type, const char* file_name, const char* password, uint32 flash_sector)
+{
+#ifndef CONFIG_SSL_SKELETON_MODE
+    static const char * const begin = "-----BEGIN";
+    int ret = SSL_OK;
+    SSLObjLoader *ssl_obj = NULL;
+
+    if (!file_name)
+    {
+        ret = SSL_ERROR_INVALID_KEY;
+        goto error;
+    }
+
+    ssl_obj = (SSLObjLoader *)zalloc(sizeof(SSLObjLoader));
+    ssl_obj->len = ssl_read_file(file_name, &ssl_obj->buf, flash_sector);
+    if (ssl_obj->len <= 0)
+    {
+        ret = SSL_ERROR_INVALID_KEY;
+        goto error;
+    }
+
+    /* is the file a PEM file? */
+    if ((char *)strstr((const char *)ssl_obj->buf, begin) != NULL)
+    {
+#ifdef CONFIG_SSL_HAS_PEM
+#if CONFIG_SSL_DISPLAY_MODE
+    	os_printf("the file is a PEM file.\n");
+#endif
+        ret = ssl_obj_PEM_load(ssl_ctx, obj_type, ssl_obj, password);
+#else
+        ssl_printf(unsupported_str);
+        ret = SSL_ERROR_NOT_SUPPORTED;
+#endif
+    }
+    else {
+#if CONFIG_SSL_DISPLAY_MODE
+    	os_printf("the file is not a PEM file.\n");
+#endif
+        ret = do_obj(ssl_ctx, obj_type, ssl_obj, password);
+    }
+
+error:
+    ssl_obj_free(ssl_obj);
+    return ret;
+#else
+    ssl_printf(unsupported_str);
+    return SSL_ERROR_NOT_SUPPORTED;
+#endif /* CONFIG_SSL_SKELETON_MODE */
+
+}
+
+/****************************end issue by espressif.com*********************************/

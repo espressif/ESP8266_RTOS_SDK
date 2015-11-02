@@ -31,7 +31,7 @@
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_ssl.h"
 
-static const uint8_t g_hello_done[] = { HS_SERVER_HELLO_DONE, 0, 0, 0 };
+static const uint8_t g_hello_done[] ICACHE_RODATA_ATTR STORE_ATTR = { HS_SERVER_HELLO_DONE, 0, 0, 0 };
 
 static int process_client_hello(SSL *ssl);
 static int send_server_hello_sequence(SSL *ssl);
@@ -115,7 +115,6 @@ int ICACHE_FLASH_ATTR do_svr_handshake(SSL *ssl, int handshake_type, uint8_t *bu
 static int ICACHE_FLASH_ATTR process_client_hello(SSL *ssl)
 {
     uint8_t *buf = ssl->bm_data;
-    uint8_t *record_buf = ssl->hmac_header;
     int pkt_size = ssl->bm_index;
     int i, j, cs_len, id_len, offset = 6 + SSL_RANDOM_SIZE;
     int ret = SSL_OK;
@@ -151,7 +150,7 @@ static int ICACHE_FLASH_ATTR process_client_hello(SSL *ssl)
 
     offset += id_len;
     cs_len = (buf[offset]<<8) + buf[offset+1];
-    offset += 2;        /* add 1 due to all cipher suites being 8 bit */
+    offset += 3;        /* add 1 due to all cipher suites being 8 bit */
 
     PARANOIA_CHECK(pkt_size, offset);
 
@@ -161,9 +160,9 @@ static int ICACHE_FLASH_ATTR process_client_hello(SSL *ssl)
     {
         for (j = 0; j < NUM_PROTOCOLS; j++)
         {
-            if (ssl_prot_prefs[j] == ((buf[offset+i]<<8) + buf[offset+i+1]))   /* got a match? */
+            if (system_get_data_of_array_8(ssl_prot_prefs, j) == ((buf[offset+i]<<8) + buf[offset+i+1]))   /* got a match? */
             {
-                ssl->cipher = ssl_prot_prefs[j];
+                ssl->cipher = system_get_data_of_array_8(ssl_prot_prefs, j);
                 goto do_state;
             }
         }
@@ -197,13 +196,13 @@ int process_sslv23_client_hello(SSL *ssl)
 
     DISPLAY_BYTES(ssl, "received %d bytes", buf, read_len, read_len);
     
-    add_packet(ssl, buf, read_len);
-
     /* connection has gone, so die */
-    if (bytes_needed < 0)
+    if (read_len < 0)
     {
         return SSL_ERROR_CONN_LOST;
     }
+
+    add_packet(ssl, buf, read_len);
 
     /* now work out what cipher suite we are going to use */
     for (j = 0; j < NUM_PROTOCOLS; j++)
@@ -309,7 +308,8 @@ static int ICACHE_FLASH_ATTR send_server_hello(SSL *ssl)
     buf[5] = ssl->version & 0x0f;
 
     /* server random value */
-    get_random(SSL_RANDOM_SIZE, &buf[6]);
+    if (get_random(SSL_RANDOM_SIZE, &buf[6]) < 0)
+        return SSL_NOT_OK;
     memcpy(ssl->dc->server_random, &buf[6], SSL_RANDOM_SIZE);
     offset = 6 + SSL_RANDOM_SIZE;
 
@@ -357,8 +357,12 @@ static int ICACHE_FLASH_ATTR send_server_hello(SSL *ssl)
  */
 static int ICACHE_FLASH_ATTR send_server_hello_done(SSL *ssl)
 {
+    uint8_t g_hello_done_ram[4];
+
+    memcpy(g_hello_done_ram, g_hello_done, sizeof(g_hello_done));
+
     return send_packet(ssl, PT_HANDSHAKE_PROTOCOL, 
-                            g_hello_done, sizeof(g_hello_done));
+            g_hello_done_ram, sizeof(g_hello_done));
 }
 
 /*
@@ -390,7 +394,8 @@ static int ICACHE_FLASH_ATTR process_client_key_xchg(SSL *ssl)
 
     /* rsa_ctx->bi_ctx is not thread-safe */
     SSL_CTX_LOCK(ssl->ssl_ctx->mutex);
-    premaster_size = RSA_decrypt(rsa_ctx, &buf[offset], premaster_secret, 1);
+    premaster_size = RSA_decrypt(rsa_ctx, &buf[offset], premaster_secret,
+            sizeof(premaster_secret), 1);
     SSL_CTX_UNLOCK(ssl->ssl_ctx->mutex);
 
     if (premaster_size != SSL_SECRET_SIZE || 
@@ -399,7 +404,9 @@ static int ICACHE_FLASH_ATTR process_client_key_xchg(SSL *ssl)
                 premaster_secret[1] != (ssl->client_version & 0x0f))
     {
         /* guard against a Bleichenbacher attack */
-        get_random(SSL_SECRET_SIZE, premaster_secret);
+        if (get_random(SSL_SECRET_SIZE, premaster_secret) < 0)
+            return SSL_NOT_OK;
+
         /* and continue - will die eventually when checking the mac */
     }
 
@@ -422,15 +429,19 @@ error:
 }
 
 #ifdef CONFIG_SSL_CERT_VERIFICATION
-static const uint8_t g_cert_request[] = { HS_CERT_REQ, 0, 0, 4, 1, 0, 0, 0 };
+static const uint8_t g_cert_request[] ICACHE_RODATA_ATTR STORE_ATTR = { HS_CERT_REQ, 0, 0, 4, 1, 0, 0, 0 };
 
 /*
  * Send the certificate request message.
  */
 static int ICACHE_FLASH_ATTR send_certificate_request(SSL *ssl)
 {
+    uint8_t g_cert_request_ram[8];
+
+    memcpy(g_cert_request_ram, g_cert_request, sizeof(g_cert_request));
+
     return send_packet(ssl, PT_HANDSHAKE_PROTOCOL, 
-            g_cert_request, sizeof(g_cert_request));
+            g_cert_request_ram, sizeof(g_cert_request));
 }
 
 /*
@@ -452,7 +463,7 @@ static int ICACHE_FLASH_ATTR process_cert_verify(SSL *ssl)
 
     /* rsa_ctx->bi_ctx is not thread-safe */
     SSL_CTX_LOCK(ssl->ssl_ctx->mutex);
-    n = RSA_decrypt(x509_ctx->rsa_ctx, &buf[6], dgst_buf, 0);
+    n = RSA_decrypt(x509_ctx->rsa_ctx, &buf[6], dgst_buf, sizeof(dgst_buf), 0);
     SSL_CTX_UNLOCK(ssl->ssl_ctx->mutex);
 
     if (n != SHA1_SIZE + MD5_SIZE)

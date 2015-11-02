@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Cameron Rich
+ * Copyright (c) 2007-2014, Cameron Rich
  * 
  * All rights reserved.
  * 
@@ -165,7 +165,13 @@ static int ICACHE_FLASH_ATTR gen_issuer(const char * dn[], uint8_t *buf, int *of
         gethostname(fqdn, sizeof(fqdn));
         fqdn_len = strlen(fqdn);
         fqdn[fqdn_len++] = '.';
-        getdomainname(&fqdn[fqdn_len], sizeof(fqdn)-fqdn_len);
+
+        if (getdomainname(&fqdn[fqdn_len], sizeof(fqdn)-fqdn_len) < 0)
+        {
+            ret = X509_NOT_OK;
+            goto error;
+        }
+
         fqdn_len = strlen(fqdn);
 
         if (fqdn[fqdn_len-1] == '.')    /* ensure '.' is not last char */

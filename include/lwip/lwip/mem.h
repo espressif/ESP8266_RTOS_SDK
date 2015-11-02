@@ -33,7 +33,6 @@
 #define __LWIP_MEM_H__
 
 #include "lwip/opt.h"
-#include "freertos/FreeRTOS.h"
 
 #ifdef __cplusplus
 extern "C" {

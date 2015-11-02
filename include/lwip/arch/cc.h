@@ -47,12 +47,6 @@
 #define BYTE_ORDER BIG_ENDIAN
 #endif
 
-typedef unsigned   char    u8_t;
-typedef signed     char    s8_t;
-typedef unsigned   short   u16_t;
-typedef signed     short   s16_t;
-typedef unsigned   long    u32_t;
-typedef signed     long    s32_t;
 typedef unsigned long   mem_ptr_t;
 typedef int sys_prot_t;
 
@@ -72,14 +66,16 @@ typedef int sys_prot_t;
 
 //#define LWIP_DEBUG
 
-#ifdef LWIP_DEBUG
 #include <stdio.h>
 
-#define os_printf(fmt, ...) do {	\
-	static const char flash_str[] ICACHE_RODATA_ATTR STORE_ATTR = fmt;	\
-	printf(flash_str, ##__VA_ARGS__);	\
-	} while(0)
+#ifndef os_printf
+#define os_printf(fmt, ...) do {    \
+    static const char flash_str[] ICACHE_RODATA_ATTR STORE_ATTR = fmt;  \
+    printf(flash_str, ##__VA_ARGS__);   \
+    } while(0)
+#endif
 
+#ifdef LWIP_DEBUG
 #define LWIP_PLATFORM_DIAG(x)   do {os_printf x;} while(0)
 #define LWIP_PLATFORM_ASSERT(x) do {os_printf(x); sys_arch_assert(__FILE__, __LINE__);} while(0)
 #else

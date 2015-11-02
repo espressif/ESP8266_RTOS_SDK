@@ -471,8 +471,8 @@ static tskTCB *prvAllocateTCBAndStack( unsigned short usStackDepth, portSTACK_TY
  */
 #if ( configUSE_TICKLESS_IDLE != 0 )
 
-	static portTickType prvGetExpectedIdleTime( void ) PRIVILEGED_FUNCTION;
-
+	//static portTickType prvGetExpectedIdleTime( void ) PRIVILEGED_FUNCTION;
+ 	//portTickType ICACHE_FLASH_ATTR prvGetExpectedIdleTime( void ) PRIVILEGED_FUNCTION;
 #endif
 
 signed portBASE_TYPE ICACHE_FLASH_ATTR
@@ -1241,7 +1241,7 @@ portBASE_TYPE xReturn;
 		/* Create the idle task, storing its handle in xIdleTaskHandle so it can
 		be returned by the xTaskGetIdleTaskHandle() function. */
 		xReturn = xTaskCreate( prvIdleTask, ( signed char * ) "IDLE", tskIDLE_STACK_SIZE, ( void * ) NULL, ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), &xIdleTaskHandle ); /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
-os_printf("idle_task_hdl : %x\n", xIdleTaskHandle);
+os_printf("idle_task_hdl : %x,prio:%d, stack:%d\n", xIdleTaskHandle,tskIDLE_PRIORITY,tskIDLE_STACK_SIZE);
 	}
 	#else
 	{
@@ -1270,7 +1270,7 @@ os_printf("idle_task_hdl : %x\n", xIdleTaskHandle);
 		STEPPING THROUGH HERE USING A DEBUGGER CAN CAUSE BIG PROBLEMS IF THE
 		DEBUGGER ALLOWS INTERRUPTS TO BE PROCESSED. */
 		//portDISABLE_INTERRUPTS();
-PortDisableInt_NoNest();
+//PortDisableInt_NoNest();
 
 		xSchedulerRunning = pdTRUE;
 		xTickCount = ( portTickType ) 0U;
@@ -1327,8 +1327,8 @@ vTaskSuspendAll( void )
 
 #if ( configUSE_TICKLESS_IDLE != 0 )
 
-	static portTickType ICACHE_FLASH_ATTR
-	prvGetExpectedIdleTime( void )
+	//static portTickType ICACHE_FLASH_ATTR
+	portTickType ICACHE_FLASH_ATTR prvGetExpectedIdleTime( void )
 	{
 	portTickType xReturn;
 
@@ -2199,7 +2199,9 @@ portTASK_FUNCTION( prvIdleTask, pvParameters )
 		to 1.  This is to ensure portSUPPRESS_TICKS_AND_SLEEP() is called when
 		user defined low power mode	implementations require
 		configUSE_TICKLESS_IDLE to be set to a value other than 1. */
-		#if ( configUSE_TICKLESS_IDLE != 0 )
+
+		//#if ( configUSE_TICKLESS_IDLE != 0 )
+		#if 0
 		{
 		portTickType xExpectedIdleTime;
 

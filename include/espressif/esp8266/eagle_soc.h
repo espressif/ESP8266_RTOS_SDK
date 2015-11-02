@@ -1,5 +1,24 @@
 /*
- *  Copyright (c) Espressif System 2010 - 2012
+ * ESPRSSIF MIT License
+ *
+ * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
+ *
+ * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
+ * it is free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
@@ -43,21 +62,21 @@
 
 //Registers Operation {{
 #define ETS_UNCACHED_ADDR(addr) (addr)
-#define ETS_CACHED_ADDR(addr) (addr)
+#define ETS_CACHED_ADDR(addr)   (addr)
 
-#define READ_PERI_REG(addr)                        (*((volatile uint32_t *)ETS_UNCACHED_ADDR(addr)))
-#define WRITE_PERI_REG(addr, val)                  (*((volatile uint32_t *)ETS_UNCACHED_ADDR(addr))) = (uint32_t)(val)
-#define CLEAR_PERI_REG_MASK(reg, mask)             WRITE_PERI_REG((reg), (READ_PERI_REG(reg)&(~(mask))))
-#define SET_PERI_REG_MASK(reg, mask)               WRITE_PERI_REG((reg), (READ_PERI_REG(reg)|(mask)))
-#define GET_PERI_REG_BITS(reg, hipos,lowpos)       ((READ_PERI_REG(reg)>>(lowpos))&((1<<((hipos)-(lowpos)+1))-1))
-#define SET_PERI_REG_BITS(reg,bit_map,value,shift) (WRITE_PERI_REG((reg),(READ_PERI_REG(reg)&(~((bit_map)<<(shift))))|((value)<<(shift)) ))
+#define READ_PERI_REG(addr)                             (*((volatile uint32 *)ETS_UNCACHED_ADDR(addr)))
+#define WRITE_PERI_REG(addr, val)                       (*((volatile uint32 *)ETS_UNCACHED_ADDR(addr))) = (uint32)(val)
+#define CLEAR_PERI_REG_MASK(reg, mask)                  WRITE_PERI_REG((reg), (READ_PERI_REG(reg) & (~(mask))))
+#define SET_PERI_REG_MASK(reg, mask)                    WRITE_PERI_REG((reg), (READ_PERI_REG(reg) | (mask)))
+#define GET_PERI_REG_BITS(reg, hipos, lowpos)           ((READ_PERI_REG(reg) >> (lowpos)) & ((1 << ((hipos) - (lowpos) + 1)) - 1))
+#define SET_PERI_REG_BITS(reg, bit_map, value, shift)   (WRITE_PERI_REG((reg), (READ_PERI_REG(reg) & (~((bit_map) << (shift)))) | ((value) << (shift)) ))
 //}}
 
 //Periheral Clock {{
-#define CPU_CLK_FREQ                80*1000000       // unit: Hz
+#define CPU_CLK_FREQ                80 * 1000000       // unit: Hz
 #define APB_CLK_FREQ                CPU_CLK_FREQ
 #define UART_CLK_FREQ               APB_CLK_FREQ
-#define TIMER_CLK_FREQ              (APB_CLK_FREQ>>8) // divided by 256
+#define TIMER_CLK_FREQ              (APB_CLK_FREQ >> 8) // divided by 256
 //}}
 
 //Peripheral device base address define{{
@@ -81,7 +100,7 @@
 //}}
 
 //Interrupt remap control registers define{{
-#define EDGE_INT_ENABLE_REG         (PERIPHS_DPORT_BASEADDR+0x04)
+#define EDGE_INT_ENABLE_REG         (PERIPHS_DPORT_BASEADDR + 0x04)
 #define TM1_EDGE_INT_ENABLE()       SET_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT1)
 #define TM1_EDGE_INT_DISABLE()      CLEAR_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT1)
 //}}

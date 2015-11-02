@@ -73,7 +73,7 @@ typedef int32_t slong_comp;     /**< A signed double precision component. */
 #define COMP_NUM_NIBBLES    8   /**< Used For diagnostics only. */
 typedef uint32_t comp;	        /**< A single precision component. */
 typedef uint64_t long_comp;     /**< A double precision component. */
-typedef sint64_t slong_comp;     /**< A signed double precision component. */
+typedef int64_t slong_comp;     /**< A signed double precision component. */
 #endif
 
 /**

@@ -76,7 +76,7 @@ extern "C" {
 #define IS_SET_SSL_FLAG(A)          (ssl->flag & A)
 
 #define MAX_KEY_BYTE_SIZE           512     /* for a 4096 bit key */
-#define RT_MAX_PLAIN_LENGTH         1024
+#define RT_MAX_PLAIN_LENGTH         1460
 #define RT_EXTRA                    1024
 #define BM_RECORD_OFFSET            5
 
@@ -88,6 +88,17 @@ extern "C" {
 
 #define PARANOIA_CHECK(A, B)        if (A < B) { \
     ret = SSL_ERROR_INVALID_HANDSHAKE; goto error; }
+
+/*Max Fragment Length Negotiation*/
+enum {
+	SSL_MAX_FRAG_LEN_NONE,
+	SSL_MAX_FRAG_LEN_512,
+	SSL_MAX_FRAG_LEN_1024,
+	SSL_MAX_FRAG_LEN_2048,
+	SSL_MAX_FRAG_LEN_4096,
+	SSL_MAX_FRAG_LEN_8192,
+	SSL_MAX_FRAG_LEN_INVALID
+};
 
 /* protocol types */
 enum
@@ -169,14 +180,15 @@ struct _SSL
     uint8_t sess_id_size;
     uint8_t version;
     uint8_t client_version;
-    sint16_t next_state;
-    sint16_t hs_status;
+    int16_t next_state;
+    int16_t hs_status;
     DISPOSABLE_CTX *dc;         /* temporary data which we'll get rid of soon */
     int client_fd;
     const cipher_info_t *cipher_info;
     void *encrypt_ctx;
     void *decrypt_ctx;
-    uint8_t bm_all_data[RT_MAX_PLAIN_LENGTH+RT_EXTRA];
+    uint8_t *bm_all_data;
+    uint32_t max_fragme_length;
     uint8_t *bm_data;
     uint16_t bm_index;
     uint16_t bm_read_index;
@@ -219,9 +231,9 @@ struct _SSL_CTX
 #ifdef CONFIG_SSL_CTX_MUTEXING
     SSL_CTX_MUTEX_TYPE mutex;
 #endif
-#ifdef CONFIG_OPENSSL_COMPATIBLE
+//#ifdef CONFIG_OPENSSL_COMPATIBLE
     void *bonus_attr;
-#endif
+//#endif
 };
 
 typedef struct _SSL_CTX SSL_CTX;
@@ -290,6 +302,9 @@ SSL_SESSION *ssl_session_update(int max_sessions,
         SSL_SESSION *ssl_sessions[], SSL *ssl,
         const uint8_t *session_id);
 void kill_ssl_session(SSL_SESSION **ssl_sessions, SSL *ssl);
+
+/*Max Fragment Length Negotiation*/
+bool ssl_fragment_length_negotiation(SSL* ssl, int fragmet_level);
 
 #ifdef __cplusplus
 }

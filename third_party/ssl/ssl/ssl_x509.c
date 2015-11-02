@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Cameron Rich
+ * Copyright (c) 2007-2015, Cameron Rich
  * 
  * All rights reserved.
  * 
@@ -118,33 +118,63 @@ int ICACHE_FLASH_ATTR x509_new(const uint8_t *cert, int *len, X509_CTX **ctx)
 
     bi_ctx = x509_ctx->rsa_ctx->bi_ctx;
 #ifdef CONFIG_SSL_CERT_VERIFICATION /* only care if doing verification */
-    /* use the appropriate signature algorithm (SHA1/MD5/MD2) */
-    if (x509_ctx->sig_type == SIG_TYPE_MD5)
+    /* use the appropriate signature algorithm */
+    switch (x509_ctx->sig_type)
     {
-        MD5_CTX md5_ctx;
-        uint8_t md5_dgst[MD5_SIZE];
-        MD5_Init(&md5_ctx);
-        MD5_Update(&md5_ctx, &cert[begin_tbs], end_tbs-begin_tbs);
-        MD5_Final(md5_dgst, &md5_ctx);
-        x509_ctx->digest = bi_import(bi_ctx, md5_dgst, MD5_SIZE);
-    }
-    else if (x509_ctx->sig_type == SIG_TYPE_SHA1)
-    {
-        SHA1_CTX sha_ctx;
-        uint8_t sha_dgst[SHA1_SIZE];
-        SHA1_Init(&sha_ctx);
-        SHA1_Update(&sha_ctx, &cert[begin_tbs], end_tbs-begin_tbs);
-        SHA1_Final(sha_dgst, &sha_ctx);
-        x509_ctx->digest = bi_import(bi_ctx, sha_dgst, SHA1_SIZE);
-    }
-    else if (x509_ctx->sig_type == SIG_TYPE_MD2)
-    {
-        MD2_CTX md2_ctx;
-        uint8_t md2_dgst[MD2_SIZE];
-        MD2_Init(&md2_ctx);
-        MD2_Update(&md2_ctx, &cert[begin_tbs], end_tbs-begin_tbs);
-        MD2_Final(md2_dgst, &md2_ctx);
-        x509_ctx->digest = bi_import(bi_ctx, md2_dgst, MD2_SIZE);
+        case SIG_TYPE_MD5:
+        {
+            MD5_CTX md5_ctx;
+            uint8_t md5_dgst[MD5_SIZE];
+            MD5_Init(&md5_ctx);
+            MD5_Update(&md5_ctx, &cert[begin_tbs], end_tbs-begin_tbs);
+            MD5_Final(md5_dgst, &md5_ctx);
+            x509_ctx->digest = bi_import(bi_ctx, md5_dgst, MD5_SIZE);
+        }
+            break;
+
+        case SIG_TYPE_SHA1:
+        {
+            SHA1_CTX sha_ctx;
+            uint8_t sha_dgst[SHA1_SIZE];
+            SHA1_Init(&sha_ctx);
+            SHA1_Update(&sha_ctx, &cert[begin_tbs], end_tbs-begin_tbs);
+            SHA1_Final(sha_dgst, &sha_ctx);
+            x509_ctx->digest = bi_import(bi_ctx, sha_dgst, SHA1_SIZE);
+        }
+            break;
+
+        case SIG_TYPE_SHA256:
+        {
+            SHA256_CTX sha256_ctx;
+            uint8_t sha256_dgst[SHA256_SIZE];
+            SHA256_Init(&sha256_ctx);
+            SHA256_Update(&sha256_ctx, &cert[begin_tbs], end_tbs-begin_tbs);
+            SHA256_Final(sha256_dgst, &sha256_ctx);
+            x509_ctx->digest = bi_import(bi_ctx, sha256_dgst, SHA256_SIZE);
+        }
+            break;
+
+        case SIG_TYPE_SHA384:
+        {
+            SHA384_CTX sha384_ctx;
+            uint8_t sha384_dgst[SHA384_SIZE];
+            SHA384_Init(&sha384_ctx);
+            SHA384_Update(&sha384_ctx, &cert[begin_tbs], end_tbs-begin_tbs);
+            SHA384_Final(sha384_dgst, &sha384_ctx);
+            x509_ctx->digest = bi_import(bi_ctx, sha384_dgst, SHA384_SIZE);
+        }
+            break;
+
+        case SIG_TYPE_SHA512:
+        {
+            SHA512_CTX sha512_ctx;
+            uint8_t sha512_dgst[SHA512_SIZE];
+            SHA512_Init(&sha512_ctx);
+            SHA512_Update(&sha512_ctx, &cert[begin_tbs], end_tbs-begin_tbs);
+            SHA512_Final(sha512_dgst, &sha512_ctx);
+            x509_ctx->digest = bi_import(bi_ctx, sha512_dgst, SHA512_SIZE);
+        }
+            break;
     }
 
     if (cert[offset] == ASN1_V3_DATA)
@@ -335,14 +365,19 @@ int ICACHE_FLASH_ATTR x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX
        to check the signature */
     if (asn1_compare_dn(cert->ca_cert_dn, cert->cert_dn) == 0)
     {
+#if CONFIG_SSL_DISPLAY_MODE
+    	os_printf("a self-signed certificate that is not in the CA store\n");
+#endif
         is_self_signed = 1;
         ctx = cert->rsa_ctx->bi_ctx;
         mod = cert->rsa_ctx->m;
         expn = cert->rsa_ctx->e;
     }
 
-//    gettimeofday(&tv, NULL);
-
+    gettimeofday(&tv, &cert->not_before);
+#if CONFIG_SSL_DISPLAY_MODE
+    os_printf("before %u, tv_sec %u, after %u\n",cert->not_before, tv.tv_sec, cert->not_after);
+#endif
     /* check the not before date */
     if (tv.tv_sec < cert->not_before)
     {
@@ -364,6 +399,9 @@ int ICACHE_FLASH_ATTR x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX
     {
        if (ca_cert_ctx != NULL) 
        {
+#if CONFIG_SSL_DISPLAY_MODE
+    	   os_printf("look for a trusted cert\n");
+#endif
             /* go thu the CA store */
             while (i < CONFIG_X509_MAX_CA_CERTS && ca_cert_ctx->cert[i])
             {
@@ -371,6 +409,9 @@ int ICACHE_FLASH_ATTR x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX
                                             ca_cert_ctx->cert[i]->cert_dn) == 0)
                 {
                     /* use this CA certificate for signature verification */
+#if CONFIG_SSL_DISPLAY_MODE
+                	os_printf("use the CA certificate for signature verification\n");
+#endif
                     match_ca_cert = 1;
                     ctx = ca_cert_ctx->cert[i]->rsa_ctx->bi_ctx;
                     mod = ca_cert_ctx->cert[i]->rsa_ctx->m;
@@ -419,13 +460,18 @@ int ICACHE_FLASH_ATTR x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX
         if (bi_compare(cert_sig, cert->digest) != 0)
             ret = X509_VFY_ERROR_BAD_SIGNATURE;
 
-
-        bi_free(ctx, cert_sig);
+#if CONFIG_SSL_DISPLAY_MODE
+        os_printf("check the signature ok\n");
+#endif
+//        bi_free(ctx, cert_sig);//comment the line for check signature by LiuH at 20150.06.11
     }
     else
     {
         ret = X509_VFY_ERROR_BAD_SIGNATURE;
     }
+
+    if (cert_sig != NULL)
+    	bi_free(ctx, cert_sig);//add the line for check signature by LiuH at 2015.06.11
 
     if (ret)
         goto end_verify;
@@ -483,14 +529,23 @@ void ICACHE_FLASH_ATTR x509_print(const X509_CTX *cert, CA_CERT_CTX *ca_cert_ctx
     ssl_printf("Sig Type:\t\t\t");
     switch (cert->sig_type)
     {
+        case SIG_TYPE_MD2:
+            ssl_printf("MD2\n");
+            break;
         case SIG_TYPE_MD5:
             ssl_printf("MD5\n");
             break;
         case SIG_TYPE_SHA1:
             ssl_printf("SHA1\n");
             break;
-        case SIG_TYPE_MD2:
-            ssl_printf("MD2\n");
+        case SIG_TYPE_SHA256:
+            ssl_printf("SHA256\n");
+            break;
+        case SIG_TYPE_SHA384:
+            ssl_printf("SHA384\n");
+            break;
+        case SIG_TYPE_SHA512:
+            ssl_printf("SHA512\n");
             break;
         default:
             ssl_printf("Unrecognized: %d\n", cert->sig_type);
@@ -517,6 +572,7 @@ void ICACHE_FLASH_ATTR x509_print(const X509_CTX *cert, CA_CERT_CTX *ca_cert_ctx
     //TTY_FLUSH();
 }
 
+#if 0
 const char * ICACHE_FLASH_ATTR x509_display_error(int error)
 {
     switch (error)
@@ -555,5 +611,7 @@ const char * ICACHE_FLASH_ATTR x509_display_error(int error)
             return "Unknown";
     }
 }
+#endif
+
 #endif      /* CONFIG_SSL_FULL_MODE */
 

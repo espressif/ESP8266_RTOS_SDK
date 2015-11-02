@@ -1,8 +1,43 @@
 @echo off
 
-echo gen_misc.bat version 20150819
+Rem ******NOTICE******
+Rem MUST set SDK_PATH & BIN_PATH firstly!!!
+Rem example:
+Rem set SDK_PATH=/c/esp_iot_sdk_freertos
+Rem set BIN_PATH=/c/esp8266_bin
+
+set SDK_PATH=""
+set BIN_PATH=""
+
+echo gen_misc.bat version 20150911
 echo .
 
+if not %SDK_PATH% == "" (
+    echo SDK_PATH: %SDK_PATH%
+) else (
+    echo ERROR: Please set SDK_PATH in gen_misc.bat firstly, exit!!!
+    goto end
+)
+
+if not %BIN_PATH% == "" (
+    echo BIN_PATH: %BIN_PATH%
+) else (
+    echo ERROR: Please set BIN_PATH in gen_misc.bat firstly, exit!!!
+    goto end
+)
+
+echo .
+echo Please check SDK_PATH/BIN_PATH, enter (Y/y) to continue:
+set input=default
+set /p input=
+
+if not %input% == Y (
+    if not %input% == y (
+        goto end
+    )
+)
+
+echo .
 echo Please follow below steps(1-5) to generate specific bin(s):
 echo STEP 1: use boot_v1.2+ by default
 set boot=new
@@ -126,11 +161,12 @@ if %input% equ 2 (
   )
 )
 
-touch user/user_main.c
-
 echo.
 echo start...
 echo.
 
-make BOOT=%boot% APP=%app% SPI_SPEED=%spi_speed% SPI_MODE=%spi_mode% SPI_SIZE=%spi_size_map%
+make clean
 
+make COMPILE=xcc BOOT=%boot% APP=%app% SPI_SPEED=%spi_speed% SPI_MODE=%spi_mode% SPI_SIZE_MAP=%spi_size_map%
+
+:end

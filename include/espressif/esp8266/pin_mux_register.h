@@ -1,12 +1,31 @@
 /*
- *  Copyright (c) Espressif System 2010 - 2012
+ * ESPRSSIF MIT License
+ *
+ * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
+ *
+ * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
+ * it is free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
 #ifndef _PIN_MUX_H_
 #define _PIN_MUX_H_
 
-#define PERIPHS_IO_MUX			        0x60000800
+#define PERIPHS_IO_MUX                  0x60000800
 
 #define PERIPHS_IO_MUX_FUNC             0x13
 #define PERIPHS_IO_MUX_FUNC_S           4
@@ -126,8 +145,8 @@
 #define PIN_PULLUP_EN(PIN_NAME)          SET_PERI_REG_MASK(PIN_NAME, PERIPHS_IO_MUX_PULLUP)
 
 #define PIN_FUNC_SELECT(PIN_NAME, FUNC)  do { \
-        CLEAR_PERI_REG_MASK(PIN_NAME, (PERIPHS_IO_MUX_FUNC<<PERIPHS_IO_MUX_FUNC_S)); \
-        SET_PERI_REG_MASK(PIN_NAME, (((FUNC&BIT2)<<2)|(FUNC&0x3))<<PERIPHS_IO_MUX_FUNC_S); \
+        CLEAR_PERI_REG_MASK(PIN_NAME, (PERIPHS_IO_MUX_FUNC << PERIPHS_IO_MUX_FUNC_S)); \
+        SET_PERI_REG_MASK(PIN_NAME, (((FUNC & BIT2) << 2) | (FUNC & 0x3)) << PERIPHS_IO_MUX_FUNC_S); \
     } while (0)
 
 #endif //_PIN_MUX_H_

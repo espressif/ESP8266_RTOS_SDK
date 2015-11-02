@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, Cameron Rich
+ * Copyright (c) 2007-2015, Cameron Rich
  * 
  * All rights reserved.
  * 
@@ -36,7 +36,8 @@
 #include "ssl/ssl_ssl.h"
 #include "ssl/ssl_crypto_misc.h"
 
-#include "lwip/sockets.h"
+//#include "lwip/sockets.h"
+#include <fcntl.h>
 
 #ifdef CONFIG_WIN32_USE_CRYPTO_LIB
 #include "wincrypt.h"
@@ -56,16 +57,16 @@ static HCRYPTPROV gCryptProv;
 static uint8_t entropy_pool[ENTROPY_POOL_SIZE];
 #endif
 
-const char * const unsupported_str = "Error: Feature not supported\n";
+const char unsupported_str[] ICACHE_RODATA_ATTR STORE_ATTR = "Error: Feature not supported\n";
 
 #ifndef CONFIG_SSL_SKELETON_MODE
 /** 
  * Retrieve a file and put it into memory
  * @return The size of the file, or -1 on failure.
  */
-int get_file(const char *filename, uint8_t **buf)
+int ICACHE_FLASH_ATTR get_file(const char *filename, uint8_t **buf)
 {
-#if 0
+#ifdef FILE
     int total_bytes = 0;
     int bytes_read = 0; 
     int filesize;
@@ -73,7 +74,7 @@ int get_file(const char *filename, uint8_t **buf)
 
     if (stream == NULL)
     {
-#ifdef CONFIG_SSL_FULL_MODE         
+#ifdef CONFIG_SSL_FULL_MODE
         printf("file '%s' does not exist\n", filename); //TTY_FLUSH();
 #endif
         return -1;
@@ -93,9 +94,42 @@ int get_file(const char *filename, uint8_t **buf)
     
     fclose(stream);
     return filesize;
-#endif
+#else
+    int total_bytes = 0;
+	int bytes_read = 0;
+	int filesize;
+	int stream = -1;
+	struct stat stream_stat;
 
-    return 0;
+	stream = open(filename, 0x18);
+	if (stream < 0) {
+#ifdef CONFIG_SSL_FULL_MODE
+		os_printf("file '%s' does not exist\n", filename);
+#endif
+		return -1;
+	}
+
+	filesize = fstat(stream, &stream_stat);
+	if (filesize < 0) {
+		close(stream);
+		return filesize;
+	}
+
+	if (stream_stat.st_size == 0) {
+		close(stream);
+		return 0;
+	}
+	filesize = stream_stat.st_size;
+	*buf = (uint8_t *) zalloc(filesize);
+
+	do {
+		bytes_read = read(stream, *buf + total_bytes, filesize - total_bytes);
+		total_bytes += bytes_read;
+	} while (total_bytes < filesize && bytes_read > 0);
+
+	close(stream);
+	return filesize;
+#endif
 }
 #endif
 
@@ -160,7 +194,7 @@ EXP_FUNC void STDCALL ICACHE_FLASH_ATTR RNG_terminate(void)
 /**
  * Set a series of bytes with a random number. Individual bytes can be 0
  */
-EXP_FUNC void STDCALL ICACHE_FLASH_ATTR get_random(int num_rand_bytes, uint8_t *rand_data)
+EXP_FUNC int STDCALL ICACHE_FLASH_ATTR get_random(int num_rand_bytes, uint8_t *rand_data)
 {
 #if !defined(WIN32) && defined(CONFIG_USE_DEV_URANDOM)
 //    /* use the Linux default */
@@ -204,21 +238,25 @@ EXP_FUNC void STDCALL ICACHE_FLASH_ATTR get_random(int num_rand_bytes, uint8_t *
     /* insert the digest at the start of the entropy pool */
     memcpy(entropy_pool, digest, MD5_SIZE);
 #endif
+    return 0;
 }
 
 /**
  * Set a series of bytes with a random number. Individual bytes are not zero.
  */
-void ICACHE_FLASH_ATTR get_random_NZ(int num_rand_bytes, uint8_t *rand_data)
+int ICACHE_FLASH_ATTR get_random_NZ(int num_rand_bytes, uint8_t *rand_data)
 {
     int i;
-    get_random(num_rand_bytes, rand_data);
+    if (get_random(num_rand_bytes, rand_data))
+        return -1;
 
     for (i = 0; i < num_rand_bytes; i++)
     {
         while (rand_data[i] == 0)  /* can't be 0 */
             rand_data[i] = (uint8_t)(os_random());
     }
+
+    return 0;
 }
 
 /**

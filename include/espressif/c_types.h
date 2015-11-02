@@ -1,58 +1,72 @@
 /*
- *  Copyright (c) 2010 - 2011 Espressif System
+ * ESPRSSIF MIT License
+ *
+ * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
+ *
+ * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
+ * it is free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
+ * to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
 #ifndef _C_TYPES_H_
 #define _C_TYPES_H_
 
-typedef unsigned char       uint8_t;
-typedef signed char         sint8_t;
-typedef signed char         int8_t;
-typedef unsigned short      uint16_t;
-typedef signed short        sint16_t;
-typedef signed short        int16_t;
-typedef unsigned long       uint32_t;
-typedef signed long         sint32_t;
-typedef signed long         int32_t;
-typedef signed long long    sint64_t;
-typedef unsigned long long  uint64_t;
-typedef unsigned long long  u_int64_t;
-typedef float               real32_t;
-typedef double              real64_t;
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
-typedef unsigned char       uint8;
-typedef unsigned char       u8;
-typedef signed char         sint8;
-typedef signed char         int8;
-typedef signed char         s8;
-typedef unsigned short      uint16;
-typedef unsigned short      u16;
-typedef signed short        sint16;
-typedef signed short        s16;
-typedef unsigned int        uint32;
-typedef unsigned int        u_int;
-typedef unsigned int        u32;
-typedef signed int          sint32;
-typedef signed int          s32;
-typedef int                 int32;
-typedef signed long long    sint64;
-typedef unsigned long long  uint64;
-typedef unsigned long long  u64;
-typedef float               real32;
-typedef double              real64;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef uint8_t  u8_t;
+typedef int8_t   s8_t;
+typedef uint16_t u16_t;
+typedef int16_t  s16_t;
+typedef uint32_t u32_t;
+typedef int32_t  s32_t;
+
+typedef uint8_t  uint8;
+typedef uint8_t  u8;
+typedef int8_t   sint8;
+typedef int8_t   int8;
+typedef int8_t   s8;
+typedef uint16_t uint16;
+typedef uint16_t u16;
+typedef int16_t  sint16;
+typedef int16_t  s16;
+typedef uint32_t uint32;
+typedef uint32_t u_int;
+typedef uint32_t u32;
+typedef int32_t  sint32;
+typedef int32_t  s32;
+typedef int32_t  int32;
+typedef int64_t  sint64;
+typedef uint64_t uint64;
+typedef uint64_t u64;
+typedef float    real32;
+typedef double   real64;
 
 #define __le16      u16
-
-typedef unsigned int        size_t;
-typedef int        			ssize_t;
-
-#define __packed        __attribute__((packed))
 
 #define LOCAL       static
 
 #ifndef NULL
-#define NULL (void *)0
+#define NULL        (void *)0
 #endif /* NULL */
 
 /* probably should not put STATUS here */
@@ -64,30 +78,32 @@ typedef enum {
     CANCEL,
 } STATUS;
 
-#define BIT(nr)                 (1UL << (nr))
+#define BIT(nr)     (1UL << (nr))
 
-#define REG_SET_BIT(_r, _b)  (*(volatile uint32_t*)(_r) |= (_b))
-#define REG_CLR_BIT(_r, _b)  (*(volatile uint32_t*)(_r) &= ~(_b))
+#define REG_WRITE(_r, _v)       (*(volatile uint32 *)(_r)) = (_v)
+#define REG_READ(_r)            (*(volatile uint32 *)(_r))
 
-#define DMEM_ATTR __attribute__((section(".bss")))
+#define REG_SET_BIT(_r, _b)     (*(volatile uint32 *)(_r) |= (_b))
+#define REG_CLR_BIT(_r, _b)     (*(volatile uint32 *)(_r) &= ~(_b))
+
+#define __packed            __attribute__((packed))
+#define STORE_ATTR          __attribute__((aligned(4)))
+
 #define SHMEM_ATTR
-
-#define IRAM_ATTR __attribute__((section(".text")))
-
 #define ICACHE_FLASH_ATTR
-#define ICACHE_RODATA_ATTR __attribute__((section(".irom.text")))
 
-#define STORE_ATTR __attribute__((aligned(4)))
+#define DMEM_ATTR           __attribute__((section(".bss")))
+#define IRAM_ATTR           __attribute__((section(".text")))
+#define ICACHE_RODATA_ATTR  __attribute__((section(".irom.text")))
 
 #ifndef __cplusplus
-typedef unsigned char   bool;
 #define BOOL            bool
-#define true            (1)
-#define false           (0)
 #define TRUE            true
 #define FALSE           false
-
-
 #endif /* !__cplusplus */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _C_TYPES_H_ */
