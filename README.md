@@ -23,7 +23,7 @@ Clone ESP8266_RTOS_SDK, e.g., to ~/ESP8266_RTOS_SDK.
     $git clone https://github.com/espressif/ESP8266_RTOS_SDK.git
 
 Modify gen_misc.sh or gen_misc.bat:
-For Linux£º
+For Linux:
 
     $export SDK_PATH=~/ESP8266_RTOS_SDK
     $export BIN_PATH=~/ESP8266_BIN

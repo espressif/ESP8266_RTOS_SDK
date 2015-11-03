@@ -25,12 +25,11 @@ def main():
     file_list = os.listdir(os.getcwd())
     cert_file_list = []
     for _file in file_list:
-        pos = _file.find(".cer")
-        if pos != -1:
-            cert_file_list.append(_file[:pos])
-
+        if _file.endswith(".cer") or _file.endswith(".key"):
+            cert_file_list.append(_file)
+    print cert_file_list
     for cert_file in cert_file_list:
-        with open(cert_file+".cer", 'rb') as f:
+        with open(cert_file, 'rb') as f:
             buff = f.read()
         cert_list.append(Cert(cert_file, buff))
     with open('esp_ca_cert.bin', 'wb+') as f:
