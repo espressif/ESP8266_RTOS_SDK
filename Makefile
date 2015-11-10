@@ -396,6 +396,10 @@ $(foreach image,$(GEN_IMAGES),$(eval $(call MakeImage,$(basename $(image)))))
 #
 
 INCLUDES := $(INCLUDES) -I $(SDK_PATH)/include -I $(SDK_PATH)/extra_include
-INCLUDES += -I $(SDK_PATH)/include/lwip -I $(SDK_PATH)/include/lwip/ipv4 -I $(SDK_PATH)/include/lwip/ipv6
 INCLUDES += -I $(SDK_PATH)/include/espressif
+INCLUDES += -I $(SDK_PATH)/include/lwip
+INCLUDES += -I $(SDK_PATH)/include/lwip/ipv4
+INCLUDES += -I $(SDK_PATH)/include/lwip/ipv6
+INCLUDES += -I $(SDK_PATH)/include/nopoll
 INCLUDES += -I $(SDK_PATH)/include/spiffs
+INCLUDES += -I $(SDK_PATH)/include/ssl

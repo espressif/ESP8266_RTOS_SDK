@@ -49,29 +49,31 @@ COMPONENTS_eagle.app.v6 = \
 	user/libuser.a  \
 	websocket/libwebsocket.a
 
-LINKFLAGS_eagle.app.v6 = \
-	-L$(SDK_PATH)/lib        \
-	-Wl,--gc-sections   \
-	-nostdlib	\
-    -T$(LD_FILE)   \
-	-Wl,--no-check-sections	\
-    -u call_user_start	\
-	-Wl,-static						\
-	-Wl,--start-group					\
-	-lminic \
-	-lgcc					\
-	-lhal					\
-	-lphy	\
-	-lpp	\
-	-lnet80211	\
-	-lwpa	\
-	-lcrypto    \
-	-lmain	\
-	-lfreertos	\
-	-llwip	\
-	-lsmartconfig \
-	$(DEP_LIBS_eagle.app.v6)					\
-	-Wl,--end-group
+LINKFLAGS_eagle.app.v6 =    \
+    -L$(SDK_PATH)/lib       \
+    -Wl,--gc-sections       \
+    -nostdlib               \
+    -T$(LD_FILE)            \
+    -Wl,--no-check-sections \
+    -u call_user_start      \
+    -Wl,-static             \
+    -Wl,--start-group       \
+    -lcirom                 \
+    -lgcc                   \
+    -lhal                   \
+    -lcrypto                \
+    -lfreertos              \
+    -llwip                  \
+    -lmain                  \
+    -lnet80211              \
+    -lnopoll                \
+    -lphy                   \
+    -lpp                    \
+    -lsmartconfig           \
+    -lssl                   \
+    -lwpa                   \
+    $(DEP_LIBS_eagle.app.v6)\
+    -Wl,--end-group
 
 DEPENDS_eagle.app.v6 = \
                 $(LD_FILE) \
