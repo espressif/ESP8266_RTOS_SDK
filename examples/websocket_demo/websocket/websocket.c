@@ -37,7 +37,7 @@
  *         info@aspl.es - http://www.aspl.es/nopoll
  */
 #include <nopoll/nopoll.h>
-#include "ssl_compat.h"
+#include "ssl_compat-1.0.h"
 #include "esp_common.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
