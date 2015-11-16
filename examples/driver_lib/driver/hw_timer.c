@@ -27,7 +27,7 @@
 #define US_TO_RTC_TIMER_TICKS(t)          \
     ((t) ?          \
      (((t) > 0x35A) ?            \
-      (((t) >> 2) * ((APB_CLK_FREQ >> 4) / 250000) + ((t)&0x3) * ((APB_CLK_FREQ >> 4) / 1000000)) : s\
+      (((t) >> 2) * ((APB_CLK_FREQ >> 4) / 250000) + ((t)&0x3) * ((APB_CLK_FREQ >> 4) / 1000000)) : \
       (((t) *(APB_CLK_FREQ>>4)) / 1000000)) :    \
          0)
 
