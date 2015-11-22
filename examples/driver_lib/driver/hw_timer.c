@@ -76,7 +76,7 @@ void hw_timer_init(uint8 req)
                       DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
     }
 
-    _xt_isr_attach(ETS_FRC_TIMER1_INUM, hw_timer_isr_cb, NULL);
+    _xt_isr_attach(ETS_FRC_TIMER1_INUM, (_xt_isr)hw_timer_isr_cb, NULL);
 
     TM1_EDGE_INT_ENABLE();
     _xt_isr_unmask(1 << ETS_FRC_TIMER1_INUM);
