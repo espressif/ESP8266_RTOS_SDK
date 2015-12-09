@@ -21,6 +21,7 @@
 /*    4>. 4MB----->0x3fb000                                                                         */
 /* 7. Don't change any other seg.                                                                   */
 
+
 MEMORY
 {
   dport0_0_seg :                      	org = 0x3FF00000, len = 0x10
