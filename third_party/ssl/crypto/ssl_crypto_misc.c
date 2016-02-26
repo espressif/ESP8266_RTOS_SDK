@@ -83,7 +83,7 @@ int ICACHE_FLASH_ATTR get_file(const char *filename, uint8_t **buf)
     /* Win CE doesn't support stat() */
     fseek(stream, 0, SEEK_END);
     filesize = ftell(stream);
-    *buf = (uint8_t *)malloc(filesize);
+    *buf = (uint8_t *)SSL_MALLOC(filesize);
     fseek(stream, 0, SEEK_SET);
 
     do
@@ -120,7 +120,7 @@ int ICACHE_FLASH_ATTR get_file(const char *filename, uint8_t **buf)
 		return 0;
 	}
 	filesize = stream_stat.st_size;
-	*buf = (uint8_t *) zalloc(filesize);
+	*buf = (uint8_t *) SSL_ZALLOC(filesize);
 
 	do {
 		bytes_read = read(stream, *buf + total_bytes, filesize - total_bytes);
@@ -334,7 +334,7 @@ EXP_FUNC void STDCALL print_blob(const char *format, const unsigned char *data,
 
 #if defined(CONFIG_SSL_HAS_PEM) || defined(CONFIG_HTTP_HAS_AUTHORIZATION)
 /* base64 to binary lookup table */
-static const uint8_t map[128] =
+static const uint8_t map[128] ICACHE_RODATA_ATTR STORE_ATTR =
 {
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -355,11 +355,13 @@ EXP_FUNC int STDCALL ICACHE_FLASH_ATTR base64_decode(const char *in, int len,
     int g, t, x, y, z;
     uint8_t c;
     int ret = -1;
+    uint8* base64_map = (uint8*)SSL_ZALLOC(128);
+    memcpy(base64_map, map, 128);
 
     g = 3;
     for (x = y = z = t = 0; x < len; x++)
     {
-        if ((c = map[in[x]&0x7F]) == 0xff)
+        if ((c = base64_map[in[x]&0x7F]) == 0xff)
             continue;
 
         if (c == 254)   /* this is the end... */
@@ -404,6 +406,7 @@ error:
         ssl_printf("Error: Invalid base64\n"); //TTY_FLUSH();
 #endif
     //TTY_FLUSH();
+    SSL_FREE(base64_map);
     return ret;
 
 }

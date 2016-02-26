@@ -82,7 +82,7 @@ void ICACHE_FLASH_ATTR RSA_pub_key_new(RSA_CTX **ctx,
         RSA_free(*ctx);
 
     bi_ctx = bi_initialize();
-    *ctx = (RSA_CTX *)zalloc(sizeof(RSA_CTX));
+    *ctx = (RSA_CTX *)SSL_ZALLOC(sizeof(RSA_CTX));
     rsa_ctx = *ctx;
     rsa_ctx->bi_ctx = bi_ctx;
     rsa_ctx->num_octets = mod_len;
@@ -124,7 +124,7 @@ void ICACHE_FLASH_ATTR RSA_free(RSA_CTX *rsa_ctx)
     }
 
     bi_terminate(bi_ctx);
-    free(rsa_ctx);
+    SSL_FREE(rsa_ctx);
 }
 
 /**
@@ -143,7 +143,7 @@ int ICACHE_FLASH_ATTR RSA_decrypt(const RSA_CTX *ctx, const uint8_t *in_data,
     const int byte_size = ctx->num_octets;
     int i = 0, size;
     bigint *decrypted_bi, *dat_bi;
-    uint8_t *block = (uint8_t *)malloc(byte_size);
+    uint8_t *block = (uint8_t *)SSL_MALLOC(byte_size);
     int pad_count = 0;
 
     if (out_len < byte_size)        /* check output has enough size */
@@ -194,7 +194,7 @@ int ICACHE_FLASH_ATTR RSA_decrypt(const RSA_CTX *ctx, const uint8_t *in_data,
     if (size > 0)
         memcpy(out_data, &block[i], size);
 
-    free(block);
+    SSL_FREE(block);
     return size ? size : -1;
 }
 

@@ -195,7 +195,8 @@ void ICACHE_FLASH_ATTR SHA512_Final(uint8_t *digest, SHA512_CTX *ctx)
     int i;
     size_t paddingSize;
     uint64_t totalSize;
-    uint8_t *padding_ram = malloc(128);
+	
+    uint8_t *padding_ram = (uint8_t *)SSL_MALLOC(128);
 
     memcpy(padding_ram, padding, 128);
  
@@ -223,6 +224,6 @@ void ICACHE_FLASH_ATTR SHA512_Final(uint8_t *digest, SHA512_CTX *ctx)
     if (digest != NULL)
        memcpy(digest, ctx->h_dig.digest, SHA512_SIZE);
 
-    free(padding_ram);
+    SSL_FREE(padding_ram);
  }
  

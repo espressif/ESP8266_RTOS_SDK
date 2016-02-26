@@ -375,7 +375,8 @@ static int ICACHE_FLASH_ATTR process_client_key_xchg(SSL *ssl)
     uint8_t *buf = &ssl->bm_data[ssl->dc->bm_proc_index];
     int pkt_size = ssl->bm_index;
     int premaster_size, secret_length = (buf[2] << 8) + buf[3];
-    uint8_t premaster_secret[MAX_KEY_BYTE_SIZE];
+//    uint8_t premaster_secret[MAX_KEY_BYTE_SIZE];
+    uint8*	premaster_secret = (uint8*)SSL_ZALLOC(MAX_KEY_BYTE_SIZE);
     RSA_CTX *rsa_ctx = ssl->ssl_ctx->rsa_ctx;
     int offset = 4;
     int ret = SSL_OK;
@@ -395,7 +396,7 @@ static int ICACHE_FLASH_ATTR process_client_key_xchg(SSL *ssl)
     /* rsa_ctx->bi_ctx is not thread-safe */
     SSL_CTX_LOCK(ssl->ssl_ctx->mutex);
     premaster_size = RSA_decrypt(rsa_ctx, &buf[offset], premaster_secret,
-            sizeof(premaster_secret), 1);
+    		MAX_KEY_BYTE_SIZE, 1);
     SSL_CTX_UNLOCK(ssl->ssl_ctx->mutex);
 
     if (premaster_size != SSL_SECRET_SIZE || 
@@ -425,6 +426,7 @@ static int ICACHE_FLASH_ATTR process_client_key_xchg(SSL *ssl)
 
     ssl->dc->bm_proc_index += rsa_ctx->num_octets+offset;
 error:
+	SSL_FREE(premaster_secret);
     return ret;
 }
 
@@ -452,7 +454,8 @@ static int ICACHE_FLASH_ATTR process_cert_verify(SSL *ssl)
 {
     uint8_t *buf = &ssl->bm_data[ssl->dc->bm_proc_index];
     int pkt_size = ssl->bm_index;
-    uint8_t dgst_buf[MAX_KEY_BYTE_SIZE];
+//    uint8_t dgst_buf[MAX_KEY_BYTE_SIZE];
+    uint8* dgst_buf = (uint8*)SSL_ZALLOC(MAX_KEY_BYTE_SIZE);
     uint8_t dgst[MD5_SIZE+SHA1_SIZE];
     X509_CTX *x509_ctx = ssl->x509_ctx;
     int ret = SSL_OK;
@@ -463,7 +466,7 @@ static int ICACHE_FLASH_ATTR process_cert_verify(SSL *ssl)
 
     /* rsa_ctx->bi_ctx is not thread-safe */
     SSL_CTX_LOCK(ssl->ssl_ctx->mutex);
-    n = RSA_decrypt(x509_ctx->rsa_ctx, &buf[6], dgst_buf, sizeof(dgst_buf), 0);
+    n = RSA_decrypt(x509_ctx->rsa_ctx, &buf[6], dgst_buf, MAX_KEY_BYTE_SIZE, 0);
     SSL_CTX_UNLOCK(ssl->ssl_ctx->mutex);
 
     if (n != SHA1_SIZE + MD5_SIZE)
@@ -481,6 +484,7 @@ static int ICACHE_FLASH_ATTR process_cert_verify(SSL *ssl)
 end_cert_vfy:
     ssl->next_state = HS_FINISHED;
 error:
+	SSL_FREE(dgst_buf);
     return ret;
 }
 

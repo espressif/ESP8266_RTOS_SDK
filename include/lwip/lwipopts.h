@@ -193,6 +193,11 @@
    ---------- IGMP options ----------
    ----------------------------------
 */
+/**
+ * LWIP_IGMP==1: Turn on IGMP module.
+ */
+#define LWIP_IGMP                       1
+
 /*
    ----------------------------------
    ---------- DNS options -----------
@@ -224,7 +229,7 @@
  * TCP_QUEUE_OOSEQ==1: TCP will queue segments that arrive out of order.
  * Define to 0 if your device is low on memory.
  */
-#define TCP_QUEUE_OOSEQ                 0
+#define TCP_QUEUE_OOSEQ                 1
 
 /*
  *     LWIP_EVENT_API==1: The user defines lwip_tcp_event() to receive all

@@ -184,6 +184,8 @@
 #define SPI_W14(i)                  (REG_SPI_BASE(i) + 0x78)
 #define SPI_W15(i)                  (REG_SPI_BASE(i) + 0x7C)
 
+#define SPI_EXT2(i)                 (REG_SPI_BASE(i)  + 0xF8)
+
 #define SPI_EXT3(i)                 (REG_SPI_BASE(i) + 0xFC)
 #define SPI_INT_HOLD_ENA                0x00000003
 #define SPI_INT_HOLD_ENA_S              0

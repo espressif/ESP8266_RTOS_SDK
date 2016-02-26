@@ -47,7 +47,7 @@
 #define CONFIG_SSL_EXPIRY_TIME 24
 #define CONFIG_X509_MAX_CA_CERTS 3
 #define CONFIG_SSL_MAX_CERTS 3
-#undef CONFIG_SSL_CTX_MUTEXING
+#define CONFIG_SSL_CTX_MUTEXING 1
 #define CONFIG_USE_DEV_URANDOM 1
 #undef CONFIG_WIN32_USE_CRYPTO_LIB
 #undef CONFIG_OPENSSL_COMPATIBLE
@@ -58,6 +58,23 @@
 
 /*add by LiuH for debug at 2015.06.11*/
 #define CONFIG_SSL_DISPLAY_MODE 0
+
+/* Mutexing definitions */
+
+#if defined(CONFIG_SSL_CTX_MUTEXING)
+#include "lwip/sys.h"
+#include "arch/sys_arch.h"
+#define SSL_CTX_MUTEX_TYPE          sys_mutex_t
+#define SSL_CTX_MUTEX_INIT(A)       sys_mutex_new(&A)
+#define SSL_CTX_MUTEX_DESTROY(A)    sys_mutex_free(&A)
+#define SSL_CTX_LOCK(A)             sys_mutex_lock(&A)
+#define SSL_CTX_UNLOCK(A)           sys_mutex_unlock(&A)
+#else   /* no mutexing */
+#define SSL_CTX_MUTEX_INIT(A)
+#define SSL_CTX_MUTEX_DESTROY(A)
+#define SSL_CTX_LOCK(A)
+#define SSL_CTX_UNLOCK(A)
+#endif
 
 /*
  * Axhttpd Configuration

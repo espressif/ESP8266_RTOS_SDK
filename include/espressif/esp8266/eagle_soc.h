@@ -85,7 +85,7 @@
 //}}
 
 //DPORT{{
-#define HOST_INF_SEL                (0x28)
+#define HOST_INF_SEL                (PERIPHS_DPORT_BASEADDR + 0x28)
 #define DPORT_LINK_DEVICE_SEL       0x000000FF
 #define DPORT_LINK_DEVICE_SEL_S     8
 #define DPORT_PERI_IO_SWAP          0x000000FF

@@ -346,6 +346,11 @@ void *zalloc(size_t nbytes) __attribute__((alias("pvPortZalloc")));
 
 void *pvPortRealloc(void *mem, size_t newsize)
 {
+    if (newsize == 0) {
+        vPortFree(mem);
+        return NULL;
+    }
+
      void *p;  	
      p = pvPortMalloc(newsize);
      if (p) {

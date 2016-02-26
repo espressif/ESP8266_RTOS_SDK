@@ -94,7 +94,7 @@ static void check(const bigint *bi);
 BI_CTX * ICACHE_FLASH_ATTR bi_initialize(void)
 {
     /* calloc() sets everything to zero */
-    BI_CTX *ctx = (BI_CTX *)zalloc(sizeof(BI_CTX));
+    BI_CTX *ctx = (BI_CTX *)SSL_ZALLOC(sizeof(BI_CTX));
    
     /* the radix */
     ctx->bi_radix = alloc(ctx, 2); 
@@ -126,7 +126,7 @@ void ICACHE_FLASH_ATTR bi_terminate(BI_CTX *ctx)
     }
 
     bi_clear_cache(ctx);
-    free(ctx);
+    SSL_FREE(ctx);
 }
 
 /**
@@ -142,8 +142,8 @@ void ICACHE_FLASH_ATTR bi_clear_cache(BI_CTX *ctx)
     for (p = ctx->free_list; p != NULL; p = pn)
     {
         pn = p->next;
-        free(p->comps);
-        free(p);
+        SSL_FREE(p->comps);
+        SSL_FREE(p);
     }
 
     ctx->free_count = 0;
@@ -1062,10 +1062,19 @@ int ICACHE_FLASH_ATTR bi_compare(bigint *bia, bigint *bib)
  */
 static void ICACHE_FLASH_ATTR more_comps(bigint *bi, int n)
 {
+	comp * bi_backs = NULL;
     if (n > bi->max_comps)
     {
         bi->max_comps = max(bi->max_comps * 2, n);
-        bi->comps = (comp*)realloc(bi->comps, bi->max_comps * COMP_BYTE_SIZE);
+		if(bi->comps) {
+	        //bi->comps = (comp*)SSL_REALLOC(bi->comps, bi->max_comps * COMP_BYTE_SIZE);
+	        bi_backs = (comp*)SSL_ZALLOC(bi->max_comps * COMP_BYTE_SIZE);
+			if(bi_backs) {
+				memcpy(bi_backs,bi->comps,bi->max_comps * COMP_BYTE_SIZE);
+				SSL_FREE(bi->comps);
+				bi->comps = bi_backs;
+			}
+		}
     }
 
     if (n > bi->size)
@@ -1104,8 +1113,8 @@ static bigint * ICACHE_FLASH_ATTR alloc(BI_CTX *ctx, int size)
     else
     {
         /* No free bigints available - create a new one. */
-        biR = (bigint *)malloc(sizeof(bigint));
-        biR->comps = (comp*)malloc(size * COMP_BYTE_SIZE);
+        biR = (bigint *)SSL_MALLOC(sizeof(bigint));
+        biR->comps = (comp*)SSL_MALLOC(size * COMP_BYTE_SIZE);
         biR->max_comps = size;  /* give some space to spare */
     }
 
@@ -1311,7 +1320,7 @@ static void ICACHE_FLASH_ATTR precompute_slide_window(BI_CTX *ctx, int window, b
         k <<= 1;
     }
 
-    ctx->g = (bigint **)malloc(k*sizeof(bigint *));
+    ctx->g = (bigint **)SSL_MALLOC(k*sizeof(bigint *));
     ctx->g[0] = bi_clone(ctx, g1);
     bi_permanent(ctx->g[0]);
     g2 = bi_residue(ctx, bi_square(ctx, ctx->g[0]));   /* g^2 */
@@ -1365,7 +1374,7 @@ bigint * ICACHE_FLASH_ATTR bi_mod_power(BI_CTX *ctx, bigint *bi, bigint *biexp)
     /* work out the slide constants */
     precompute_slide_window(ctx, window_size, bi);
 #else   /* just one constant */
-    ctx->g = (bigint **)malloc(sizeof(bigint *));
+    ctx->g = (bigint **)SSL_MALLOC(sizeof(bigint *));
     ctx->g[0] = bi_clone(ctx, bi);
     ctx->window = 1;
     bi_permanent(ctx->g[0]);
@@ -1417,7 +1426,7 @@ bigint * ICACHE_FLASH_ATTR bi_mod_power(BI_CTX *ctx, bigint *bi, bigint *biexp)
         bi_free(ctx, ctx->g[i]);
     }
 
-    free(ctx->g);
+    SSL_FREE(ctx->g);
     bi_free(ctx, bi);
     bi_free(ctx, biexp);
 #if defined CONFIG_BIGINT_MONTGOMERY

@@ -51,6 +51,15 @@ typedef enum {
     SPI_FLASH_RESULT_TIMEOUT    /**< SPI Flash operating time out */
 } SpiFlashOpResult;
 
+typedef struct{
+    uint32  deviceId;
+    uint32  chip_size;    // chip size in byte
+    uint32  block_size;
+    uint32  sector_size;
+    uint32  page_size;
+    uint32  status_mask;
+} SpiFlashChip;
+
 #define SPI_FLASH_SEC_SIZE  4096    /**< SPI Flash sector size */
 
 /**
@@ -110,6 +119,36 @@ SpiFlashOpResult spi_flash_write(uint32 des_addr, uint32 *src_addr, uint32 size)
   * @return SpiFlashOpResult
   */
 SpiFlashOpResult spi_flash_read(uint32 src_addr, uint32 *des_addr, uint32 size);
+
+/**
+  * @brief  Registered function for spi_flash_set_read_func.
+  *
+  * @attention  used for sdk internal, don't need to care about params
+  *
+  * @param  SpiFlashChip *spi : spi flash struct pointer.
+  * @param  uint32 src_addr  : source address of the data.
+  * @param  uint32 *des_addr : destination address in Flash.
+  * @param  uint32 size      : length of data
+  *
+  * @return SpiFlashOpResult
+  */
+typedef SpiFlashOpResult (* user_spi_flash_read)(
+        SpiFlashChip *spi,
+        uint32 src_addr,
+        uint32 *des_addr,
+        uint32 size);
+
+/**
+  * @brief  Register user-define SPI flash read API.
+  *
+  * @attention This API can be only used in SPI overlap mode, please refer to ESP8266_RTOS_SDK
+  *            \examples\driver_lib\driver\spi_overlap.c
+  *
+  * @param  user_spi_flash_read read : user-define SPI flash read API .
+  *
+  * @return  none
+  */
+void spi_flash_set_read_func(user_spi_flash_read read);
 
 /**
   * @}

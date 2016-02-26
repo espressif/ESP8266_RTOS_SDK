@@ -65,7 +65,7 @@ EXP_FUNC int STDCALL ICACHE_FLASH_ATTR ssl_obj_load(SSL_CTX *ssl_ctx, int obj_ty
         goto error;
     }
 
-    ssl_obj = (SSLObjLoader *)zalloc(sizeof(SSLObjLoader));
+    ssl_obj = (SSLObjLoader *)SSL_ZALLOC(sizeof(SSLObjLoader));
     ssl_obj->len = get_file(filename, &ssl_obj->buf); 
     if (ssl_obj->len <= 0)
     {
@@ -110,10 +110,11 @@ EXP_FUNC int STDCALL ICACHE_FLASH_ATTR ssl_obj_memory_load(SSL_CTX *ssl_ctx, int
 {
     int ret;
     SSLObjLoader *ssl_obj;
+    uint32 sign_len = (len + 3)&(~3);
 
-    ssl_obj = (SSLObjLoader *)zalloc(sizeof(SSLObjLoader));
-    ssl_obj->buf = (uint8_t *)malloc(len);
-    memcpy(ssl_obj->buf, data, len);
+    ssl_obj = (SSLObjLoader *)SSL_ZALLOC(sizeof(SSLObjLoader));
+    ssl_obj->buf = (uint8_t *)SSL_MALLOC(sign_len);
+    memcpy(ssl_obj->buf, data, sign_len);
     ssl_obj->len = len;
     ret = do_obj(ssl_ctx, mem_type, ssl_obj, password);
     ssl_obj_free(ssl_obj);
@@ -169,8 +170,8 @@ void ICACHE_FLASH_ATTR ssl_obj_free(SSLObjLoader *ssl_obj)
 {
     if (ssl_obj)
     {
-        free(ssl_obj->buf);
-        free(ssl_obj);
+    	SSL_FREE(ssl_obj->buf);
+    	SSL_FREE(ssl_obj);
     }
 }
 
@@ -232,8 +233,8 @@ static int ICACHE_FLASH_ATTR pem_decrypt(const char *where, const char *end,
         goto error;
     }
 
-    char *aes_str_0_ram = malloc(24);
-    char *aes_str_1_ram = malloc(24);
+    char *aes_str_0_ram = (char *)SSL_MALLOC(24);
+    char *aes_str_1_ram = (char *)SSL_MALLOC(24);
 
     system_get_string_from_flash(aes_str[0], aes_str_0_ram, 24);
     system_get_string_from_flash(aes_str[1], aes_str_1_ram, 24);
@@ -294,8 +295,8 @@ static int ICACHE_FLASH_ATTR pem_decrypt(const char *where, const char *end,
     ret = 0;
 
 error:
-    free(aes_str_0_ram);
-    free(aes_str_1_ram);
+    SSL_FREE(aes_str_0_ram);
+    SSL_FREE(aes_str_1_ram);
     return ret; 
 }
 
@@ -307,8 +308,8 @@ static int ICACHE_FLASH_ATTR new_pem_obj(SSL_CTX *ssl_ctx, int is_cacert, char *
 {
     int ret = SSL_ERROR_BAD_CERTIFICATE;
     SSLObjLoader *ssl_obj = NULL;
-    char *begins_ram = malloc(40);
-    char *ends_ram = malloc(40);
+    char *begins_ram = (char *)SSL_MALLOC(40);
+    char *ends_ram = (char *)SSL_MALLOC(40);
 
     while (remain > 0)
     {
@@ -326,10 +327,10 @@ static int ICACHE_FLASH_ATTR new_pem_obj(SSL_CTX *ssl_ctx, int is_cacert, char *
                 start += strlen(begins_ram);
                 pem_size = (int)(end-start);
 
-                ssl_obj = (SSLObjLoader *)zalloc(sizeof(SSLObjLoader));
+                ssl_obj = (SSLObjLoader *)SSL_ZALLOC(sizeof(SSLObjLoader));
 
                 /* 4/3 bigger than what we need but so what */
-                ssl_obj->buf = (uint8_t *)zalloc(pem_size);
+                ssl_obj->buf = (uint8_t *)SSL_ZALLOC(pem_size);
                 ssl_obj->len = pem_size;
 
                 if (i == IS_RSA_PRIVATE_KEY && 
@@ -398,8 +399,8 @@ static int ICACHE_FLASH_ATTR new_pem_obj(SSL_CTX *ssl_ctx, int is_cacert, char *
            break;
     }
 error:
-    free(begins_ram);
-	free(ends_ram);
+    SSL_FREE(begins_ram);
+	SSL_FREE(ends_ram);
     ssl_obj_free(ssl_obj);
     return ret;
 }
@@ -414,7 +415,7 @@ static int ICACHE_FLASH_ATTR ssl_obj_PEM_load(SSL_CTX *ssl_ctx, int obj_type,
 
     /* add a null terminator */
     ssl_obj->len++;
-    ssl_obj->buf = (uint8_t *)realloc(ssl_obj->buf, ssl_obj->len);
+    ssl_obj->buf = (uint8_t *)SSL_REALLOC(ssl_obj->buf, ssl_obj->len);
     ssl_obj->buf[ssl_obj->len-1] = 0;
     start = (char *)ssl_obj->buf;
     return new_pem_obj(ssl_ctx, obj_type == SSL_OBJ_X509_CACERT,
@@ -475,7 +476,7 @@ int ICACHE_FLASH_ATTR load_key_certs(SSL_CTX *ssl_ctx)
     }
 
     ssl_obj_memory_load(ssl_ctx, SSL_OBJ_X509_CERT, cert_data, cert_size, NULL);
-    free(cert_data);
+    SSL_FREE(cert_data);
 #else
     if (strlen(CONFIG_SSL_X509_CERT_LOCATION))
     {
@@ -512,110 +513,3 @@ error:
 
 }
 
-/********************************start issue by espressif.com********************************/
-typedef struct _extension_head{
-	char name[32];
-	uint16_t length;
-}extension_head;
-
-typedef struct _extension_info{
-	extension_head head;
-	int32 offerset;
-}extension_info;
-
-static int ssl_read_file(const char* file_name, uint8_t **buf, uint32 flash_sector)
-{
-	int32 offerset = 0;
-	int   file_size = 0;
-	extension_info *extension_option = NULL;
-	uint32 start_addr = flash_sector * 4096;
-	extension_option = (extension_info *)zalloc(sizeof(extension_info));
-	if (!extension_option)
-		return -1;
-
-	do {
-		spi_flash_read(start_addr + offerset, (uint32 *)&extension_option->head,	sizeof(extension_head));
-
-#if CONFIG_SSL_DISPLAY_MODE
-		printf("name[%s], length[%d]\n", extension_option->head.name,extension_option->head.length);
-#endif
-		if (extension_option->head.length > system_get_free_heap_size())
-			break;
-
-		offerset += sizeof(extension_head);
-		if (strcmp(file_name, extension_option->head.name) == 0) {
-			*buf = (uint8_t *) zalloc(extension_option->head.length);
-			if (*buf != NULL){
-				spi_flash_read(start_addr + offerset, (uint32 *)*buf, extension_option->head.length);
-				file_size = extension_option->head.length;
-			}
-			break;
-		}
-		offerset += extension_option->head.length;
-	} while (extension_option->head.length < system_get_free_heap_size());
-
-	free(extension_option);
-	extension_option = NULL;
-	return file_size;
-}
-/**
- * Load the information depending on user options.
- * @Parameters ssl_ctx  	The client/server context
- * @Parameters obj_type 	The format of the load data
- * @Parameters file_name	The location of a file in DER/PEM format.
- * @Parameters password 	The password used. Can be null if not required.
- * @Parameters flash_sector	The sector about the information in the flash
- * @Returns					result true or false
-*/
-int ICACHE_FLASH_ATTR ssl_obj_option_load(SSL_CTX *ssl_ctx, int obj_type, const char* file_name, const char* password, uint32 flash_sector)
-{
-#ifndef CONFIG_SSL_SKELETON_MODE
-    static const char * const begin = "-----BEGIN";
-    int ret = SSL_OK;
-    SSLObjLoader *ssl_obj = NULL;
-
-    if (!file_name)
-    {
-        ret = SSL_ERROR_INVALID_KEY;
-        goto error;
-    }
-
-    ssl_obj = (SSLObjLoader *)zalloc(sizeof(SSLObjLoader));
-    ssl_obj->len = ssl_read_file(file_name, &ssl_obj->buf, flash_sector);
-    if (ssl_obj->len <= 0)
-    {
-        ret = SSL_ERROR_INVALID_KEY;
-        goto error;
-    }
-
-    /* is the file a PEM file? */
-    if ((char *)strstr((const char *)ssl_obj->buf, begin) != NULL)
-    {
-#ifdef CONFIG_SSL_HAS_PEM
-#if CONFIG_SSL_DISPLAY_MODE
-    	os_printf("the file is a PEM file.\n");
-#endif
-        ret = ssl_obj_PEM_load(ssl_ctx, obj_type, ssl_obj, password);
-#else
-        ssl_printf(unsupported_str);
-        ret = SSL_ERROR_NOT_SUPPORTED;
-#endif
-    }
-    else {
-#if CONFIG_SSL_DISPLAY_MODE
-    	os_printf("the file is not a PEM file.\n");
-#endif
-        ret = do_obj(ssl_ctx, obj_type, ssl_obj, password);
-    }
-
-error:
-    ssl_obj_free(ssl_obj);
-    return ret;
-#else
-    ssl_printf(unsupported_str);
-    return SSL_ERROR_NOT_SUPPORTED;
-#endif /* CONFIG_SSL_SKELETON_MODE */
-
-}
-
-/****************************end issue by espressif.com*********************************/

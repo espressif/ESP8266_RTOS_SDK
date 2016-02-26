@@ -184,6 +184,17 @@ enum {
 };
 
 /**
+  * @brief     espconn initialization.
+  *
+  * @attention   Please call this API in user_init, if you need to use espconn functions.
+  *
+  * @param     null
+  *
+  * @return    null
+  */
+void espconn_init(void);
+
+/**
   * @brief     Connect to a TCP server (ESP8266 acting as TCP client).
   *
   * @attention If espconn_connect fail, returns non-0 value, there is no connection, so it

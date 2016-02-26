@@ -1,10 +1,10 @@
 /* eagle.flash.bin     @ 0x00000 */
-/* eagle.irom0text.bin @ 0x40000 */
+/* eagle.irom0text.bin @ 0x20000 */
 
 /* Flash Map, support 512KB/1MB/2MB/4MB SPI Flash */
 /* |......|..............................|..........................|.....|....|                       */
 /* ^      ^                              ^                          ^     ^                            */
-/* |_flash.bin start(0x0000)             |_irom0text.bin start(0x40000)   |                            */
+/* |_flash.bin start(0x0000)             |_irom0text.bin start(0x20000)   |                            */
 /*        |_flash.bin end                                           |_irom0text.bin end                */
 /*                                                                        |_system param area(0x7b000) */
 
@@ -26,7 +26,7 @@ MEMORY
   dport0_0_seg :                      	org = 0x3FF00000, len = 0x10
   dram0_0_seg :                       	org = 0x3FFE8000, len = 0x18000
   iram1_0_seg :                       	org = 0x40100000, len = 0x8000
-  irom0_0_seg :                       	org = 0x40240000, len = 0x3C000
+  irom0_0_seg :                       	org = 0x40220000, len = 0x5C000
 }
 
 INCLUDE "../ld/eagle.app.v6.common.ld"

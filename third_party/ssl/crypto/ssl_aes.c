@@ -179,9 +179,10 @@ void ICACHE_FLASH_ATTR AES_set_key(AES_CTX *ctx, const uint8_t *key,
 {
     int i, ii;
     uint32_t *W, tmp, tmp2;
-    unsigned char *Rcon_ram = malloc(32);
     unsigned char *ip;
     int words;
+
+    unsigned char *Rcon_ram = (unsigned char *)SSL_MALLOC(32);
 
     switch (mode)
     {
@@ -245,7 +246,7 @@ void ICACHE_FLASH_ATTR AES_set_key(AES_CTX *ctx, const uint8_t *key,
         W[i]=W[i-words]^tmp;
     }
 
-    free(Rcon_ram);
+    SSL_FREE(Rcon_ram);
 
     /* copy the iv across */
     memcpy(ctx->iv, iv, 16);

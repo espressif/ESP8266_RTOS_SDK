@@ -119,6 +119,17 @@ void pwm_set_period(uint32 period);
 uint32 pwm_get_period(void);
 
 /**
+  * @brief  Starts PWM. 
+  *
+  * @attention This function needs to be called after PWM configuration is changed.
+  *
+  * @param  null
+  *
+  * @return null
+  */
+void pwm_start(void);
+
+/**
   * @}
   */
 

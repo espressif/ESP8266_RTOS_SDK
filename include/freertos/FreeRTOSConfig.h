@@ -104,7 +104,7 @@
 #if configUSE_TIMERS
 #define configTIMER_TASK_PRIORITY ( tskIDLE_PRIORITY + 2 )
 #define configTIMER_QUEUE_LENGTH (10)
-#define configTIMER_TASK_STACK_DEPTH  ( ( unsigned short ) 256 )
+#define configTIMER_TASK_STACK_DEPTH  ( ( unsigned short ) 512 )
 #endif
 
 /* Co-routine definitions. */
