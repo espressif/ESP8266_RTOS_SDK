@@ -83,7 +83,7 @@ uart0_write_char(char c)
 }
 
 LOCAL void
-uart_rx_intr_handler_ssc(void)
+uart_rx_intr_handler_ssc(void *arg)
 {
     /* uart0 and uart1 intr combine togther, when interrupt occur, see reg 0x3ff20020, bit2, bit0 represents
       * uart1 and uart0 respectively
@@ -117,7 +117,7 @@ uart_config(uint8 uart_no, UartDevice *uart)
         PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_U1TXD_BK);
     } else {
         /* rcv_buff size if 0x100 */
-        _xt_isr_attach(ETS_UART_INUM, uart_rx_intr_handler_ssc);
+        _xt_isr_attach(ETS_UART_INUM, uart_rx_intr_handler_ssc, NULL);
         PIN_PULLUP_DIS(PERIPHS_IO_MUX_U0TXD_U);
         PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_U0TXD);
     }
@@ -421,7 +421,7 @@ uart_init_new(void)
     UART_IntrConfig(UART0, &uart_intr);
 
     UART_SetPrintPort(UART0);
-    UART_intr_handler_register(uart0_rx_intr_handler);
+    UART_intr_handler_register(uart0_rx_intr_handler, NULL);
     ETS_UART_INTR_ENABLE();
 
     /*
