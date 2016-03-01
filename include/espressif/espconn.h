@@ -241,6 +241,8 @@ sint8 espconn_disconnect(struct espconn *espconn);
   * @return    Non-0 : error code
   *    -  ESPCONN_ARG - illegal argument, can't find the corresponding network according
   *                     to structure espconn
+  *    -  ESPCONN_INPROGRESS - the connection is still in progress, please call espconn_disconnect
+  *                     to disconnect before delete it.
   */
 sint8 espconn_delete(struct espconn *espconn);
 

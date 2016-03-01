@@ -74,7 +74,7 @@ void os_timer_setfn(os_timer_t *ptimer, os_timer_func_t *pfunction, void *parg);
   * @brief  Enable the millisecond timer.
   *
   * @param  os_timer_t *ptimer : timer structure
-  * @param  uint32_t milliseconds : Timing, unit: millisecond, the maximum value allowed is 0x41893
+  * @param  uint32_t milliseconds : Timing, unit: millisecond, range: 5 ~ 0x68DB8
   * @param  bool repeat_flag : Whether the timer will be invoked repeatedly or not
   *
   * @return null

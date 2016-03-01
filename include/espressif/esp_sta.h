@@ -351,13 +351,32 @@ bool wifi_station_dhcpc_start(void);
 bool wifi_station_dhcpc_stop(void);
 
 /**
-  * @brief  Get the ESP8266 station DHCP client status.
+  * @brief   Get the ESP8266 station DHCP client status.
   *
   * @param  null
   *
-  * @return enum dhcp_status
+  * @return  enum dhcp_status
   */
 enum dhcp_status wifi_station_dhcpc_status(void);
+
+/**
+  * @brief    Set ESP8266 station DHCP hostname.
+  *
+  * @param  char *name : hostname of ESP8266 station
+  *
+  * @return    true  : succeed
+  * @return    false : fail
+  */
+bool wifi_station_set_hostname(char *name);
+
+/**
+  * @brief  Get ESP8266 station DHCP hostname.
+  *
+  * @param  null
+  *
+  * @return the hostname of ESP8266 station
+  */
+char* wifi_station_get_hostname(void);
 
 /**
   * @}

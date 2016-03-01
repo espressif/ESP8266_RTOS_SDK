@@ -133,8 +133,8 @@ uint8 wifi_softap_get_station_num(void);
   * @brief     Get the information of stations connected to the ESP8266 soft-AP,
   *            including MAC and IP.
   *
-  * @attention wifi_softap_get_station_info can not get the static IP, it can only
-  *            be used when DHCP is enabled.
+  * @attention wifi_softap_get_station_info depends on DHCP, it can only
+  *            be used when DHCP is enabled, so it can not get the static IP.
   *
   * @param     null
   *

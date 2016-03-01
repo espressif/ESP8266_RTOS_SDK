@@ -355,7 +355,7 @@ typedef struct _esp_event {
   * @brief      The Wi-Fi event handler.
   *
   * @attention  No complex operations are allowed in callback. 
-  *             If you want to execute any complex operations, please post message to another task instead.  
+  *             If users want to execute any complex operations, please post message to another task instead.  
   *
   * @param      System_Event_t *event : WiFi event
   *
@@ -960,7 +960,7 @@ bool wifi_promiscuous_set_mac(const uint8_t *address);
 /**
   * @brief     Enable the promiscuous mode.
   *
-  * @attention 1. The promiscuous mode can only be enabled in the ESP8266 station mode.
+  * @attention 1. The promiscuous mode can only be enabled in the ESP8266 station mode. Do not call this API in user_init.
   * @attention 2. When in the promiscuous mode, the ESP8266 station and soft-AP are disabled.
   * @attention 3. Call wifi_station_disconnect to disconnect before enabling the promiscuous mode.
   * @attention 4. Don't call any other APIs when in the promiscuous mode. Call

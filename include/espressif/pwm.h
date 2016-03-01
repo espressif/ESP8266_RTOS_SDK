@@ -73,8 +73,8 @@ void pwm_init(uint32 period, uint32 *duty, uint32 pwm_channel_num, uint32(*pin_i
   * @brief     Set the duty cycle of a PWM channel.
   *
   *            Set the time that high level signal will last, duty depends on period,
-  *            the maximum value can be period *1000 / 45.
-  *            For example, 1KHz PWM, duty range is 0~22222
+  *            the maximum value can be 1023.
+  *           
   *
   * @attention After set configuration, pwm_start needs to be called to take effect.
   *
@@ -87,8 +87,6 @@ void pwm_set_duty(uint32 duty, uint8 channel);
 
 /**
   * @brief  Get the duty cycle of a PWM channel.
-  *
-  *         Duty cycle will be (duty * 45)/(period *1000).
   *
   * @param  uint8 channel : PWM channel number
   *

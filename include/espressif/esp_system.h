@@ -260,7 +260,7 @@ bool system_rtc_mem_write(uint8 dst, const void *src, uint16 n);
   * @brief  UART0 swap.
   *
   *         Use MTCK as UART0 RX, MTDO as UART0 TX, so ROM log will not output from
-  *         this new UART0. We also need to use MTDO (U0CTS) and MTCK (U0RTS) as UART0 in hardware.
+  *         this new UART0. We also need to use MTDO (U0RTS) and MTCK (U0CTS) as UART0 in hardware.
   *
   * @param  null
   *
@@ -300,8 +300,9 @@ uint16 system_adc_read(void);
 /**
   * @brief     Measure the power voltage of VDD3P3 pin 3 and 4, unit : 1/1024 V.
   *
-  * @attention 1. system_get_vdd33 can only be called when TOUT pin is suspended.
-  * @attention 2. The 107th byte in esp_init_data_default.bin (0~127byte) is named
+  * @attention 1. system_get_vdd33 depends on RF, please do not use it if RF is disabled.
+  * @attention 2. system_get_vdd33 can only be called when TOUT pin is suspended.
+  * @attention 3. The 107th byte in esp_init_data_default.bin (0~127byte) is named
   *               as "vdd33_const", when TOUT pin is suspended vdd33_const must be
   *               set as 0xFF, that is 255.
   *
