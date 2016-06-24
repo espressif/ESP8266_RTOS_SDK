@@ -10,6 +10,20 @@ APIs of "ESP8266_RTOS_SDK" are same as "ESP8266_NONOS_SDK"
 
 More details in "Wiki" !
 
+### about user_rf_cal_sector_set ###
+
+Use this function to set the target flash sector to store RF_CAL parameters. 
+
+The user_rf_cal_sector_set has to be added in application, but need NOT to be called. It will be called inside the SDK.
+The system parameter area (4 flash sectors) has already been used, so the RF_CAL parameters will be stored in the target sector set by user_rf_cal_sector_set. Since we do not know which sector is available in user data area, users need to set an available sector in the user_rf_cal_sector_set for the SDK to store RF_CAL parameter. If the user_rf_cal_sector_set is not added in the application, the compilation will fail in link stage.
+
+For example, refer to user_rf_cal_sector_set in SDK/examples/project_template/user/user_main.c
+
+Note:
+
+1. esp_init_data.bin has to be downloaded into flash at least once.
+2. Download blank.bin to initialize the sector stored RF_CAL parameter (set by user_rf_cal_sector_set), and download esp_init_data.bin into flash, when the system needs to be initialized, or RF needs to be calibrated again.
+
 ## Requrements ##
 
 You can use both xcc and gcc to compile your project, gcc is recommended.
