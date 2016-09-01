@@ -150,7 +150,7 @@ static int ICACHE_FLASH_ATTR process_client_hello(SSL *ssl)
 
     offset += id_len;
     cs_len = (buf[offset]<<8) + buf[offset+1];
-    offset += 3;        /* add 1 due to all cipher suites being 8 bit */
+    offset += 2;        /* skip cipher length field */
 
     PARANOIA_CHECK(pkt_size, offset);
 
