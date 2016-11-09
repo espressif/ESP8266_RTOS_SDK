@@ -60,6 +60,9 @@
 
 #include <string.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
 
 /* Router tables. */
 struct nd6_neighbor_cache_entry neighbor_cache[LWIP_ND6_NUM_NEIGHBORS];

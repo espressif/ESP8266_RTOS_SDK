@@ -49,6 +49,10 @@
 #include "netif/etharp.h"
 #include "netif/ppp_oe.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /* global variables */
 static tcpip_init_done_fn tcpip_init_done;
 static void *tcpip_init_done_arg;
@@ -509,10 +513,15 @@ pbuf_free_callback(struct pbuf *p)
  * @param m the heap memory to free
  * @return ERR_OK if callback could be enqueued, an err_t if not
  */
+static void mem_free_local(void *arg)
+{
+	mem_free(arg);
+}
+
 err_t
 mem_free_callback(void *m)
 {
-  return tcpip_callback_with_block(mem_free, m, 0);
+  return tcpip_callback_with_block(mem_free_local, m, 0);
 }
 
 #endif /* !NO_SYS */

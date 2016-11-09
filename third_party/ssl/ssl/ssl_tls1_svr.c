@@ -33,6 +33,10 @@
 
 static const uint8_t g_hello_done[] ICACHE_RODATA_ATTR STORE_ATTR = { HS_SERVER_HELLO_DONE, 0, 0, 0 };
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 static int process_client_hello(SSL *ssl);
 static int send_server_hello_sequence(SSL *ssl);
 static int send_server_hello(SSL *ssl);

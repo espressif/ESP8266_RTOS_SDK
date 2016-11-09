@@ -41,6 +41,10 @@
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_ssl.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 static int do_obj(SSL_CTX *ssl_ctx, int obj_type, 
                     SSLObjLoader *ssl_obj, const char *password);
 #ifdef CONFIG_SSL_HAS_PEM

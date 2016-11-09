@@ -25,14 +25,26 @@ def main():
     file_list = os.listdir(os.getcwd())
     cert_file_list = []
     for _file in file_list:
-        if _file.endswith(".cer") or _file.endswith(".key"):
-            cert_file_list.append(_file)
-    print cert_file_list
+        pos = _file.find(".key_1024")
+        if pos != -1:
+            cert_file_list.append(_file[:pos])
+        
+        pos = _file.find(".cer")
+        if pos!= -1:
+            cert_file_list.append(_file[:pos])
+
     for cert_file in cert_file_list:
-        with open(cert_file, 'rb') as f:
-            buff = f.read()
-        cert_list.append(Cert(cert_file, buff))
-    with open('esp_ca_cert.bin', 'wb+') as f:
+        if cert_file == 'private_key':
+            with open(cert_file+".key_1024", 'rb') as f:
+                buff = f.read()
+            cert_list.append(Cert(cert_file, buff))
+
+        if cert_file == 'certificate':    
+            with open(cert_file+".cer", 'rb') as f:
+                buff = f.read()
+            cert_list.append(Cert(cert_file, buff))
+        
+    with open('esp_cert_private_key.bin', 'wb+') as f:
         for _cert in cert_list:
             f.write("%s" % _cert)
     pass

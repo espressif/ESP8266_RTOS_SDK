@@ -45,6 +45,10 @@
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_ssl.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #define OPENSSL_CTX_ATTR  ((OPENSSL_CTX *)ssl_ctx->bonus_attr)
 
 static char *key_password = NULL;

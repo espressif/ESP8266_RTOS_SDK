@@ -36,6 +36,10 @@
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_crypto.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 void ICACHE_FLASH_ATTR RSA_priv_key_new(RSA_CTX **ctx, 
         const uint8_t *modulus, int mod_len,
         const uint8_t *pub_exp, int pub_len,

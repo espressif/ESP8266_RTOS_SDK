@@ -37,6 +37,10 @@
 #include "ssl/ssl_crypto.h"
 #include "ssl/ssl_crypto_misc.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 struct tm
 {
   int tm_sec;                   /* Seconds.     [0-60] (1 leap second) */

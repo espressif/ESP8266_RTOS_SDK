@@ -71,6 +71,7 @@
 #if LWIP_DHCP /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/stats.h"
+#include "lwip/sys.h"
 #include "lwip/mem.h"
 #include "lwip/udp.h"
 #include "lwip/ip_addr.h"
@@ -82,6 +83,10 @@
 #include "netif/etharp.h"
 
 #include <string.h>
+
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
 
 /** DHCP_CREATE_RAND_XID: if this is set to 1, the xid is created using
  * LWIP_RAND() (this overrides DHCP_GLOBAL_XID)
@@ -394,7 +399,9 @@ dhcp_fine_tmr()
     if (netif->dhcp != NULL) {
       /*add DHCP retries processing by LiuHan*/
       if (DHCP_MAXRTX != 0) {
-    	  if (netif->dhcp->tries >= DHCP_MAXRTX){
+    	  if ( netif->dhcp->tries >= DHCP_MAXRTX 
+				&& ( netif->dhcp->state == DHCP_REQUESTING || netif->dhcp->state == DHCP_SELECTING ) 
+		  ){
 			  os_printf("DHCP timeout\n");
 			  if (netif->dhcp_event != NULL)
 				  netif->dhcp_event();
@@ -1604,6 +1611,9 @@ decode_next:
 static void
 dhcp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t port)
 {
+  SYS_ARCH_DECL_PROTECT(lev); 
+  // add critical for protect dhcp struct
+  SYS_ARCH_PROTECT(lev);
   struct netif *netif = (struct netif *)arg;
   struct dhcp *dhcp = netif->dhcp;
   struct dhcp_msg *reply_msg = (struct dhcp_msg *)p->payload;
@@ -1696,6 +1706,7 @@ dhcp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t
 free_pbuf_and_return:
   dhcp->msg_in = NULL;
   pbuf_free(p);
+  SYS_ARCH_UNPROTECT(lev);
 }
 
 /**

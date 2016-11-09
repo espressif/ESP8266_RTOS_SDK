@@ -63,6 +63,10 @@
 
 #include <string.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 const struct eth_addr ethbroadcast = {{0xff,0xff,0xff,0xff,0xff,0xff}};
 const struct eth_addr ethzero = {{0,0,0,0,0,0}};
 
@@ -1120,9 +1124,24 @@ etharp_query(struct netif *netif, ip_addr_t *ipaddr, struct pbuf *q)
           /* queue was already existent, append the new entry to the end */
           struct etharp_q_entry *r;
           r = arp_table[i].q;
+          int entry_q_number = 1;
           while (r->next != NULL) {
+            entry_q_number ++;
             r = r->next;
           }
+#ifdef LWIP_ESP8266
+          if(entry_q_number >= ARP_ENTRY_QUEUE_SIZE) {
+            struct etharp_q_entry *q = arp_table[i].q;
+            /* pop first item off the queue */
+            arp_table[i].q = q->next;
+            /* get the packet pointer */
+            p = q->p;
+            /* now queue entry can be freed */
+            memp_free(MEMP_ARP_QUEUE, q);
+            /* free the queued IP packet */
+            pbuf_free(p);
+          }
+#endif /* LWIP_ESP8266 */
           r->next = new_entry;
         } else {
           /* queue did not exist, first item in queue */

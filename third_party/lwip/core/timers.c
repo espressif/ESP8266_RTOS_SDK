@@ -62,6 +62,10 @@
 #include "lwip/sys.h"
 #include "lwip/pbuf.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /** The one and only timeout list */
 static struct sys_timeo *next_timeout;
 #if NO_SYS

@@ -47,6 +47,10 @@
 
 #include <string.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /* public (non-static) constants */
 /** SNMP v1 == 0 */
 const s32_t snmp_version = 0;

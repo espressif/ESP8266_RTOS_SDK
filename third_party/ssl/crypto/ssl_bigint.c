@@ -63,6 +63,9 @@
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_bigint.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
 
 #define V1      v->comps[v->size-1]                 /**< v1 for division */
 #define V2      v->comps[v->size-2]                 /**< v2 for division */

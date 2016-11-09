@@ -43,6 +43,10 @@
 #include "wincrypt.h"
 #endif
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #ifndef WIN32
 //static int rng_fd = -1;
 #elif defined(CONFIG_WIN32_USE_CRYPTO_LIB)

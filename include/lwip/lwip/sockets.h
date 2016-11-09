@@ -381,6 +381,18 @@ int lwip_getpeername (int s, struct sockaddr *name, socklen_t *namelen);
 int lwip_getsockname (int s, struct sockaddr *name, socklen_t *namelen);
 int lwip_getsockopt (int s, int level, int optname, void *optval, socklen_t *optlen);
 int lwip_setsockopt (int s, int level, int optname, const void *optval, socklen_t optlen);
+
+
+/**
+ * set if lwip_close will use 4-handshake to close a tcp connection,
+ *
+ * @param req 1 , send rst pkt directly, when call lwip_close(),rather than 4-handshake.
+ * then all buffed PCB memory resource will be freed immediately
+ * 0, send Fin flag pkt other than rst pkt when call lwip_close(s)
+ * @return 
+ */
+void lwip_force_close_set(char req);
+
 int lwip_close(int s);
 int lwip_connect(int s, const struct sockaddr *name, socklen_t namelen);
 int lwip_listen(int s, int backlog);
@@ -398,7 +410,7 @@ int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptse
 int lwip_ioctl(int s, long cmd, void *argp);
 int lwip_fcntl(int s, int cmd, int val);
 
-#if LWIP_COMPAT_SOCKETS
+#if LWIP_COMPAT_SOCKETS && !defined(SOCKETS_MT)
 #define accept(a,b,c)         lwip_accept(a,b,c)
 #define bind(a,b,c)           lwip_bind(a,b,c)
 #define shutdown(a,b)         lwip_shutdown(a,b)
@@ -443,6 +455,8 @@ int lwip_fcntl(int s, int cmd, int val);
 #ifdef __cplusplus
 }
 #endif
+
+#include "multi-threads/sockets_mt.h"
 
 #endif /* LWIP_SOCKET */
 

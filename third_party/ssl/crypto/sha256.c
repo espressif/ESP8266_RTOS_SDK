@@ -35,6 +35,10 @@
 //#include "crypto.h"
 #include "lwip/mem.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #define GET_UINT32(n,b,i)                       \
 {                                               \
     (n) = ((uint32_t) (b)[(i)    ] << 24)       \

@@ -58,6 +58,10 @@
 
 #include <string.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #define IP4ADDR_PORT_TO_SOCKADDR(sin, ipXaddr, port) do { \
       (sin)->sin_len = sizeof(struct sockaddr_in); \
       (sin)->sin_family = AF_INET; \
@@ -192,9 +196,6 @@ union sockaddr_aligned {
 #endif /* LWIP_IPV6 */
    struct sockaddr_in sin;
 };
-
-char DefSocketCloseFlag = 0;
-char SocketCloseDoneFlag = 0;
 
 /** The global array of available sockets */
 static struct lwip_sock sockets[NUM_SOCKETS];
@@ -335,6 +336,7 @@ alloc_socket(struct netconn *newconn, int accepted)
     /* Protect socket array */
     SYS_ARCH_PROTECT(lev);
     if (!sockets[i].conn) {
+
       sockets[i].conn       = newconn;
       /* The socket is not yet known to anyone, so no need to protect
          after having marked it as used. */
@@ -348,6 +350,7 @@ alloc_socket(struct netconn *newconn, int accepted)
       sockets[i].errevent   = 0;
       sockets[i].err        = 0;
       sockets[i].select_waiting = 0;
+
       return i;
     }
     SYS_ARCH_UNPROTECT(lev);
@@ -548,27 +551,12 @@ lwip_close(int s)
   } else {
     LWIP_ASSERT("sock->lastdata == NULL", sock->lastdata == NULL);
   }
-if(sock->conn->state == NETCONN_WRITE)
-{
-	DefSocketCloseFlag = 1;
-	SocketCloseDoneFlag = 0;
-	if( sys_sem_valid(&(sock->conn->snd_op_completed)))
-	{
-	    sock->conn->current_msg->err = ERR_OK;
-	    sock->conn->current_msg = NULL;
-	    sock->conn->state = NETCONN_NONE;
-	    sys_sem_signal(&(sock->conn->snd_op_completed));
-	}
-	while( SocketCloseDoneFlag != 1 )
-	{ vTaskDelay(1); }
-	set_errno(0);
-	return 0;
-}
 
   netconn_delete(sock->conn);
 
   free_socket(sock, is_tcp);
   set_errno(0);
+
   return 0;
 }
 
@@ -756,10 +744,12 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
           netconn_recved(sock->conn, (u32_t)off);
           /* already received data, return that */
           sock_set_errno(sock, 0);
+
           return off;
         }
         LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom(%d): returning EWOULDBLOCK\n", s));
         sock_set_errno(sock, EWOULDBLOCK);
+
         return -1;
       }
 
@@ -779,6 +769,7 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
           netconn_recved(sock->conn, (u32_t)off);
           /* already received data, return that */
           sock_set_errno(sock, 0);
+		  
           return off;
         }
         /* We should really do some error checking here. */
@@ -866,7 +857,11 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
         } else {
         	/*fix the code for setting the UDP PROTO's remote infomation by liuh at 2014.8.27*/
         	if (NETCONNTYPE_GROUP(netconn_type(sock->conn)) == NETCONN_UDP){
+#if LWIP_IPV6
         		sock->conn->pcb.udp->remote_ip.ip4.addr = fromaddr->ip4.addr;
+#else
+        		sock->conn->pcb.udp->remote_ip.addr = fromaddr->addr;
+#endif
         		sock->conn->pcb.udp->remote_port = port;
         	}
         }
@@ -900,6 +895,7 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
     netconn_recved(sock->conn, (u32_t)off);
   }
   sock_set_errno(sock, 0);
+
   return off;
 }
 
@@ -933,7 +929,9 @@ lwip_send(int s, const void *data, size_t size, int flags)
 
   if (NETCONNTYPE_GROUP(netconn_type(sock->conn)) != NETCONN_TCP) {
 #if (LWIP_UDP || LWIP_RAW)
-    return lwip_sendto(s, data, size, flags, NULL, 0);
+	int ret;
+    ret = lwip_sendto(s, data, size, flags, NULL, 0);
+    return ret;
 #else /* (LWIP_UDP || LWIP_RAW) */
     sock_set_errno(sock, err_to_errno(ERR_ARG));
     return -1;
@@ -949,13 +947,6 @@ lwip_send(int s, const void *data, size_t size, int flags)
   LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_send(%d) err=%d written=%"SZT_F"\n", s, err, written));
   sock_set_errno(sock, err_to_errno(err));
 
-
-if(DefSocketCloseFlag==1)
-{
-	DefSocketCloseFlag = 0;
-	lwip_close(s);
-	SocketCloseDoneFlag = 1;
-}
   return (err == ERR_OK ? (int)written : -1);
 }
 
@@ -1084,7 +1075,11 @@ lwip_sendto(int s, const void *data, size_t size, int flags,
 	  /*fix the code for getting the UDP proto's remote information by liuh at 2014.8.27*/
 //	  ipX_addr_set_any(NETCONNTYPE_ISIPV6(netconn_type(sock->conn)), &buf.addr);
 	  if (NETCONNTYPE_GROUP(netconn_type(sock->conn)) == NETCONN_UDP){
+#if LWIP_IPV6
 		  buf.addr.ip4.addr = sock->conn->pcb.udp->remote_ip.ip4.addr;
+#else
+		  buf.addr.addr = sock->conn->pcb.udp->remote_ip.addr;
+#endif
 		  remote_port = sock->conn->pcb.udp->remote_port;
 	  } else {
 		  remote_port = 0;
@@ -1446,7 +1441,6 @@ event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
   SYS_ARCH_DECL_PROTECT(lev);
 
   LWIP_UNUSED_ARG(len);
-
   /* Get socket */
   if (conn) {
     s = conn->socket;
@@ -1473,7 +1467,7 @@ event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
       return;
     }
   } else {
-    return;
+	return;
   }
 
   SYS_ARCH_PROTECT(lev);
@@ -1498,7 +1492,6 @@ event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
       LWIP_ASSERT("unknown event", 0);
       break;
   }
-
   if (sock->select_waiting == 0) {
     /* noone is waiting for this socket, no need to check select_cb_list */
     SYS_ARCH_UNPROTECT(lev);
@@ -1712,6 +1705,22 @@ lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen)
       }
 #endif /* LWIP_UDP */
       break;
+#if LWIP_SO_LINGER
+     case SO_LINGER:
+	 {
+	   s16_t conn_linger;
+	   struct linger* linger = (struct linger*)optval;
+	   conn_linger = sock->conn->linger;
+	   if (conn_linger >= 0) {
+	     linger->l_onoff = 1;
+	     linger->l_linger = (int)conn_linger;
+	   } else {
+	     linger->l_onoff = 0;
+	     linger->l_linger = 0;
+	   }
+     }
+     break;
+#endif /* LWIP_SO_LINGER */
 
     default:
       LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_getsockopt(%d, SOL_SOCKET, UNIMPL: optname=0x%x, ..)\n",
@@ -1859,7 +1868,7 @@ lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen)
   data.optlen = optlen;
   data.err = err;
   tcpip_callback(lwip_getsockopt_internal, &data);
-  sys_arch_sem_wait(&sock->conn->op_completed, 0);
+  sys_arch_sem_wait(&sock->conn->ioctrl_completed, 0);
   /* maybe lwip_getsockopt_internal has changed err */
   err = data.err;
 
@@ -2089,7 +2098,7 @@ lwip_getsockopt_internal(void *arg)
     LWIP_ASSERT("unhandled level", 0);
     break;
   } /* switch (level) */
-  sys_sem_signal(&sock->conn->op_completed);
+  sys_sem_signal(&sock->conn->ioctrl_completed);
 }
 
 int
@@ -2154,6 +2163,26 @@ lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t opt
       }
 #endif /* LWIP_UDP */
       break;
+#if LWIP_SO_LINGER
+    case SO_LINGER:
+    {
+      const struct linger* linger = (const struct linger*)optval;
+      if (linger->l_onoff) {
+        int lingersec = linger->l_linger;
+        if (lingersec < 0) {
+            return EINVAL;
+        }
+        if (lingersec > 0xFFFF) {
+            lingersec = 0xFFFF;
+        }
+        sock->conn->linger = (s16_t)lingersec;
+      } else {
+		sock->conn->linger = -1;
+	  }
+    }
+    break;
+#endif /* LWIP_SO_LINGER */
+
     default:
       LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_setsockopt(%d, SOL_SOCKET, UNIMPL: optname=0x%x, ..)\n",
                   s, optname));
@@ -2316,7 +2345,7 @@ lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t opt
   data.optlen = &optlen;
   data.err = err;
   tcpip_callback(lwip_setsockopt_internal, &data);
-  sys_arch_sem_wait(&sock->conn->op_completed, 0);
+  sys_arch_sem_wait(&sock->conn->ioctrl_completed, 0);
   /* maybe lwip_setsockopt_internal has changed err */
   err = data.err;
 
@@ -2551,7 +2580,7 @@ lwip_setsockopt_internal(void *arg)
     LWIP_ASSERT("unhandled level", 0);
     break;
   }  /* switch (level) */
-  sys_sem_signal(&sock->conn->op_completed);
+  sys_sem_signal(&sock->conn->ioctrl_completed);
 }
 
 int
@@ -2676,5 +2705,7 @@ lwip_fcntl(int s, int cmd, int val)
   }
   return ret;
 }
+
+#include "multi-threads/sockets_mt.c"
 
 #endif /* LWIP_SOCKET */

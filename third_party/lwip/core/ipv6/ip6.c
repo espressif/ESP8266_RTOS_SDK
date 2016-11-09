@@ -60,6 +60,9 @@
 #include "lwip/debug.h"
 #include "lwip/stats.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
 
 /**
  * Finds the appropriate network interface for a given IPv6 address. It tries to select

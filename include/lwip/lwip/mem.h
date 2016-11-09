@@ -50,20 +50,49 @@ typedef size_t mem_size_t;
 /* in case C library malloc() needs extra protection,
  * allow these defines to be overridden.
  */
+
+#ifndef MEMLEAK_DEBUG
+
+#include "esp_libc.h"
+
 #ifndef mem_free
-#define mem_free vPortFree
+#define mem_free(s) free(s)
 #endif
 #ifndef mem_malloc
-#define mem_malloc pvPortMalloc
+#define mem_malloc(s) malloc(s)
 #endif
 #ifndef mem_calloc
-#define mem_calloc pvPortCalloc
+#define mem_calloc(s) calloc(s)
 #endif
 #ifndef mem_realloc
-#define mem_realloc pvPortRealloc
+#define mem_realloc(p, s) realloc(p, s)
 #endif
 #ifndef mem_zalloc
-#define mem_zalloc pvPortZalloc
+#define mem_zalloc(s) zalloc(s)
+#endif
+
+#else
+
+#ifndef mem_free
+#define mem_free(s) \
+	do{\
+		const char *file = mem_debug_file;\
+		vPortFree(s, file, __LINE__);\
+	}while(0)
+#endif
+#ifndef mem_malloc
+#define mem_malloc(s) ({const char *file = mem_debug_file; pvPortMalloc(s, file, __LINE__);})
+#endif
+#ifndef mem_calloc
+#define mem_calloc(s) ({const char *file = mem_debug_file; pvPortCalloc(s, file, __LINE__);})
+#endif
+#ifndef mem_realloc
+#define mem_realloc(p, s) ({const char *file = mem_debug_file; pvPortRealloc(p, s, file, __LINE__);})
+#endif
+#ifndef mem_zalloc
+#define mem_zalloc(s) ({const char *file = mem_debug_file; pvPortZalloc(s, file, __LINE__);})
+#endif
+
 #endif
 
 /* Since there is no C library allocation function to shrink memory without

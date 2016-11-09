@@ -40,6 +40,10 @@
 
 #include "lwip/sockets.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #ifdef CONFIG_SSL_CERT_VERIFICATION
 /**
  * Retrieve the signature from a certificate.
@@ -374,7 +378,7 @@ int ICACHE_FLASH_ATTR x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX
         expn = cert->rsa_ctx->e;
     }
 
-    gettimeofday(&tv, &cert->not_before);
+    gettimeofday(&tv, (void*)&cert->not_before);
 #if CONFIG_SSL_DISPLAY_MODE
     os_printf("before %u, tv_sec %u, after %u\n",cert->not_before, tv.tv_sec, cert->not_after);
 #endif

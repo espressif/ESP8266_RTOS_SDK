@@ -42,6 +42,7 @@ extern "C" {
 #endif
 
 #include "esp_common.h"
+#include "lwip/apps/time.h"
 
 #if 0
 #define ssl_printf(fmt, args...) os_printf(fmt,## args)
@@ -88,19 +89,19 @@ static __inline__ uint64 be64toh(uint64 __x) {return (((uint64)be32toh(__x & (ui
 #define htobe64(x) be64toh(x)
 #endif
 
-#if 1
-#define SSL_MALLOC(size) 		  ax_malloc(size, __FILE__, __LINE__)
-#define SSL_REALLOC(mem_ref,size) ax_realloc(mem_ref, size, __FILE__, __LINE__)
-#define SSL_CALLOC(element, size) ax_calloc(element, size, __FILE__, __LINE__)
-#define SSL_ZALLOC(size) 		  ax_zalloc(size, __FILE__, __LINE__)
+#ifdef MEMLEAK_DEBUG
+#define SSL_MALLOC(size) 		  ax_malloc(size, mem_debug_file, __LINE__)
+#define SSL_REALLOC(mem_ref,size) ax_realloc(mem_ref, size, mem_debug_file, __LINE__)
+#define SSL_CALLOC(element, size) ax_calloc(element, size, mem_debug_file, __LINE__)
+#define SSL_ZALLOC(size) 		  ax_zalloc(size, mem_debug_file, __LINE__)
+#define SSL_FREE(mem_ref)         ax_free(mem_ref, mem_debug_file, __LINE__)
 #else
 #define SSL_MALLOC(size) 		  malloc(size)
 #define SSL_REALLOC(mem_ref,size) realloc(mem_ref, size)
 #define SSL_CALLOC(element, size) calloc(element, size)
 #define SSL_ZALLOC(size) 		  zalloc(size)
+#define SSL_FREE(mem_ref)         free(mem_ref)
 #endif
-
-#define SSL_FREE(mem_ref) 	 	  ax_free(mem_ref, __FILE__, __LINE__)
 
 #if 0
 #define  FILE_NAME_LENGTH 		   25

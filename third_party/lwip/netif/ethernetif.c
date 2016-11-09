@@ -49,6 +49,10 @@
 
 #include "esp_common.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /* Define those to better describe your network interface. */
 #define IFNAME0 'e'
 #define IFNAME1 'n'
@@ -105,7 +109,7 @@ low_level_output(struct netif *netif, struct pbuf *p)
 {
   struct ethernetif *ethernetif = netif->state;
   struct pbuf *q;
-
+  err_t err = ERR_OK;
 //  initiate transfer();
   
 #if ETH_PAD_SIZE
@@ -115,14 +119,17 @@ low_level_output(struct netif *netif, struct pbuf *p)
   struct pbuf *tmp;
   for(q = p; q != NULL; q = q->next) {
     /* Send the data from the pbuf to the interface, one pbuf at a
-       time. The size of the data in each pbuf is kept in the ->len
-       variable. */
-//    send data from(q->payload, q->len);
+     time. The size of the data in each pbuf is kept in the ->len
+     variable. */
+  //    send data from(q->payload, q->len);
     tmp = q->next;
 
-    ieee80211_output_pbuf(netif, q);
+    err = ieee80211_output_pbuf(netif, q);
+    if (err == ERR_MEM) {
+        err = ERR_OK;
+    }
     q->next = tmp;
-	break;
+    break;
   }
 
 //  signal that packet should be sent();
@@ -133,7 +140,7 @@ low_level_output(struct netif *netif, struct pbuf *p)
   
   LINK_STATS_INC(link.xmit);
 
-  return ERR_OK;
+  return err;
 }
 
 /**

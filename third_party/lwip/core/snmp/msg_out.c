@@ -52,6 +52,10 @@
 #include "lwip/snmp_asn1.h"
 #include "lwip/snmp_msg.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 struct snmp_trap_dst
 {
   /* destination IP address in network order */

@@ -200,7 +200,8 @@ CCFLAGS += 			\
 	-mlongcalls	\
 	-mtext-section-literals \
 	-ffunction-sections \
-	-fdata-sections
+	-fdata-sections	\
+	-fno-builtin-printf
 #	-Wall			
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
@@ -397,6 +398,7 @@ $(foreach image,$(GEN_IMAGES),$(eval $(call MakeImage,$(basename $(image)))))
 #
 
 INCLUDES := $(INCLUDES) -I $(SDK_PATH)/include -I $(SDK_PATH)/extra_include
+INCLUDES += -I $(SDK_PATH)/driver_lib/include
 INCLUDES += -I $(SDK_PATH)/include/espressif
 INCLUDES += -I $(SDK_PATH)/include/lwip
 INCLUDES += -I $(SDK_PATH)/include/lwip/ipv4

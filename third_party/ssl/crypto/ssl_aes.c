@@ -40,6 +40,10 @@
 /* all commented out in skeleton mode */
 #ifndef CONFIG_SSL_SKELETON_MODE
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #define rot1(x) (((x) << 24) | ((x) >> 8))
 #define rot2(x) (((x) << 16) | ((x) >> 16))
 #define rot3(x) (((x) <<  8) | ((x) >> 24))

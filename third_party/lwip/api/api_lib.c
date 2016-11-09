@@ -54,6 +54,10 @@
 
 #include <string.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /**
  * Create a new netconn (of a specific type) that has a callback function.
  * The corresponding pcb is also created.
@@ -85,6 +89,7 @@ netconn_new_with_proto_and_callback(enum netconn_type t, u8_t proto, netconn_cal
 #endif /* LWIP_TCP */
       sys_sem_free(&conn->op_completed);
       sys_sem_free(&conn->snd_op_completed);
+      sys_sem_free(&conn->ioctrl_completed);
       sys_mbox_free(&conn->recvmbox);
       memp_free(MEMP_NETCONN, conn);
       return NULL;
@@ -420,6 +425,14 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
 #if (LWIP_UDP || LWIP_RAW)
   {
     LWIP_ASSERT("buf != NULL", buf != NULL);
+	/*start for mutlix thread by liuhan*/
+	if (buf == NULL) {
+      API_EVENT(conn, NETCONN_EVT_RCVMINUS, 0);
+      /* Avoid to lose any previous error code */
+      NETCONN_SET_SAFE_ERR(conn, ERR_CLSD);
+      return ERR_CLSD;
+    }
+	/*finish for mutlix thread by liuhan*/
     len = netbuf_len((struct netbuf *)buf);
   }
 #endif /* (LWIP_UDP || LWIP_RAW) */

@@ -79,6 +79,10 @@
 #define NETIF_LINK_CALLBACK(n)
 #endif /* LWIP_NETIF_LINK_CALLBACK */ 
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 struct netif *netif_list;
 struct netif *netif_default;
 
@@ -846,9 +850,20 @@ netif_matches_ip6_addr(struct netif * netif, ip6_addr_t * ip6addr)
   return -1;
 }
 
+static err_t
+netif_null_output_ip6(struct netif *netif, struct pbuf *p, ip6_addr_t *ipaddr)
+{
+	(void)netif;
+	(void)p;
+	(void)ipaddr;
+	return ERR_IF;
+}
+#endif  /*LWIP_IPV6*/
+
 void
 netif_create_ip6_linklocal_address(struct netif * netif, u8_t from_mac_48bit)
 {
+#if LWIP_IPV6
   u8_t i, addr_index;
 
   /* Link-local prefix. */
@@ -891,11 +906,14 @@ netif_create_ip6_linklocal_address(struct netif * netif, u8_t from_mac_48bit)
   /* Consider address valid. */
   netif->ip6_addr_state[0] = IP6_ADDR_PREFERRED;
 #endif /* LWIP_IPV6_AUTOCONFIG */
+
+#endif  /*LWIP_IPV6*/
 }
 
 void
 netif_create_ip4_linklocal_address(struct netif * netif)
 {
+#if LWIP_IPV6
 	ip_addr_t linklocal;
 	ip_addr_t linklocal_mask;
 	uint32_t addr = 0;
@@ -918,15 +936,7 @@ netif_create_ip4_linklocal_address(struct netif * netif)
 	} else {
 		IP4_ADDR(&netif->link_local_addr.ip4, 169, 254, ip4_addr3(&addr), ip4_addr4(&addr));
 	}
+#endif  /*LWIP_IPV6*/
 }
 
-static err_t
-netif_null_output_ip6(struct netif *netif, struct pbuf *p, ip6_addr_t *ipaddr)
-{
-    (void)netif;
-    (void)p;
-    (void)ipaddr;
 
-    return ERR_IF;
-}
-#endif /* LWIP_IPV6 */

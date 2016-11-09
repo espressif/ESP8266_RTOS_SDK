@@ -36,6 +36,10 @@
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_ssl.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /**
  * Generate a basic X.509 certificate
  */

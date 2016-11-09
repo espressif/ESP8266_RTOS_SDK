@@ -84,6 +84,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /** DNS server IP address */
 #ifndef DNS_SERVER_ADDRESS
 #define DNS_SERVER_ADDRESS(ipaddr)        (ip4_addr_set_u32(ipaddr, 0xDEDE43D0)) /* resolver1.opendns.com(208.67.222.222) */
@@ -743,7 +747,7 @@ dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t 
   struct dns_table_entry *pEntry;
   u16_t nquestions, nanswers;
 
-  u8_t* dns_payload_buffer = (u8_t* )zalloc(LWIP_MEM_ALIGN_BUFFER(DNS_MSG_SIZE));
+  u8_t* dns_payload_buffer = (u8_t* )mem_zalloc(LWIP_MEM_ALIGN_BUFFER(DNS_MSG_SIZE));
   dns_payload = (u8_t *)LWIP_MEM_ALIGN(dns_payload_buffer);
 
   LWIP_UNUSED_ARG(arg);
@@ -773,8 +777,7 @@ dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t 
     if (i < DNS_TABLE_SIZE) {
       pEntry = &dns_table[i];
       if(pEntry->state == DNS_STATE_ASKING) {
-        /* This entry is now completed. */
-        pEntry->state = DNS_STATE_DONE;
+
         pEntry->err   = hdr->flags2 & DNS_FLAG2_ERR_MASK;
 
         /* We only care about the question(s) and the answers. The authrr
@@ -794,8 +797,11 @@ dns_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, ip_addr_t *addr, u16_t 
         if (((hdr->flags1 & DNS_FLAG1_RESPONSE) == 0) || (pEntry->err != 0) || (nquestions != 1)) {
           LWIP_DEBUGF(DNS_DEBUG, ("dns_recv: \"%s\": error in flags\n", pEntry->name));
           /* call callback to indicate error, clean up memory and return */
-          goto responseerr;
+          //goto responseerr;
+			goto memerr;
         }
+        /* This entry is now completed. */
+        pEntry->state = DNS_STATE_DONE;
 
 #if DNS_DOES_NAME_CHECK
         /* Check if the name in the "question" part match with the name in the entry. */
@@ -868,7 +874,7 @@ flushentry:
 memerr:
   /* free pbuf */
   pbuf_free(p);
-  free(dns_payload_buffer);
+  mem_free(dns_payload_buffer);
   return;
 }
 

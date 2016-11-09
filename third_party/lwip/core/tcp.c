@@ -58,6 +58,10 @@
 
 #include <string.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #ifndef TCP_LOCAL_PORT_RANGE_START
 /* From http://www.iana.org/assignments/port-numbers:
    "The Dynamic and/or Private Ports are those from 49152 through 65535" */
@@ -160,6 +164,25 @@ tcp_tmr(void)
     tcp_slowtmr();
   }
 }
+
+static char LwipForceClose = 0;
+//Open this func to customer
+/**
+ * set if lwip_close will use 4-handshake to close a tcp connection,
+ *
+ * @param req 1 , send rst pkt directly, when call lwip_close(),rather than 4-handshake.
+ * then all buffed PCB memory resource will be freed immediately
+ * 0, send Fin flag pkt other than rst pkt
+ * @return 
+ */
+void lwip_force_close_set(char req)
+{
+	if(req == 0)
+		LwipForceClose = 0;
+	else
+		LwipForceClose = 1;
+}
+
 
 /**
  * Closes the TX side of a connection held by the PCB.
@@ -1333,7 +1356,7 @@ static void tcp_kill_finwait2(void)
 	inactivity = 0;
 	inactive = NULL;
 	for (pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
-		if (pcb->state == FIN_WAIT_2) {
+		if (pcb->state == FIN_WAIT_1 || pcb->state == FIN_WAIT_2) {
 			if ((u32_t) (tcp_ticks - pcb->tmr) >= inactivity) {
 				inactivity = tcp_ticks - pcb->tmr;
 				inactive = pcb;
@@ -1396,7 +1419,8 @@ tcp_alloc(u8_t prio)
   /*Kills the oldest connection that is in FIN_WAIT_2 state.*/
   time_wait_num = 0;
   for (pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next){
-	  if (pcb->state == FIN_WAIT_2)
+	  //if (pcb->state == FIN_WAIT_2)
+	  if (pcb->state == FIN_WAIT_2 || pcb->state == FIN_WAIT_1)
 		  time_wait_num ++;
   }
 

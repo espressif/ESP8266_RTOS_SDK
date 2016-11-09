@@ -37,6 +37,10 @@
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_crypto.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /**
  * Perform HMAC-MD5
  * NOTE: does not handle keys larger than the block size.

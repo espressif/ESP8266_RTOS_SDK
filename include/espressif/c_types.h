@@ -90,7 +90,12 @@ typedef enum {
 #define STORE_ATTR          __attribute__((aligned(4)))
 
 #define SHMEM_ATTR
+
+#ifdef ICACHE_FLASH
+#define ICACHE_FLASH_ATTR __attribute__((section(".irom0.text")))
+#else
 #define ICACHE_FLASH_ATTR
+#endif
 
 #define DMEM_ATTR           __attribute__((section(".bss")))
 #define IRAM_ATTR           __attribute__((section(".text")))

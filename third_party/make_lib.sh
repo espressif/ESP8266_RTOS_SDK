@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 export SDK_PATH=$(dirname $(pwd))
 

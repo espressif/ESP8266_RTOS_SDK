@@ -40,6 +40,10 @@
 #include "lwip/memp.h"
 #include "lwip/netif.h"
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /** .iso.org.dod.internet address prefix, @see snmp_iso_*() */
 const s32_t prefix[4] = {1, 3, 6, 1};
 

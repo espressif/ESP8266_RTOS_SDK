@@ -38,6 +38,10 @@
  */
 #include <nopoll_decl.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /** 
  * \addtogroup nopoll_decl_module
  * @{
@@ -54,7 +58,7 @@
  */
 noPollPtr nopoll_calloc(size_t count, size_t size)
 {
-   return calloc (count, size);
+   return (void *)os_calloc (count, size);
 }
 
 /** 
@@ -68,7 +72,7 @@ noPollPtr nopoll_calloc(size_t count, size_t size)
  */
 noPollPtr nopoll_realloc(noPollPtr ref, size_t size)
 {
-   return realloc (ref, size);
+   return (void *)os_realloc (ref, size);
 }
 
 /** 
@@ -79,7 +83,7 @@ noPollPtr nopoll_realloc(noPollPtr ref, size_t size)
  */
 void nopoll_free (noPollPtr ref)
 {
-	free (ref);
+	os_free (ref);
 	return;
 }
 

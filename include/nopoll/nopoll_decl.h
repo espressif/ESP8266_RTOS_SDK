@@ -454,6 +454,8 @@ typedef enum {
 
 BEGIN_C_DECLS
 
+#include "esp_libc.h"
+
 noPollPtr  nopoll_calloc  (size_t count, size_t size);
 
 noPollPtr  nopoll_realloc (noPollPtr ref, size_t size);

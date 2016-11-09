@@ -25,7 +25,8 @@ endif
 #   makefile at its root level - these are then overridden
 #   for a subtree within the makefile rooted therein
 #
-#DEFINES += 
+# MEMLEAK_DEBUG must be defined for FreeRTOS.
+DEFINES += -DMEMLEAK_DEBUG -DICACHE_FLASH
 
 #############################################################
 # Recursion Magic - Don't touch this!!

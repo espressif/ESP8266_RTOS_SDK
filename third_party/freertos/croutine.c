@@ -88,6 +88,10 @@ corCRCB * pxCurrentCoRoutine = NULL;
 static unsigned portBASE_TYPE uxTopCoRoutineReadyPriority = 0;
 static portTickType xCoRoutineTickCount = 0, xLastTickCount = 0, xPassedTicks = 0;
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 /* The initial state of the co-routine when it is created. */
 #define corINITIAL_STATE	( 0 )
 
@@ -139,7 +143,7 @@ signed portBASE_TYPE xReturn;
 corCRCB *pxCoRoutine;
 
 	/* Allocate the memory that will store the co-routine control block. */
-	pxCoRoutine = ( corCRCB * ) pvPortMalloc( sizeof( corCRCB ) );
+	pxCoRoutine = ( corCRCB * ) os_malloc( sizeof( corCRCB ) );
 	if( pxCoRoutine )
 	{
 		/* If pxCurrentCoRoutine is NULL then this is the first co-routine to

@@ -33,6 +33,10 @@
 #define __LWIPOPTS_H__
 
 #define LWIP_ESP8266
+
+#define SOCKETS_MT
+
+//#define SOCKETS_TCP_TRACE
 /*
    -----------------------------------------------
    ---------- Platform specific locking ----------
@@ -93,7 +97,7 @@
  * MEMP_NUM_TCP_PCB: the number of simulatenously active TCP connections.
  * (requires the LWIP_TCP option)
  */
-#define MEMP_NUM_TCP_PCB                (*(volatile uint32*)0x600011FC)
+#define MEMP_NUM_TCP_PCB                5	//(*(volatile uint32*)0x600011FC)
 
 /**
  * MEMP_NUM_NETCONN: the number of struct netconns.
@@ -115,6 +119,16 @@
  */
 #define ARP_QUEUEING                    1
 
+#if ARP_QUEUEING
+#ifdef LWIP_ESP8266
+/**
+ * Only queue ARP_ENTRY_QUEUE_SIZE pending outgoing packets for ARP entry.
+ * This limit will be helpful to avoid system running out of memory instantly.
+ * (eg. within 350ms)
+ */
+#define ARP_ENTRY_QUEUE_SIZE            3
+#endif /* LWIP_ESP8266 */
+#endif /* ARP_QUEUEING */
 /*
    --------------------------------
    ---------- IP options ----------
@@ -223,13 +237,13 @@
  * TCP_WND: The size of a TCP window.  This must be at least
  * (2 * TCP_MSS) for things to work well
  */
-#define TCP_WND                         (*(volatile uint32*)0x600011F0)
+//#define TCP_WND                         (*(volatile uint32*)0x600011F0)
 
 /**
  * TCP_QUEUE_OOSEQ==1: TCP will queue segments that arrive out of order.
  * Define to 0 if your device is low on memory.
  */
-#define TCP_QUEUE_OOSEQ                 1
+#define TCP_QUEUE_OOSEQ                 0
 
 /*
  *     LWIP_EVENT_API==1: The user defines lwip_tcp_event() to receive all
@@ -242,12 +256,12 @@
 /**
  * TCP_MAXRTX: Maximum number of retransmissions of data segments.
  */
-#define TCP_MAXRTX                      (*(volatile uint32*)0x600011E8)
+#define TCP_MAXRTX                      12  //(*(volatile uint32*)0x600011E8)
 
 /**
  * TCP_SYNMAXRTX: Maximum number of retransmissions of SYN segments.
  */
-#define TCP_SYNMAXRTX                   (*(volatile uint32*)0x600011E4)
+#define TCP_SYNMAXRTX                   6   //(*(volatile uint32*)0x600011E4)
 
 /**
  * TCP_LISTEN_BACKLOG: Enable the backlog option for tcp listen pcb.

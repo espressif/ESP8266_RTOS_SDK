@@ -52,3 +52,7 @@ PROVIDE ( strlen = 0x40002ac8 );
 PROVIDE ( strncmp = 0x40002ab8 );
 PROVIDE ( strncpy = 0x40002a98 );
 PROVIDE ( strstr = 0x40002ad8 );
+
+PROVIDE ( gpio_input_get = 0x40004cf0 );
+PROVIDE ( gpio_pin_wakeup_disable = 0x40004ed4 );
+PROVIDE ( gpio_pin_wakeup_enable = 0x40004e90 );

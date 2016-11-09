@@ -178,6 +178,7 @@ struct netconn {
   /** sem that is used to synchroneously execute functions in the core context */
   sys_sem_t op_completed;	//
   sys_sem_t snd_op_completed;	//only for snd semphore
+  sys_sem_t ioctrl_completed;   //only for IO ctrl semphore
   /** mbox where received packets are stored until they are fetched
       by the netconn application thread (can grow quite big) */
   sys_mbox_t recvmbox;
@@ -224,6 +225,101 @@ struct netconn {
 #endif /* LWIP_TCP */
   /** A callback function that is informed about events for this netconn */
   netconn_callback callback;
+
+#if LWIP_SO_LINGER
+    /* add by DongHeng, to force to free TCP */
+  s16_t linger;
+#endif
+
+#ifdef SOCKETS_TCP_TRACE
+  u32_t recv_bytes[2];
+  u32_t recv_bytes_err[2];
+
+  u32_t send_bytes[2];
+  u32_t send_bytes_ok[2];
+  u32_t send_bytes_nomem[2];
+
+#define ADD_TCP_RECV_BYTES(s, b) \
+{ \
+    if (s->recv_bytes[0] > 0xffff0000){ \
+        s->recv_bytes[0] = b; \
+        s->recv_bytes[1]++; \
+    } else { \
+        s->recv_bytes[0] += b; \
+    } \
+}
+
+#define ADD_TCP_RECV_BYTES_ERR(s, b) \
+{ \
+    if (s->recv_bytes_err[0] > 0xffff0000){ \
+        s->recv_bytes_err[0] = b; \
+        s->recv_bytes_err[1]++; \
+    } else { \
+        s->recv_bytes_err[0] += b; \
+    } \
+}
+
+#define ADD_TCP_SEND_BYTES(s, b) \
+{ \
+    if (s->send_bytes[0] > 0xffff0000){ \
+        s->send_bytes[0] = b; \
+        s->send_bytes[1]++; \
+    } else { \
+        s->send_bytes[0] += b; \
+    } \
+}
+
+#define ADD_TCP_SEND_BYTES_OK(s, b) \
+{ \
+    if (s->send_bytes_ok[0] > 0xffff0000){ \
+        s->send_bytes_ok[0] = b; \
+        s->send_bytes_ok[1]++; \
+    } else { \
+        s->send_bytes_ok[0] += b; \
+    } \
+}
+
+#define ADD_TCP_SEND_BYTES_NOMEM(s, b) \
+{ \
+    if (s->send_bytes_nomem[0] > 0xffff0000){ \
+        s->send_bytes_nomem[0] = b; \
+        s->send_bytes_nomem[1]++; \
+    } else { \
+        s->send_bytes_nomem[0] += b; \
+    } \
+}
+
+#define ADD_TCP_RECV_BYTES_CLEAR(s) \
+    (s)->recv_bytes[0] = (s)->recv_bytes[1] = 0;
+
+#define ADD_TCP_RECV_BYTES_ERR_CLEAR(s) \
+    (s)->recv_bytes_err[0] = (s)->recv_bytes_err[1] = 0;
+
+#define ADD_TCP_SEND_BYTES_CLEAR(s) \
+    (s)->send_bytes[0] = (s)->send_bytes[1] = 0;
+
+#define ADD_TCP_SEND_BYTES_OK_CLEAR(s) \
+    (s)->send_bytes_ok[0] = (s)->send_bytes_ok[1] = 0;
+
+#define ADD_TCP_SEND_BYTES_NOMEM_CLEAR(s) \
+    (s)->send_bytes_nomem[0] = (s)->send_bytes_nomem[1] = 0;
+
+#define ADD_TCP_RECV_BYTES_GET(s, b) \
+    (b)[0] = (s)->recv_bytes[0]; (b)[1] = (s)->recv_bytes[1];
+
+#define ADD_TCP_RECV_BYTES_ERR_GET(s, b) \
+    (b)[0] = (s)->recv_bytes_err[0]; (b)[1] = (s)->recv_bytes_err[1];
+
+#define ADD_TCP_SEND_BYTES_GET(s, b) \
+    (b)[0] = (s)->send_bytes[0]; (b)[1] = (s)->send_bytes[1];
+
+#define ADD_TCP_SEND_BYTES_OK_GET(s, b) \
+    (b)[0] = (s)->send_bytes_ok[0]; (b)[1] = (s)->send_bytes_ok[1];
+
+#define ADD_TCP_SEND_BYTES_NOMEM_GET(s, b) \
+    (b)[0] = (s)->send_bytes_nomem[0]; (b)[1] = (s)->send_bytes_nomem[1];
+
+#endif
 };
 
 /** Register an Network connection event */

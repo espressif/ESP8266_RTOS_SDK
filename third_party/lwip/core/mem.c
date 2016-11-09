@@ -65,6 +65,10 @@
 
 #include <string.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #if MEM_USE_POOLS
 /* lwIP head implemented with different sized pools */
 

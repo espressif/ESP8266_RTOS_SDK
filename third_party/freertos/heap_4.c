@@ -85,7 +85,12 @@ task.h is included from an application file. */
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
-extern char _heap_start;
+#if 1
+#define mem_printf(fmt, args...) ets_printf(fmt,## args)
+#else 
+#define mem_printf(fmt, args...)
+#endif
+
 #define configTOTAL_HEAP_SIZE			( ( size_t ) ( 0x40000000 - (uint32)&_heap_start ) )
 
 /* Block sizes must not get too small. */
@@ -97,16 +102,16 @@ extern char _heap_start;
 /* A few bytes might be lost to byte aligning the heap start address. */
 #define heapADJUSTED_HEAP_SIZE	( configTOTAL_HEAP_SIZE - portBYTE_ALIGNMENT )
 
-/* Allocate the memory for the heap. */
-//static unsigned char ucHeap[ configTOTAL_HEAP_SIZE ];
-static unsigned char *ucHeap;
-
 /* Define the linked list structure.  This is used to link free blocks in order
 of their memory address. */
 typedef struct A_BLOCK_LINK
 {
 	struct A_BLOCK_LINK *pxNextFreeBlock;	/*<< The next free block in the list. */
 	size_t xBlockSize;						/*<< The size of the free block. */
+#ifdef MEMLEAK_DEBUG
+        const char *file;
+        unsigned line;
+#endif
 } xBlockLink;
 
 /*-----------------------------------------------------------*/
@@ -125,18 +130,31 @@ static void prvInsertBlockIntoFreeList( xBlockLink *pxBlockToInsert );
  */
 static void prvHeapInit( void );
 
-/*-----------------------------------------------------------*/
 
+extern char _heap_start;
+/*-----------------------------------------------------------*/
+/* Allocate the memory for the heap. */
+//static unsigned char ucHeap[ configTOTAL_HEAP_SIZE ];
+static unsigned char *ucHeap;
 /* The size of the structure placed at the beginning of each allocated memory
 block must by correctly byte aligned. */
-static const size_t heapSTRUCT_SIZE  = ( ( sizeof ( xBlockLink ) + ( portBYTE_ALIGNMENT - 1 ) ) & ~portBYTE_ALIGNMENT_MASK );
+static unsigned short heapSTRUCT_SIZE;//  = ( ( sizeof ( xBlockLink ) + ( portBYTE_ALIGNMENT - 1 ) ) & ~portBYTE_ALIGNMENT_MASK );
+
+static unsigned short portBYTE_ALIGNMENT_MASK_v;
+static unsigned short portBYTE_ALIGNMENT_v;
+
+/* Create a couple of list links to mark the start and end of the list. */
+static xBlockLink xStart, *pxEnd = NULL;
+
+#ifdef MEMLEAK_DEBUG
+//add by jjj, we Link the used blocks here
+static xBlockLink yStart;
+static size_t yFreeBytesRemaining;
+#endif
 
 /* Ensure the pxEnd pointer will end up on the correct byte alignment. */
 //static const size_t xTotalHeapSize = ( ( size_t ) heapADJUSTED_HEAP_SIZE ) & ( ( size_t ) ~portBYTE_ALIGNMENT_MASK );
 static size_t xTotalHeapSize;
-
-/* Create a couple of list links to mark the start and end of the list. */
-static xBlockLink xStart, *pxEnd = NULL;
 
 /* Keeps track of the number of free bytes remaining, but says nothing about
 fragmentation. */
@@ -149,7 +167,122 @@ application.  When the bit is free the block is still part of the free heap
 space. */
 static size_t xBlockAllocatedBit = 0;
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = "user_app";
+#endif
+
 /*-----------------------------------------------------------*/
+bool ICACHE_FLASH_ATTR __attribute__((weak))
+check_memleak_debug_enable()
+{
+    return 0;
+}
+#ifdef MEMLEAK_DEBUG 
+#include "spi_flash.h"
+//extern SpiFlashChip *flashchip;
+extern SpiFlashChip flashchip;
+void prvInsertBlockIntoUsedList(xBlockLink *pxBlockToInsert)
+{
+        xBlockLink *pxIterator;
+        for( pxIterator = &yStart; pxIterator->pxNextFreeBlock < pxBlockToInsert && pxIterator->pxNextFreeBlock != NULL;pxIterator = pxIterator->pxNextFreeBlock)
+        {
+                /* Nothing to do here. */
+        }
+        pxBlockToInsert->pxNextFreeBlock = pxIterator->pxNextFreeBlock;
+        pxIterator->pxNextFreeBlock = pxBlockToInsert;
+        yFreeBytesRemaining += pxBlockToInsert->xBlockSize;
+}
+
+static const char *ICACHE_FLASH_ATTR
+vGetFileName(char *file_name_out, const char *file_name_in)
+{
+	if (((uint32)file_name_in & 0x40200000) == 0x40200000) {
+		uint16 str_len = ((strlen(file_name_in) - 1) / 4 + 1) * 4;
+
+		if (str_len > 32) {
+			str_len = 32;
+		}
+
+		memcpy(file_name_out, file_name_in, str_len);
+		file_name_out[str_len] = 0;
+
+		return file_name_out;
+	}
+
+	return file_name_in;
+}
+
+void pvShowMalloc()
+{
+	xBlockLink *pxIterator;
+//ets_printf("sh0:%d,%d,",heapSTRUCT_SIZE,sizeof( xBlockLink ));
+	if(heapSTRUCT_SIZE < sizeof( xBlockLink ))
+		return;
+	ETS_INTR_LOCK();
+	Wait_SPI_Idle(&flashchip);
+	Cache_Read_Enable_New();
+//ets_printf("sh1,");
+	os_printf("--------Show Malloc--------\n");
+	for( pxIterator = &yStart; pxIterator->pxNextFreeBlock != NULL;pxIterator = pxIterator->pxNextFreeBlock) {
+		char file_name[33];
+		const char *file_name_printf;
+//ets_printf("sh2,");
+		file_name_printf = vGetFileName(file_name, pxIterator->pxNextFreeBlock->file);
+		os_printf("F:%s\tL:%u\tmalloc %u\t@ %x\n", file_name_printf, pxIterator->pxNextFreeBlock->line, pxIterator->pxNextFreeBlock->xBlockSize, ( void * ) ( ( ( unsigned char * ) pxIterator->pxNextFreeBlock ) + heapSTRUCT_SIZE));
+//ets_printf("sh3,");
+//		ets_delay_us(2000);
+        system_soft_wdt_feed();
+	}
+	os_printf("--------Free %d--------\n\n", xFreeBytesRemaining);
+
+#if 0
+	uint32 last_link = (uint32)yStart.pxNextFreeBlock;
+	uint32 index = 0;
+	os_printf("'*':used, '-'free, each %d bytes\n", portBYTE_ALIGNMENT_v);
+	os_printf("%x:", last_link);
+	for( pxIterator = &yStart; pxIterator->pxNextFreeBlock != NULL;pxIterator = pxIterator->pxNextFreeBlock) {
+	    uint16 i;
+	    for (i = 0; i < ((uint32)pxIterator->pxNextFreeBlock - last_link) / portBYTE_ALIGNMENT_v; i++) {
+	        index++;
+	        os_printf("-");
+	        if (index % 64 == 0) {
+	            os_printf("\n%x:", (uint32)yStart.pxNextFreeBlock + index * portBYTE_ALIGNMENT_v);
+	        }
+	    }
+	    for (i = 0; i < pxIterator->pxNextFreeBlock->xBlockSize / portBYTE_ALIGNMENT_v; i++) {
+	        index++;
+	        os_printf("*");
+	        if (index % 64 == 0) {
+	            os_printf("\n%x:", (uint32)yStart.pxNextFreeBlock + index * portBYTE_ALIGNMENT_v);
+            }
+	    }
+	    last_link = ((uint32)pxIterator->pxNextFreeBlock + pxIterator->pxNextFreeBlock->xBlockSize);
+        system_soft_wdt_feed();
+    }
+	os_printf("\n\n");
+#endif
+
+//ets_printf("sh4\n");
+	ETS_INTR_UNLOCK();
+}
+
+void system_show_malloc(void) __attribute__((alias("pvShowMalloc")));
+
+int prvRemoveBlockFromUsedList(xBlockLink *pxBlockToRemove)
+{
+        xBlockLink *pxIterator;
+        for( pxIterator = &yStart; pxIterator->pxNextFreeBlock != pxBlockToRemove && pxIterator->pxNextFreeBlock != NULL;pxIterator = pxIterator->pxNextFreeBlock)
+        {
+                /* Nothing to do here. */
+        }
+        if(pxIterator->pxNextFreeBlock != pxBlockToRemove){
+            return -1;
+        }
+        pxIterator->pxNextFreeBlock = pxBlockToRemove->pxNextFreeBlock;
+        yFreeBytesRemaining -= pxBlockToRemove->xBlockSize;
+        return 0;
+}
+#endif
 
 size_t xPortWantedSizeAlign(size_t xWantedSize)
 {
@@ -157,16 +290,21 @@ size_t xPortWantedSizeAlign(size_t xWantedSize)
 
 	/* Ensure that blocks are always aligned to the required number
 	of bytes. */
-	if( ( xWantedSize & portBYTE_ALIGNMENT_MASK ) != 0x00 )
+	if( ( xWantedSize & portBYTE_ALIGNMENT_MASK_v ) != 0x00 )
 	{
 		/* Byte alignment required. */
-		xWantedSize += ( portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK ) );
+		xWantedSize += ( portBYTE_ALIGNMENT_v - ( xWantedSize & portBYTE_ALIGNMENT_MASK_v ) );
 	}
 
 	return xWantedSize;
 }
 
+
+#ifndef MEMLEAK_DEBUG
 void *pvPortMalloc( size_t xWantedSize )
+#else
+void *pvPortMalloc( size_t xWantedSize, const char * file, unsigned line)
+#endif
 {
 xBlockLink *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
 void *pvReturn = NULL;
@@ -183,20 +321,12 @@ void *pvReturn = NULL;
 			prvHeapInit();
 		}
 
-		/* Check the requested block size is not so large that the top bit is
-		set.  The top bit of the block size member of the xBlockLink structure 
-		is used to determine who owns the block - the application or the
-		kernel, so it must be free. */
-		if( ( xWantedSize & xBlockAllocatedBit ) == 0 )
-		{
-			/* The wanted size is increased so it can contain a xBlockLink
-			structure in addition to the requested amount of bytes. */
 			if( xWantedSize > 0 )
 			{
 				xWantedSize = xPortWantedSizeAlign(xWantedSize);
 			}
 
-			if( ( xWantedSize > 0 ) && ( xWantedSize <= xFreeBytesRemaining ) )
+			if( ( xWantedSize > 0 ) && ( xWantedSize < xFreeBytesRemaining ) )
 			{
 				/* Traverse the list from the start	(lowest address) block until 
 				one	of adequate size is found. */
@@ -235,17 +365,23 @@ void *pvReturn = NULL;
 						pxNewBlockLink->xBlockSize = pxBlock->xBlockSize - xWantedSize;
 						pxBlock->xBlockSize = xWantedSize;
 
-						/* Insert the new block into the list of free blocks. */
-						prvInsertBlockIntoFreeList( ( pxNewBlockLink ) );
-					}
-
-					xFreeBytesRemaining -= pxBlock->xBlockSize;
-
-					/* The block is being returned - it is allocated and owned
-					by the application and has no "next" block. */
-					pxBlock->xBlockSize |= xBlockAllocatedBit;
-					pxBlock->pxNextFreeBlock = NULL;
+					//Insert the new block into the list of free blocks.
+					//ETS_INTR_LOCK();
+					prvInsertBlockIntoFreeList( ( pxNewBlockLink ) );
+					//ETS_INTR_UNLOCK();
 				}
+#ifdef MEMLEAK_DEBUG
+			        pxBlock->pxNextFreeBlock = NULL;
+#endif
+				xFreeBytesRemaining -= pxBlock->xBlockSize;
+#ifdef MEMLEAK_DEBUG
+					if(heapSTRUCT_SIZE >= sizeof( xBlockLink )){
+						pxBlock->file = file;
+						pxBlock->line = line;
+					}
+					//link the use block
+					prvInsertBlockIntoUsedList(pxBlock);
+#endif
 			}
 		}
 	}
@@ -256,27 +392,30 @@ void *pvReturn = NULL;
 	{
 		if( pvReturn == NULL )
 		{
-			extern void vApplicationMallocFailedHook( void );
-			vApplicationMallocFailedHook();
+			//extern void vApplicationMallocFailedHook( void );
+			//vApplicationMallocFailedHook();
+			ets_printf("E:M %d\n", xWantedSize);
 		}
 	}
 	#endif
-
+//mem_printf("%s %x\n", __func__, pvReturn);
 //    printf("%s %x %x\n", __func__, pvReturn, pxBlock);
 	return pvReturn;
 }
 
-void *malloc(size_t nbytes) __attribute__((alias("pvPortMalloc")));
+//void *malloc(size_t nbytes) __attribute__((alias("pvPortMalloc")));
 
 /*-----------------------------------------------------------*/
-
+#ifndef MEMLEAK_DEBUG
 void vPortFree( void *pv )
+#else
+void vPortFree(void *pv, const char * file, unsigned line)
+#endif
 {
 unsigned char *puc = ( unsigned char * ) pv;
 xBlockLink *pxLink;
 
 //    printf("%s\n", __func__);
-    
 	if( pv != NULL )
 	{
 		/* The memory being freed will have an xBlockLink structure immediately
@@ -286,34 +425,33 @@ xBlockLink *pxLink;
 		/* This casting is to keep the compiler from issuing warnings. */
 		pxLink = ( void * ) puc;
 
-		/* Check the block is actually allocated. */
-		configASSERT( ( pxLink->xBlockSize & xBlockAllocatedBit ) != 0 );
-		configASSERT( pxLink->pxNextFreeBlock == NULL );
-		
-		if( ( pxLink->xBlockSize & xBlockAllocatedBit ) != 0 )
-		{
-			if( pxLink->pxNextFreeBlock == NULL )
-			{
-				/* The block is being returned to the heap - it is no longer
-				allocated. */
-				pxLink->xBlockSize &= ~xBlockAllocatedBit;
-
 //				vTaskSuspendAll();
 				ETS_INTR_LOCK();
 				{
-					/* Add this block to the list of free blocks. */
-					xFreeBytesRemaining += pxLink->xBlockSize;
-					prvInsertBlockIntoFreeList( ( ( xBlockLink * ) pxLink ) );
+#ifdef MEMLEAK_DEBUG
+					if(prvRemoveBlockFromUsedList(pxLink) < 0){
+						ets_printf("%x already freed\n", pv);
+					}
+					else
+#endif
+					{
+						/* Add this block to the list of free blocks. */
+						xFreeBytesRemaining += pxLink->xBlockSize;
+						prvInsertBlockIntoFreeList( ( ( xBlockLink * ) pxLink ) );
+					}
 				}
 //				xTaskResumeAll();
 				ETS_INTR_UNLOCK();
-			}
-		}
 	}
 
 //	printf("%s %x %d\n", __func__, pv, xFreeBytesRemaining);
+//mem_printf("%s %x %d\n", __func__, pv, xFreeBytesRemaining);
 }
 
+//void free(void *ptr) __attribute__((alias("vPortFree")));
+
+#ifndef MEMLEAK_DEBUG
+void *malloc(size_t nbytes) __attribute__((alias("pvPortMalloc")));
 void free(void *ptr) __attribute__((alias("vPortFree")));
 
 /*-----------------------------------------------------------*/
@@ -351,21 +489,101 @@ void *pvPortRealloc(void *mem, size_t newsize)
         return NULL;
     }
 
-     void *p;  	
-     p = pvPortMalloc(newsize);
-     if (p) {
-       /* zero the memory */
-       if (mem != NULL) {
-		   memcpy(p, mem, newsize);
-		   vPortFree(mem);
-       }
-     }
-     return p;     
+    void *p;
+    p = pvPortMalloc(newsize);
+    if (p) {
+        /* zero the memory */
+        if (mem != NULL) {
+            memcpy(p, mem, newsize);
+            vPortFree(mem);
+        }
+    }
+    return p;
 }
 
 void *realloc(void *ptr, size_t nbytes) __attribute__((alias("pvPortRealloc")));
+/*-----------------------------------------------------------*/
+
+#else
 
 /*-----------------------------------------------------------*/
+void *pvPortCalloc(size_t count, size_t size, const char * file, unsigned line)
+{
+  void *p;
+//ets_printf("1,");
+  /* allocate 'count' objects of size 'size' */
+  p = pvPortMalloc(count * size, file, line);
+//ets_printf("2,");
+  if (p) {
+    /* zero the memory */
+    memset(p, 0, count * size);
+  }
+//ets_printf("3,");
+  return p;
+}
+/*-----------------------------------------------------------*/
+
+void *pvPortZalloc(size_t size, const char * file, unsigned line)
+{
+     return pvPortCalloc(1, size, file, line);
+}
+/*-----------------------------------------------------------*/
+
+void *pvPortRealloc(void *mem, size_t newsize, const char *file, unsigned line)
+{
+    if (newsize == 0) {
+        vPortFree(mem, file, line);
+        return NULL;
+    }
+
+    void *p;
+    p = pvPortMalloc(newsize, file, line);
+    if (p) {
+        /* zero the memory */
+        if (mem != NULL) {
+            memcpy(p, mem, newsize);
+            vPortFree(mem, file, line);
+        }
+    }
+    return p;
+}
+/*-----------------------------------------------------------*/
+//For user
+void *malloc(size_t nbytes)
+{
+//ets_printf("u_m\n");
+	return pvPortMalloc( nbytes, mem_debug_file, 0);
+}
+
+void free(void *ptr)
+{
+//ets_printf("u_f\n");
+	vPortFree(ptr, mem_debug_file, 0);
+}
+
+void *zalloc(size_t nbytes)
+{
+	return pvPortZalloc(nbytes, mem_debug_file, 0);
+}
+
+void *calloc(size_t count, size_t nbytes)
+{
+	return pvPortCalloc(count, nbytes, mem_debug_file, 0);
+}
+
+void *realloc(void *ptr, size_t nbytes)
+{
+	return pvPortRealloc(ptr, nbytes, mem_debug_file, 0);
+}
+
+/*
+void *malloc(size_t nbytes) __attribute__((alias("malloc1")));
+void free(void *ptr) __attribute__((alias("free1")));
+void *calloc(size_t count, size_t nbytes) __attribute__((alias("zalloc1")));
+void *zalloc(size_t nbytes) __attribute__((alias("calloc1")));
+void *realloc(void *ptr, size_t nbytes) __attribute__((alias("realloc1")));
+*/
+#endif
 
 size_t ICACHE_FLASH_ATTR
 xPortGetFreeHeapSize( void )
@@ -386,12 +604,22 @@ static void prvHeapInit( void )
 xBlockLink *pxFirstFreeBlock;
 unsigned char *pucHeapEnd, *pucAlignedHeap;
 
-    xFreeBytesRemaining = ( ( size_t ) heapADJUSTED_HEAP_SIZE ) & ( ( size_t ) ~portBYTE_ALIGNMENT_MASK );
+    if( check_memleak_debug_enable() ){
+        portBYTE_ALIGNMENT_MASK_v = 0xf;
+        portBYTE_ALIGNMENT_v = 16;
+        heapSTRUCT_SIZE = ( (sizeof( xBlockLink ) + portBYTE_ALIGNMENT_MASK_v)& ~portBYTE_ALIGNMENT_MASK_v);
+    } else {
+        portBYTE_ALIGNMENT_MASK_v = 0x7;
+        portBYTE_ALIGNMENT_v = 8;
+        heapSTRUCT_SIZE = 8;
+    }
+
+    xFreeBytesRemaining = ( ( size_t ) heapADJUSTED_HEAP_SIZE ) & ( ( size_t ) ~portBYTE_ALIGNMENT_MASK_v );
     xTotalHeapSize = xFreeBytesRemaining ;
 	ucHeap = &_heap_start;
 
 	/* Ensure the heap starts on a correctly aligned boundary. */
-	pucAlignedHeap = ( unsigned char * ) ( ( ( portPOINTER_SIZE_TYPE ) &ucHeap[ portBYTE_ALIGNMENT ] ) & ( ( portPOINTER_SIZE_TYPE ) ~portBYTE_ALIGNMENT_MASK ) );
+	pucAlignedHeap = ( unsigned char * ) ( ( ( portPOINTER_SIZE_TYPE ) &ucHeap[ portBYTE_ALIGNMENT_MASK_v ] ) & ( ( portPOINTER_SIZE_TYPE ) ~portBYTE_ALIGNMENT_MASK_v ) );
 
 	/* xStart is used to hold a pointer to the first item in the list of free
 	blocks.  The void cast is used to prevent compiler warnings. */
@@ -403,7 +631,7 @@ unsigned char *pucHeapEnd, *pucAlignedHeap;
 	pucHeapEnd = pucAlignedHeap + xTotalHeapSize;
 	pucHeapEnd -= heapSTRUCT_SIZE;
 	pxEnd = ( void * ) pucHeapEnd;
-	configASSERT( ( ( ( unsigned long ) pxEnd ) & ( ( unsigned long ) portBYTE_ALIGNMENT_MASK ) ) == 0UL );
+	//configASSERT( ( ( ( unsigned long ) pxEnd ) & ( ( unsigned long ) portBYTE_ALIGNMENT_MASK ) ) == 0UL );
 	pxEnd->xBlockSize = 0;
 	pxEnd->pxNextFreeBlock = NULL;
 
@@ -416,8 +644,13 @@ unsigned char *pucHeapEnd, *pucAlignedHeap;
 	/* The heap now contains pxEnd. */
 	xFreeBytesRemaining -= heapSTRUCT_SIZE;
 
-	/* Work out the position of the top bit in a size_t variable. */
-	xBlockAllocatedBit = ( ( size_t ) 1 ) << ( ( sizeof( size_t ) * heapBITS_PER_BYTE ) - 1 );
+#ifdef MEMLEAK_DEBUG
+	//add by jjj
+        yStart.pxNextFreeBlock = NULL;
+	yStart.xBlockSize = ( size_t ) 0;
+        yFreeBytesRemaining = 0;
+#endif
+
 }
 /*-----------------------------------------------------------*/
 

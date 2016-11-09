@@ -55,6 +55,10 @@
 
 #include <string.h>
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #define SET_NONBLOCKING_CONNECT(conn, val)  do { if(val) { \
   (conn)->flags |= NETCONN_FLAG_IN_NONBLOCKING_CONNECT; \
 } else { \
@@ -251,6 +255,9 @@ recv_tcp(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 
   if (sys_mbox_trypost(&conn->recvmbox, p) != ERR_OK) {
     /* don't deallocate p: it is presented to us later again from tcp_fasttmr! */
+#ifdef SOCKETS_TCP_TRACE
+    ADD_TCP_RECV_BYTES_ERR(conn, len);
+#endif
     return ERR_MEM;
   } else {
 #if LWIP_SO_RCVBUF
@@ -259,7 +266,9 @@ recv_tcp(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
     /* Register event with callback */
     API_EVENT(conn, NETCONN_EVT_RCVPLUS, len);
   }
-
+#ifdef SOCKETS_TCP_TRACE
+  ADD_TCP_RECV_BYTES(conn, len);
+#endif
   return ERR_OK;
 }
 
@@ -332,6 +341,10 @@ sent_tcp(void *arg, struct tcp_pcb *pcb, u16_t len)
       conn->flags &= ~NETCONN_FLAG_CHECK_WRITESPACE;
       API_EVENT(conn, NETCONN_EVT_SENDPLUS, len);
     }
+
+#ifdef SOCKETS_TCP_TRACE
+    ADD_TCP_SEND_BYTES_OK(conn, len);
+#endif
   }
   
   return ERR_OK;
@@ -394,13 +407,16 @@ err_tcp(void *arg, err_t err)
     if (!was_nonblocking_connect) {
       /* set error return code */
       LWIP_ASSERT("conn->current_msg != NULL", conn->current_msg != NULL);
-      conn->current_msg->err = err;
+      //Jack, temp modify here, We haven't find the root cause;
+      if(conn->current_msg != NULL)
+          conn->current_msg->err = err;
       conn->current_msg = NULL;
       /* wake up the waiting task */
-      if (old_state == NETCONN_WRITE)
+      if (old_state == NETCONN_WRITE) {
         sys_sem_signal(&conn->snd_op_completed);
-	  else
+	  } else {
       	sys_sem_signal(&conn->op_completed);
+      }
     }
   } else {
     LWIP_ASSERT("conn->current_msg == NULL", conn->current_msg == NULL);
@@ -620,9 +636,16 @@ netconn_alloc(enum netconn_type t, netconn_callback callback)
     sys_sem_free(&conn->op_completed);
     goto free_and_return;
   }
+  if (sys_sem_new(&conn->ioctrl_completed, 0) != ERR_OK) {
+    sys_sem_free(&conn->snd_op_completed);
+    sys_sem_free(&conn->op_completed);
+    goto free_and_return;
+  }
+
   if (sys_mbox_new(&conn->recvmbox, size) != ERR_OK) {
     sys_sem_free(&conn->op_completed);
     sys_sem_free(&conn->snd_op_completed);
+    sys_sem_free(&conn->ioctrl_completed);
     goto free_and_return;
   }
 
@@ -650,6 +673,17 @@ netconn_alloc(enum netconn_type t, netconn_callback callback)
   conn->recv_bufsize = RECV_BUFSIZE_DEFAULT;
   conn->recv_avail   = 0;
 #endif /* LWIP_SO_RCVBUF */
+#if LWIP_SO_LINGER
+  conn->linger = 0;
+#endif
+#ifdef SOCKETS_TCP_TRACE
+  ADD_TCP_RECV_BYTES_CLEAR(conn);
+  ADD_TCP_RECV_BYTES_ERR_CLEAR(conn)
+
+  ADD_TCP_SEND_BYTES_CLEAR(conn);
+  ADD_TCP_SEND_BYTES_OK_CLEAR(conn);
+  ADD_TCP_SEND_BYTES_NOMEM_CLEAR(conn);
+#endif
   conn->flags = 0;
   return conn;
 free_and_return:
@@ -676,8 +710,10 @@ netconn_free(struct netconn *conn)
 
   sys_sem_free(&conn->op_completed);
   sys_sem_free(&conn->snd_op_completed);
+  sys_sem_free(&conn->ioctrl_completed);
   sys_sem_set_invalid(&conn->op_completed);
   sys_sem_set_invalid(&conn->snd_op_completed);
+  sys_sem_set_invalid(&conn->ioctrl_completed);
 
   memp_free(MEMP_NETCONN, conn);
 }
@@ -716,7 +752,8 @@ netconn_drain(struct netconn *conn)
       } else
 #endif /* LWIP_TCP */
       {
-        netbuf_delete((struct netbuf *)mem);
+        if (mem)
+          netbuf_delete((struct netbuf *)mem);
       }
     }
     sys_mbox_free(&conn->recvmbox);
@@ -734,12 +771,14 @@ netconn_drain(struct netconn *conn)
         tcp_accepted(conn->pcb.tcp);
       }
       /* drain recvmbox */
-      netconn_drain(newconn);
-      if (newconn->pcb.tcp != NULL) {
-        tcp_abort(newconn->pcb.tcp);
-        newconn->pcb.tcp = NULL;
+      if (newconn) {
+        netconn_drain(newconn);
+        if (newconn->pcb.tcp != NULL) {
+            tcp_abort(newconn->pcb.tcp);
+            newconn->pcb.tcp = NULL;
+        }
+        netconn_free(newconn);
       }
-      netconn_free(newconn);
     }
     sys_mbox_free(&conn->acceptmbox);
     sys_mbox_set_invalid(&conn->acceptmbox);
@@ -793,15 +832,26 @@ lwip_netconn_do_close_internal(struct netconn *conn)
       tcp_err(conn->pcb.tcp, NULL);
     }
   }
-  /* Try to close the connection */
-  if (close) {
+
+#if LWIP_SO_LINGER
+  /* Add by DongHeng, for TCP free by multi-thread */
+  if (conn->linger > 0) {
+  	tcp_abort(conn->pcb.tcp);
+	err = ERR_OK;
+  }
+  else
+#endif
+  	if (close) { /* Try to close the connection */
     err = tcp_close(conn->pcb.tcp);
   } else {
     err = tcp_shutdown(conn->pcb.tcp, shut_rx, shut_tx);
   }
+  
   if (err == ERR_OK) {
     /* Closing succeeded */
-    conn->current_msg->err = ERR_OK;
+    //Jack, temp modify here, We haven't find the root cause;
+    if(conn->current_msg != NULL)
+        conn->current_msg->err = ERR_OK;
     conn->current_msg = NULL;
     conn->state = NETCONN_NONE;
     if (close) {
@@ -975,6 +1025,7 @@ lwip_netconn_do_connected(void *arg, struct tcp_pcb *pcb, err_t err)
   LWIP_ASSERT("(conn->current_msg != NULL) || conn->in_non_blocking_connect",
     (conn->current_msg != NULL) || IN_NONBLOCKING_CONNECT(conn));
 
+  //Jack, temp modify here, We haven't find the root cause;
   if (conn->current_msg != NULL) {
     conn->current_msg->err = err;
   }
@@ -1325,6 +1376,13 @@ lwip_netconn_do_writemore(struct netconn *conn)
     }
     LWIP_ASSERT("lwip_netconn_do_writemore: invalid length!", ((conn->write_offset + len) <= conn->current_msg->msg.w.len));
     err = tcp_write(conn->pcb.tcp, dataptr, len, apiflags);
+#ifdef SOCKETS_TCP_TRACE
+    if (ERR_OK == err) {
+        ADD_TCP_SEND_BYTES(conn, len);
+    } else if (ERR_MEM == err) {
+        ADD_TCP_SEND_BYTES_NOMEM(conn, len);
+    }
+#endif
     /* if OK or memory error, check available space */
     if ((err == ERR_OK) || (err == ERR_MEM)) {
 err_mem:
@@ -1372,7 +1430,9 @@ err_mem:
   if (write_finished) {
     /* everything was written: set back connection state
        and back to application task */
-    conn->current_msg->err = err;
+    //Jack, temp modify here, We haven't find the root cause;
+    if(conn->current_msg != NULL)
+        conn->current_msg->err = err;
     conn->current_msg = NULL;
     conn->state = NETCONN_NONE;
 #if LWIP_TCPIP_CORE_LOCKING

@@ -65,6 +65,10 @@
 /* all commented out if not used */
 #ifdef CONFIG_SSL_USE_PKCS12
 
+#ifdef MEMLEAK_DEBUG
+static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
+#endif
+
 #define BLOCK_SIZE          64
 #define PKCS12_KEY_ID       1
 #define PKCS12_IV_ID        2
