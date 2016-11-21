@@ -24,6 +24,8 @@ int lwip_read_mt(int s, void *mem, size_t len);
 int lwip_write_mt(int s, const void *data, size_t size);
 int lwip_shutdown_mt(int s, int how);
 int lwip_close_mt(int s);
+int lwip_select_mt(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, struct timeval *timeout);
+int lwip_fcntl_mt(int s, int cmd, int val);
 
 #ifdef SOCKETS_TCP_TRACE
 int lwip_trace_tcp(int s, int cmd, void *arg);
