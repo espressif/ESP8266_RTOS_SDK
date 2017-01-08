@@ -84,6 +84,20 @@ void gpio_config(GPIO_ConfigTypeDef *pGPIOConfig)
     } while (io_num < 16);
 }
 
+/******************************************************************************
+ * FunctionName : gpio_intr_handler - generic handling of GPIO interrupts
+*******************************************************************************/
+void gpio_intr_handler() {
+    int i;
+    uint32 gpio_mask = _xt_read_ints();
+    uint32_t gpio_status = GPIO_REG_READ(GPIO_STATUS_ADDRESS);
+    os_printf("interrupt@%dus: mask=0x%02x, status=0x%02x\n",system_get_time(),gpio_mask,gpio_status);
+    for (i=0 ; i<16 ; i++)
+        if ( (0x1<<i) & gpio_status & gpio_intr_callbacks[i]!= NULL )
+            (*gpio_intr_callbacks[i])();   
+    GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, gpio_status );     //clear interrupt status
+}
+
 /*
  * Change GPIO pin output by setting, clearing, or disabling pins.
  * In general, it is expected that a bit will be set in at most one

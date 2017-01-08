@@ -193,6 +193,15 @@ typedef struct {
 #define GPIO_INPUT_GET(gpio_no)     ((gpio_input_get()>>gpio_no)&BIT0)
 
 /**  
+  * @brief   Sample the level of GPIO input.
+  * 
+  * @param   gpio_bits : The GPIO bit number.
+  *  
+  * @return  the level of GPIO input 
+  */
+#define GPIO_INPUT(gpio_bits)       ((gpio_input_get()&gpio_bits)?1:0)
+
+/**  
   * @brief   Enable GPIO16 output.
   * 
   * @param   null
@@ -227,6 +236,28 @@ void gpio16_input_conf(void);
   * @return  the level  of GPIO16 input.
   */
 uint8 gpio16_input_get(void);
+
+/**  
+  * @brief   Enable all GPIO interrupts
+  * 
+  * @param   null
+  *  
+  * @return  null 
+  */
+#define GPIO_INTERRUPT_ENABLE   _xt_isr_unmask(1 << ETS_GPIO_INUM)
+
+
+void (*gpio_intr_callbacks[16])(void);
+void gpio_intr_handler();
+
+/**  
+  * @brief   Setup the characteristics of a pin
+  * 
+  * @param   the GPIOConfig structure
+  *  
+  * @return  null 
+  */
+void gpio_config(GPIO_ConfigTypeDef *pGPIOConfig);
 
 /**  
   * @brief   Configure Gpio pins out or input.
