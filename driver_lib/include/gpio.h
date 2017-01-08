@@ -246,8 +246,22 @@ uint8 gpio16_input_get(void);
   */
 #define GPIO_INTERRUPT_ENABLE   _xt_isr_unmask(1 << ETS_GPIO_INUM)
 
-
+/**  
+  * @brief   prototypes of per pin individual interrupt callback functions
+  * 
+  * @param   null
+  *  
+  * @return  null 
+  */
 void (*gpio_intr_callbacks[16])(void);
+
+/**  
+  * @brief   Generic GPIO interrupt handler which will spawn the individual callbacks
+  * 
+  * @param   null
+  *  
+  * @return  null 
+  */
 void gpio_intr_handler();
 
 /**  
