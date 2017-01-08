@@ -22,6 +22,8 @@
  *
  */
 
+// see https://github.com/espressif/ESP8266_RTOS_SDK/issues/8#issuecomment-271147003 for sample code
+
 #ifndef __GPIO_H__
 #define __GPIO_H__
 
