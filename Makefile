@@ -260,7 +260,7 @@ endif
 	@echo "SDK_PATH: $(SDK_PATH)"
 	
 ifeq ($(app), 0)
-	@python $(SDK_PATH)/tools/gen_appbin.py $< 0 $(mode) $(freqdiv) $(size_map)
+	@python2 $(SDK_PATH)/tools/gen_appbin.py $< 0 $(mode) $(freqdiv) $(size_map)
 	@mv eagle.app.flash.bin $(BIN_PATH)/eagle.flash.bin
 	@mv eagle.app.v6.irom0text.bin $(BIN_PATH)/eagle.irom0text.bin
 	@rm eagle.app.v6.*
@@ -275,10 +275,10 @@ else
 	@echo ""
 
     ifneq ($(boot), new)
-		@python $(SDK_PATH)/tools/gen_appbin.py $< 1 $(mode) $(freqdiv) $(size_map)
+		@python2 $(SDK_PATH)/tools/gen_appbin.py $< 1 $(mode) $(freqdiv) $(size_map)
 		@echo "Support boot_v1.1 and +"
     else
-		@python $(SDK_PATH)/tools/gen_appbin.py $< 2 $(mode) $(freqdiv) $(size_map)
+		@python2 $(SDK_PATH)/tools/gen_appbin.py $< 2 $(mode) $(freqdiv) $(size_map)
 
     	ifeq ($(size_map), 6)
 		@echo "Support boot_v1.4 and +"

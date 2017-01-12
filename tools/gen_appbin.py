@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 #
 # File	: gen_appbin.py
 # This file is part of Espressif's generate bin script.
