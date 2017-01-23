@@ -58,7 +58,7 @@ struct mbed_ssl
 /*******************************************************************************/
 /*******************************************************************************/
 
-unsigned int max_content_len;
+unsigned int max_content_len = 2048;
 
 /*******************************************************************************/
 /*******************************************************************************/
@@ -104,7 +104,6 @@ LOCAL int mbed_ssl_init(struct mbed_ssl *mbed_ssl, struct ssl_ctx *ssl_ctx)
 
 	mbed_ssl->ssl_ctx = ssl_ctx;
 	SSL_MUTEX_INIT(&ssl_self->mutex);
-	max_content_len = 2048;
 
 	mbedtls_x509_crt_init(&ssl_verify->ca_crt);
 	mbedtls_x509_crt_init(&ssl_verify->own_crt);
