@@ -30,6 +30,7 @@ typedef struct ssl_ctx SSL_CTX;
 
 #define SSL_get_verify_result ssl_get_verify_result
 #define SSL_set_fd ssl_set_fd
+#define SSL_set_fragment ssl_fragment_length_negotiation
 
 #define SSL_CTX_set_option ssl_ctx_set_option
 
