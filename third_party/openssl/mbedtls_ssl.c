@@ -189,6 +189,8 @@ LOCAL void mbed_ssl_deinit(struct mbed_ssl *mbed_ssl)
 	mbedtls_x509_crt_free(&ssl_verify->own_crt);
 	mbedtls_pk_free(&ssl_verify->pk);
 
+	mbedtls_net_free(&ssl_fd->fd);
+	mbedtls_net_free(&ssl_fd->cl_fd);
 	mbedtls_entropy_free(&ssl_fd->entropy);
 	mbedtls_ctr_drbg_free(&ssl_fd->ctr_drbg);
 	mbedtls_ssl_config_free(&ssl_fd->conf);
