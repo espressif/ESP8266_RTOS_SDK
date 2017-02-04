@@ -5,7 +5,8 @@
 /* ^  ^                        ^     ^     ^  ^                        ^     ^                            */
 /* |_boot start(0x0000)        |     |     |_pad start(0x40000)        |     |                            */
 /*    |_user1 start(0x1000)    |_user1 end    |_user2 start(0x41000)   |_user2 end                        */
-/*                                   |_system param symmetric area(0x3b000)  |_system param area(0x7b000) */
+/*                                   |_system param symmetric area(0x3c000)  |_system param area(0x7c000) */
+/*                                                                            (last 4 sectors (16 kB))    */
 
 /* NOTICE: */ 
 /* 1. You can change irom0 len, but MUST make sure user2 end not overlap system param area. */

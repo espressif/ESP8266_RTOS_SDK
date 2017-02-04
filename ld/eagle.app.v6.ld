@@ -6,7 +6,8 @@
 /* ^      ^                              ^                          ^     ^                            */
 /* |_flash.bin start(0x0000)             |_irom0text.bin start(0x20000)   |                            */
 /*        |_flash.bin end                                           |_irom0text.bin end                */
-/*                                                                        |_system param area(0x7b000) */
+/*                                                                        |_system param area(0x7c000) */
+/*                                                                         (last 4 sectors (16 kB))    */
 
 /* NOTICE: */ 
 /* 1. You can change irom0 org, but MUST make sure irom0text.bin start not overlap flash.bin end.   */
@@ -15,10 +16,10 @@
 /* 4. Space between irom0text.bin end and system param area can be used as user param area.         */
 /* 5. Make sure irom0text.bin end < 0x100000                                                        */
 /* 6. system param area:                                                                            */
-/*    1>. 512KB--->0x07b000                                                                         */
-/*    2>. 1MB----->0x0fb000                                                                         */
-/*    3>. 2MB----->0x1fb000                                                                         */
-/*    4>. 4MB----->0x3fb000                                                                         */
+/*    1>. 512KB--->0x07c000                                                                         */
+/*    2>. 1MB----->0x0fc000                                                                         */
+/*    3>. 2MB----->0x1fc000                                                                         */
+/*    4>. 4MB----->0x3fc000                                                                         */
 /* 7. Don't change any other seg.                                                                   */
 
 MEMORY
