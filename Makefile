@@ -205,6 +205,7 @@ CCFLAGS += 			\
 #	-Wall			
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
+CPPFLAGS = $(CCPPFLAGS) $(DEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
 DFLAGS = $(CCFLAGS) $(DDEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
 
 
@@ -343,11 +344,11 @@ $(OBJODIR)/%.d: %.c
 	
 $(OBJODIR)/%.o: %.cpp
 	@mkdir -p $(OBJODIR);
-	$(CPP) $(if $(findstring $<,$(DSRCS)),$(DFLAGS),$(CFLAGS)) $(COPTS_$(*F)) -o $@ -c $<
+	$(CPP) $(if $(findstring $<,$(DSRCS)),$(DFLAGS),$(CPPFLAGS)) $(COPTS_$(*F)) -o $@ -c $<
 
 $(OBJODIR)/%.d: %.cpp
 	@mkdir -p $(OBJODIR);
-	@echo DEPEND: $(CPP) -M $(CFLAGS) $<
+	@echo DEPEND: $(CPP) -M $(CPPFLAGS) $<
 	@set -e; rm -f $@; \
 	$(CPP) -M $(CFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\.o\)[ :]*,$(OBJODIR)/\1 $@ : ,g' < $@.$$$$ > $@; \
