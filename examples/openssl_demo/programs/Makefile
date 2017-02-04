@@ -12,12 +12,12 @@
 #     a generated lib/image xxx.a ()
 #
 ifndef PDIR
+
 UP_EXTRACT_DIR = ..
-GEN_LIBS = libopenssl.a
-COMPONENTS_libopenssl = library/liblibrary.a platform/libplatform.a
+GEN_LIBS = openssl_demo.a
+		       
 endif
 
-CCFLAGS += -fno-aggressive-loop-optimizations
 
 #############################################################
 # Configuration i.e. compile options etc.
@@ -26,11 +26,7 @@ CCFLAGS += -fno-aggressive-loop-optimizations
 #   makefile at its root level - these are then overridden
 #   for a subtree within the makefile rooted therein
 #
-DEFINES += -D_POSIX_SOURCE \
-			-DLWIP_OPEN_SRC	\
-			-DPBUF_RSV_FOR_WLAN	\
-			-DEBUF_LWIP \
-			-DMEMLEAK_DEBUG
+#DEFINES += 
 
 #############################################################
 # Recursion Magic - Don't touch this!!
@@ -44,10 +40,7 @@ DEFINES += -D_POSIX_SOURCE \
 # Required for each makefile to inherit from the parent
 #
 
-INCLUDES := $(INCLUDES) -I $(SDK_PATH)/include/openssl/ \
-                        -I $(SDK_PATH)/include/openssl/openssl \
-                        -I $(SDK_PATH)/include/openssl/internal \
-                        -I $(SDK_PATH)/include/openssl/platform
+INCLUDES := $(INCLUDES) -I $(PDIR)include
 INCLUDES += -I ./
 PDIR := ../$(PDIR)
 sinclude $(PDIR)Makefile
