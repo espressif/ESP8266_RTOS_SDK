@@ -3,12 +3,11 @@
 ----------
 
 ESP8266 SDK based on FreeRTOS.
+
    
 ## Note ##
 
 APIs of "ESP8266_RTOS_SDK" are same as "ESP8266_NONOS_SDK"
-
-More details in "Wiki" !
 
 ## Requrements ##
 
