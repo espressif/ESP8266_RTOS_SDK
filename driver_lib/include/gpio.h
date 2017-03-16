@@ -22,6 +22,8 @@
  *
  */
 
+// see https://github.com/espressif/ESP8266_RTOS_SDK/issues/8#issuecomment-271147003 for sample code
+
 #ifndef __GPIO_H__
 #define __GPIO_H__
 
@@ -193,6 +195,15 @@ typedef struct {
 #define GPIO_INPUT_GET(gpio_no)     ((gpio_input_get()>>gpio_no)&BIT0)
 
 /**  
+  * @brief   Sample the level of GPIO input.
+  * 
+  * @param   gpio_bits : The GPIO bit number.
+  *  
+  * @return  the level of GPIO input 
+  */
+#define GPIO_INPUT(gpio_bits)       ((gpio_input_get()&gpio_bits)?1:0)
+
+/**  
   * @brief   Enable GPIO16 output.
   * 
   * @param   null
@@ -227,6 +238,42 @@ void gpio16_input_conf(void);
   * @return  the level  of GPIO16 input.
   */
 uint8 gpio16_input_get(void);
+
+/**  
+  * @brief   Enable all GPIO interrupts
+  * 
+  * @param   null
+  *  
+  * @return  null 
+  */
+#define GPIO_INTERRUPT_ENABLE   _xt_isr_unmask(1 << ETS_GPIO_INUM)
+
+/**  
+  * @brief   prototypes of per pin individual interrupt callback functions
+  * 
+  * @param   null
+  *  
+  * @return  null 
+  */
+void (*gpio_intr_callbacks[16])(void);
+
+/**  
+  * @brief   Generic GPIO interrupt handler which will spawn the individual callbacks
+  * 
+  * @param   null
+  *  
+  * @return  null 
+  */
+void gpio_intr_handler();
+
+/**  
+  * @brief   Setup the characteristics of a pin
+  * 
+  * @param   the GPIOConfig structure
+  *  
+  * @return  null 
+  */
+void gpio_config(GPIO_ConfigTypeDef *pGPIOConfig);
 
 /**  
   * @brief   Configure Gpio pins out or input.
