@@ -69,11 +69,9 @@ bool default_hostname = 1;
  */
 static void
 low_level_init(struct netif *netif)
-{  
+{
   /* set MAC hardware address length */
   netif->hwaddr_len = ETHARP_HWADDR_LEN;
-
-  /* set MAC hardware address */
 
   /* maximum transfer unit */
   netif->mtu = 1500;
@@ -158,23 +156,23 @@ ethernetif_input(struct netif *netif, struct pbuf *p)
   struct ethernetif *ethernetif;
   struct eth_hdr *ethhdr;
 
+  if(p == NULL)
+    goto _exit;
 
-if(p == NULL)
-	goto _exit;
-
-
-if(p->payload == NULL)
-{
+  if(p->payload == NULL) {
     pbuf_free(p);
-	goto _exit;
-}
+    goto _exit;
+  }
 
+  if(netif == NULL) {
+    goto _exit;
+  }
 
-if(netif == NULL)
-{
-	goto _exit;
-}
-
+  if (!(netif->flags & NETIF_FLAG_LINK_UP)) {
+    pbuf_free(p);
+    p = NULL;
+    goto _exit;
+  }
 
   ethernetif = netif->state;
 
@@ -224,6 +222,16 @@ err_t ethernetif_init(struct netif *netif)
 {
   LWIP_ASSERT("netif != NULL", (netif != NULL));
 
+  u8_t mac[NETIF_MAX_HWADDR_LEN];
+
+  /* set MAC hardware address */
+  if ((struct netif *)wifi_get_netif(STATION_IF) == netif) {
+    wifi_get_macaddr(STATION_IF, mac);
+  } else {
+    wifi_get_macaddr(SOFTAP_IF, mac);
+  }
+  memcpy(netif->hwaddr, mac, NETIF_MAX_HWADDR_LEN);
+
 #if LWIP_NETIF_HOSTNAME
   if ((struct netif *)wifi_get_netif(STATION_IF) == netif) {
       if (default_hostname == 1) {
@@ -255,7 +263,10 @@ err_t ethernetif_init(struct netif *netif)
   netif->output_ip6 = ethip6_output;
 #endif /* LWIP_IPV6 */
   netif->linkoutput = low_level_output;
-  
+
+  extern void wifi_station_dhcpc_event(void);
+  netif->dhcp_event = wifi_station_dhcpc_event;
+
   /* initialize the hardware */
   low_level_init(netif);
 

@@ -201,7 +201,8 @@ CCFLAGS += 			\
 	-mtext-section-literals \
 	-ffunction-sections \
 	-fdata-sections	\
-	-fno-builtin-printf
+	-fno-builtin-printf	\
+	-fno-jump-tables
 #	-Wall			
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(EXTRA_CCFLAGS) $(INCLUDES)
@@ -407,3 +408,4 @@ INCLUDES += -I $(SDK_PATH)/include/nopoll
 INCLUDES += -I $(SDK_PATH)/include/spiffs
 INCLUDES += -I $(SDK_PATH)/include/ssl
 INCLUDES += -I $(SDK_PATH)/include/json
+INCLUDES += -I $(SDK_PATH)/include/openssl
