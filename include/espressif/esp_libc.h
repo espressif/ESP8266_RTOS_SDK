@@ -72,11 +72,13 @@ long atol(const char *s);
 unsigned long os_random(void);
 int os_get_random(unsigned char *buf, size_t len);
 
+#ifndef os_printf
 /* NOTE: don't use printf_opt in irq handler, for test */
 #define os_printf(fmt, ...) do {    \
         static const char flash_str[] ICACHE_RODATA_ATTR STORE_ATTR = fmt;  \
         printf(flash_str, ##__VA_ARGS__);   \
     } while(0)
+#endif
 
 /* Note: check_memleak_debug_enable is a weak function inside SDK.
  * please copy following codes to user_main.c.
@@ -90,43 +92,67 @@ bool ICACHE_FLASH_ATTR check_memleak_debug_enable(void)
 
 #ifndef MEMLEAK_DEBUG
 #define MEMLEAK_DEBUG_ENABLE    0
+#ifndef os_free
 #define os_free(s)        free(s)
+#endif
+
+#ifndef os_malloc
 #define os_malloc(s)      malloc(s)
-#define os_calloc(p, s)   calloc(p, s);
+#endif
+
+#ifndef os_calloc
+#define os_calloc(p, s)   calloc(p, s)
+#endif
+
+#ifndef os_realloc
 #define os_realloc(p, s)  realloc(p, s)
+#endif
+
+#ifndef os_zalloc
 #define os_zalloc(s)      zalloc(s)
+#endif
 #else
 #define MEMLEAK_DEBUG_ENABLE    1
 
+#ifndef os_free
 #define os_free(s) \
 do{\
     static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
     vPortFree(s, mem_debug_file, __LINE__);\
 }while(0)
+#endif
 
+#ifndef os_malloc
 #define os_malloc(s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
         pvPortMalloc(s, mem_debug_file, __LINE__);  \
     })
+#endif
 
+#ifndef os_calloc
 #define os_calloc(p, s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
         pvPortCalloc(p, s, mem_debug_file, __LINE__);  \
     })
+#endif
 
+#ifndef os_realloc
 #define os_realloc(p, s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
         pvPortRealloc(p, s, mem_debug_file, __LINE__);  \
     })
+#endif
 
+#ifndef os_zalloc
 #define os_zalloc(s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
         pvPortZalloc(s, mem_debug_file, __LINE__);  \
     })
+#endif
 
 #endif
 
