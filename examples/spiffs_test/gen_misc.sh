@@ -8,8 +8,8 @@ export SDK_PATH=~/esp_iot_sdk_freertos
 export BIN_PATH=~/esp8266_bin
 !
 
-export SDK_PATH=
-export BIN_PATH=
+export SDK_PATH=$SDK_PATH
+export BIN_PATH=$BIN_PATH
 
 echo "gen_misc.sh version 20150911"
 echo ""
@@ -133,7 +133,10 @@ echo "    3=2048KB( 512KB+ 512KB)"
 echo "    4=4096KB( 512KB+ 512KB)"
 echo "    5=2048KB(1024KB+1024KB)"
 echo "    6=4096KB(1024KB+1024KB)"
-echo "enter (0/2/3/4/5/6, default 0):"
+echo "    7=4096KB(2048KB+2048KB) not support ,just for compatible with nodeMCU board"
+echo "    8=8192KB(1024KB+1024KB)"
+echo "    9=16384KB(1024KB+1024KB)"
+echo "enter (0/2/3/4/5/6/7/8/9, default 0):"
 read input
 
 if [ -z "$input" ]; then
@@ -159,6 +162,18 @@ elif [ $input == 5 ]; then
 elif [ $input == 6 ]; then
     spi_size_map=6
     echo "spi size: 4096KB"
+    echo "spi ota map:  1024KB + 1024KB"
+elif [ $input == 7 ]; then
+    spi_size_map=7
+    echo"not support ,just for compatible with nodeMCU board"
+    exit
+elif [ $input == 8 ]; then
+    spi_size_map=8
+    echo "spi size: 8192KB"
+    echo "spi ota map:  1024KB + 1024KB"
+elif [ $input == 9 ]; then
+    spi_size_map=9
+    echo "spi size: 16384KB"
     echo "spi ota map:  1024KB + 1024KB"
 else
     spi_size_map=0
