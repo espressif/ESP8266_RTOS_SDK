@@ -1,4 +1,4 @@
-﻿This is a simple project template.
+This is a simple project template.
 
 sample_lib is an example for multi-level folder Makefile, notice the folder structure and each Makefile, you can get the clue.
 
