@@ -120,6 +120,10 @@
 
 #define NUM_SOCKETS MEMP_NUM_NETCONN
 
+#ifndef SOCK_API_SYNC
+	#define SOCK_API_SYNC 1
+#endif
+
 /** Contains all internal pointers and states used for a socket */
 struct lwip_sock {
   /** sockets currently are built on netconns, each socket has one netconn */
@@ -140,6 +144,15 @@ struct lwip_sock {
   int err;
   /** counter of how many threads are waiting for this socket using select */
   int select_waiting;
+
+#if SOCK_API_SYNC
+  /* closing is 0, when the socket is created. It is 1, when the function "close" is called, */
+  /* and then send / get function is not able to be called  */
+  int closing;
+
+  sys_mutex_t mutex_recv;
+  sys_mutex_t mutex_send;
+#endif
 };
 
 /** Description for a task waiting in select */
@@ -192,9 +205,6 @@ union sockaddr_aligned {
 #endif /* LWIP_IPV6 */
    struct sockaddr_in sin;
 };
-
-char DefSocketCloseFlag = 0;
-char SocketCloseDoneFlag = 0;
 
 /** The global array of available sockets */
 static struct lwip_sock sockets[NUM_SOCKETS];
@@ -255,6 +265,131 @@ static const int err_to_errno_table[] ICACHE_RODATA_ATTR STORE_ATTR = {
   sk->err = (e); \
   set_errno(sk->err); \
 } while (0)
+
+
+/* add the function for socket API sync between threads */
+#if SOCK_API_SYNC
+#define SOCK_DEBUG(level, ...) \
+	if (level > 2) printf(__VA_ARGS__);
+
+#define SOCK_INIT_CLOSING_SIG(sock) do { \
+	(sock)->closing = 0; \
+	SOCK_DEBUG(1, "SOCK_INIT_CLOSING_SIG:[%d]\n", (sock)->closing); \
+} while (0)
+
+#define SOC_DEINIT_SYNC(sock) do { \
+	sys_mutex_free(&(sock)->mutex_recv); \
+	sys_mutex_free(&(sock)->mutex_send); \
+	SOCK_DEBUG(1, "SOC_DEINIT_SYNC OK!\n"); \
+} while (0)
+
+#define SOCK_START_CLOSING(sock) do { \
+    (sock)->closing = 1; \
+    SOCK_DEBUG(1, "SOCK_START_CLOSING:[%d]\n", (sock)->closing); \
+} while (0)
+
+#define SOCK_CHECK_NOT_CLOSING(sock) do { \
+	if ((sock)->closing) { \
+		SOCK_DEBUG(1, "SOCK_CHECK_NOT_CLOSING:[%d]\n", (sock)->closing); \
+		return -1; \
+	} \
+} while (0)
+
+#define SOCK_WAIT() do { \
+	extern void sys_arch_msleep(int ms); \
+	sys_arch_msleep(50); \
+	SOCK_DEBUG(0, "SOCK_WAIT_FOR_10MS\n"); \
+} while (0);
+
+/* place lwip_socket */
+#define SOC_INIT_SYNC(sock) do { \
+	SOCK_INIT_CLOSING_SIG(sock); \
+	if (sys_mutex_new(&(sock)->mutex_recv)) return -1; \
+	if (sys_mutex_new(&(sock)->mutex_send)) { \
+		sys_mutex_free(&(sock)->mutex_recv); \
+		return -1; \
+	} \
+	SOCK_DEBUG(1, "SOC_INIT_SYNC OK!\n"); \
+} while (0)
+
+/* place in lwip_recv*/
+#define SOCK_RECV_LOCK(sock) do { \
+	SOCK_CHECK_NOT_CLOSING(sock); \
+	sys_mutex_lock(&sock->mutex_recv); \
+	SOCK_DEBUG(1, "SOCK_RECV_LOCK\n"); \
+} while (0)
+
+/* place in lwip_recv*/
+#define SOCK_RECV_UNLOCK(sock) do { \
+	sys_mutex_unlock(&sock->mutex_recv); \
+	SOCK_DEBUG(1, "SOCK_RECV_UNLOCK\n"); \
+} while (0)
+
+/* place in lwip_send */
+#define SOCK_SEND_LOCK(sock) do { \
+	SOCK_CHECK_NOT_CLOSING(sock); \
+	sys_mutex_lock(&sock->mutex_send); \
+	SOCK_DEBUG(0, "SOCK_SEND_LOCK\n"); \
+} while (0)
+
+/* place in lwip_send */
+#define SOCK_SEND_UNLOCK(sock) do { \
+	sys_mutex_unlock(&sock->mutex_send); \
+	SOCK_DEBUG(0, "SOCK_SEND_UNLOCK\n"); \
+} while (0)
+
+/* place in lwip_close */
+#define SOCK_DEINIT_SYNC(sock) do { \
+	SOCK_CHECK_NOT_CLOSING(sock); \
+	SOCK_START_CLOSING(sock); \
+	if (0 > sock_wait_to_be_idle(sock)) return -1; \
+	SOC_DEINIT_SYNC(sock); \
+	SOCK_DEBUG(1, "SOCK_WAIT_TO_BE_IDLE\n"); \
+} while (0);
+
+static int sock_wait_to_be_idle(struct lwip_sock *sock)
+{
+	extern sys_mutex_trylock(sys_mutex_t *pxMutex);
+	int recving = 1, sending = 1;
+	int count = 10;
+
+	/* wait for 500ms */
+	while (count--) {
+		if (recving) {
+			if (!sys_mutex_trylock(&sock->mutex_recv)) recving = 0;
+			else sys_mbox_trypost(&sock->conn->recvmbox, NULL);
+		}
+
+		if (sending) {
+			if (!sys_mutex_trylock(&sock->mutex_send)) sending = 0;
+			else {
+			    	if (sys_sem_valid(&(sock->conn->snd_op_completed))) {
+	                           sock->conn->current_msg->err = ERR_OK;
+	                           sock->conn->current_msg = NULL;
+	                           sock->conn->state = NETCONN_NONE;
+	                           sys_sem_signal(&(sock->conn->snd_op_completed));
+	                        }
+			}
+		}
+
+		if (!recving && !sending) return 0;
+
+		SOCK_WAIT();
+	}
+
+	return count;
+}
+#else
+#define SOC_INIT_SYNC(sock)
+
+#define SOCK_RECV_LOCK(sock)
+#define SOCK_RECV_UNLOCK(sock)
+#define SOCK_SEND_LOCK(sock)
+#define SOCK_SEND_UNLOCK(sock)
+
+#define SOCK_DEINIT_SYNC(sock)
+#endif
+
 
 /* Forward delcaration of some functions */
 static void event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len);
@@ -335,6 +470,7 @@ alloc_socket(struct netconn *newconn, int accepted)
     /* Protect socket array */
     SYS_ARCH_PROTECT(lev);
     if (!sockets[i].conn) {
+
       sockets[i].conn       = newconn;
       /* The socket is not yet known to anyone, so no need to protect
          after having marked it as used. */
@@ -348,6 +484,9 @@ alloc_socket(struct netconn *newconn, int accepted)
       sockets[i].errevent   = 0;
       sockets[i].err        = 0;
       sockets[i].select_waiting = 0;
+
+      SOC_INIT_SYNC(&sockets[i]);
+
       return i;
     }
     SYS_ARCH_UNPROTECT(lev);
@@ -543,32 +682,19 @@ lwip_close(int s)
     return -1;
   }
 
+  SOCK_DEINIT_SYNC(sock);
+
   if(sock->conn != NULL) {
     is_tcp = NETCONNTYPE_GROUP(netconn_type(sock->conn)) == NETCONN_TCP;
   } else {
     LWIP_ASSERT("sock->lastdata == NULL", sock->lastdata == NULL);
   }
-if(sock->conn->state == NETCONN_WRITE)
-{
-	DefSocketCloseFlag = 1;
-	SocketCloseDoneFlag = 0;
-	if( sys_sem_valid(&(sock->conn->snd_op_completed)))
-	{
-	    sock->conn->current_msg->err = ERR_OK;
-	    sock->conn->current_msg = NULL;
-	    sock->conn->state = NETCONN_NONE;
-	    sys_sem_signal(&(sock->conn->snd_op_completed));
-	}
-	while( SocketCloseDoneFlag != 1 )
-	{ vTaskDelay(1); }
-	set_errno(0);
-	return 0;
-}
 
   netconn_delete(sock->conn);
 
   free_socket(sock, is_tcp);
   set_errno(0);
+
   return 0;
 }
 
@@ -742,6 +868,8 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
     return -1;
   }
 
+  SOCK_RECV_LOCK(sock);
+
   do {
     LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom: top while sock->lastdata=%p\n", sock->lastdata));
     /* Check if there is data left from the last recv operation. */
@@ -756,10 +884,16 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
           netconn_recved(sock->conn, (u32_t)off);
           /* already received data, return that */
           sock_set_errno(sock, 0);
+
+          SOCK_RECV_UNLOCK(sock);
+
           return off;
         }
         LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_recvfrom(%d): returning EWOULDBLOCK\n", s));
         sock_set_errno(sock, EWOULDBLOCK);
+
+        SOCK_RECV_UNLOCK(sock);
+
         return -1;
       }
 
@@ -779,6 +913,7 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
           netconn_recved(sock->conn, (u32_t)off);
           /* already received data, return that */
           sock_set_errno(sock, 0);
+          SOCK_RECV_UNLOCK(sock);
           return off;
         }
         /* We should really do some error checking here. */
@@ -786,8 +921,10 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
           s, lwip_strerr(err)));
         sock_set_errno(sock, err_to_errno(err));
         if (err == ERR_CLSD) {
+          SOCK_RECV_UNLOCK(sock);
           return 0;
         } else {
+          SOCK_RECV_UNLOCK(sock);
           return -1;
         }
       }
@@ -900,6 +1037,9 @@ lwip_recvfrom(int s, void *mem, size_t len, int flags,
     netconn_recved(sock->conn, (u32_t)off);
   }
   sock_set_errno(sock, 0);
+
+  SOCK_RECV_UNLOCK(sock);
+
   return off;
 }
 
@@ -931,11 +1071,17 @@ lwip_send(int s, const void *data, size_t size, int flags)
     return -1;
   }
 
+  SOCK_SEND_LOCK(sock);
+
   if (NETCONNTYPE_GROUP(netconn_type(sock->conn)) != NETCONN_TCP) {
 #if (LWIP_UDP || LWIP_RAW)
-    return lwip_sendto(s, data, size, flags, NULL, 0);
+	int ret;
+	SOCK_SEND_UNLOCK(sock);
+    ret = lwip_sendto(s, data, size, flags, NULL, 0);
+    return ret;
 #else /* (LWIP_UDP || LWIP_RAW) */
     sock_set_errno(sock, err_to_errno(ERR_ARG));
+    SOCK_SEND_UNLOCK(sock);
     return -1;
 #endif /* (LWIP_UDP || LWIP_RAW) */
   }
@@ -949,13 +1095,8 @@ lwip_send(int s, const void *data, size_t size, int flags)
   LWIP_DEBUGF(SOCKETS_DEBUG, ("lwip_send(%d) err=%d written=%"SZT_F"\n", s, err, written));
   sock_set_errno(sock, err_to_errno(err));
 
+  SOCK_SEND_UNLOCK(sock);
 
-if(DefSocketCloseFlag==1)
-{
-	DefSocketCloseFlag = 0;
-	lwip_close(s);
-	SocketCloseDoneFlag = 1;
-}
   return (err == ERR_OK ? (int)written : -1);
 }
 
@@ -1570,6 +1711,8 @@ lwip_shutdown(int s, int how)
   if (!sock) {
     return -1;
   }
+
+  SOCK_DEINIT_SYNC(sock);
 
   if (sock->conn != NULL) {
     if (NETCONNTYPE_GROUP(netconn_type(sock->conn)) != NETCONN_TCP) {

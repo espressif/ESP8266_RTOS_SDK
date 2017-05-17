@@ -319,6 +319,13 @@ sys_mutex_lock(sys_mutex_t *pxMutex)
     while (xSemaphoreTake(*pxMutex, portMAX_DELAY) != pdPASS);
 }
 
+err_t
+sys_mutex_trylock(sys_mutex_t *pxMutex)
+{
+	if (xSemaphoreTake(*pxMutex, 0) == pdPASS) return 0;
+	else return -1;
+}
+
 /** Unlock a mutex
  * @param mutex the mutex to unlock */
 void
@@ -409,5 +416,11 @@ sys_arch_assert(const char *file, int line)
     os_printf("\nAssertion: %d in %s\n", line, file);
 
     while(1);
+}
+
+void
+sys_arch_msleep(int ms)
+{
+	vTaskDelay(ms / portTICK_RATE_MS);
 }
 

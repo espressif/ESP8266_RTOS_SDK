@@ -261,7 +261,9 @@ static void create_msg(struct dhcps_msg *m)
         memset((char *) m->file, 0, sizeof(m->file));
 
         memset((char *) m->options, 0, sizeof(m->options));
-        memcpy((char *) m->options, &magic_cookie, sizeof(magic_cookie));
+
+        u32_t magic_cookie1 = magic_cookie;
+        memcpy((char *) m->options, &magic_cookie1, sizeof(magic_cookie1));
 }
 ///////////////////////////////////////////////////////////////////////////////////
 /*

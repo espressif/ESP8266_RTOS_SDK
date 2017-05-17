@@ -207,6 +207,11 @@ tcp_close_shutdown(struct tcp_pcb *pcb, u8_t rst_on_unacked_data)
     }
   }
 
+  if (pcb != NULL) {
+	  tcp_abort(pcb);
+	  return ERR_OK;
+  }
+
   switch (pcb->state) {
   case CLOSED:
     /* Closing a pcb in the CLOSED state might seem erroneous,
