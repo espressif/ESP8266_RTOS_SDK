@@ -1058,12 +1058,9 @@ dhcp_bind(struct netif *netif)
     /* set renewal period timer */
     LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_bind(): t1 renewal timer %"U32_F" secs\n", dhcp->offered_t1_renew));
     timeout = (dhcp->offered_t1_renew + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS;
-    if(timeout > 0xffff) {
-      timeout = 0xffff;
-    }
     dhcp->t1_timeout = (u16_t)timeout;
     if (dhcp->t1_timeout == 0) {
-      dhcp->t1_timeout = 1;
+      dhcp->t1_timeout = 60;
     }
     LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_bind(): set request timeout %"U32_F" msecs\n", dhcp->offered_t1_renew*1000));
   }
@@ -1071,12 +1068,9 @@ dhcp_bind(struct netif *netif)
   if (dhcp->offered_t2_rebind != 0xffffffffUL) {
     LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_bind(): t2 rebind timer %"U32_F" secs\n", dhcp->offered_t2_rebind));
     timeout = (dhcp->offered_t2_rebind + DHCP_COARSE_TIMER_SECS / 2) / DHCP_COARSE_TIMER_SECS;
-    if(timeout > 0xffff) {
-      timeout = 0xffff;
-    }
     dhcp->t2_timeout = (u16_t)timeout;
     if (dhcp->t2_timeout == 0) {
-      dhcp->t2_timeout = 1;
+      dhcp->t2_timeout = (dhcp->t1_timeout>>2)*7;
     }
     LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE | LWIP_DBG_STATE, ("dhcp_bind(): set request timeout %"U32_F" msecs\n", dhcp->offered_t2_rebind*1000));
   }

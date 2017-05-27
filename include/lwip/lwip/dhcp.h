@@ -16,7 +16,7 @@ extern "C" {
 #endif
 
 /** period (in seconds) of the application calling dhcp_coarse_tmr() */
-#define DHCP_COARSE_TIMER_SECS 60 
+#define DHCP_COARSE_TIMER_SECS 1
 /** period (in milliseconds) of the application calling dhcp_coarse_tmr() */
 #define DHCP_COARSE_TIMER_MSECS (DHCP_COARSE_TIMER_SECS * 1000UL)
 /** period (in milliseconds) of the application calling dhcp_fine_tmr() */
@@ -46,9 +46,9 @@ struct dhcp
   struct pbuf *p_out; /* pbuf of outcoming msg */
   struct dhcp_msg *msg_out; /* outgoing msg */
   u16_t options_out_len; /* outgoing msg options length */
-  u16_t request_timeout; /* #ticks with period DHCP_FINE_TIMER_SECS for request timeout */
-  u16_t t1_timeout;  /* #ticks with period DHCP_COARSE_TIMER_SECS for renewal time */
-  u16_t t2_timeout;  /* #ticks with period DHCP_COARSE_TIMER_SECS for rebind time */
+  u32_t request_timeout; /* #ticks with period DHCP_FINE_TIMER_SECS for request timeout */
+  u32_t t1_timeout;  /* #ticks with period DHCP_COARSE_TIMER_SECS for renewal time */
+  u32_t t2_timeout;  /* #ticks with period DHCP_COARSE_TIMER_SECS for rebind time */
   ip_addr_t server_ip_addr; /* dhcp server address that offered this lease */
   ip_addr_t offered_ip_addr;
   ip_addr_t offered_sn_mask;

@@ -48,6 +48,7 @@ typedef struct _list_node{
 }list_node;
 
 extern u32_t dhcps_lease_time;
+#define DHCPS_COARSE_TIMER_SECS  1
 #define DHCPS_LEASE_TIMER  dhcps_lease_time  //0x05A0
 #define DHCPS_MAX_LEASE 0x64
 #define BOOTP_BROADCAST 0x8000

@@ -28,7 +28,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include "esp8266/gpio_register.h"
 #define GPIO_Pin_0              (BIT(0))  /* Pin 0 selected */
 #define GPIO_Pin_1              (BIT(1))  /* Pin 1 selected */
 #define GPIO_Pin_2              (BIT(2))  /* Pin 2 selected */
@@ -190,7 +190,7 @@ typedef struct {
   *  
   * @return  the level of GPIO input 
   */
-#define GPIO_INPUT_GET(gpio_no)     ((gpio_input_get()>>gpio_no)&BIT0)
+#define GPIO_INPUT_GET(gpio_no)     ((gpio_input_get()>>gpio_no)&BIT(0))
 
 /**  
   * @brief   Enable GPIO16 output.

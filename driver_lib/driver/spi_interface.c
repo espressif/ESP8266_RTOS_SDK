@@ -22,6 +22,7 @@
 #include "spi_interface.h"
 #include "esp8266/eagle_soc.h"
 #include "esp8266/ets_sys.h"
+#include "esp8266/pin_mux_register.h"
 #include "esp_libc.h"
 //*****************************************************************************
 //
@@ -123,6 +124,10 @@ void ICACHE_FLASH_ATTR SPIInit(SpiNum spiNum, SpiAttr* pAttr)
         // SPI Speed
         if (1 < (pAttr->speed)) {
             CLEAR_PERI_REG_MASK(SPI_CLOCK(spiNum), SPI_CLK_EQU_SYSCLK);
+            if (spiNum == SpiNum_HSPI) {
+                CLEAR_PERI_REG_MASK(PERIPHS_IO_MUX_CONF_U, SPI1_CLK_EQU_SYS_CLK);
+            }
+
             WRITE_PERI_REG(SPI_CLOCK(spiNum),
                            ((pAttr->speed & SPI_CLKCNT_N) << SPI_CLKCNT_N_S) |
                            ((((pAttr->speed + 1) / 2 - 1) & SPI_CLKCNT_H) << SPI_CLKCNT_H_S) |
@@ -169,6 +174,8 @@ void ICACHE_FLASH_ATTR SPIInit(SpiNum spiNum, SpiAttr* pAttr)
 
     //clear Daul or Quad lines transmission mode
     CLEAR_PERI_REG_MASK(SPI_CTRL(spiNum), SPI_QIO_MODE | SPI_DIO_MODE | SPI_DOUT_MODE | SPI_QOUT_MODE);
+    SET_PERI_REG_MASK(SPI_CTRL(spiNum), SPI_FASTRD_MODE);
+
 }
 
 /**
@@ -258,6 +265,7 @@ int ICACHE_FLASH_ATTR SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
         SET_PERI_REG_BITS(SPI_USER1(spiNum), SPI_USR_MOSI_BITLEN, ((pInData->dataLen << 3) - 1), SPI_USR_MOSI_BITLEN_S);
     } else {
         CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MOSI);
+        CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MISO);
         SET_PERI_REG_BITS(SPI_USER1(spiNum), SPI_USR_MOSI_BITLEN,
                           0, SPI_USR_MOSI_BITLEN_S);
     }
@@ -329,9 +337,15 @@ int ICACHE_FLASH_ATTR SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
         SET_PERI_REG_BITS(SPI_USER1(spiNum), SPI_USR_MISO_BITLEN,
                           0, SPI_USR_MISO_BITLEN_S);
     }
+
+    //CLEAR FIFO DATA
+    int fifo_idx = 0;
+    do {
+        WRITE_PERI_REG(SPI_W0(spiNum) + (fifo_idx << 2), 0);
+    } while (++fifo_idx < (pOutData->dataLen / 4));
+
     // Start send data
     SET_PERI_REG_MASK(SPI_CMD(spiNum), SPI_USR);
-
     while (READ_PERI_REG(SPI_CMD(spiNum))&SPI_USR);
     // Read data out
     do {

@@ -49,15 +49,36 @@ typedef enum {          // timer interrupt mode
 
 static void (* user_hw_timer_cb)(void) = NULL;
 
+bool frc1_auto_load = false;
+
 static void hw_timer_isr_cb(void *arg)
 {
+    if(frc1_auto_load == false ) {
+        RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
+                      DIVDED_BY_16 | TM_EDGE_INT);
+    }
+
     if (user_hw_timer_cb != NULL) {
         (*(user_hw_timer_cb))();
     }
 }
 
-void hw_timer_arm(uint32 val)
+void hw_timer_disarm(void)
 {
+    RTC_REG_WRITE(FRC1_CTRL_ADDRESS,0);
+}
+
+void hw_timer_arm(uint32 val ,bool req)
+{
+    frc1_auto_load = req;
+    if (frc1_auto_load == true) {
+        RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
+                      FRC1_AUTO_LOAD | DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
+    } else {
+        RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
+                      DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
+    }
+
     RTC_REG_WRITE(FRC1_LOAD_ADDRESS, US_TO_RTC_TIMER_TICKS(val));
 }
 
@@ -66,8 +87,9 @@ void hw_timer_set_func(void (* user_hw_timer_cb_set)(void))
     user_hw_timer_cb = user_hw_timer_cb_set;
 }
 
-void hw_timer_init(uint8 req)
+void hw_timer_init(void)
 {
+#if 0
     if (req == 1) {
         RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
                       FRC1_AUTO_LOAD | DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
@@ -76,6 +98,7 @@ void hw_timer_init(uint8 req)
                       DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
     }
 
+#endif
     _xt_isr_attach(ETS_FRC_TIMER1_INUM, hw_timer_isr_cb, NULL);
 
     TM1_EDGE_INT_ENABLE();
@@ -108,8 +131,8 @@ void hw_test_timer_cb(void)
 
 void user_init(void)
 {
-    hw_timer_init(1);
-    hw_timer_set_func(hw_test_timer_cb);
+    hw_timer_init();
+    hw_timer_set_func(hw_test_timer_cb,1);
     hw_timer_arm(100);
 }
 #endif
