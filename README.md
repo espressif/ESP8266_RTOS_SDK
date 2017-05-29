@@ -50,6 +50,6 @@ Just follow the tips and steps.
 
 eagle.app.v6.flash.bin, downloads to flash 0x00000
 
-eagle.app.v6.irom0text.bin, downloads to flash 0x40000
+eagle.app.v6.irom0text.bin, downloads to flash 0x20000
 
-blank.bin, downloads to flash 0x7E000
+For blank.bin and esp_init_data_default.bin, check the flash_map documentation
