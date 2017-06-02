@@ -1,2 +1,12 @@
-lwip:   6ee4a9b3
-driver: 7bee5263
+gwen:
+    espnow:     1aafc07
+    main:       1aafc07
+    mesh:       1aafc07
+    net80211:   1aafc07
+    pp:         1aafc07
+    wpa:        1aafc07
+    wps:        1aafc07
+
+gitlab:
+    lwip:       6ee4a9b3
+    driver:     7bee5263
