@@ -347,6 +347,7 @@ LOCAL int lwip_exit_mt_shutdown(int s, int arg)
 
 LOCAL int lwip_exit_mt_close(int s, int arg)
 {
+	SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_STATE_NONE);
 	return 0;
 } 
 
