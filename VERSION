@@ -8,5 +8,5 @@ gwen:
     wps:        1aafc07
 
 gitlab:
-    lwip:       6ee4a9b3
+    lwip:       243eb8be
     driver:     7bee5263

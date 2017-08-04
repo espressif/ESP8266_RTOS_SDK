@@ -87,25 +87,16 @@ bool configTime(int timezone, int daylightOffset, char *server1, char *server2, 
 	return true;
 }
 
-time_t time(time_t *t)
-{
-	time_t seconds = sntp_get_current_timestamp();
-	if (seconds == 0){
-		micros_set_default_time();
-		seconds = millis();
-	}
-
-	if (t){
-		*t = seconds;
-	}
-	return seconds;
-}
-
 int __attribute__((weak))
 _gettimeofday_r(void *ptr, struct timeval *ptimeval, void *ptimezone)
 {
 	if (ptimeval){
-		ptimeval->tv_sec = time(NULL);
+	    time_t seconds = sntp_get_current_timestamp();
+        if (seconds == 0){
+            micros_set_default_time();
+            seconds = millis();
+        }
+		ptimeval->tv_sec = seconds;
 
 		ptimeval->tv_usec = 0;
 	}
