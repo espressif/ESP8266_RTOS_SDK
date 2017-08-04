@@ -10,3 +10,4 @@ gwen:
 gitlab:
     lwip:       243eb8be
     driver:     7bee5263
+    mbedtls:    1ac9f1f4
