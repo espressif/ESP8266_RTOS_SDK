@@ -1,7 +1,7 @@
 /*
- * ESPRSSIF MIT License
+ * ESPRESSIF MIT License
  *
- * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
+ * Copyright (c) 2015-2017 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
  *
  * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
  * it is free of charge, to any person obtaining a copy of this software and associated
@@ -815,6 +815,46 @@ bool wifi_set_user_limit_rate_mask(uint8 enable_mask);
   * @}
   */
 
+/** \defgroup WiFi_Vendor_IE_APIs Vendor IE APIs
+  * @brief WiFi Vendor IE APIs
+  */
+
+/** @addtogroup WiFi_Vendor_IE_APIs
+  * @{
+  */
+
+typedef enum {
+    VND_IE_TYPE_BEACON = 0,  /**< beacon */
+    VND_IE_TYPE_PROBE_REQ,   /**< probe request */
+    VND_IE_TYPE_PROBE_RESP,  /**< probe response */
+    VND_IE_TYPE_ASSOC_REQ,   /**< associate request */
+    VND_IE_TYPE_ASSOC_RESP,  /**< associate response */
+    VND_IE_TYPE_NUM,
+} vendor_ie_type;
+
+/**
+  * @brief  Set Vendor IE of ESP8266.
+  *
+  *         The Vendor IE will be added to the target packets of vendor_ie_type.
+  *
+  * @param  bool enable  :
+  *    -  true, enable the corresponding vendor-specific IE function, all parameters below have to be set.
+  *    -  false, disable the corresponding vendor-specific IE function and release the resource,
+  *       only the parameter "type" below has to be set.
+  * @param  uint8_t type : IE type. If it is VND_IE_TYPE_BEACON, please disable the IE function and enable
+  *                        again to take the configuration effect immediately .
+  * @param  uint8_t idx : vendor-specific IE index, 0 or 1. Only support two vendor-specific IEs in one frame.
+  * @param  uint8_t *vnd_ie : vendor-specific information elements, need to input the whole 802.11 IE
+  *                           including Element ID, Length, Organization Identifier and Vendor-specific Content.
+  *
+  * @return true  : succeed
+  * @return false : fail
+  */
+bool wifi_set_vnd_ie(bool enable, vendor_ie_type type, uint8_t idx, uint8_t *vnd_ie);
+
+/**
+  * @}
+  */
 
 /** \defgroup WiFi_User_IE_APIs User IE APIs
   * @brief WiFi User IE APIs
