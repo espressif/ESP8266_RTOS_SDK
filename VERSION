@@ -1,13 +1,14 @@
 gwen:
+    espconn:    730c7f0
     espnow:     1aafc07
-    main:       b2944d6
+    main:       730c7f0
     mesh:       1aafc07
-    net80211:   1aafc07
+    net80211:   730c7f0
     pp:         1474356
-    wpa:        1aafc07
+    wpa:        730c7f0
     wps:        1aafc07
 
 gitlab:
-    lwip:       243eb8be
+    lwip:       2235ad17
     driver:     7bee5263
     mbedtls:    1ac9f1f4

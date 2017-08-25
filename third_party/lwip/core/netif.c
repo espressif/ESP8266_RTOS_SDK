@@ -395,16 +395,42 @@ netif_set_ipaddr(struct netif *netif, ip_addr_t *ipaddr)
       }
     }
     for (lpcb = tcp_listen_pcbs.listen_pcbs; lpcb != NULL; lpcb = lpcb->next) {
-      /* PCB bound to current local interface address? */
-      if ((!(ip_addr_isany(ipX_2_ip(&lpcb->local_ip)))) &&
-          (ip_addr_cmp(ipX_2_ip(&lpcb->local_ip), &(netif->ip_addr)))) {
-        /* The PCB is listening to the old ipaddr and
-         * is set to listen to the new one instead */
-        ip_addr_set(ipX_2_ip(&lpcb->local_ip), ipaddr);
+      if (!ip_addr_isany(ipaddr)) {
+        /* PCB bound to current local interface address? */
+        if ((!(ip_addr_isany(ipX_2_ip(&lpcb->local_ip)))) &&
+            (ip_addr_cmp(ipX_2_ip(&lpcb->local_ip), &(netif->last_ip_addr)))) {
+          /* The PCB is listening to the old ipaddr and
+           * is set to listen to the new one instead */
+          ip_addr_set(ipX_2_ip(&lpcb->local_ip), ipaddr);
+        }
       }
     }
   }
 #endif
+
+#if LWIP_UDP
+#ifdef LWIP_ESP8266
+  if (ipaddr && (ip_addr_cmp(ipaddr, &(netif->ip_addr))) == 0) {
+    if (!ip_addr_isany(ipaddr)) {
+      struct udp_pcb* upcb;
+      for (upcb = udp_pcbs; upcb != NULL; upcb = upcb->next) {
+        /* PCB bound to current local interface address? */
+        if (!ip_addr_isany(ipX_2_ip(&upcb->local_ip)) &&
+            ip_addr_cmp(ipX_2_ip(&upcb->local_ip), &(netif->last_ip_addr))) {
+          /* The PCB is bound to the old ipaddr and
+           * is set to bound to the new one instead */
+          ip_addr_set(ipX_2_ip(&upcb->local_ip), ipaddr);
+        }
+      }
+    }
+  }
+
+  if (ipaddr && !ip_addr_isany(ipaddr)) {
+    ip_addr_set(&(netif->last_ip_addr), ipaddr);
+  }
+#endif
+#endif
+
   snmp_delete_ipaddridx_tree(netif);
   snmp_delete_iprteidx_tree(0,netif);
   /* set new IP address to netif */

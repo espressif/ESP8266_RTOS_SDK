@@ -160,6 +160,10 @@ struct netif {
   /** pointer to next in linked list */
   struct netif *next;
 
+#ifdef LWIP_ESP8266
+  ip_addr_t last_ip_addr;
+#endif
+
   /** IP address configuration in network byte order */
   ip_addr_t ip_addr;
   ip_addr_t netmask;
