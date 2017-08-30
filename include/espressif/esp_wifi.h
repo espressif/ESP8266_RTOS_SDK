@@ -833,6 +833,18 @@ typedef enum {
 } vendor_ie_type;
 
 /**
+  * @brief  Vendor IE received callback.
+  *
+  * @param  vendor_ie_type type :  type of vendor IE.
+  * @param  const uint8 sa[6] : source address of the packet.
+  * @param  uint8 *vendor_ie : pointer of vendor IE.
+  * @param  sint32 rssi : signal strength.
+  *
+  * @return null
+  */
+typedef void (*vendor_ie_recv_cb_t)(vendor_ie_type type, const uint8 sa[6], const uint8 *vnd_ie, sint32 rssi);
+
+/**
   * @brief  Set Vendor IE of ESP8266.
   *
   *         The Vendor IE will be added to the target packets of vendor_ie_type.
@@ -851,6 +863,25 @@ typedef enum {
   * @return false : fail
   */
 bool wifi_set_vnd_ie(bool enable, vendor_ie_type type, uint8_t idx, uint8_t *vnd_ie);
+
+/**
+  * @brief   Register vendor IE received callback.
+  *
+  * @param   vendor_ie_recv_cb_t cb : callback
+  *
+  * @return  0 : succeed
+  * @return -1 : fail
+  */
+sint32 wifi_register_vnd_ie_recv_cb(vendor_ie_recv_cb_t cb);
+
+/**
+  * @brief  Unregister vendor IE received callback.
+  *
+  * @param  null
+  *
+  * @return null
+  */
+void wifi_unregister_vnd_ie_recv_cb(void);
 
 /**
   * @}
