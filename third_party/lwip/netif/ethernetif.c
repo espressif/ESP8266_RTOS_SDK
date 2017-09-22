@@ -113,21 +113,16 @@ low_level_output(struct netif *netif, struct pbuf *p)
 #if ETH_PAD_SIZE
   pbuf_header(p, -ETH_PAD_SIZE); /* drop the padding word */
 #endif
-
-  struct pbuf *tmp;
   for(q = p; q != NULL; q = q->next) {
     /* Send the data from the pbuf to the interface, one pbuf at a
      time. The size of the data in each pbuf is kept in the ->len
      variable. */
   //    send data from(q->payload, q->len);
-    tmp = q->next;
 
     err = ieee80211_output_pbuf(netif, q);
     if (err == ERR_MEM) {
         err = ERR_OK;
     }
-    q->next = tmp;
-    break;
   }
 
 //  signal that packet should be sent();
