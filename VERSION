@@ -1,10 +1,10 @@
 gwen:
     espnow:     1aafc07
-    main:       4e7f435
+    main:       ae577a4
     mesh:       1aafc07
     net80211:   730c7f0
-    pp:         1474356
-    wpa:        730c7f0
+    pp:         ae577a4
+    wpa:        ae577a4
     wps:        1aafc07
 
 gitlab:
