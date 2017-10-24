@@ -110,6 +110,7 @@ SECTIONS
     *libmbedtls.a:(.rodata.* .rodata)
     *libssl.a:(.rodata.* .rodata)
     *libopenssl.a:(.rodata.* .rodata)
+    *libplatforms.a:(.rodata.* .rodata)
     *(.irom0.literal .irom.literal .irom.text.literal .irom0.text .irom.text)
     *(.literal.* .text.*)
     _irom0_text_end = ABSOLUTE(.);
