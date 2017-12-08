@@ -25,14 +25,14 @@
 
 #ifdef MEMLEAK_DEBUG
 
-extern void *pvPortMalloc( size_t xWantedSize, const char * file, unsigned line);
+extern void *pvPortMalloc( size_t xWantedSize, const char * file, unsigned line, bool use_iram);
 extern void *pvPortZalloc( size_t xWantedSize, const char * file, unsigned line);
 extern void vPortFree(void *pv, const char * file, unsigned line);
 
 #define ssl_mem_malloc(s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-        pvPortMalloc(s, mem_debug_file, __LINE__);  \
+        pvPortMalloc(s, mem_debug_file, __LINE__, false);  \
     })
 
 #define ssl_mem_zalloc(s)    \

@@ -299,14 +299,14 @@ xQueueHandle xReturn = NULL;
 	/* Allocate the new queue structure. */
 	if( uxQueueLength > ( unsigned portBASE_TYPE ) 0 )
 	{
-		pxNewQueue = ( xQUEUE * ) os_malloc( sizeof( xQUEUE ) );
+		pxNewQueue = ( xQUEUE * ) os_malloc_iram( sizeof( xQUEUE ) );
 		if( pxNewQueue != NULL )
 		{
 			/* Create the list of pointers to queue items.  The queue is one byte
 			longer than asked for to make wrap checking easier/faster. */
 			xQueueSizeInBytes = ( size_t ) ( uxQueueLength * uxItemSize ) + ( size_t ) 1; /*lint !e961 MISRA exception as the casts are only redundant for some ports. */
 
-			pxNewQueue->pcHead = ( signed char * ) os_malloc( xQueueSizeInBytes );
+			pxNewQueue->pcHead = ( signed char * ) os_malloc_iram( xQueueSizeInBytes );
 			if( pxNewQueue->pcHead != NULL )
 			{
 				/* Initialise the queue members as described above where the
@@ -356,7 +356,7 @@ xQueueHandle xReturn = NULL;
 		( void ) ucQueueType;
 
 		/* Allocate the new queue structure. */
-		pxNewQueue = ( xQUEUE * ) os_malloc( sizeof( xQUEUE ) );
+		pxNewQueue = ( xQUEUE * ) os_malloc_iram( sizeof( xQUEUE ) );
 		if( pxNewQueue != NULL )
 		{
 			/* Information required for priority inheritance. */

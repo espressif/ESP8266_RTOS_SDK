@@ -126,7 +126,15 @@ do{\
 #define os_malloc(s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-        pvPortMalloc(s, mem_debug_file, __LINE__);  \
+        pvPortMalloc(s, mem_debug_file, __LINE__, false);  \
+    })
+#endif
+
+#ifndef os_malloc_iram
+#define os_malloc_iram(s)    \
+    ({  \
+        static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
+        pvPortMalloc(s, mem_debug_file, __LINE__, true);  \
     })
 #endif
 

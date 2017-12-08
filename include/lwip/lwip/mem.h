@@ -81,7 +81,7 @@ typedef size_t mem_size_t;
 	}while(0)
 #endif
 #ifndef mem_malloc
-#define mem_malloc(s) ({const char *file = mem_debug_file; pvPortMalloc(s, file, __LINE__);})
+#define mem_malloc(s) ({const char *file = mem_debug_file; pvPortMalloc(s, file, __LINE__, false);})
 #endif
 #ifndef mem_calloc
 #define mem_calloc(s) ({const char *file = mem_debug_file; pvPortCalloc(s, file, __LINE__);})

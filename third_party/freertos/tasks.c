@@ -2486,7 +2486,7 @@ tskTCB *pxNewTCB;
 
 	/* Allocate space for the TCB.  Where the memory comes from depends on
 	the implementation of the port malloc function. */
-	pxNewTCB = ( tskTCB * ) os_malloc( sizeof( tskTCB ) );
+	pxNewTCB = ( tskTCB * ) os_malloc_iram( sizeof( tskTCB ) );
 
 	if( pxNewTCB != NULL )
 	{
