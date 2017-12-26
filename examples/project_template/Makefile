@@ -68,7 +68,6 @@ LINKFLAGS_eagle.app.v6 = \
 	-ljson	\
 	-llwip	\
 	-lmain	\
-	-lmesh	\
 	-lmirom	\
 	-lnet80211	\
 	-lnopoll	\

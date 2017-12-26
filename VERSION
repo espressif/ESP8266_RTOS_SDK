@@ -2,7 +2,6 @@ gwen:
     crypto:     a8c4880
     espnow:     a8c4880
     main:       a8c4880
-    mesh:       a8c4880
     minic:      a8c4880
     net80211:   a8c4880
     pp:         a8c4880
