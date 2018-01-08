@@ -1,10 +1,10 @@
 gwen:
     crypto:     52dbf63
     espnow:     52dbf63
-    main:       0a605cd
+    main:       94fab61
     minic:      52dbf63
-    net80211:   0a605cd
-    pp:         52dbf63
+    net80211:   94fab61
+    pp:         94fab61
     pwm:        52dbf63
     smartconfig:52dbf63
     wpa:        bac4751
