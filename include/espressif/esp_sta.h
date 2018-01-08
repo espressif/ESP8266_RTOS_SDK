@@ -149,6 +149,16 @@ struct scan_config {
     uint8 show_hidden;      /**< enable to scan AP whose SSID is hidden */
 };
 
+typedef enum {
+    CIPHER_NONE = 0,        /**< the cipher type is none */
+    CIPHER_WEP40,           /**< the cipher type is WEP40 */
+    CIPHER_WEP104,          /**< the cipher type is WEP104 */
+    CIPHER_TKIP,            /**< the cipher type is TKIP */
+    CIPHER_CCMP,            /**< the cipher type is CCMP */
+    CIPHER_TKIP_CCMP,       /**< the cipher type is TKIP and CCMP */
+    CIPHER_UNKNOWN,         /**< the cipher type is unknown */
+} CIPHER_TYPE;
+
 struct bss_info {
     STAILQ_ENTRY(bss_info)     next;    /**< information of next AP */
 
@@ -162,6 +172,13 @@ struct bss_info {
     sint16 freq_offset;                 /**< frequency offset */
     sint16 freqcal_val;
     uint8 *esp_mesh_ie;
+    CIPHER_TYPE pairwise_cipher;        /**< pairwise cipher of AP */
+    CIPHER_TYPE group_cipher;           /**< group cipher of AP */
+    uint32_t phy_11b:1;                 /**< bit: 0 flag to identify if 11b mode is enabled or not */
+    uint32_t phy_11g:1;                 /**< bit: 1 flag to identify if 11g mode is enabled or not */
+    uint32_t phy_11n:1;                 /**< bit: 2 flag to identify if 11n mode is enabled or not */
+    uint32_t wps:1;                     /**< bit: 3 flag to identify if WPS is supported or not */
+    uint32_t reserved:28;               /**< bit: 4..31 reserved */
 };
 
 /**
