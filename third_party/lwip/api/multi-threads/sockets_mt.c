@@ -370,7 +370,8 @@ LOCAL int lwip_exit_mt_select(int s, int arg)
 	}
 
 	for (i = 0; i < s; i++) {
-		if (SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
+	    if ((FD_ISSET(i, read_set) || FD_ISSET(i, write_set)) \
+	            && SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
 			return -1;
 		}	
 	}
