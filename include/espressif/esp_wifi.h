@@ -65,6 +65,18 @@ typedef enum {
     AUTH_MAX
 } AUTH_MODE;
 
+typedef enum {
+    WIFI_COUNTRY_POLICY_AUTO,   /**< Country policy is auto, use the country info of AP to which the station is connected */
+    WIFI_COUNTRY_POLICY_MANUAL, /**< Country policy is manual, always use the configured country info */
+} WIFI_COUNTRY_POLICY;
+
+typedef struct {
+    char cc[3];               /**< country code string */
+    uint8_t schan;            /**< start channel */
+    uint8_t nchan;            /**< total channel number */
+    uint8_t policy;           /**< country policy */
+} wifi_country_t;
+
 /**
   * @brief  Get the current operating mode of the WiFi.
   *
