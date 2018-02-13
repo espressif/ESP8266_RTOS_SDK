@@ -1787,8 +1787,10 @@ tcp_eff_send_mss_impl(u16_t sendmss, ipX_addr_t *dest
   if (mtu != 0) {
     mss_s = mtu - IP_HLEN - TCP_HLEN;
 #if LWIP_IPV6
-    /* for IPv6, substract the difference in header size */
-    mss_s -= (IP6_HLEN - IP_HLEN);
+    if (isipv6) {
+      /* for IPv6, substract the difference in header size */
+      mss_s -= (IP6_HLEN - IP_HLEN);
+    }
 #endif /* LWIP_IPV6 */
     /* RFC 1122, chap 4.2.2.6:
      * Eff.snd.MSS = min(SendMSS+20, MMS_S) - TCPhdrsize - IPoptionsize
