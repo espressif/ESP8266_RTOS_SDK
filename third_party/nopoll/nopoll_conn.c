@@ -49,7 +49,9 @@
 #include <nopoll_conn.h>
 #include <nopoll_private.h>
 
-
+static mbedtls_ssl_context mbedtlsSSLContext = {0};
+static mbedtls_ssl_config mbedtlsSSLConfig = {0};
+static mbedtls_net_context mbedtlsNETContext = {0};
 
 /** 
  * @brief Allows to enable/disable non-blocking/blocking behavior on
@@ -190,9 +192,9 @@ nopoll_bool                 nopoll_conn_set_sock_tcp_nodelay   (NOPOLL_SOCKET so
 	return nopoll_true;
 } /* end */
 
-/** 
- * @internal Allows to create a plain socket connection against the
- * host and port provided.
+/**
+ * Call mbedtls_library_init() (defined in nopoll_mbedtls_shim.c) and use
+ * the socket it returns
  *
  * @param ctx The context where the connection happens.
  *
@@ -206,55 +208,23 @@ NOPOLL_SOCKET nopoll_conn_sock_connect (noPollCtx   * ctx,
 					const char  * host,
 					const char  * port)
 {
-	struct hostent     * hostent;
-	struct sockaddr_in   saddr;
-	NOPOLL_SOCKET        session;
-
-	/* resolve hosting name */
-	hostent = gethostbyname (host);
-	if (hostent == NULL) {
-		nopoll_log (ctx, NOPOLL_LEVEL_DEBUG, "unable to resolve host name %s", host);
-		return -1;
-	} /* end if */
+	int ret;
+	NOPOLL_SOCKET session;
 
 	/* create the socket and check if it */
-	session      = socket (AF_INET, SOCK_STREAM, 0);
-	if (session == NOPOLL_INVALID_SOCKET) {
-		nopoll_log (ctx, NOPOLL_LEVEL_CRITICAL, "unable to create socket");
+	ret = mbedtls_library_init(&mbedtlsSSLContext, &mbedtlsSSLConfig, &mbedtlsNETContext, host, port);
+
+	if (ret != 0)
+	{
+		printf("\nunable to create socket - mbedtls_library_init() failed.\n");
+		nopoll_log (ctx, NOPOLL_LEVEL_CRITICAL, "unable to create socket - mbedtls_library_init() failed.");
 		return -1;
-	} /* end if */
+	}
 
-	/* disable nagle */
-	nopoll_conn_set_sock_tcp_nodelay (session, nopoll_true);
+	session = mbedtlsNETContext.fd;
 
-	/* prepare socket configuration to operate using TCP/IP
-	 * socket */
-        memset(&saddr, 0, sizeof(saddr));
-	saddr.sin_addr.s_addr = ((struct in_addr *)(hostent->h_addr))->s_addr;
-        saddr.sin_family    = AF_INET;
-	    saddr.sin_port      = htons((uint16_t) strtol (port, NULL, 10));
-
-	/* set non blocking status */
-//	nopoll_conn_set_sock_block (session, nopoll_false);
-	
-	/* do a tcp connect */
-        if (connect (session, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
-		if(errno != NOPOLL_EINPROGRESS && errno != NOPOLL_EWOULDBLOCK && errno != NOPOLL_ENOTCONN) { 
-		        shutdown (session, SHUT_RDWR);
-                        nopoll_close_socket (session);
-
-			nopoll_log (ctx, NOPOLL_LEVEL_WARNING, "unable to connect to remote host %s:%s errno=%d",
-				    host, port, errno);
-			return -1;
-		} /* end if */
-	} /* end if */
-
-	/* return socket created */
 	return session;
 }
-
-
-
 
 /** 
  * @internal Function that builds the client init greetings that will
@@ -1020,16 +990,10 @@ noPollConn * nopoll_conn_tls_new (noPollCtx  * ctx,
 				  const char * protocols,
 				  const char * origin)
 {
-	/* init ssl ciphers and engines */
-	if (! __nopoll_tls_was_init) {
-		__nopoll_tls_was_init = nopoll_true;
-		SSL_library_init ();
-	} /* end if */
-
-	/* call common implementation */
-	return __nopoll_conn_new_common (ctx, options, nopoll_true, 
-					 host_ip, host_port, host_name, 
-					 get_url, protocols, origin);
+	printf("This version of the ESP8266_RTOS_SDK websocket library (\"-lnopoll\") no longer supports the \"nopoll_conn_tls_new()\" api.\n");
+	printf("The websocket library has been hacked to provide _only_ TLS 1.2 secure connections which are tailored to operate with the Currant backend.\n");
+	printf("These TLS 1.2 secured websocket connections are created using the \"nopoll_conn_new()\" api (yeah, kinda counterintuitive - but this is a hack :-)\n");
+	return NULL;
 }
 
 /** 
@@ -1672,7 +1636,7 @@ void nopoll_conn_unref (noPollConn * conn)
  */
 int nopoll_conn_default_receive (noPollConn * conn, char * buffer, int buffer_size)
 {
-	return recv (conn->session, buffer, buffer_size, 0);
+	return mbedtls_ssl_read (&mbedtlsSSLContext, buffer, buffer_size);
 }
 
 /** 
@@ -1680,7 +1644,7 @@ int nopoll_conn_default_receive (noPollConn * conn, char * buffer, int buffer_si
  */
 int nopoll_conn_default_send (noPollConn * conn, char * buffer, int buffer_size)
 {
-	return send (conn->session, buffer, buffer_size, 0);
+	return  mbedtls_ssl_write (&mbedtlsSSLContext, buffer, buffer_size);
 }
 
 /** 
@@ -3441,9 +3405,19 @@ void          nopoll_conn_set_on_close (noPollConn            * conn,
  * @param nopoll_true if the operation was sent without any error,
  * otherwise nopoll_false is returned.
  */
+
+/*
+ * The websocket protocol is ambiguous on the point of whether
+ * or not the PONG packet should be masked - but the consensus
+ * seems to be (1) mask the PONG packet, and (2) since a mask
+ * implies a payload, attach an "unnecessary" 4-byte payload.
+ * This little static holds the payload:
+ */
+static uint8 unnecessaryPongContent[] = {'P', 'O', 'N', 'G'};
+
 nopoll_bool      nopoll_conn_send_pong (noPollConn * conn)
 {
-	return nopoll_conn_send_frame (conn, nopoll_true, nopoll_false, NOPOLL_PONG_FRAME, 0, NULL, 0);
+	return nopoll_conn_send_frame (conn, nopoll_true, nopoll_true, NOPOLL_PONG_FRAME, 4, unnecessaryPongContent, 0);
 }
 
 /** 

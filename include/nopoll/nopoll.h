@@ -57,6 +57,7 @@ BEGIN_C_DECLS
 #include <nopoll_listener.h>
 #include <nopoll_io.h>
 #include <nopoll_loop.h>
+#include <nopoll_mbedtls_shim.h>
 
 /** 
  * \addtogroup nopoll_module
