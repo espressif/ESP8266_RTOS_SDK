@@ -157,7 +157,7 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
 	uint8* load_buffer = NULL;
     const char *pers = "ssl_client1";
 
-	printf("mbedtls_library_init(): Connecting to host \"%s\", port \"\%s\"\n", SERVER_NAME, SERVER_PORT);
+	/* printf("mbedtls_library_init(): Connecting to host \"%s\", port \"\%s\"\n", SERVER_NAME, SERVER_PORT); */
 
     mbedtls_entropy_context *entropy = (mbedtls_entropy_context *)zalloc(sizeof(mbedtls_entropy_context));
     mbedtls_ctr_drbg_context ctr_drbg;
@@ -170,7 +170,7 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
      * 0. Initialize the RNG and the session data
      */
 
-    mbedtls_printf( "\n  . Seeding the random number generator..." );
+    /* mbedtls_printf( "\n  . Seeding the random number generator..." ); */
 
     mbedtls_entropy_init( entropy );
     if( ( ret = mbedtls_ctr_drbg_seed( &ctr_drbg, mbedtls_entropy_func, entropy,
@@ -181,12 +181,12 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
         goto exit;
     }
 
-    mbedtls_printf( " ok\n" );
+    /* mbedtls_printf( " ok\n" ); */
 
     /*
      * 1.1. Load the trusted CA
      */
-    mbedtls_printf( "  . Loading the CA root certificate ..." );
+    /* mbedtls_printf( "  . Loading the CA root certificate ..." ); */
     load_buffer = Ssl_obj_load(default_cas_certificate, default_cas_certificate_len);
     ret = mbedtls_x509_crt_parse( cacert, (const unsigned char *) load_buffer, default_cas_certificate_len );
 	free(load_buffer);
@@ -197,12 +197,12 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
         goto exit;
     }
 
-    mbedtls_printf( " ok (%d skipped)\n", ret );
+    /* mbedtls_printf( " ok (%d skipped)\n", ret ); */
 
     /*
      * 2. Start the connection
      */
-    mbedtls_printf( "  . Connecting to tcp/%s/%s...", SERVER_NAME, SERVER_PORT );
+    /* mbedtls_printf( "  . Connecting to tcp/%s/%s...", SERVER_NAME, SERVER_PORT ); */
     //fflush( stdout );
 
 	mbedtls_net_init( server_fd );
@@ -212,12 +212,12 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
         mbedtls_printf( " failed\n  ! mbedtls_net_connect returned %d\n\n", ret );
         goto exit;
     }
-    mbedtls_printf( " ok\n" );
+    /* mbedtls_printf( " ok\n" ); */
 
     /*
      * 3. Setup stuff
      */
-    mbedtls_printf( "  . Setting up the SSL/TLS structure..." );
+    /* mbedtls_printf( "  . Setting up the SSL/TLS structure..." ); */
     //fflush( stdout );
 
     if( ( ret = mbedtls_ssl_config_defaults( conf,
@@ -229,7 +229,7 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
         goto exit;
     }
 
-    mbedtls_printf( " ok %d\n" , system_get_free_heap_size());
+    /* mbedtls_printf( " ok %d\n" , system_get_free_heap_size()); */
 
     /* OPTIONAL is not optimal for security,
      * but makes interop easier in this simplified example */
@@ -258,7 +258,7 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
     /*
      * 4. Handshake
      */
-    mbedtls_printf( "  . Performing the SSL/TLS handshake..." );
+    /* mbedtls_printf( "  . Performing the SSL/TLS handshake..." ); */
     //fflush( stdout );
 
 	static int handshakes = 0;
@@ -272,12 +272,12 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
         }
     }
 
-    mbedtls_printf( " ok\n" );
+    /* mbedtls_printf( " ok\n" ); */
 
     /*
      * 5. Verify the server certificate
      */
-    mbedtls_printf( "  . Verifying peer X.509 certificate..." );
+    /* mbedtls_printf( "  . Verifying peer X.509 certificate..." ); */
 
     /* In real life, we probably want to bail out when ret != 0 */
     if( ( flags = mbedtls_ssl_get_verify_result( ssl ) ) != 0 )
@@ -290,8 +290,8 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
 
         mbedtls_printf( "%s\n", vrfy_buf );
     }
-    else
-        mbedtls_printf( " ok\n" );
+    /* else */
+    /*     mbedtls_printf( " ok\n" ); */
 
 exit:
 
