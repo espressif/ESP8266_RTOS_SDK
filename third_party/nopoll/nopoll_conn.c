@@ -212,6 +212,10 @@ NOPOLL_SOCKET nopoll_conn_sock_connect (noPollCtx   * ctx,
 	NOPOLL_SOCKET session;
 
 	/* create the socket and check if it */
+	memset (&mbedtlsSSLContext, 0, sizeof(mbedtls_ssl_context));
+	memset (&mbedtlsSSLConfig, 0, sizeof(mbedtls_ssl_config));
+	memset (&mbedtlsNETContext, 0, sizeof(mbedtls_net_context));
+
 	ret = mbedtls_library_init(&mbedtlsSSLContext, &mbedtlsSSLConfig, &mbedtlsNETContext, host, port);
 
 	if (ret != 0)
