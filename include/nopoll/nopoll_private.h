@@ -39,7 +39,24 @@
 #ifndef __NOPOLL_PRIVATE_H__
 #define __NOPOLL_PRIVATE_H__
 
-#include "ssl/ssl_compat-1.0.h"
+#include "mbedtls/compat-1.3.h"
+
+/* (vjc) had to add local #defines to compile without libssl:*/
+#define EVP_MAX_MD_SIZE                 6
+/*encapsulation the structure based on the espressif platform*/
+struct  _MD_CTX
+{
+    unsigned char cksum[16];    /* checksum of the data block */
+    unsigned char state[48];    /* intermediate digest state */
+    unsigned char buffer[16];   /* data block being processed */
+    int left;                   /* amount of data in buffer */
+};
+
+typedef struct _MD_CTX          EVP_MD_CTX;
+typedef unsigned char           EVP_MD;
+/* (vjc)..end of new declarations */
+
+
 #include <nopoll_handlers.h>
 
 typedef struct _noPollCertificate {
@@ -268,8 +285,6 @@ struct _noPollConn {
 	nopoll_bool   pending_ssl_accept;
 
 	/* SSL support */
-	SSL_CTX        * ssl_ctx;
-	SSL            * ssl;
 
 	/* certificates */
 	char           * certificate;

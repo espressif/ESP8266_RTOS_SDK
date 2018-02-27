@@ -288,6 +288,7 @@ int nopoll_conn_log_ssl (noPollConn * conn)
 #if defined(SHOW_DEBUG_LOG)
         noPollCtx      * ctx = conn->ctx;
 #endif
+#ifdef NOWAY
 	char             log_buffer [512];
 	unsigned long    err;
 	int              error_position;
@@ -318,11 +319,13 @@ int nopoll_conn_log_ssl (noPollConn * conn)
 		    conn->id, conn->session, errno);
 	
 	
+#endif  // NOWAY
 	return (0);
 }
 
 int __nopoll_conn_tls_handle_error (noPollConn * conn, int res, const char * label, nopoll_bool * needs_retry)
 {
+#ifdef NOWAY
 	int ssl_err;
 
 	(*needs_retry) = nopoll_false;
@@ -370,6 +373,7 @@ int __nopoll_conn_tls_handle_error (noPollConn * conn, int res, const char * lab
 		break;
 	}
 	nopoll_log (conn->ctx, NOPOLL_LEVEL_WARNING, "%s/SSL_get_error returned %d", label, res);
+#endif  // NOWAY
 	return -1;
 	
 }
@@ -377,6 +381,7 @@ int __nopoll_conn_tls_handle_error (noPollConn * conn, int res, const char * lab
 /** 
  * @internal Default connection receive until handshake is complete.
  */
+#ifdef NOWAY
 int nopoll_conn_tls_receive (noPollConn * conn, char * buffer, int buffer_size)
 {
 	int res;
@@ -400,10 +405,12 @@ int nopoll_conn_tls_receive (noPollConn * conn, char * buffer, int buffer_size)
 	/* nopoll_log (conn->ctx, NOPOLL_LEVEL_DEBUG, "  SSL: after procesing error %d bytes..", res); */
 	return res;
 }
+#endif // NOWAY
 
 /** 
  * @internal Default connection send until handshake is complete.
  */
+#ifdef NOWAY
 int nopoll_conn_tls_send (noPollConn * conn, char * buffer, int buffer_size)
 {
 	int         res;
@@ -428,8 +435,10 @@ int nopoll_conn_tls_send (noPollConn * conn, char * buffer, int buffer_size)
 	}
 	return res;
 }
+#endif // NOWAY
 
 
+#ifdef NOWAY
 SSL_CTX * __nopoll_conn_get_ssl_context (noPollCtx * ctx, noPollConn * conn, noPollConnOpts * opts, nopoll_bool is_client)
 {
 	/* call to user defined function if the context creator is defined */
@@ -460,9 +469,11 @@ SSL_CTX * __nopoll_conn_get_ssl_context (noPollCtx * ctx, noPollConn * conn, noP
 	/* reached this point, report default TLSv1 method */
 	return (SSL_CTX *)SSL_CTX_new (is_client ? TLSv1_client_method () : TLSv1_server_method ()); 
 }
+#endif // NOWAY
 
 noPollCtx * __nopoll_conn_ssl_ctx_debug = NULL;
 
+#ifdef NOWAY
 int __nopoll_conn_ssl_verify_callback (int ok, X509_STORE_CTX * store) {
 	char   data[256];
 	X509 * cert;
@@ -491,9 +502,11 @@ int __nopoll_conn_ssl_verify_callback (int ok, X509_STORE_CTX * store) {
 	}
 	return ok; /* return same value */
 }
+#endif // NOWAY
 
 nopoll_bool __nopoll_conn_set_ssl_client_options (noPollCtx * ctx, noPollConn * conn, noPollConnOpts * options)
 {
+#ifdef NOWAY
 	nopoll_log (ctx, NOPOLL_LEVEL_DEBUG, "Checking to establish SSL options (%p)", options);
 
 	if (options && options->ca_certificate) {
@@ -555,6 +568,9 @@ nopoll_bool __nopoll_conn_set_ssl_client_options (noPollCtx * ctx, noPollConn * 
 	} /* end if */
 
 	return nopoll_true;
+#else
+	return nopoll_false;
+#endif // NOWAY	
 }
 
 
@@ -576,7 +592,9 @@ noPollConn * __nopoll_conn_new_common (noPollCtx       * ctx,
 	char           * content;
 	int              size;
 	int              ssl_error;
+#ifdef NOWAY
 	X509           * server_cert;
+#endif  // NOWAY
 	int              iterator;
 	long             remaining_timeout;
 
@@ -674,6 +692,7 @@ noPollConn * __nopoll_conn_new_common (noPollCtx       * ctx,
 		return NULL;
 	} /* end if */
 
+#ifdef NOWAY
 	/* check for TLS support */
 	if (enable_tls) {
 		/* found TLS connection request, enable it */
@@ -797,6 +816,8 @@ noPollConn * __nopoll_conn_new_common (noPollCtx       * ctx,
 		nopoll_log (ctx, NOPOLL_LEVEL_DEBUG, "TLS I/O handlers configured");
 		conn->tls_on = nopoll_true;
 	} /* end if */
+#endif  // NOWAY
+
 
 	nopoll_log (ctx, NOPOLL_LEVEL_DEBUG, "Sending websocket client init: %s", content);
 	size = strlen (content);
@@ -1605,10 +1626,12 @@ void nopoll_conn_unref (noPollConn * conn)
 	if (conn->previous_msg) 
 		nopoll_msg_unref (conn->previous_msg);
 
+#ifdef NOWAY
 	if (conn->ssl)
 		SSL_free (conn->ssl);
 	if (conn->ssl_ctx)
 		SSL_CTX_free (conn->ssl_ctx);
+#endif // NOWAY
 
 	/* release handshake internal data */
 	if (conn->handshake) {
@@ -2032,10 +2055,30 @@ char * nopoll_conn_produce_accept_key (noPollCtx * ctx, const char * websocket_k
 	nopoll_log (ctx, NOPOLL_LEVEL_DEBUG, "base key value: %s", accept_key);
 
 	/* now sha-1 */
+#ifdef NOWAY
 	md = (EVP_MD *)EVP_sha1 ();
+#else
+	// (vjc) EVP_sha1() is #defined to be "esp_EVP_sha1(void)" -- and that just returns NULL!
+	md = NULL;
+#endif // NOWAY
+
+#ifdef NOWAY
+	// (vjc) EVP_DigestInit() is #defined to be "esp_EVP_DigestInit()" - which simply returns
+	// without doing anything! (ssl_platform.c)
 	EVP_DigestInit (&mdctx, md);
+#endif // NOWAY
+
+#ifdef NOWAY
+	// (vjc) EVP_DigestUpdate() is #defined to be "esp_EVP_DigestUpdate()" - which simply returns
+	// without doing anything! (ssl_platform.c)
 	EVP_DigestUpdate (&mdctx, accept_key, strlen (accept_key));
+#endif // NOWAY
+
+#ifdef NOWAY
+	// (vjc) EVP_DigestFinal() is #defined to be "esp_EVP_DigestFinal()" - which simply returns
+	// without doing anything! (ssl_platform.c)
 	EVP_DigestFinal (&mdctx, buffer, &md_len);
+#endif // NOWAY
 
 	nopoll_log (ctx, NOPOLL_LEVEL_DEBUG, "Sha-1 length is: %u", md_len);
 	/* now convert into base64 */
@@ -2482,6 +2525,7 @@ noPollMsg   * nopoll_conn_get_msg (noPollConn * conn)
 		    "=== START: conn-id=%d (errno=%d, session: %d, conn->handshake_ok: %d, conn->pending_ssl_accept: %d) ===", 
 		    conn->id, errno, conn->session, conn->handshake_ok, conn->pending_ssl_accept);
 	
+#ifdef NOWAY
 	/* check for accept SSL connection */
 	if (conn->pending_ssl_accept) {
 		nopoll_log (conn->ctx, NOPOLL_LEVEL_DEBUG, "Received connect over a connection (id %d) with TLS handshake pending to be finished, processing..",
@@ -2551,6 +2595,7 @@ noPollMsg   * nopoll_conn_get_msg (noPollConn * conn)
 		return NULL;
 		
 	} /* end if */
+#endif // NOWAY
 
 	/* check connection status */
 	if (! conn->handshake_ok) {
@@ -3895,6 +3940,7 @@ nopoll_bool __nopoll_conn_accept_complete_common (noPollCtx * ctx, noPollConnOpt
 	nopoll_log (ctx, NOPOLL_LEVEL_DEBUG, "Connection received and accepted from %s:%s (conn refs: %d, ctx refs: %d)", 
 		    listener->host, listener->port, listener->refs, ctx->refs);
 
+#ifdef NOWAY
 	if (listener->tls_on || tls_on) {
 		/* reached this point, ensure tls is enabled on this
 		 * session */
@@ -4059,6 +4105,7 @@ nopoll_bool __nopoll_conn_accept_complete_common (noPollCtx * ctx, noPollConnOpt
 		nopoll_log (ctx, NOPOLL_LEVEL_DEBUG, "Prepared TLS session to be activated on next reads (conn id %d)", conn->id);
 		
 	} /* end if */
+#endif // NOWAY
 
 	/* release connection options */
 	__nopoll_conn_opts_release_if_needed (options);

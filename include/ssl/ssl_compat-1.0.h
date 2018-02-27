@@ -62,7 +62,7 @@
 
 #define CRYPTO_cleanup_all_ex_data(a)			esp_CRYPTO_cleanup_all_ex_data(a)
 
-#define base64_encode(a,b,c,d,e)				esp_base64_encode(a,b,c,d,e)
+#define base64_encode(a,b,c,d,e)				mbedtls_base64_encode(a,b,c,d,e)
 
 #define TLSv1_client_method(a)					esp_TLSv1_client_method(a)
 //#if	TLSv1_1__method
