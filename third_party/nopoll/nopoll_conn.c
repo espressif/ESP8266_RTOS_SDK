@@ -240,6 +240,7 @@ char * __nopoll_conn_get_client_init (noPollConn * conn, noPollConnOpts * opts)
 	char key[50];
 	int  key_size = 50;
 	char nonce[17];
+	char *auth_token = getauthtoken();
 
 	/* get the nonce */
 	if (! nopoll_nonce (nonce, 16)) {
@@ -260,23 +261,28 @@ char * __nopoll_conn_get_client_init (noPollConn * conn, noPollConnOpts * opts)
 	conn->handshake->expected_accept = nopoll_strdup (key);
 
 	/* send initial handshake                                                                                                                        |cookie |prot  | */
-	return nopoll_strdup_printf ("GET %s HTTP/1.1\r\nHost: %s\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: %s\r\nOrigin: %s\r\n%s%s%s%s%s%s%s%sSec-WebSocket-Version: %d\r\n\r\n", 
-				     conn->get_url, conn->host_name, 
-				     /* sec-websocket-key */
-				     key,
-				     /* Origin */
-				     conn->origin, 
-				     /* Cookie */
-				     (opts && opts->cookie) ? "Cookie" : "",
-				     (opts && opts->cookie) ? ": " : "",
-				     (opts && opts->cookie) ? opts->cookie : "",
-				     (opts && opts->cookie) ? "\r\n" : "",
-				     /* protocol part */
-				     conn->protocols ? "Sec-WebSocket-Protocol" : "",
-				     conn->protocols ? ": " : "",
-				     conn->protocols ? conn->protocols : "",
-				     conn->protocols ? "\r\n" : "",
-				     conn->ctx->protocol_version);
+    return nopoll_strdup_printf ("GET %s HTTP/1.1\r\nHost: %s\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: %s\r\nOrigin: %s\r\n%s%s%s%s%s%s%s%s%s%s%sSec-WebSocket-Version: %d\r\n\r\n", 
+
+                     conn->get_url, conn->host_name, 
+                     /* sec-websocket-key */
+                     key,
+                     /* Origin */
+                     conn->origin, 
+                     /* Authcode */
+                     (auth_token == NULL) ? "" : "Authorization: Bearer ",
+                     (auth_token == NULL) ? "" : auth_token,
+                     (auth_token == NULL) ? "" : "\r\n",
+                     /* Cookie */
+                     (opts && opts->cookie) ? "Cookie" : "",
+                     (opts && opts->cookie) ? ": " : "",
+                     (opts && opts->cookie) ? opts->cookie : "",
+                     (opts && opts->cookie) ? "\r\n" : "",
+                     /* protocol part */
+                     conn->protocols ? "Sec-WebSocket-Protocol" : "",
+                     conn->protocols ? ": " : "",
+                     conn->protocols ? conn->protocols : "",
+                     conn->protocols ? "\r\n" : "",
+                     conn->ctx->protocol_version);
 }
 
 
@@ -691,6 +697,13 @@ noPollConn * __nopoll_conn_new_common (noPollCtx       * ctx,
 
 		return NULL;
 	} /* end if */
+
+	/* print out all the headers and everything in the initial GET request: */
+	printf("\r\n######## ######## ######## ######## ######## ########\r\n");
+	printf("Initial websocket GET request + headers:\n");
+	printf("\r\n######## ######## ######## ######## ######## ########\r\n");
+	printf("\r\n%s\r\n", content);
+	printf("\r\n######## ######## ######## ######## ######## ########\r\n");
 
 #ifdef NOWAY
 	/* check for TLS support */

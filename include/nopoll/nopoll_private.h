@@ -54,6 +54,15 @@ struct  _MD_CTX
 
 typedef struct _MD_CTX          EVP_MD_CTX;
 typedef unsigned char           EVP_MD;
+
+// We also have to declare the extern routine "getauthtoken()",
+// which is needed when the headers needed to establish the
+// websocket connection to the Currant backend are created.
+// "getauthtoken()" will be defined in whatever app links to
+// the nopoll websocket library for the purpose of talking
+// to the Currant backend:
+extern char *getauthtoken(void);
+
 /* (vjc)..end of new declarations */
 
 
