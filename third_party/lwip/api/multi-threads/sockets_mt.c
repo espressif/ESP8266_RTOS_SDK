@@ -21,8 +21,8 @@ enum sock_mt_stat{
 };
 
 enum sock_mt_shutdown {
-    SOCK_MT_SHUTDOWN_NONE = 0,
-    SOCK_MT_SHUTDOWN_OK
+    SOCK_MT_SHUTDOWN_OK = 0,
+    SOCK_MT_SHUTDOWN_NONE
 };
 
 enum sock_mt_module {
@@ -88,15 +88,21 @@ typedef struct _sock_mt sock_mt_t;
         SYS_ARCH_DECL_PROTECT(lev);                                         \
                                                                             \
         SYS_ARCH_PROTECT(lev);                                              \
-        if (sockets_mt[s].lock[l])                                          \
-            err = sys_mutex_trylock(&sockets_mt[s].lock[l]);                \
+        if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE)               \
+            err = ERR_CLSD;                                                 \
         else                                                                \
-            err = ERR_VAL;                                                  \
+            err = ERR_OK;                                                   \
+        if (err == ERR_OK) {                                                \
+            if (sockets_mt[s].lock[l])                                      \
+                err = sys_mutex_trylock(&sockets_mt[s].lock[l]);            \
+            else                                                            \
+                err = ERR_VAL;                                              \
+        }                                                                   \
         SYS_ARCH_UNPROTECT(lev);                                            \
                                                                             \
         if (err == ERR_OK)                                                  \
             break;                                                          \
-        else if (err == ERR_VAL)                                            \
+        else if (err == ERR_VAL || err == ERR_CLSD)                         \
             return -1;                                                      \
                                                                             \
         vTaskDelay(1);                                                      \
@@ -111,13 +117,19 @@ typedef struct _sock_mt sock_mt_t;
         SYS_ARCH_DECL_PROTECT(lev);                                         \
                                                                             \
         SYS_ARCH_PROTECT(lev);                                              \
-        if (sockets_mt[s].lock[l])                                          \
-            r = sys_mutex_trylock(&sockets_mt[s].lock[l]);                  \
+        if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE)               \
+            r = ERR_CLSD;                                                   \
         else                                                                \
-            r = ERR_VAL;                                                    \
+            r = ERR_OK;                                                     \
+        if (r == ERR_OK) {                                                  \
+            if (sockets_mt[s].lock[l])                                      \
+                r = sys_mutex_trylock(&sockets_mt[s].lock[l]);              \
+            else                                                            \
+                r = ERR_VAL;                                                \
+        }                                                                   \
         SYS_ARCH_UNPROTECT(lev);                                            \
                                                                             \
-        if (r == ERR_OK || ERR_VAL)                                         \
+        if (r == ERR_OK || r == ERR_VAL || r == ERR_CLSD)                   \
             break;                                                          \
         vTaskDelay(1);                                                      \
     }                                                                       \
@@ -242,16 +254,9 @@ LOCAL int lwip_enter_mt_state(int s, int arg)
         return -1;
 
     SOCK_MT_LOCK(s, SOCK_MT_STATE_LOCK);
-    if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE) {
-        goto failed;
-    }
     SOCK_MT_SET_STATE(s, arg);
     
     return 0;
-
-failed:
-    SOCK_MT_UNLOCK(s, SOCK_MT_STATE_LOCK);
-    return -1;
 }
 
 LOCAL int lwip_enter_mt_recv(int s, int arg)
@@ -261,20 +266,14 @@ LOCAL int lwip_enter_mt_recv(int s, int arg)
         return -1;
 
 	SOCK_MT_LOCK(s, SOCK_MT_RECV_LOCK);
-	if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE) {
-		goto failed;
-	}
     
 	return 0;
-
-failed:
-	SOCK_MT_UNLOCK(s, SOCK_MT_RECV_LOCK);
-	return -1;
 }
 
 LOCAL int lwip_enter_mt_shutdown(int s, int arg)
 {
-    if(tryget_socket(s) == NULL)
+    if(tryget_socket(s) == NULL
+       || SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE)
         return -1;
 
 	SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_SHUTDOWN_OK);
@@ -313,7 +312,7 @@ LOCAL int lwip_enter_mt_select(int s, int arg)
 
 			SOCK_MT_SET_READ_SEL(i);
 			SOCK_MT_LOCK_RET(i, SOCK_MT_RECV_LOCK, err);
-			if (err != ERR_OK || SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
+			if (err != ERR_OK) {
 				goto failed2;
 			}
 		}
@@ -323,7 +322,7 @@ LOCAL int lwip_enter_mt_select(int s, int arg)
 
 			SOCK_MT_SET_WRITE_SEL(i);
 			SOCK_MT_LOCK_RET(i, SOCK_MT_STATE_LOCK, err);
-			if (err != ERR_OK || SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
+			if (err != ERR_OK) {
 				goto failed3;
 			}
 		}	
@@ -361,15 +360,8 @@ LOCAL int lwip_enter_mt_ioctrl(int s, int arg)
         return -1;
 
 	SOCK_MT_LOCK(s, SOCK_MT_IOCTRL_LOCK);
-	if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE) {
-		goto failed;
-	}
     
 	return 0;
-
-failed:
-	SOCK_MT_UNLOCK(s, SOCK_MT_IOCTRL_LOCK);
-	return -1;
 }
 
 LOCAL int lwip_exit_mt_state(int s, int arg)
@@ -397,7 +389,7 @@ LOCAL int lwip_exit_mt_recv(int s, int arg)
 
 LOCAL int lwip_exit_mt_shutdown(int s, int arg)
 {
-	SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_STATE_NONE);
+	//SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_STATE_NONE);
 	return 0;
 } 
 
