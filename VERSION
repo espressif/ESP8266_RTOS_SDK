@@ -1,10 +1,10 @@
 gwen:
     crypto:     9ec59b5
     espnow:     9ec59b5
-    main:       f2108f6
+    main:       1cf9bb0
     minic:      9ec59b5
     net80211:   f2108f6
-    pp:         9ec59b5
+    pp:         1cf9bb0
     pwm:        9ec59b5
     smartconfig:9ec59b5
     wpa:        f2108f6
@@ -12,7 +12,7 @@ gwen:
 
 gitlab:
     espconn:    3a998034
-    freertos:   ac047746
+    freertos:   66a199b7
     lwip:       829319d2
     driver:     7bee5263
     mbedtls:    1ac9f1f4
