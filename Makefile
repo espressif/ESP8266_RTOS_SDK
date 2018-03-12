@@ -148,23 +148,27 @@ LD_FILE = $(LDDIR)/eagle.app.v6.ld
 
 ifneq ($(boot), none)
 ifneq ($(app),0)
-    ifneq ($(findstring $(size_map),  6  8  9),)
+    ifneq ($(findstring $(size_map),  8  9),)
       LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).2048.ld
     else
-      ifeq ($(size_map), 5)
-        LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).2048.ld
+      ifeq ($(size_map), 6)
+        LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).2048.app$(app).ld
       else
-        ifeq ($(size_map), 4)
-          LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).1024.app$(app).ld
+        ifeq ($(size_map), 5)
+          LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).2048.ld
         else
-          ifeq ($(size_map), 3)
+          ifeq ($(size_map), 4)
             LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).1024.app$(app).ld
           else
-            ifeq ($(size_map), 2)
+            ifeq ($(size_map), 3)
               LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).1024.app$(app).ld
             else
-              ifeq ($(size_map), 0)
-                LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).512.app$(app).ld
+              ifeq ($(size_map), 2)
+                LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).1024.app$(app).ld
+              else
+                ifeq ($(size_map), 0)
+                  LD_FILE = $(LDDIR)/eagle.app.v6.$(boot).512.app$(app).ld
+                endif
               endif
             endif
           endif
