@@ -295,7 +295,10 @@ poll_tcp(void *arg, struct tcp_pcb *pcb)
     lwip_netconn_do_writemore(conn);
   } else if (conn->state == NETCONN_CLOSE) {
     lwip_netconn_do_close_internal(conn);
+  } else if (conn->state == NETCONN_NONE) {
+    return ERR_OK;
   }
+
   /* @todo: implement connect timeout here? */
 
   /* Did a nonblocking write fail before? Then check available write-space. */
@@ -331,6 +334,8 @@ sent_tcp(void *arg, struct tcp_pcb *pcb, u16_t len)
     lwip_netconn_do_writemore(conn);
   } else if (conn->state == NETCONN_CLOSE) {
     lwip_netconn_do_close_internal(conn);
+  } else if (conn->state == NETCONN_NONE) {
+    return ERR_OK;
   }
 
   if (conn) {

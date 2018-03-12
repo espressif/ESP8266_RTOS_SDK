@@ -66,12 +66,64 @@ typedef struct _sock_mt sock_mt_t;
     #define SOCK_MT_DEBUG(level, ...)
 #endif
 
+#if 0
 #define SOCK_MT_LOCK(s, l)                                                  \
 {                                                                           \
     SOCK_MT_DEBUG(1, "s %d l %d enter ", s, l);                             \
     sys_mutex_lock(&sockets_mt[s].lock[l]);                                 \
     SOCK_MT_DEBUG(1, "OK\n");                                               \
 }
+
+#define SOCK_MT_LOCK_RET(s, l, r)                                           \
+{                                                                           \
+    SOCK_MT_LOCK(s, l);                                                     \
+    r = ERR_OK;                                                             \
+}
+#else
+#define SOCK_MT_LOCK(s, l)                                                  \
+{                                                                           \
+    SOCK_MT_DEBUG(1, "s %d l %d enter ", s, l);                             \
+    while (1) {                                                             \
+        err_t err;                                                          \
+        SYS_ARCH_DECL_PROTECT(lev);                                         \
+                                                                            \
+        SYS_ARCH_PROTECT(lev);                                              \
+        if (sockets_mt[s].lock[l])                                          \
+            err = sys_mutex_trylock(&sockets_mt[s].lock[l]);                \
+        else                                                                \
+            err = ERR_VAL;                                                  \
+        SYS_ARCH_UNPROTECT(lev);                                            \
+                                                                            \
+        if (err == ERR_OK)                                                  \
+            break;                                                          \
+        else if (err == ERR_VAL)                                            \
+            return -1;                                                      \
+                                                                            \
+        vTaskDelay(1);                                                      \
+    }                                                                       \
+    SOCK_MT_DEBUG(1, "OK\n");                                               \
+}
+
+#define SOCK_MT_LOCK_RET(s, l, r)                                           \
+{                                                                           \
+    SOCK_MT_DEBUG(1, "s %d l %d enter ", s, l);                             \
+    while (1) {                                                             \
+        SYS_ARCH_DECL_PROTECT(lev);                                         \
+                                                                            \
+        SYS_ARCH_PROTECT(lev);                                              \
+        if (sockets_mt[s].lock[l])                                          \
+            r = sys_mutex_trylock(&sockets_mt[s].lock[l]);                  \
+        else                                                                \
+            r = ERR_VAL;                                                    \
+        SYS_ARCH_UNPROTECT(lev);                                            \
+                                                                            \
+        if (r == ERR_OK || ERR_VAL)                                         \
+            break;                                                          \
+        vTaskDelay(1);                                                      \
+    }                                                                       \
+    SOCK_MT_DEBUG(1, "OK\n");                                               \
+}  
+#endif
 
 #define SOCK_MT_TRYLOCK(s, l, r)                                            \
 {                                                                           \
@@ -257,17 +309,21 @@ LOCAL int lwip_enter_mt_select(int s, int arg)
                 goto failed1;
         
 		if (FD_ISSET(i, read_set)) {
+			err_t err;
+
 			SOCK_MT_SET_READ_SEL(i);
-			SOCK_MT_LOCK(i, SOCK_MT_RECV_LOCK);
-			if (SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
+			SOCK_MT_LOCK_RET(i, SOCK_MT_RECV_LOCK, err);
+			if (err != ERR_OK || SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
 				goto failed2;
 			}
 		}
 		
 		if (FD_ISSET(i, write_set)) {
+			err_t err;
+
 			SOCK_MT_SET_WRITE_SEL(i);
-			SOCK_MT_LOCK(i, SOCK_MT_STATE_LOCK);
-			if (SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
+			SOCK_MT_LOCK_RET(i, SOCK_MT_STATE_LOCK, err);
+			if (err != ERR_OK || SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
 				goto failed3;
 			}
 		}	
@@ -408,6 +464,43 @@ LOCAL const ICACHE_RODATA_ATTR STORE_ATTR lwip_io_mt_fn lwip_exit_mt_table[] = {
     lwip_exit_mt_close
 };
 
+LOCAL void lwip_do_sync_send(void *arg)
+{
+    struct netconn *conn = arg;
+
+    SYS_ARCH_DECL_PROTECT(lev);
+    SYS_ARCH_PROTECT(lev);
+    if (conn->current_msg) {
+        conn->current_msg->err = ERR_OK;
+        conn->current_msg = NULL;
+    }
+    conn->state = NETCONN_NONE;
+    SYS_ARCH_UNPROTECT(lev);
+    if (sys_sem_valid(&(conn->snd_op_completed)))
+        sys_sem_signal(&(conn->snd_op_completed));
+
+    /*
+     * if we use "op_completed" for its sync semaphore, then socket functions
+     * which are blocked by op_completed will be waked up.
+     *
+     * So we had better use a specific semaphore for the function, ioctrl_completed
+     * may be a good choise.
+     */
+    sys_sem_signal(&(conn->ioctrl_completed));
+}
+
+LOCAL void lwip_do_sync_rst_state(void *arg)
+{
+    struct netconn *conn = arg;
+
+    SYS_ARCH_DECL_PROTECT(lev);
+    SYS_ARCH_PROTECT(lev);
+    conn->state = NETCONN_NONE;
+    SYS_ARCH_UNPROTECT(lev);
+
+    sys_sem_signal(&(conn->ioctrl_completed)); 
+}
+
 LOCAL void lwip_sync_state_mt(struct lwip_sock *sock , int state)
 {
 	SOCK_MT_DEBUG(1, "sync state %d\n", state);
@@ -419,16 +512,8 @@ LOCAL void lwip_sync_state_mt(struct lwip_sock *sock , int state)
 			break;
 		case SOCK_MT_STATE_SEND :
 		{
-			SYS_ARCH_DECL_PROTECT(lev);
-			SYS_ARCH_PROTECT(lev);
-			if (sock->conn->current_msg) {
-				sock->conn->current_msg->err = ERR_OK;
-	        	sock->conn->current_msg = NULL;
-			}
-	        sock->conn->state = NETCONN_NONE;
-			SYS_ARCH_UNPROTECT(lev);
-            if (sys_sem_valid(&(sock->conn->snd_op_completed)))
-			    sys_sem_signal(&(sock->conn->snd_op_completed));
+			tcpip_callback(lwip_do_sync_send, sock->conn);
+			sys_arch_sem_wait(&sock->conn->ioctrl_completed, 0);
 			break;
 		}	
 		case SOCK_MT_STATE_CONNECT :
@@ -458,15 +543,19 @@ LOCAL void lwip_sync_mt(int s)
 {
 	int module = 0;
     int ret;
+    struct lwip_sock *sock;
 
 	while (module < SOCK_MT_SELECT) {
 		extern void sys_arch_msleep(int ms);
 		int ret;
-		struct lwip_sock *sock;
 
 		SOCK_MT_TRYLOCK(s, module, ret);
 		if (ret == ERR_OK) {
-			SOCK_MT_UNLOCK(s, module);
+			/*
+			 * we always lock the mutex in case of other thread entering,
+			 * other thread will be blocked at "SOCK_MT_LOCK" and poll-check
+			 */
+			//SOCK_MT_UNLOCK(s, module);
 			module++;
 			continue;
 		}
@@ -494,6 +583,12 @@ LOCAL void lwip_sync_mt(int s)
 
 		sys_arch_msleep(LWIP_SYNC_MT_SLEEP_MS);
 	}
+
+    sock = tryget_socket(s);
+    if (sock) {
+        tcpip_callback(lwip_do_sync_rst_state, sock->conn);
+        sys_arch_sem_wait(&sock->conn->ioctrl_completed, 0);
+    }
 }
 
 int lwip_socket_mt(int domain, int type, int protocol)
@@ -764,6 +859,8 @@ int lwip_close_mt(int s)
 {
     int ret;
     int i;
+    SYS_ARCH_DECL_PROTECT(lev);
+    sys_mutex_t lock_tmp[SOCK_MT_LOCK_MAX];
 
 	lwip_shutdown_mt(s, SHUT_RDWR);
 
@@ -773,9 +870,15 @@ int lwip_close_mt(int s)
 
     LWIP_EXIT_MT(s, SOCK_MT_CLOSE, 0);
 
+    SYS_ARCH_PROTECT(lev);
     for (i = 0 ; i < SOCK_MT_LOCK_MAX; i++) {
-        sys_mutex_free(&sockets_mt[s].lock[i]);
+        lock_tmp[i] = sockets_mt[s].lock[i];
         sockets_mt[s].lock[i] = NULL;
+    }    
+    SYS_ARCH_UNPROTECT(lev);
+
+    for (i = 0 ; i < SOCK_MT_LOCK_MAX; i++) {
+        sys_mutex_free(&lock_tmp[i]);
     }    
 
     return ret;
