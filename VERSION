@@ -1,14 +1,14 @@
 gwen:
     crypto:     9ec59b5
     espnow:     9ec59b5
-    main:       5cb8501
+    main:       f2108f6
     minic:      9ec59b5
-    net80211:   5cb8501
+    net80211:   f2108f6
     pp:         9ec59b5
     pwm:        9ec59b5
     smartconfig:9ec59b5
-    wpa:        5cb8501
-    wps:        9ec59b5
+    wpa:        f2108f6
+    wps:        f2108f6
 
 gitlab:
     espconn:    3a998034
