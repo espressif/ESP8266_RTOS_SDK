@@ -13,7 +13,7 @@ gwen:
 gitlab:
     espconn:    3a998034
     freertos:   a9985a9c
-    lwip:       4dd2bcd3
+    lwip:       391bef1e
     driver:     7bee5263
     mbedtls:    1ac9f1f4
     ssl:        eefb383a
