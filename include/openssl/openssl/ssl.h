@@ -22,6 +22,26 @@
 #include "internal/ssl_x509.h"
 #include "internal/ssl_pkey.h"
 
+/*encapsulation the structure based on the espressif platform*/
+struct  _MD_CTX
+{
+    unsigned char cksum[16];    /* checksum of the data block */
+    unsigned char state[48];    /* intermediate digest state */
+    unsigned char buffer[16];   /* data block being processed */
+    int left;                   /* amount of data in buffer */
+};
+
+typedef struct _MD_CTX          EVP_MD_CTX;
+typedef unsigned char           EVP_MD;
+
+/*encapsulation the function based on the espressif platform*/
+
+#define strerror(a)                             ERR_strerror(a)
+
+/*encapsulation the protocol based on the espressif platform*/
+#define SSL_FILETYPE_PEM                        10
+#define EVP_MAX_MD_SIZE                         6
+
 /*
 {
 */
