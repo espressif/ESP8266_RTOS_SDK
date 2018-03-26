@@ -1,9 +1,9 @@
 gwen:
     crypto:     9ec59b5
     espnow:     79c549f
-    main:       1155a0b
+    main:       89a3039
     minic:      9ec59b5
-    net80211:   f2108f6
+    net80211:   89a3039
     pp:         1155a0b
     pwm:        9ec59b5
     smartconfig:9ec59b5
