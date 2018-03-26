@@ -18,3 +18,4 @@ gitlab:
     mbedtls:    1ac9f1f4
     ssl:        eefb383a
     openssl:    1669353f
+    nopoll:     31f0ea07

@@ -122,21 +122,9 @@ nopoll_bool        nopoll_conn_opts_set_ssl_certs    (noPollConnOpts * opts,
 	
 	/* store certificate settings */
 	opts->certificate        = nopoll_strdup (certificate);
-	if (opts->certificate)
-//		if (access (opts->certificate, R_OK) != 0)
-//			return nopoll_false;
 	opts->private_key        = nopoll_strdup (private_key);
-	if (opts->private_key)
-//		if (access (opts->private_key, R_OK) != 0)
-//			return nopoll_false;
 	opts->chain_certificate  = nopoll_strdup (chain_certificate);
-	if (opts->chain_certificate)
-//		if (access (opts->chain_certificate, R_OK) != 0)
-//			return nopoll_false;
 	opts->ca_certificate     = nopoll_strdup (ca_certificate);
-	if (opts->ca_certificate)
-//		if (access (opts->ca_certificate, R_OK) != 0)
-//			return nopoll_false;
 
 	return nopoll_true;
 }

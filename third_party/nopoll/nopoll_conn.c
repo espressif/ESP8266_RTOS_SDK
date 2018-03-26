@@ -704,7 +704,7 @@ noPollConn * __nopoll_conn_new_common (noPollCtx       * ctx,
 	if (enable_tls) {
 		/* found TLS connection request, enable it */
 		conn->ssl_ctx  = __nopoll_conn_get_ssl_context (ctx, conn, options, nopoll_true);
-
+		SSL_CTX_set_default_read_buffer_len(conn->ssl_ctx, 4096);
 		/* check for client side SSL configuration */
 		if (! __nopoll_conn_set_ssl_client_options (ctx, conn, options)) {
 			nopoll_log (ctx, NOPOLL_LEVEL_CRITICAL, "Unable to configure additional SSL options, unable to continue",
@@ -804,7 +804,6 @@ noPollConn * __nopoll_conn_new_common (noPollCtx       * ctx,
 
 			return conn;
 		}
-		X509_free (server_cert);
 
 		/* call to check post ssl checks after SSL finalization */
 		if (conn->ctx && conn->ctx->post_ssl_check) {
