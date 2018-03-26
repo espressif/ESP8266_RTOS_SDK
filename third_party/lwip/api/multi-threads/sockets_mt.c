@@ -832,7 +832,7 @@ int lwip_fcntl_mt(int s, int cmd, int val)
     return ret;
 }
 
-int lwip_shutdown_mt(int s, int how)
+LOCAL int __lwip_shutdown_mt(int s, int how)
 {
     int ret;
 
@@ -847,6 +847,11 @@ int lwip_shutdown_mt(int s, int how)
     return ret;
 }
 
+int lwip_shutdown_mt(int s, int how)
+{
+    return lwip_shutdown(s, how);
+}
+
 int lwip_close_mt(int s)
 {
     int ret;
@@ -854,7 +859,7 @@ int lwip_close_mt(int s)
     SYS_ARCH_DECL_PROTECT(lev);
     sys_mutex_t lock_tmp[SOCK_MT_LOCK_MAX];
 
-	lwip_shutdown_mt(s, SHUT_RDWR);
+	__lwip_shutdown_mt(s, SHUT_RDWR);
 
     LWIP_ENTER_MT(s, SOCK_MT_CLOSE, 0);	
 
