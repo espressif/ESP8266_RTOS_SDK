@@ -21,20 +21,24 @@
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 
-typedef struct Timer 
-{
-	portTickType xTicksToWait;
-	xTimeOutType xTimeOut;
+#include "openssl/ssl.h"
+
+typedef struct Timer {
+    portTickType xTicksToWait;
+    xTimeOutType xTimeOut;
 } Timer;
 
 typedef struct Network Network;
 
-struct Network
-{
-	int my_socket;
-	int (*mqttread) (Network*, unsigned char*, int, int);
-	int (*mqttwrite) (Network*, unsigned char*, int, int);
-	void (*disconnect) (Network*);
+struct Network {
+    int my_socket;
+    int (*mqttread)(Network*, unsigned char*, unsigned int, unsigned int);
+    int (*mqttwrite)(Network*, unsigned char*, unsigned int, unsigned int);
+    void (*disconnect)(Network*);
+
+    int read_count;
+    SSL_CTX* ctx;
+    SSL* ssl;
 };
 
 void TimerInit(Timer*);
@@ -43,28 +47,73 @@ void TimerCountdownMS(Timer*, unsigned int);
 void TimerCountdown(Timer*, unsigned int);
 int TimerLeftMS(Timer*);
 
-typedef struct Mutex
-{
-	xSemaphoreHandle sem;
+typedef struct Mutex {
+    xSemaphoreHandle sem;
 } Mutex;
 
 void MutexInit(Mutex*);
 int MutexLock(Mutex*);
 int MutexUnlock(Mutex*);
 
-typedef struct Thread
-{
-	xTaskHandle task;
+typedef struct Thread {
+    xTaskHandle task;
 } Thread;
 
 int ThreadStart(Thread*, void (*fn)(void*), void* arg);
 
-int esp_read(Network*, unsigned char*, int, int);
-int esp_write(Network*, unsigned char*, int, int);
-void esp_disconnect(Network*);
-
+/**
+ * @brief Initialize the network structure
+ *
+ * @param m - network structure
+ *
+ * @return void
+ */
 void NetworkInit(Network*);
-int NetworkConnect(Network*, char*, int);
+
+/**
+ * @brief connect with mqtt broker
+ *
+ * @param n           - mqtt network struct
+ * @param addr        - mqtt broker address
+ * @param port        - mqtt broker port
+ *
+ * @return connect status
+ */
+int NetworkConnect(Network* n, char* addr, int port);
+
+typedef struct ssl_ca_crt_key {
+    unsigned char* cacrt;
+    unsigned int cacrt_len;
+    unsigned char* cert;
+    unsigned int cert_len;
+    unsigned char* key;
+    unsigned int key_len;
+} ssl_ca_crt_key_t;
+
+/**
+ * @brief Initialize the network structure for SSL connection
+ *
+ * @param m - network structure
+ *
+ * @return void
+ */
+void NetworkInitSSL(Network* n);
+
+/**
+ * @brief Use SSL to connect with mqtt broker
+ *
+ * @param n           - mqtt network struct
+ * @param addr        - mqtt broker address
+ * @param port        - mqtt broker port
+ * @param ssl_cck     - client CA, certificate and private key
+ * @param method      - SSL context client method
+ * @param verify_mode - SSL verifying mode
+ * @param frag_len    - SSL read buffer length
+ *
+ * @return connect status
+ */
+int NetworkConnectSSL(Network* n, char* addr, int port, ssl_ca_crt_key_t* ssl_cck, const SSL_METHOD* method, int verify_mode, unsigned int frag_len);
+
 /*int NetworkConnectTLS(Network*, char*, int, SlSockSecureFiles_t*, unsigned char, unsigned int, char);*/
 
 #endif

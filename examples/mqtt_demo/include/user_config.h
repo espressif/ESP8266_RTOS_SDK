@@ -25,8 +25,11 @@
 #ifndef __USER_CONFIG_H__
 #define __USER_CONFIG_H__
 
-#define SSID     "TEST001"
-#define PASSWORD "1234567890"
+#define SSID         "espressif"        /* Wi-Fi SSID */
+#define PASSWORD     "1234567890"     /* Wi-Fi Password */
+
+#define MQTT_BROKER  "iot.eclipse.org"  /* MQTT Broker Address*/
+#define MQTT_PORT    1883             /* MQTT Port*/
 
 #endif
 

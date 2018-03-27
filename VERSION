@@ -11,11 +11,12 @@ gwen:
     wps:        ff84a8b
 
 gitlab:
+    driver:     7bee5263
     espconn:    3a998034
     freertos:   a9985a9c
     lwip:       1651e055
-    driver:     7bee5263
     mbedtls:    1ac9f1f4
-    ssl:        eefb383a
-    openssl:    1669353f
+    mqtt:       6c098065
     nopoll:     31f0ea07
+    openssl:    1669353f
+    ssl:        eefb383a
