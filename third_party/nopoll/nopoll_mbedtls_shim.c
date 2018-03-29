@@ -161,6 +161,7 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
 
     mbedtls_entropy_context *entropy = (mbedtls_entropy_context *)zalloc(sizeof(mbedtls_entropy_context));
     mbedtls_ctr_drbg_context ctr_drbg;
+    mbedtls_ctr_drbg_init( &ctr_drbg );
 
     mbedtls_x509_crt *cacert = (mbedtls_x509_crt *)zalloc(sizeof(mbedtls_x509_crt));
 	mbedtls_x509_crt *clicert = (mbedtls_x509_crt *)zalloc(sizeof(mbedtls_x509_crt));
@@ -305,13 +306,32 @@ exit:
 #endif
 
     mbedtls_x509_crt_free( clicert );
-    free(clicert);
     mbedtls_x509_crt_free( cacert );
-    free(cacert);
     mbedtls_pk_free( pkey );
-    free(pkey);
     mbedtls_entropy_free( entropy );
+    mbedtls_ctr_drbg_free( &ctr_drbg );
+ 
+    free(clicert);
+    free(cacert);
+    free(pkey);
     free(entropy);
+    
+
 
     return( ret );
+}
+
+void mbedtls_library_free(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbedtls_net_context *server_fd)
+{
+
+    mbedtls_ssl_close_notify( ssl );
+    mbedtls_net_free( server_fd );
+    mbedtls_ssl_free( ssl );
+    mbedtls_ssl_config_free( conf );
+
+    /* Note that we do not try to free() either "ssl" or "conf" because these were never malloc'd in the first place.*/
+    /* "ssl" and "conf" are statically allocated data structs, local to this file.. */
+    /*free(ssl);*/
+    /*free(conf);*/
+
 }
