@@ -10,7 +10,7 @@ APIs of "ESP8266_RTOS_SDK" are same as "ESP8266_NONOS_SDK"
 
 More details in "Wiki" !
 
-## Requrements ##
+## Requirements ##
 
 You can use both xcc and gcc to compile your project, gcc is recommended.
 For gcc, please refer to [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk).
