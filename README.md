@@ -1,55 +1,76 @@
-# ESP8266_RTOS_SDK #
+# ** IMPORTANT NOTICE **
+## About this repository
+A new branching model is applied to this repository, which consists of a master branch and release branches.
 
-----------
+### 1. Master branch
+The master branch is an integration branch where bug fixes/features are gathered for compiling and functional testing.
 
-ESP8266 SDK based on FreeRTOS.
-   
-## Note ##
+### 2. Release branch
+The release branch is where releases are maintained and hot fixes (with names like *release/v2.x.x*) are added.
+Please ensure that all your production-related work are tracked with the release branches.
 
-APIs of "ESP8266_RTOS_SDK" are same as "ESP8266_NONOS_SDK"
+With this new model, we can push out bug fixes more quickly and achieve simpler maintenance.
 
-More details in "Wiki" !
+## Roadmap
+*ESP8266_RTOS_SDK*'s framework is quite outdated and different from the current *[esp-idf](https://github.com/espressif/esp-idf)* and we are planning to migrate *ESP8266_RTOS_SDK* to *esp-idf* eventually after *v2.0.0*.
 
-## Requrements ##
+However, we will firstly provide a new version of ESP8266 SDK (*ESP8266_RTOS_SDK v3.0*), which shares the same framework with *esp-idf* (esp-idf style), as a work-around, because the multi-CPU architecture is not supported by *esp-idf* for the time being.
 
-You can use both xcc and gcc to compile your project, gcc is recommended.
-For gcc, please refer to [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk).
+Actions to be taken for *ESP8266_RTOS_SDK v3.0* include the following items:
 
-  
-## Compile ##
+1. Modify the framework to esp-idf style
+2. Restructure some core libraries including Wi-Fi libraries and libmain
+3. Update some third-party libraries including FreeRTOS, lwIP, mbedTLS, noPoll, libcoap, SPIFFS, cJSON, wolfSSL, etc.
+4. Update some drivers
+5. Others
 
-Clone ESP8266_RTOS_SDK, e.g., to ~/ESP8266_RTOS_SDK.
+---
 
+## Requirements
+
+Both the xcc and gcc compilers can be used to compile the project. However, it is recommended that the gcc compiler be used.
+
+For more information about the gcc compiler, please refer to [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk).
+
+## Compiling
+
+1. Clone *ESP8266_RTOS_SDK*, i.e., to `~/ESP8266_RTOS_SDK`.
+
+```
     $git clone https://github.com/espressif/ESP8266_RTOS_SDK.git
+```
 
-Modify gen_misc.sh or gen_misc.bat:
-For Linux:
+2. Modify *gen_misc.sh* or *gen_misc.bat*:
 
+    * For Linux:
+    ```
     $export SDK_PATH=~/ESP8266_RTOS_SDK
     $export BIN_PATH=~/ESP8266_BIN
-
-For Windows:
-
+    ```
+    * For Windows:
+    ```
     set SDK_PATH=/c/ESP8266_RTOS_SDK
     set BIN_PATH=/c/ESP8266_BIN
+    ```
 
-ESP8266_RTOS_SDK/examples/project_template is a project template, you can copy this to anywhere, e.g., to ~/workspace/project_template.
+    You can use *ESP8266_RTOS_SDK/examples/project_template* to start your project, which can be copied anywhere, i.e., to `~/workspace/project_template`.
 
-Generate bin: 
-For Linux:
+3. Generate bins:
+    * For Linux:
 
+    ```
     ./gen_misc.sh
+    ```
+    * For Windows:
 
-For Windows:
-
+    ```
     gen_misc.bat
-   
-Just follow the tips and steps.
+    ```
 
-## Download ##
+## Downloading
 
-eagle.app.v6.flash.bin, downloads to flash 0x00000
+1. *eagle.app.v6.flash.bin* should be downloaded to the address of *0x00000* in the flash.
 
-eagle.app.v6.irom0text.bin, downloads to flash 0x40000
+2. *eagle.app.v6.irom0text.bin* should be downloaded to the address of *0x40000* in the flash.
 
-blank.bin, downloads to flash 0x7E000
+3. *blank.bin* should be downloaded to the address of *0x7E000* in the flash.
