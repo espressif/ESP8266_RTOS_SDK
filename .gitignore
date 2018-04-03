@@ -1,0 +1,7 @@
+.output
+bin/upgrade/*
+
+# eclipse setting
+.settings
+.cproject
+.project
