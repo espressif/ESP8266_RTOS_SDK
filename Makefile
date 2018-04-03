@@ -420,6 +420,7 @@ INCLUDES += -I $(SDK_PATH)/include/espressif
 INCLUDES += -I $(SDK_PATH)/include/lwip
 INCLUDES += -I $(SDK_PATH)/include/lwip/ipv4
 INCLUDES += -I $(SDK_PATH)/include/lwip/ipv6
+INCLUDES += -I $(SDK_PATH)/include/lwip/posix
 INCLUDES += -I $(SDK_PATH)/include/nopoll
 INCLUDES += -I $(SDK_PATH)/include/spiffs
 INCLUDES += -I $(SDK_PATH)/include/ssl
