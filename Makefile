@@ -424,5 +424,5 @@ INCLUDES += -I $(SDK_PATH)/include/nopoll
 INCLUDES += -I $(SDK_PATH)/include/spiffs
 INCLUDES += -I $(SDK_PATH)/include/ssl
 INCLUDES += -I $(SDK_PATH)/include/json
-INCLUDES += -I $(SDK_PATH)/include/openssl
+INCLUDES += -I $(SDK_PATH)/components/openssl/include
 INCLUDES += -I $(SDK_PATH)/include/mqtt
