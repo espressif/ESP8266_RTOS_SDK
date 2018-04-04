@@ -100,7 +100,6 @@
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "esp_ssc.h"
-#include "esp_spiffs.h"
 
 #include "esp8266/esp8266.h"
 
