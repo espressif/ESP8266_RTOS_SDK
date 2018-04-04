@@ -1,0 +1,13 @@
+README
+
+esp-idf compile and 'AR' user program as target library 'libmain.a', so we should not use
+library which is named 'libmain.a'. We use 'libcore.a' instead of it.
+
+As I konwn, you can do following:
+
+1. rename libmain.a to libcore.a
+2. change text 
+        "*libmain.a:spi_flash.o(.literal .text .literal.* .text.*)"
+   to
+        "*libcore.a:spi_flash.o(.literal .text .literal.* .text.*)"
+   in file 'eagle.app.v6.common.ld'
