@@ -216,6 +216,3 @@ SECTIONS
   } >iram1_0_seg :iram1_0_phdr
 
 }
-
-/* get ROM code address */
-INCLUDE "../ld/eagle.rom.addr.v6.ld"

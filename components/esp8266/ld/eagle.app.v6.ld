@@ -28,5 +28,3 @@ MEMORY
   iram1_0_seg :                       	org = 0x40100000, len = 0x8000
   irom0_0_seg :                       	org = 0x40220000, len = 0x5C000
 }
-
-INCLUDE "../ld/eagle.app.v6.common.ld"
