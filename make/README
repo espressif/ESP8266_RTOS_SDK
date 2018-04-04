@@ -1,6 +1,10 @@
 README
 
-The SDK uses 'make' of esp-idf and information of esp-idf is following:
+The SDK uses 'make' of esp-idf, and changed things are following:
+
+1. remove the "toolchain" warning in file project.mk at line 543
+
+Information of esp-idf is following:
 
 URL: https://github.com/espressif/esp-idf
 tag: v3.1-dev

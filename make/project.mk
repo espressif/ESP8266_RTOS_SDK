@@ -540,7 +540,7 @@ $(info Expected to see version(s): $(SUPPORTED_TOOLCHAIN_GCC_VERSIONS))
 $(info Please check ESP-IDF setup instructions and update the toolchain, or proceed at your own risk.)
 endif
 else
-$(info WARNING: Failed to find Xtensa toolchain, may need to alter PATH or set one in the configuration menu)
+#$(info WARNING: Failed to find Xtensa toolchain, may need to alter PATH or set one in the configuration menu)
 endif # TOOLCHAIN_COMMIT_DESC
 
 endif #MAKE_RESTARTS
