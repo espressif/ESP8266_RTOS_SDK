@@ -427,3 +427,4 @@ INCLUDES += -I $(SDK_PATH)/components/axtls/include
 INCLUDES += -I $(SDK_PATH)/include/json
 INCLUDES += -I $(SDK_PATH)/components/openssl/include
 INCLUDES += -I $(SDK_PATH)/include/mqtt
+INCLUDES += -I $(SDK_PATH)/components/freertos/include
