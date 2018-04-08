@@ -1,4 +1,5 @@
 #include "esp_common.h"
+#include "esp_spiffs.h"
 
 #include <fcntl.h>
 #include <stdio.h>
