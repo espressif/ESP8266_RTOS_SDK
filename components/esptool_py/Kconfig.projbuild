@@ -48,7 +48,7 @@ config ESPTOOLPY_COMPRESSED
 
 choice FLASHMODE
 	prompt "Flash SPI mode"
-	default FLASHMODE_DIO
+	default FLASHMODE_QIO
 	help
 		Mode the flash chip is flashed in, as well as the default mode for the
 		binary to run in.
