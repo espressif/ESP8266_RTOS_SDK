@@ -115,7 +115,7 @@ task.h is included from an application file. */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "espressif/esp8266/ets_sys.h"
+#include "esp8266/ets_sys.h"
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 

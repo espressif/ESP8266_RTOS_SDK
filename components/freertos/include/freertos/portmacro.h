@@ -71,7 +71,7 @@ extern "C" {
 #endif
 
 #include "c_types.h"
-#include "espressif/esp_libc.h"
+#include "esp_libc.h"
 #include "esp8266/ets_sys.h"
 
 #include    <xtensa/xtruntime.h>

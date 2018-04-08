@@ -22,7 +22,7 @@
  *
  */
 
-#include "espressif/esp_common.h"
+#include "esp_common.h"
 #include "freertos/portmacro.h"
 
 #include "gpio.h"
