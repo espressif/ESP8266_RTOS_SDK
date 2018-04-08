@@ -1,4 +1,6 @@
-#include "esp_common.h"
+#include "esp_spiffs.h"
+#include "esp_ssc.h"
+#include "esp_system.h"
 #include "testrunner.h"
 #include <stdlib.h>
 #include "spiffs_test_params.h"
