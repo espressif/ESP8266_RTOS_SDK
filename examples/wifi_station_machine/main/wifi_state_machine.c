@@ -23,15 +23,15 @@
  */
 
 #include <stddef.h>
-#include "espressif/c_types.h"
+#include "c_types.h"
 #include "lwipopts.h"
 #include "lwip/ip_addr.h"
-#include "espressif/esp_libc.h"
-#include "espressif/esp_misc.h"
-#include "espressif/esp_common.h"
-#include "espressif/esp_wifi.h"
-#include "espressif/esp_sta.h"
-#include "espressif/esp_softap.h"
+#include "esp_libc.h"
+#include "esp_misc.h"
+#include "esp_common.h"
+#include "esp_wifi.h"
+#include "esp_sta.h"
+#include "esp_softap.h"
 #include "wifi_state_machine.h"
 
 typedef void (* wifi_state_cb_t)();

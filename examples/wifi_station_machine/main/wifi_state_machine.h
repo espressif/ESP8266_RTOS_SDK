@@ -26,8 +26,8 @@
 #define _WIFI_STATE_MACHINE_H_
 
 #include <stddef.h>
-#include "espressif/c_types.h"
-#include "espressif/esp_wifi.h"
+#include "c_types.h"
+#include "esp_wifi.h"
 
 typedef void (* wifi_state_cb_t)();
 typedef void (* wifi_disco_cb_t)(uint8_t reason);
