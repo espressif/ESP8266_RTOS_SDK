@@ -9,6 +9,40 @@ LIBS += airkiss cirom crypto espnow gcc hal core minic mirom net80211 \
         phy pp pwm smartconfig ssc wpa wps
 endif
 
+ESPTOOLPY_FLASHSIZE ?= $(CONFIG_ESPTOOLPY_FLASHSIZE)
+
+ifeq ($(CONFIG_ESPTOOLPY_APP_NUM),"app1")
+BIN_APP_NUM := app1
+endif
+ifeq ($(CONFIG_ESPTOOLPY_APP_NUM),"app2")
+BIN_APP_NUM := app2
+endif
+
+ifeq ($(ESPTOOLPY_FLASHSIZE), "512KB")
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.512.$(BIN_APP_NUM).ld
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "1MB")
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.1024.$(BIN_APP_NUM).ld
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "2MB")
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.1024.$(BIN_APP_NUM).ld
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "2MB-c1")
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.2048.ld
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "4MB")
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.1024.$(BIN_APP_NUM).ld
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "4MB-c1")
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.2048.ld
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "8MB")
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.2048.ld
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "16MB")
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.2048.ld
+endif
+
 #Linker scripts used to link the final application.
 #Warning: These linker scripts are only used when the normal app is compiled; the bootloader
 #specifies its own scripts.
