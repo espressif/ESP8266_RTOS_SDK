@@ -30,8 +30,8 @@
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
-#include "espressif/espconn.h"
-#include "espressif/airkiss.h"
+#include "espconn.h"
+#include "airkiss.h"
 
 #define server_ip "192.168.101.142"
 #define server_port 9669
