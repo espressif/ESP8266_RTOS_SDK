@@ -1,69 +1,155 @@
-# Component support for esptool.py. Doesn't do much by itself,
-# components have their own flash targets that can use these variables.
+
+BOOTLOADER_FIRMWARE_DIR := $(abspath $(COMPONENT_PATH))/firmware
+
+#configurate downloading parameters
+BIN_APP_NUM ?= ESPTOOLPY_APP_NUM
+ESPTOOLPY_FLASHSIZE ?= $(CONFIG_ESPTOOLPY_FLASHSIZE)
+ESPTOOLPY_FLASHMODE ?= $(CONFIG_ESPTOOLPY_FLASHMODE)
+ESPTOOLPY_FLASHFREQ ?= $(CONFIG_ESPTOOLPY_FLASHFREQ)
+
+ifeq ($(ESPTOOLPY_FLASHSIZE), "512KB")
+BLANK_BIN_OFFSET1 := 0x7B000
+BLANK_BIN_OFFSET2 := 0x7E000
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x7C000
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.512.$(BIN_APP_NUM).ld
+ESP8266_SIZEMAP := 0
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "1MB")
+BLANK_BIN_OFFSET1 := 0xFB000
+BLANK_BIN_OFFSET2 := 0xFE000
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0xFC000
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.1024.$(BIN_APP_NUM).ld
+ESP8266_SIZEMAP := 2
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "2MB")
+BLANK_BIN_OFFSET1 := 0x1FB000
+BLANK_BIN_OFFSET2 := 0x1FE000
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x1FC000
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.1024.$(BIN_APP_NUM).ld
+ESP8266_SIZEMAP := 3
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "2MB-c1")
+BLANK_BIN_OFFSET1 := 0x1FB000
+BLANK_BIN_OFFSET2 := 0x1FE000
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x1FC000
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.2048.ld
+ESP8266_SIZEMAP := 5
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "4MB")
+BLANK_BIN_OFFSET1 := 0x3FB000
+BLANK_BIN_OFFSET2 := 0x3FE000
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x3FC000
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.1024.$(BIN_APP_NUM).ld
+ESP8266_SIZEMAP := 4
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "4MB-c1")
+BLANK_BIN_OFFSET1 := 0x3FB000
+BLANK_BIN_OFFSET2 := 0x3FE000
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x3FC000
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.2048.ld
+ESP8266_SIZEMAP := 6
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "8MB")
+BLANK_BIN_OFFSET1 := 0x7FB000
+BLANK_BIN_OFFSET2 := 0x7FE000
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x7FC000
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.2048.ld
+ESP8266_SIZEMAP := 8
+endif
+ifeq ($(ESPTOOLPY_FLASHSIZE), "16MB")
+BLANK_BIN_OFFSET1 := 0xFFB000
+BLANK_BIN_OFFSET2 := 0xFFE000
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0xFFC000
+ESP8266_LINKER_SCRIPTS := eagle.app.v6.new.2048.ld
+ESP8266_SIZEMAP := 9
+endif
+export ESP8266_LINKER_SCRIPTS
+
+BOOTLOADER_BIN_OFFSET := 0
+APP_OFFSET := 0x1000
+
+ESP8266_BOOTMODE ?= 2 # always be 2
+
+ifeq ($(ESPTOOLPY_FLASHMODE),"qio")
+ESP8266_FLASHMODE ?= 0
+endif
+ifeq ($(ESPTOOLPY_FLASHMODE),"qout")
+ESP8266_FLASHMODE ?= 1
+endif
+ifeq ($(ESPTOOLPY_FLASHMODE),"dio")
+ESP8266_FLASHMODE ?= 2
+endif
+ifeq ($(ESPTOOLPY_FLASHMODE),"dout")
+ESP8266_FLASHMODE ?= 3
+endif
+
+ifeq ($(ESPTOOLPY_FLASHFREQ),"20m")
+ESP8266_FREQDIV ?= 2
+endif
+ifeq ($(ESPTOOLPY_FLASHFREQ),"26m")
+ESP8266_FREQDIV ?= 1
+endif
+ifeq ($(ESPTOOLPY_FLASHFREQ),"40m")
+ESP8266_FREQDIV ?= 0
+endif
+ifeq ($(ESPTOOLPY_FLASHFREQ),"80m")
+ESP8266_FREQDIV ?= 15
+endif
+
+ESP8266_BINSCRIPT ?= python $(IDF_PATH)/tools/gen_appbin.py
+
+ifdef DEBUG_BIN_PARAM
+$(info mode:$(ESP8266_BOOTMODE) flash:$(ESP8266_FLASHMODE) freqdiv:$(ESP8266_FREQDIV), size_map:$(ESP8266_SIZEMAP))
+$(info BLANK:$(BLANK_BIN_OFFSET1)/$(BLANK_BIN_OFFSET2) data:$(ESP_INIT_DATA_DEFAULT_BIN_OFFSET) script:$(ESP8266_LINKER_SCRIPTS))
+endif
+
+$(APP_BIN): $(APP_ELF)
+	@$(OBJCOPY) --only-section .text -O binary $< eagle.app.v6.text.bin
+	@$(OBJCOPY) --only-section .data -O binary $< eagle.app.v6.data.bin
+	@$(OBJCOPY) --only-section .rodata -O binary $< eagle.app.v6.rodata.bin
+	@$(OBJCOPY) --only-section .irom0.text -O binary $< eagle.app.v6.irom0text.bin
+	@$(ESP8266_BINSCRIPT) $< $(ESP8266_BOOTMODE) $(ESP8266_FLASHMODE) $(ESP8266_FREQDIV) $(ESP8266_SIZEMAP)
+	@mv eagle.app.flash.bin $@
+	@rm eagle.app.v6.*
+
+BLANK_BIN := $(BOOTLOADER_FIRMWARE_DIR)/blank.bin
+ESP_INIT_DATA_DEFAULT_BIN := $(BOOTLOADER_FIRMWARE_DIR)/esp_init_data_default.bin
+BOOTLOADER_BIN := $(BOOTLOADER_FIRMWARE_DIR)/boot_v1.7.bin
+
+CONFIG_ESPTOOLPY_COMPRESSED ?= y
+CONFIG_ESPTOOLPY_BEFORE_RESET ?=y
+CONFIG_ESPTOOLPY_AFTER_RESET ?=y
+
+PYTHON ?= $(call dequote,$(CONFIG_PYTHON))
+ESPTOOLPY_SRC := $(IDF_PATH)/components/esptool_py/esptool/esptool.py
+
+CHIP ?= esp8266
 ESPPORT ?= $(CONFIG_ESPTOOLPY_PORT)
 ESPBAUD ?= $(CONFIG_ESPTOOLPY_BAUD)
 ESPFLASHMODE ?= $(CONFIG_ESPTOOLPY_FLASHMODE)
 ESPFLASHFREQ ?= $(CONFIG_ESPTOOLPY_FLASHFREQ)
 ESPFLASHSIZE ?= $(CONFIG_ESPTOOLPY_FLASHSIZE)
+ESPTOOLPY := $(PYTHON) $(ESPTOOLPY_SRC) --chip $(CHIP)
 
-CONFIG_ESPTOOLPY_COMPRESSED ?=
+ESPTOOL_WRITE_FLASH_OPTIONS := --flash_mode $(ESPFLASHMODE) --flash_freq $(ESPFLASHFREQ) --flash_size $(ESPFLASHSIZE)
 
-PYTHON ?= $(call dequote,$(CONFIG_PYTHON))
-
-# two commands that can be used from other components
-# to invoke esptool.py (with or without serial port args)
-#
-ESPTOOLPY_SRC := $(COMPONENT_PATH)/esptool/esptool.py
-ESPTOOLPY := $(PYTHON) $(ESPTOOLPY_SRC) --chip esp32
 ESPTOOLPY_SERIAL := $(ESPTOOLPY) --port $(ESPPORT) --baud $(ESPBAUD) --before $(CONFIG_ESPTOOLPY_BEFORE) --after $(CONFIG_ESPTOOLPY_AFTER)
-
-# Supporting esptool command line tools
-ESPEFUSEPY := $(PYTHON) $(COMPONENT_PATH)/esptool/espefuse.py
-ESPSECUREPY := $(PYTHON) $(COMPONENT_PATH)/esptool/espsecure.py
-export ESPSECUREPY  # is used in bootloader_support component
-
-ESPTOOL_FLASH_OPTIONS := --flash_mode $(ESPFLASHMODE) --flash_freq $(ESPFLASHFREQ) --flash_size $(ESPFLASHSIZE)
-ifdef CONFIG_ESPTOOLPY_FLASHSIZE_DETECT
-ESPTOOL_WRITE_FLASH_OPTIONS := --flash_mode $(ESPFLASHMODE) --flash_freq $(ESPFLASHFREQ) --flash_size detect
-else
-ESPTOOL_WRITE_FLASH_OPTIONS := $(ESPTOOL_FLASH_OPTIONS)
-endif
-
-ESPTOOL_ELF2IMAGE_OPTIONS :=
 
 ESPTOOLPY_WRITE_FLASH=$(ESPTOOLPY_SERIAL) write_flash $(if $(CONFIG_ESPTOOLPY_COMPRESSED),-z,-u) $(ESPTOOL_WRITE_FLASH_OPTIONS)
 
-ESPTOOL_ALL_FLASH_ARGS += $(CONFIG_APP_OFFSET) $(APP_BIN)
-
-ifdef CONFIG_SECURE_BOOT_BUILD_SIGNED_BINARIES
-ifndef IS_BOOTLOADER_BUILD
-# for locally signed secure boot image, add a signing step to get from unsigned app to signed app
-APP_BIN_UNSIGNED := $(APP_BIN:.bin=-unsigned.bin)
-
-$(APP_BIN): $(APP_BIN_UNSIGNED) $(SECURE_BOOT_SIGNING_KEY) $(SDKCONFIG_MAKEFILE)
-	$(ESPSECUREPY) sign_data --keyfile $(SECURE_BOOT_SIGNING_KEY) -o $@ $<
-endif
-endif
-# non-secure boot (or bootloader), both these files are the same
-APP_BIN_UNSIGNED ?= $(APP_BIN)
-
-$(APP_BIN_UNSIGNED): $(APP_ELF) $(ESPTOOLPY_SRC)
-	$(ESPTOOLPY) elf2image $(ESPTOOL_FLASH_OPTIONS) $(ESPTOOL_ELF2IMAGE_OPTIONS) -o $@ $<
+ESPTOOL_ALL_FLASH_ARGS += $(BOOTLOADER_BIN_OFFSET) $(BOOTLOADER_BIN) \
+                          $(APP_OFFSET) $(APP_BIN) \
+                          $(ESP_INIT_DATA_DEFAULT_BIN_OFFSET) $(ESP_INIT_DATA_DEFAULT_BIN) \
+                          $(BLANK_BIN_OFFSET1) $(BLANK_BIN) \
+                          $(BLANK_BIN_OFFSET2) $(BLANK_BIN)
 
 flash: all_binaries $(ESPTOOLPY_SRC) $(call prereq_if_explicit,erase_flash)
-	@echo "Flashing binaries to serial port $(ESPPORT) (app at offset $(CONFIG_APP_OFFSET))..."
-ifdef CONFIG_SECURE_BOOT_ENABLED
-	@echo "(Secure boot enabled, so bootloader not flashed automatically. See 'make bootloader' output)"
-endif
+	@echo "Flashing binaries to serial port $(ESPPORT) (app at offset $(APP_OFFSET))..."
 	$(ESPTOOLPY_WRITE_FLASH) $(ESPTOOL_ALL_FLASH_ARGS)
 
 app-flash: $(APP_BIN) $(ESPTOOLPY_SRC) $(call prereq_if_explicit,erase_flash)
-	@echo "Flashing app to serial port $(ESPPORT), offset $(CONFIG_APP_OFFSET)..."
-	$(ESPTOOLPY_WRITE_FLASH) $(CONFIG_APP_OFFSET) $(APP_BIN)
-
-# Submodules normally added in component.mk, but can be added
-# at the project level as long as qualified path
-COMPONENT_SUBMODULES += $(COMPONENT_PATH)/esptool
+	@echo "Flashing app to serial port $(ESPPORT), offset $(APP_OFFSET)..."
+	$(ESPTOOLPY_WRITE_FLASH) $(APP_OFFSET) $(APP_BIN)
 
 erase_flash:
 	@echo "Erasing entire flash..."
@@ -94,5 +180,14 @@ monitor: $(call prereq_if_explicit,%flash)
 	[ -f $(APP_ELF) ] || echo "*** Or alternatively 'make simple_monitor' to view the serial port as-is."
 	[ -f $(APP_ELF) ] || exit 1
 	$(MONITOR_PYTHON) $(IDF_PATH)/tools/idf_monitor.py $(MONITOR_OPTS) $(APP_ELF)
+
+# global CFLAGS for ESP8266
+CFLAGS += -DMEMLEAK_DEBUG -DICACHE_FLASH
+
+# void compiler error, we should remove these later
+CFLAGS += -Wno-error=char-subscripts -Wno-error=unknown-pragmas -Wno-error=implicit-function-declaration \
+          -Wno-error=pointer-sign -Wno-error=switch -Wno-error=maybe-uninitialized -Wno-error=format= \
+          -Wno-error=unused-value -Wno-error=address -Wno-error=return-type -Wno-error=format-extra-args \
+          -Wno-error=format-zero-length -Wno-error=unused-label -Wno-error=sizeof-pointer-memaccess
 
 .PHONY: erase_flash
