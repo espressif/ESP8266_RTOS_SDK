@@ -416,7 +416,8 @@ $(foreach image,$(GEN_IMAGES),$(eval $(call MakeImage,$(basename $(image)))))
 
 INCLUDES := $(INCLUDES) -I $(SDK_PATH)/include -I $(SDK_PATH)/extra_include
 INCLUDES += -I $(SDK_PATH)/driver_lib/include
-INCLUDES += -I $(SDK_PATH)/include/espressif
+INCLUDES += -I $(SDK_PATH)/components/esp8266/include
+INCLUDES += -I $(SDK_PATH)/components/esp8266/include/espressif
 INCLUDES += -I $(SDK_PATH)/components/lwip/include
 INCLUDES += -I $(SDK_PATH)/components/lwip/include/lwip
 INCLUDES += -I $(SDK_PATH)/components/lwip/include/lwip/ipv4
