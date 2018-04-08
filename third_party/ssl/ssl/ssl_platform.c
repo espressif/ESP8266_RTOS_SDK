@@ -179,12 +179,10 @@ EXP_FUNC int STDCALL ICACHE_FLASH_ATTR esp_base64_encode(uint8 *dst, size_t dlen
 			*p ++ = '=';
 
 		*p ++ = '=';
-
-		*olen = p - dst;
 		*p  = 0;
-
-		return 0;
 	}
+	*olen = p - dst;
+	return 0;
 }
 
 static char *key_password = NULL;
