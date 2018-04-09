@@ -107,7 +107,7 @@ char *ICACHE_FLASH_ATTR esp_EVP_cleanup(void)
 	return NULL;
 }
 
-static const unsigned char base64_enc_map[64] ICACHE_RODATA_ATTR STORE_ATTR =
+static const unsigned char base64_enc_map[64] =
 {
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
 	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',

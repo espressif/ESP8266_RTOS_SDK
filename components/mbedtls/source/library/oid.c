@@ -160,7 +160,7 @@ typedef struct {
     const char          *short_name;
 } oid_x520_attr_t;
 
-static const oid_x520_attr_t oid_x520_attr_type[] ICACHE_RODATA_ATTR =
+static const oid_x520_attr_t oid_x520_attr_type[] =
 {
     {
         { ADD_LEN( MBEDTLS_OID_AT_CN ),          "id-at-commonName",               "Common Name" },
@@ -256,7 +256,7 @@ typedef struct {
     int                 ext_type;
 } oid_x509_ext_t;
 
-static const oid_x509_ext_t oid_x509_ext[] ICACHE_RODATA_ATTR =
+static const oid_x509_ext_t oid_x509_ext[] =
 {
     {
         { ADD_LEN( MBEDTLS_OID_BASIC_CONSTRAINTS ),    "id-ce-basicConstraints",   "Basic Constraints" },
@@ -287,7 +287,7 @@ static const oid_x509_ext_t oid_x509_ext[] ICACHE_RODATA_ATTR =
 FN_OID_TYPED_FROM_ASN1(oid_x509_ext_t, x509_ext, oid_x509_ext)
 FN_OID_GET_ATTR1(mbedtls_oid_get_x509_ext_type, oid_x509_ext_t, x509_ext, int, ext_type)
 
-static const mbedtls_oid_descriptor_t oid_ext_key_usage[] ICACHE_RODATA_ATTR =
+static const mbedtls_oid_descriptor_t oid_ext_key_usage[] =
 {
     { ADD_LEN( MBEDTLS_OID_SERVER_AUTH ),      "id-kp-serverAuth",      "TLS Web Server Authentication" },
     { ADD_LEN( MBEDTLS_OID_CLIENT_AUTH ),      "id-kp-clientAuth",      "TLS Web Client Authentication" },
@@ -312,7 +312,7 @@ typedef struct {
     mbedtls_pk_type_t           pk_alg;
 } oid_sig_alg_t;
 
-static const oid_sig_alg_t oid_sig_alg[] ICACHE_RODATA_ATTR =
+static const oid_sig_alg_t oid_sig_alg[] =
 {
     {
         { ADD_LEN( MBEDTLS_OID_PKCS1_MD2 ),        "md2WithRSAEncryption",     "RSA with MD2" },
@@ -394,7 +394,7 @@ typedef struct {
     mbedtls_pk_type_t           pk_alg;
 } oid_pk_alg_t;
 
-static const oid_pk_alg_t oid_pk_alg[] ICACHE_RODATA_ATTR =
+static const oid_pk_alg_t oid_pk_alg[] =
 {
     {
         { ADD_LEN( MBEDTLS_OID_PKCS1_RSA ),      "rsaEncryption",   "RSA" },
@@ -427,7 +427,7 @@ typedef struct {
     mbedtls_ecp_group_id        grp_id;
 } oid_ecp_grp_t;
 
-static const oid_ecp_grp_t oid_ecp_grp[] ICACHE_RODATA_ATTR =
+static const oid_ecp_grp_t oid_ecp_grp[] =
 {
     {
         { ADD_LEN( MBEDTLS_OID_EC_GRP_SECP192R1 ), "secp192r1",    "secp192r1" },
@@ -493,7 +493,7 @@ typedef struct {
     mbedtls_cipher_type_t       cipher_alg;
 } oid_cipher_alg_t;
 
-static const oid_cipher_alg_t oid_cipher_alg[] ICACHE_RODATA_ATTR =
+static const oid_cipher_alg_t oid_cipher_alg[] =
 {
     {
         { ADD_LEN( MBEDTLS_OID_DES_CBC ),              "desCBC",       "DES-CBC" },
@@ -522,7 +522,7 @@ typedef struct {
     mbedtls_md_type_t           md_alg;
 } oid_md_alg_t;
 
-static const oid_md_alg_t oid_md_alg[] ICACHE_RODATA_ATTR =
+static const oid_md_alg_t oid_md_alg[] =
 {
     {
         { ADD_LEN( MBEDTLS_OID_DIGEST_ALG_MD2 ),       "id-md2",       "MD2" },
@@ -577,7 +577,7 @@ typedef struct {
     mbedtls_cipher_type_t       cipher_alg;
 } oid_pkcs12_pbe_alg_t;
 
-static const oid_pkcs12_pbe_alg_t oid_pkcs12_pbe_alg[] ICACHE_RODATA_ATTR =
+static const oid_pkcs12_pbe_alg_t oid_pkcs12_pbe_alg[] =
 {
     {
         { ADD_LEN( MBEDTLS_OID_PKCS12_PBE_SHA1_DES3_EDE_CBC ), "pbeWithSHAAnd3-KeyTripleDES-CBC", "PBE with SHA1 and 3-Key 3DES" },

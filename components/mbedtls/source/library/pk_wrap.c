@@ -160,7 +160,7 @@ static void rsa_debug( const void *ctx, mbedtls_pk_debug_item *items )
     items->value = &( ((mbedtls_rsa_context *) ctx)->E );
 }
 
-const mbedtls_pk_info_t mbedtls_rsa_info ICACHE_RODATA_ATTR = {
+const mbedtls_pk_info_t mbedtls_rsa_info = {
     MBEDTLS_PK_RSA,
     "RSA",
     rsa_get_bitlen,
@@ -270,7 +270,7 @@ static void eckey_debug( const void *ctx, mbedtls_pk_debug_item *items )
     items->value = &( ((mbedtls_ecp_keypair *) ctx)->Q );
 }
 
-const mbedtls_pk_info_t mbedtls_eckey_info ICACHE_RODATA_ATTR = {
+const mbedtls_pk_info_t mbedtls_eckey_info = {
     MBEDTLS_PK_ECKEY,
     "EC",
     eckey_get_bitlen,
@@ -299,7 +299,7 @@ static int eckeydh_can_do( mbedtls_pk_type_t type )
             type == MBEDTLS_PK_ECKEY_DH );
 }
 
-const mbedtls_pk_info_t mbedtls_eckeydh_info ICACHE_RODATA_ATTR = {
+const mbedtls_pk_info_t mbedtls_eckeydh_info = {
     MBEDTLS_PK_ECKEY_DH,
     "EC_DH",
     eckey_get_bitlen,         /* Same underlying key structure */
@@ -362,7 +362,7 @@ static void ecdsa_free_wrap( void *ctx )
     mbedtls_free( ctx );
 }
 
-const mbedtls_pk_info_t mbedtls_ecdsa_info ICACHE_RODATA_ATTR = {
+const mbedtls_pk_info_t mbedtls_ecdsa_info = {
     MBEDTLS_PK_ECDSA,
     "ECDSA",
     eckey_get_bitlen,     /* Compatible key structures */
@@ -471,7 +471,7 @@ static void rsa_alt_free_wrap( void *ctx )
     mbedtls_free( ctx );
 }
 
-const mbedtls_pk_info_t mbedtls_rsa_alt_info ICACHE_RODATA_ATTR = {
+const mbedtls_pk_info_t mbedtls_rsa_alt_info = {
     MBEDTLS_PK_RSA_ALT,
     "RSA-alt",
     rsa_alt_get_bitlen,

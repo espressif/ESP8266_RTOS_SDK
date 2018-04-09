@@ -31,7 +31,7 @@
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_ssl.h"
 
-static const uint8_t g_hello_done[] ICACHE_RODATA_ATTR STORE_ATTR = { HS_SERVER_HELLO_DONE, 0, 0, 0 };
+static const uint8_t g_hello_done[] = { HS_SERVER_HELLO_DONE, 0, 0, 0 };
 
 #ifdef MEMLEAK_DEBUG
 static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
@@ -435,7 +435,7 @@ error:
 }
 
 #ifdef CONFIG_SSL_CERT_VERIFICATION
-static const uint8_t g_cert_request[] ICACHE_RODATA_ATTR STORE_ATTR = { HS_CERT_REQ, 0, 0, 4, 1, 0, 0, 0 };
+static const uint8_t g_cert_request[] = { HS_CERT_REQ, 0, 0, 4, 1, 0, 0, 0 };
 
 /*
  * Send the certificate request message.

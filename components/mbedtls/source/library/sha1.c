@@ -307,7 +307,7 @@ void mbedtls_sha1_update( mbedtls_sha1_context *ctx, const unsigned char *input,
         memcpy( (void *) (ctx->buffer + left), input, ilen );
 }
 
-static const unsigned char sha1_padding[64] ICACHE_RODATA_ATTR =
+static const unsigned char sha1_padding[64] =
 {
  0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

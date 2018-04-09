@@ -55,7 +55,7 @@ static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
     (b)[(i) + 3] = (uint8_t) ((n)      );       \
 }
 
-static const uint8_t sha256_padding[64] ICACHE_RODATA_ATTR STORE_ATTR =
+static const uint8_t sha256_padding[64] =
 {
     0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

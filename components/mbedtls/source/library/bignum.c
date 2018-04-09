@@ -1968,7 +1968,7 @@ cleanup:
 
 #if defined(MBEDTLS_GENPRIME)
 
-static const int small_prime[] ICACHE_RODATA_ATTR STORE_ATTR =
+static const int small_prime[] =
 {
         3,    5,    7,   11,   13,   17,   19,   23,
        29,   31,   37,   41,   43,   47,   53,   59,

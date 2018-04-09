@@ -275,7 +275,7 @@ void mbedtls_md5_update( mbedtls_md5_context *ctx, const unsigned char *input, s
     }
 }
 
-static const unsigned char md5_padding[64] ICACHE_RODATA_ATTR =
+static const unsigned char md5_padding[64] =
 {
  0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

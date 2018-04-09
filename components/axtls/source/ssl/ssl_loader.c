@@ -191,7 +191,7 @@ void ICACHE_FLASH_ATTR ssl_obj_free(SSLObjLoader *ssl_obj)
 #define IS_PRIVATE_KEY              2
 #define IS_CERTIFICATE              3
 
-static const char begins[NUM_PEM_TYPES][40] ICACHE_RODATA_ATTR STORE_ATTR =
+static const char begins[NUM_PEM_TYPES][40] =
 {
     "-----BEGIN RSA PRIVATE KEY-----",
     "-----BEGIN ENCRYPTED PRIVATE KEY-----",
@@ -199,7 +199,7 @@ static const char begins[NUM_PEM_TYPES][40] ICACHE_RODATA_ATTR STORE_ATTR =
     "-----BEGIN CERTIFICATE-----",
 };
 
-static const char ends[NUM_PEM_TYPES][40]  ICACHE_RODATA_ATTR STORE_ATTR =
+static const char ends[NUM_PEM_TYPES][40] =
 {
     "-----END RSA PRIVATE KEY-----",
     "-----END ENCRYPTED PRIVATE KEY-----",
@@ -207,7 +207,7 @@ static const char ends[NUM_PEM_TYPES][40]  ICACHE_RODATA_ATTR STORE_ATTR =
     "-----END CERTIFICATE-----",
 };
 
-static const char aes_str[2][24]  ICACHE_RODATA_ATTR STORE_ATTR =
+static const char aes_str[2][24] =
 {
     "DEK-Info: AES-128-CBC,",
     "DEK-Info: AES-256-CBC," 

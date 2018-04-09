@@ -83,7 +83,7 @@ static void mbedtls_zeroize( void *v, size_t n ) {
 /*
  * Default profile
  */
-const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_default ICACHE_RODATA_ATTR =
+const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_default =
 {
     /* Hashes from SHA-1 and above */
     MBEDTLS_X509_ID_FLAG( MBEDTLS_MD_SHA1 ) |
@@ -100,7 +100,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_default ICACHE_RODATA_AT
 /*
  * Next-default profile
  */
-const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_next ICACHE_RODATA_ATTR =
+const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_next =
 {
     /* Hashes from SHA-256 and above */
     MBEDTLS_X509_ID_FLAG( MBEDTLS_MD_SHA256 ) |
@@ -125,7 +125,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_next ICACHE_RODATA_ATTR 
 /*
  * NSA Suite B Profile
  */
-const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_suiteb ICACHE_RODATA_ATTR =
+const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_suiteb =
 {
     /* Only SHA-256 and 384 */
     MBEDTLS_X509_ID_FLAG( MBEDTLS_MD_SHA256 ) |

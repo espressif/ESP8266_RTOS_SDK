@@ -61,7 +61,7 @@ static HCRYPTPROV gCryptProv;
 static uint8_t entropy_pool[ENTROPY_POOL_SIZE];
 #endif
 
-const char unsupported_str[] ICACHE_RODATA_ATTR STORE_ATTR = "Error: Feature not supported\n";
+const char unsupported_str[] = "Error: Feature not supported\n";
 
 #ifndef CONFIG_SSL_SKELETON_MODE
 /** 
@@ -338,7 +338,7 @@ EXP_FUNC void STDCALL print_blob(const char *format, const unsigned char *data,
 
 #if defined(CONFIG_SSL_HAS_PEM) || defined(CONFIG_HTTP_HAS_AUTHORIZATION)
 /* base64 to binary lookup table */
-static const uint8_t map[128] ICACHE_RODATA_ATTR STORE_ATTR =
+static const uint8_t map[128] =
 {
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,

@@ -44,10 +44,10 @@ static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
 /* The session expiry time */
 #define SSL_EXPIRY_TIME     (CONFIG_SSL_EXPIRY_TIME*3600)
 
-static const uint8_t g_hello_request[] ICACHE_RODATA_ATTR STORE_ATTR = { HS_HELLO_REQUEST, 0, 0, 0 };
-static const uint8_t g_chg_cipher_spec_pkt[] ICACHE_RODATA_ATTR STORE_ATTR = { 1 };
-static const char server_finished[] ICACHE_RODATA_ATTR STORE_ATTR = "server finished";
-static const char client_finished[] ICACHE_RODATA_ATTR STORE_ATTR = "client finished";
+static const uint8_t g_hello_request[] = { HS_HELLO_REQUEST, 0, 0, 0 };
+static const uint8_t g_chg_cipher_spec_pkt[] = { 1 };
+static const char server_finished[] = "server finished";
+static const char client_finished[] = "client finished";
 
 static int do_handshake(SSL *ssl, uint8_t *buf, int read_len);
 static int set_key_block(SSL *ssl, int is_write);
@@ -65,7 +65,7 @@ const uint8_t ssl_prot_prefs[NUM_PROTOCOLS] =
 #else
 static void session_free(SSL_SESSION *ssl_sessions[], int sess_index);
 
-const uint8_t ssl_prot_prefs[NUM_PROTOCOLS] ICACHE_RODATA_ATTR STORE_ATTR =
+const uint8_t ssl_prot_prefs[NUM_PROTOCOLS] =
 #ifdef CONFIG_SSL_PROT_LOW                  /* low security, fast speed */
 { SSL_RC4_128_SHA, SSL_AES128_SHA, SSL_AES256_SHA, SSL_RC4_128_MD5 };
 #elif CONFIG_SSL_PROT_MEDIUM                /* medium security, medium speed */
