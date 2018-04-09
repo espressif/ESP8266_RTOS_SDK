@@ -3,7 +3,7 @@
 #include "openssl/ssl.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "espressif/c_types.h"
+#include "c_types.h"
 #include "lwip/sockets.h"
 
 #define OPENSSL_DEMO_THREAD_NAME "ssl_demo"
