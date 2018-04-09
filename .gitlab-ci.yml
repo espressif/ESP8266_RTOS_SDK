@@ -5,6 +5,8 @@ stages:
 variables:
   GIT_STRATEGY: clone
 
+  IDF_PATH: "$CI_PROJECT_DIR"
+
 # before each job, we need to check if this job is filtered by bot stage/job filter
 .apply_bot_filter: &apply_bot_filter
   python $APPLY_BOT_FILTER_SCRIPT || exit 0
