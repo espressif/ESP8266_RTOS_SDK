@@ -31,20 +31,17 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
 
 #define ssl_mem_malloc(s)    \
     ({  \
-        static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-        pvPortMalloc(s, mem_debug_file, __LINE__, false);  \
+        pvPortMalloc(s, __FILE__, __LINE__, false);  \
     })
 
 #define ssl_mem_zalloc(s)    \
     ({  \
-        static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-        pvPortZalloc(s, mem_debug_file, __LINE__);  \
+        pvPortZalloc(s, __FILE__, __LINE__);  \
     })
 
 #define ssl_mem_free(s) \
 do{\
-    static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-    vPortFree(s, mem_debug_file, __LINE__);\
+    vPortFree(s, __FILE__, __LINE__);\
 }while(0)
 
 
