@@ -27,8 +27,8 @@
 #include "openssl/ssl.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "espressif/c_types.h"
-#include "espressif/esp_misc.h"
+#include "c_types.h"
+#include "esp_misc.h"
 #include "lwip/sockets.h"
 #include "ssl_server_crt.h"
 
