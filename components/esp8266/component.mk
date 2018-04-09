@@ -1,8 +1,10 @@
 #
 # Component Makefile
 #
-COMPONENT_ADD_INCLUDEDIRS += include/espressif include/driver
+COMPONENT_ADD_INCLUDEDIRS += include
+COMPONENT_PRIV_INCLUDEDIRS := include/driver
 COMPONENT_SRCDIRS := driver
+
 LIBS ?=
 ifndef CONFIG_NO_BLOBS
 LIBS += airkiss cirom crypto espnow gcc hal core minic mirom net80211 \
