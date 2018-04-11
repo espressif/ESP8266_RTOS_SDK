@@ -1,0 +1,7 @@
+menu "tcpip adapter"
+
+config TCPIP_ADAPER_DEBUG
+    bool "Enable tcpip adaptor debug"
+    default 1
+
+endmenu
