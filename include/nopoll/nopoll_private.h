@@ -61,7 +61,7 @@ typedef unsigned char           EVP_MD;
 // "getauthtoken()" will be defined in whatever app links to
 // the nopoll websocket library for the purpose of talking
 // to the Currant backend:
-extern char *getauthtoken(void);
+extern const uint8 *getauthtoken(void);
 
 /* (vjc)..end of new declarations */
 

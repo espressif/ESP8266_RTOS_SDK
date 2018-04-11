@@ -240,7 +240,7 @@ char * __nopoll_conn_get_client_init (noPollConn * conn, noPollConnOpts * opts)
 	char key[50];
 	int  key_size = 50;
 	char nonce[17];
-	char *auth_token = getauthtoken();
+	const char *auth_token = getauthtoken();
 
 	/* get the nonce */
 	if (! nopoll_nonce (nonce, 16)) {
