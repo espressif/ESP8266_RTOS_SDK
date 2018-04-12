@@ -16,7 +16,6 @@
  *******************************************************************************/
 
 #include "lwip/netdb.h"
-#include "openssl/ssl.h"
 #include "MQTTFreeRTOS.h"
 
 int ThreadStart(Thread* thread, void (*fn)(void*), void* arg)
@@ -207,7 +206,7 @@ exit:
     return retVal;
 }
 
-
+#ifdef CONFIG_SSL_USING_MBEDTLS
 static int esp_ssl_read(Network* n, unsigned char* buffer, unsigned int len, unsigned int timeout_ms)
 {
     portTickType xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
@@ -444,3 +443,4 @@ exit1:
 exit:
     return retVal;
 }
+#endif
