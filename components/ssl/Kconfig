@@ -1,0 +1,17 @@
+menu "SSL"
+
+choice SSL_LIBRARY_CHOOSE
+    prompt "Choose SSL/TLS library"
+    default SSL_USING_MBEDTLS
+    help
+        Choose the SSL/TLS library which you want to use.
+
+        Currently we support mbedTLS and axTLS.
+
+config SSL_USING_MBEDTLS
+    bool "mbedTLS"
+config SSL_USING_AXTLS
+    bool "axTLS"
+endchoice
+
+endmenu
