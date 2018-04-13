@@ -1,13 +1,11 @@
-/******************************************************************************
- * Copyright 2013-2014 Espressif Systems (Wuxi)
- *
- * FileName: user_main.c
- *
- * Description: entry file of user application
- *
- * Modification history:
- *     2015/7/3, v1.0 create this file.
-*******************************************************************************/
+/* WPS example
+
+   This example code is in the Public Domain (or CC0 licensed, at your option.)
+
+   Unless required by applicable law or agreed to in writing, this
+   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+   CONDITIONS OF ANY KIND, either express or implied.
+*/
 
 #include "esp_common.h"
 #include <stdio.h>
