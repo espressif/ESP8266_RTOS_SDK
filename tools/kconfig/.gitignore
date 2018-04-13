@@ -1,0 +1,31 @@
+#
+# Generated files
+#
+config*
+*.d
+*.lex.c
+*.tab.c
+*.tab.h
+zconf.hash.c
+*.moc
+gconf.glade.h
+*.pot
+*.mo
+
+#
+# configuration programs
+#
+conf
+mconf
+nconf
+qconf
+gconf
+kxgettext
+
+# configuration programs, Windows
+conf.exe
+mconf.exe
+nconf.exe
+qconf.exe
+gconf.exe
+kxgettext.exe
