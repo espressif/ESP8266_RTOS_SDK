@@ -21,7 +21,9 @@
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 
+#ifdef CONFIG_SSL_USING_MBEDTLS
 #include "openssl/ssl.h"
+#endif
 
 typedef struct Timer {
     portTickType xTicksToWait;
@@ -37,8 +39,10 @@ struct Network {
     void (*disconnect)(Network*);
 
     int read_count;
+#ifdef CONFIG_SSL_USING_MBEDTLS
     SSL_CTX* ctx;
     SSL* ssl;
+#endif
 };
 
 void TimerInit(Timer*);
@@ -90,6 +94,7 @@ typedef struct ssl_ca_crt_key {
     unsigned int key_len;
 } ssl_ca_crt_key_t;
 
+#ifdef CONFIG_SSL_USING_MBEDTLS
 /**
  * @brief Initialize the network structure for SSL connection
  *
@@ -115,5 +120,7 @@ void NetworkInitSSL(Network* n);
 int NetworkConnectSSL(Network* n, char* addr, int port, ssl_ca_crt_key_t* ssl_cck, const SSL_METHOD* method, int verify_mode, unsigned int frag_len);
 
 /*int NetworkConnectTLS(Network*, char*, int, SlSockSecureFiles_t*, unsigned char, unsigned int, char);*/
+
+#endif
 
 #endif
