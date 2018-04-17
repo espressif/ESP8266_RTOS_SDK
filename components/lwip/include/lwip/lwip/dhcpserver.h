@@ -3,49 +3,51 @@
 
 #define USE_DNS
 
-typedef struct dhcps_state{
-        s16_t state;
+#include "esp_wifi.h"
+
+typedef struct dhcps_state {
+    s16_t state;
 } dhcps_state;
 
 // ����dhcpclient�Զ����һ��DHCP msg�ṹ��
 typedef struct dhcps_msg {
-        u8_t op, htype, hlen, hops;
-        u8_t xid[4];
-        u16_t secs, flags;
-        u8_t ciaddr[4];
-        u8_t yiaddr[4];
-        u8_t siaddr[4];
-        u8_t giaddr[4];
-        u8_t chaddr[16];
-        u8_t sname[64];
-        u8_t file[128];
-        u8_t options[312];
-}dhcps_msg;
+    u8_t op, htype, hlen, hops;
+    u8_t xid[4];
+    u16_t secs, flags;
+    u8_t ciaddr[4];
+    u8_t yiaddr[4];
+    u8_t siaddr[4];
+    u8_t giaddr[4];
+    u8_t chaddr[16];
+    u8_t sname[64];
+    u8_t file[128];
+    u8_t options[312];
+} dhcps_msg;
 
 #ifndef LWIP_OPEN_SRC
 struct dhcps_lease {
-	bool enable;
-	struct ip_addr start_ip;
-	struct ip_addr end_ip;
+    bool enable;
+    struct ip_addr start_ip;
+    struct ip_addr end_ip;
 };
 
-enum dhcps_offer_option{
-	OFFER_START = 0x00,
-	OFFER_ROUTER = 0x01,
-	OFFER_END
+enum dhcps_offer_option {
+    OFFER_START = 0x00,
+    OFFER_ROUTER = 0x01,
+    OFFER_END
 };
 #endif
 
-struct dhcps_pool{
-	struct ip_addr ip;
-	u8_t mac[6];
-	u32_t lease_timer;
+struct dhcps_pool {
+    struct ip_addr ip;
+    u8_t mac[6];
+    u32_t lease_timer;
 };
 
-typedef struct _list_node{
-	void *pnode;
-	struct _list_node *pnext;
-}list_node;
+typedef struct _list_node {
+    void* pnode;
+    struct _list_node* pnext;
+} list_node;
 
 extern u32_t dhcps_lease_time;
 #define DHCPS_COARSE_TIMER_SECS  1
@@ -53,7 +55,6 @@ extern u32_t dhcps_lease_time;
 #define DHCPS_MAX_LEASE 0x64
 #define BOOTP_BROADCAST 0x8000
 
-#define DHCP_REQUEST        1
 #define DHCP_REPLY          2
 #define DHCP_HTYPE_ETHERNET 1
 #define DHCP_HLEN_ETHERNET  6
@@ -96,7 +97,7 @@ extern u32_t dhcps_lease_time;
 
 #define   dhcps_router_enabled(offer)	((offer & OFFER_ROUTER) != 0)
 
-void dhcps_start(struct ip_info *info);
+void dhcps_start(struct ip_info* info);
 void dhcps_stop(void);
 
 #endif

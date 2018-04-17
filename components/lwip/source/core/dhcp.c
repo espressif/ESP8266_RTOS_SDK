@@ -1130,9 +1130,6 @@ dhcp_bind(struct netif *netif)
   /* bring the interface up */
   netif_set_up(netif);
 
-  // use old ip/mask/gw to check whether ip/mask/gw changed
-  system_station_got_ip_set(&ip, &mask, &gw);
-
   /* netif is now bound to DHCP leased address */
   dhcp_set_state(dhcp, DHCP_BOUND);
 }

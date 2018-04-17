@@ -357,8 +357,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
     p->len = p->tot_len = length;
     p->next = NULL;
     p->type = type;
-    p->eb = NULL;
-
+    
     LWIP_ASSERT("pbuf_alloc: pbuf->payload properly aligned",
            ((mem_ptr_t)p->payload % MEM_ALIGNMENT) == 0);
     break;
@@ -736,9 +735,6 @@ pbuf_free(struct pbuf *p)
               || type == PBUF_ESF_RX
 #endif //EBUF_LWIP
       ) {
-#ifdef EBUF_LWIP
-          system_pp_recycle_rx_pkt(p->eb);
-#endif //EBUF_LWIP
           memp_free(MEMP_PBUF, p);
         /* type == PBUF_RAM */
         } else {
