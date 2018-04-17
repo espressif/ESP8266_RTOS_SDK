@@ -118,9 +118,6 @@ struct pbuf {
    * the stack itself, or pbuf->next pointers from a chain.
    */
   u16_t ref;
-  
-  /* add a pointer for esf_buf */
-  void * eb; 
 };
 
 #if LWIP_SUPPORT_CUSTOM_PBUF
