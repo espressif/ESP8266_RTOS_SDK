@@ -162,7 +162,7 @@ void tcpip_adapter_stop(uint8_t netif_index)
         TCPIP_ATAPTER_LOG("ERROR bad netif index:%d\n", netif_index);
         return;
     }
-    if (esp_netif[netif_index == NULL])
+    if (esp_netif[netif_index] == NULL)
         return;
 
     if (netif_index == TCPIP_ADAPTER_IF_STA) {
