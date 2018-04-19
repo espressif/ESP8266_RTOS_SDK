@@ -137,6 +137,11 @@ void PendSV(char req)
     }
 }
 
+void HDL_MAC_SIG_IN_LV1_ISR(void)
+{
+    PendSV(2);
+}
+
 extern portBASE_TYPE MacIsrSigPostDefHdl(void);
 
 void SoftIsrHdl(void* arg)
