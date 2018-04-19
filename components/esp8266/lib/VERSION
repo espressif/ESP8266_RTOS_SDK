@@ -1,7 +1,7 @@
 gwen:
     crypto:     21b4121
     espnow:     21b4121
-    main:       21b4121
+    core:       0655d69
     minic:      21b4121
     net80211:   21b4121
     pp:         21b4121

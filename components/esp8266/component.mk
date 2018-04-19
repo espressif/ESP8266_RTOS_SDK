@@ -3,7 +3,7 @@
 #
 COMPONENT_ADD_INCLUDEDIRS += include
 COMPONENT_PRIV_INCLUDEDIRS := include/driver
-COMPONENT_SRCDIRS := driver
+COMPONENT_SRCDIRS := driver source
 
 LIBS ?=
 ifndef CONFIG_NO_BLOBS
