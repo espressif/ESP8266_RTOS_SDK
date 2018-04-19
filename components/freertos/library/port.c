@@ -315,3 +315,18 @@ uint16 _xt_isr_handler(uint16 i)
 
     return i & ~(1 << index);
 }
+
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+{
+    os_printf("task [%s] stask overflow\n", pcTaskName);
+}
+
+void __taskEXIT_CRITICAL(void)
+{
+    portEXIT_CRITICAL();
+}
+
+void __taskENTER_CRITICAL(void)
+{
+    portENTER_CRITICAL();
+}
