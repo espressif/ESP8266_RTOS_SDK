@@ -10,7 +10,6 @@
 */
     #include <xtensa/coreasm.h>
     #include <xtensa/config/specreg.h>
-    #include "xtos-internal.h"
 
     #include "freertos/xtensa_rtos.h"
 
@@ -22,6 +21,14 @@
 
 //    .section    .iram.text
     .section    .text
+
+    .macro  xtos_lock    ax
+    rsil    \ax,    XCHAL_EXCM_LEVEL
+    .endm
+
+    .macro  xtos_unlock    ax
+    wsr     \ax,    PS
+    .endm
 
 /*
 **********************************************************************************************************
