@@ -275,7 +275,7 @@ static int32_t rand_wrapper(void)
     return (int32_t)os_random();
 }
 
-wifi_osi_funcs_t g_wifi_osi_funcs = {
+wifi_osi_funcs_t s_wifi_osi_funcs = {
     .enter_critical = enter_critical_wrapper,
     .exit_critical = exit_critical_wrapper,
     
