@@ -98,7 +98,7 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
     if (netif_index == TCPIP_ADAPTER_IF_STA) {
         if (authed == 0) {
             if (esp_netif[netif_index] == NULL) {
-                esp_netif[netif_index] = (struct netif*)os_malloc(sizeof(*esp_netif[netif_index]));
+                esp_netif[netif_index] = (struct netif*)os_zalloc(sizeof(*esp_netif[netif_index]));
                 TCPIP_ATAPTER_LOG("Malloc netif:%d\n", netif_index);
                 TCPIP_ATAPTER_LOG("Add netif:%d\n", netif_index);
                 netif_add(esp_netif[netif_index], NULL, NULL, NULL, NULL, ethernetif_init, tcpip_input);
@@ -132,7 +132,7 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
 
         if (esp_netif[netif_index] == NULL) {
             TCPIP_ATAPTER_LOG("Malloc netif:%d\n", netif_index);
-            esp_netif[netif_index] = (struct netif*)os_malloc(sizeof(*esp_netif[netif_index]));
+            esp_netif[netif_index] = (struct netif*)os_zalloc(sizeof(*esp_netif[netif_index]));
             netif_add(esp_netif[netif_index], &esp_ip[TCPIP_ADAPTER_IF_AP].ip,
                       &esp_ip[TCPIP_ADAPTER_IF_AP].netmask, &esp_ip[TCPIP_ADAPTER_IF_AP].gw, NULL, ethernetif_init, tcpip_input);
         }
