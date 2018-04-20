@@ -22,8 +22,8 @@
 #include "esp_timer.h"
 
 #include "lwip/apps/sntp.h"
-#include "lwip/apps/time.h"
-#include "lwip/apps/sntp_time.h"
+#include "lwip/apps/sntp/time.h"
+#include "lwip/apps/sntp/sntp_time.h"
 
 static os_timer_t micros_overflow_timer;
 static uint32 micros_at_last_overflow_tick = 0;

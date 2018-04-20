@@ -42,7 +42,7 @@ extern "C" {
 #endif
 
 #include "esp_common.h"
-#include "lwip/apps/time.h"
+#include "lwip/apps/sntp/time.h"
 
 #if 0
 #define ssl_printf(fmt, args...) os_printf(fmt,## args)

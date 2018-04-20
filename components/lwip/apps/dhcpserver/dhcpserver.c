@@ -18,7 +18,7 @@
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
 #include "lwip/mem.h"
-#include "lwip/dhcpserver.h"
+#include "dhcpserver/dhcpserver.h"
 
 #ifndef LWIP_OPEN_SRC
 #include "net80211/ieee80211_var.h"

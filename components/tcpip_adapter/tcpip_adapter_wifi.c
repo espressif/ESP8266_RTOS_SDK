@@ -15,12 +15,12 @@
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
 #include "lwip/dhcp.h"
-#include "lwip/dhcpserver.h"
 #include "netif/etharp.h"
 #include "esp_wifi.h"
 #include "esp_timer.h"
 #include "esp_misc.h"
 #include "tcpip_adapter.h"
+#include "dhcpserver/dhcpserver.h"
 
 /* Avoid warning. No header file has include these function */
 err_t ethernetif_init(struct netif* netif);
