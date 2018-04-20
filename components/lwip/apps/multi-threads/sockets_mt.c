@@ -1,5 +1,9 @@
 
+#include "lwip/opt.h"
+
 #ifdef SOCKETS_MT
+
+#include "../../lwip/src/api/sockets.c"
 
 #ifndef LWIP_SYNC_MT_SLEEP_MS
 	#define LWIP_SYNC_MT_SLEEP_MS 10
