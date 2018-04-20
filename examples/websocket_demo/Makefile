@@ -70,7 +70,8 @@ LINKFLAGS_eagle.app.v6 =    \
     -lphy                   \
     -lpp                    \
     -lsmartconfig           \
-    -lssl                   \
+    -lopenssl               \
+    -lmbedtls               \
     -lwpa                   \
     $(DEP_LIBS_eagle.app.v6)\
     -Wl,--end-group
