@@ -5,7 +5,7 @@
  *      Author: LiuHan
  */
 #include "apps/sntp_opts.h"
-#include "apps/sntp_time.h"
+#include "lwip/apps/sntp/sntp_time.h"
 #include "esp_timer.h"
 
 static s8_t sntp_time_timezone = 8;

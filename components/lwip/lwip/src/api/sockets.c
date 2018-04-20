@@ -2706,6 +2706,4 @@ lwip_fcntl(int s, int cmd, int val)
   return ret;
 }
 
-#include "multi-threads/sockets_mt.c"
-
 #endif /* LWIP_SOCKET */

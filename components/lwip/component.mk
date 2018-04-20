@@ -1,9 +1,10 @@
 #
 # Component Makefile
 #
-COMPONENT_ADD_INCLUDEDIRS += include/lwip/ipv4 include/lwip/ipv6 include/lwip/posix include/lwip
+COMPONENT_ADD_INCLUDEDIRS += lwip/src/include lwip/src/include/lwip lwip/src/include/posix lwip/include/lwip \
+								include/lwip/apps include/lwip/port apps
 
-COMPONENT_SRCDIRS += source/api source/api/multi-threads source/apps source/arch \
-                     source/netif source/core source/core/ipv4 source/core/ipv6
+COMPONENT_SRCDIRS += lwip/src/api lwip/src/apps/sntp lwip/src/netif lwip/src/core lwip/src/core/ipv4 lwip/src/core/ipv6 \
+								port/freertos port/netif apps/dhcpserver apps/sntp apps/multi-threads
 
 CFLAGS += -D_POSIX_SOURCE -DLWIP_OPEN_SRC -DPBUF_RSV_FOR_WLAN -DEBUF_LWIP
