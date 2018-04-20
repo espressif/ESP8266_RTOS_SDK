@@ -137,6 +137,11 @@ void PendSV(char req)
     }
 }
 
+void HDL_MAC_SIG_IN_LV1_ISR(void)
+{
+    PendSV(2);
+}
+
 extern portBASE_TYPE MacIsrSigPostDefHdl(void);
 
 void SoftIsrHdl(void* arg)
@@ -309,4 +314,19 @@ uint16 _xt_isr_handler(uint16 i)
     _xt_isr_status = 0;
 
     return i & ~(1 << index);
+}
+
+void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+{
+    os_printf("task [%s] stask overflow\n", pcTaskName);
+}
+
+void __taskEXIT_CRITICAL(void)
+{
+    portEXIT_CRITICAL();
+}
+
+void __taskENTER_CRITICAL(void)
+{
+    portENTER_CRITICAL();
 }

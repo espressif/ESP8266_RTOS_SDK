@@ -117,8 +117,6 @@ extern void PendSV(char req);
 	if(xSwitchRequired) PendSV(1)
 #endif
 
-#define HDL_MAC_SIG_IN_LV1_ISR() PendSV(2)
-
 /* Task utilities. */
 #define portEND_SWITCHING_ISR( xSwitchRequired ) 	\
 {													\

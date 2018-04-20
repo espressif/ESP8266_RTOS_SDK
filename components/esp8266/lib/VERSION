@@ -1,11 +1,11 @@
 gwen:
-    crypto:     21b4121
-    espnow:     21b4121
-    core:       0655d69
-    minic:      21b4121
-    net80211:   21b4121
-    pp:         21b4121
-    pwm:        21b4121
+    crypto:     5fc5b4f
+    espnow:     5fc5b4f
+    core:       5fc5b4f
+    minic:      5fc5b4f
+    net80211:   5fc5b4f
+    pp:         5fc5b4f
+    pwm:        5fc5b4f
     smartconfig:9ec59b5
-    wpa:        21b4121
-    wps:        21b4121
+    wpa:        5fc5b4f
+    wps:        5fc5b4f
