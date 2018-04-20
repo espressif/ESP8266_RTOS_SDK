@@ -1,6 +1,6 @@
 /*
  *  TCP/IP or UDP/IP networking functions
- *  modified for LWIP support on ESP32
+ *  modified for LWIP support on ESP8266
  *
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
  *  Additions Copyright (C) 2015 Angus Gratton

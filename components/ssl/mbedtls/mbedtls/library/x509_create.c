@@ -30,7 +30,7 @@
 #include "mbedtls/x509.h"
 #include "mbedtls/asn1write.h"
 #include "mbedtls/oid.h"
-#include "c_types.h"
+
 #include <string.h>
 
 typedef struct {
