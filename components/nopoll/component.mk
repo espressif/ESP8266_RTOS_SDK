@@ -3,7 +3,7 @@
 #
 
 ifdef CONFIG_SSL_USING_MBEDTLS
-COMPONENT_ADD_INCLUDEDIRS += include/nopoll
+COMPONENT_ADD_INCLUDEDIRS += nopoll/src port/include
 
-COMPONENT_SRCDIRS := library
+COMPONENT_SRCDIRS := nopoll/src
 endif
