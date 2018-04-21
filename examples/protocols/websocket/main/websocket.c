@@ -36,7 +36,7 @@
  *      Email address:
  *         info@aspl.es - http://www.aspl.es/nopoll
  */
-#include <nopoll/nopoll.h>
+#include <nopoll.h>
 #include "esp_common.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
