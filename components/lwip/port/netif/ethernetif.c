@@ -18,7 +18,7 @@
 #include "esp_libc.h"
 #include "esp_wifi.h"
 #include "tcpip_adapter.h"
-
+#include "esp_socket.h"
 
 int8_t ieee80211_output_pbuf(uint8_t fd, uint8_t* dataptr, uint16_t datalen);
 int8_t wifi_get_netif(uint8_t fd);
@@ -54,6 +54,22 @@ static void low_level_init(struct netif* netif)
     /* Do whatever else is needed to initialize interface. */
 }
 
+/*
+ * @brief LWIP low-level AI/O sending callback function, it is to free pbuf
+ *
+ * @param aio AI/O control block pointer
+ *
+ * @return 0 meaning successs
+ */
+static int low_level_send_cb(esp_aio_t *aio)
+{
+    struct pbuf *pbuf = aio->arg;
+
+    pbuf_free(pbuf);
+
+    return 0;
+}
+
 /**
  * This function should do the actual transmission of the packet. The packet is
  * contained in the pbuf that is passed to the function. This pbuf
@@ -72,6 +88,7 @@ static void low_level_init(struct netif* netif)
 
 static int8_t low_level_output(struct netif* netif, struct pbuf* p)
 {
+    esp_aio_t aio;
     int8_t err = ERR_OK;
 
     if (netif == NULL) {
@@ -83,20 +100,20 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
     pbuf_header(p, -ETH_PAD_SIZE); /* drop the padding word */
 #endif
 
-    uint8_t* outputbuf = (uint8_t*)os_malloc(p->len + 36);
-    if (outputbuf == NULL) {
-        TCPIP_ATAPTER_LOG("ERROR no memory\n");
-        return ERR_MEM;
-    }
+    pbuf_ref(p);
 
-    outputbuf += 36;
-    memcpy(outputbuf, p->payload, p->len);
+    aio.fd = (int)netif->state;
+    aio.pbuf = p->payload;
+    aio.len = p->len;
+    aio.cb = low_level_send_cb;
+    aio.arg = p;
+    aio.ret = 0;
 
-    if (netif == esp_netif[TCPIP_ADAPTER_IF_STA]) {
-        err = ieee80211_output_pbuf(TCPIP_ADAPTER_IF_STA, outputbuf, p->len);
-    } else {
-        err = ieee80211_output_pbuf(TCPIP_ADAPTER_IF_AP, outputbuf, p->len);
-    }
+    /*
+     * we use "SOCK_RAW" to create socket, so all input/output datas include full ethernet
+     * header, meaning we should not pass target low-level address here.
+     */
+    err = esp_aio_sendto(&aio, NULL, 0);
 
     if (err == ERR_MEM) {
         err = ERR_OK;

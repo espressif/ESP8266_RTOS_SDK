@@ -21,6 +21,16 @@
 #include "esp_misc.h"
 #include "tcpip_adapter.h"
 #include "dhcpserver/dhcpserver.h"
+#include "net/sockio.h"
+#include "esp_socket.h"
+
+struct tcpip_adapter_pbuf {
+    struct pbuf_custom  pbuf;
+
+    void                *base;
+
+    struct netif        *netif;
+};
 
 /* Avoid warning. No header file has include these function */
 err_t ethernetif_init(struct netif* netif);
@@ -86,6 +96,90 @@ static void tcpip_adapter_station_dhcp_start()
     }
 }
 
+/*
+ * @brief LWIP custom pbuf callback function, it is to free custom pbuf
+ *
+ * @param p LWIP pbuf pointer
+ *
+ * @return none
+ */
+static void tcpip_adapter_free_pbuf(struct pbuf *p)
+{
+    struct tcpip_adapter_pbuf *pa = (struct tcpip_adapter_pbuf *)p;
+    int s = (int)pa->netif->state;
+
+    esp_free_pbuf(s, pa->base);
+    os_free(pa);
+}
+
+/*
+ * @brief TCPIP adapter AI/O recieve callback function, it is to recieve input data
+ *        and pass it to LWIP core
+ *
+ * @param aio AI/O control block pointer
+ *
+ * @return 0 if success or others if failed
+ */
+static int tcpip_adapter_recv_cb(struct esp_aio *aio)
+{
+    struct pbuf *pbuf = NULL;
+    struct tcpip_adapter_pbuf *p;
+    struct netif *netif = (struct netif *)aio->arg;
+
+    extern void ethernetif_input(struct netif *netif, struct pbuf *p);
+
+    p = os_malloc(sizeof(struct tcpip_adapter_pbuf));
+    if (!p)
+        return -ENOMEM;
+    p->pbuf.custom_free_function = tcpip_adapter_free_pbuf;
+    p->base = (void *)aio->pbuf;
+    p->netif = netif;
+
+    // PBUF_RAW means payload = (char *)aio->pbuf + offset(=0)
+    pbuf = pbuf_alloced_custom(PBUF_RAW, aio->len, PBUF_REF, &p->pbuf, (void *)aio->pbuf, aio->len);
+    if (!pbuf)
+        return -ENOMEM;
+
+    ethernetif_input(netif, pbuf);
+
+    return 0;
+}
+
+/*
+ * @brief create a "esp_socket" and bind it to target net card
+ *
+ * @param name net card name pointer
+ * @param netif LWIP net interface pointer
+ *
+ * @return 0 if success or others if failed
+ */
+static int tcpip_adapter_bind_netcard(const char *name, struct netif *netif)
+{
+    int s, ret;
+
+    s = esp_socket(AF_PACKET, SOCK_RAW, ETH_P_ALL);
+    if (s < 0) {
+        TCPIP_ATAPTER_LOG("create socket of (AF_PACKET, SOCK_RAW, ETH_P_ALL) error\n");
+        return -1;
+    }
+
+    ret = esp_ioctl(s, SIOCGIFINDEX, name);
+    if (ret) {
+        TCPIP_ATAPTER_LOG("bind socket %d to netcard %s error\n", s, name);
+        esp_close(s);
+        return -1;
+    }
+
+    ret = esp_aio_event(s, ESP_SOCKET_RECV_EVENT, tcpip_adapter_recv_cb, netif);
+    if (ret) {
+        TCPIP_ATAPTER_LOG("socket %d register receive callback function %p error\n", s, tcpip_adapter_recv_cb);
+        esp_close(s);
+        return -1;
+    }
+
+    return s;
+}
+
 void tcpip_adapter_start(uint8_t netif_index, bool authed)
 {
     if (!TCPIP_ADAPTER_IF_VALID(netif_index)) {
@@ -98,10 +192,20 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
     if (netif_index == TCPIP_ADAPTER_IF_STA) {
         if (authed == 0) {
             if (esp_netif[netif_index] == NULL) {
+                int s;
+                const char *netcard_name = "sta0";
+
                 esp_netif[netif_index] = (struct netif*)os_zalloc(sizeof(*esp_netif[netif_index]));
                 TCPIP_ATAPTER_LOG("Malloc netif:%d\n", netif_index);
                 TCPIP_ATAPTER_LOG("Add netif:%d\n", netif_index);
-                netif_add(esp_netif[netif_index], NULL, NULL, NULL, NULL, ethernetif_init, tcpip_input);
+
+                s = tcpip_adapter_bind_netcard(netcard_name, esp_netif[netif_index]);
+                if (s < 0) {
+                    TCPIP_ATAPTER_LOG("TCPIP adapter bind net card %s error\n", netcard_name);
+                    return ;
+                }
+
+                netif_add(esp_netif[netif_index], NULL, NULL, NULL, (void *)s, ethernetif_init, tcpip_input);
             }
         } else {
             if ((esp_netif[netif_index]->flags & NETIF_FLAG_DHCP) == 0) {
@@ -131,10 +235,20 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
         }
 
         if (esp_netif[netif_index] == NULL) {
+            int s;
+            const char *netcard_name = "ap0";
+
             TCPIP_ATAPTER_LOG("Malloc netif:%d\n", netif_index);
             esp_netif[netif_index] = (struct netif*)os_zalloc(sizeof(*esp_netif[netif_index]));
+
+            s = tcpip_adapter_bind_netcard(netcard_name, esp_netif[netif_index]);
+            if (s < 0) {
+                TCPIP_ATAPTER_LOG("TCPIP adapter bind net card %s error\n", netcard_name);
+                return ;
+            }
+
             netif_add(esp_netif[netif_index], &esp_ip[TCPIP_ADAPTER_IF_AP].ip,
-                      &esp_ip[TCPIP_ADAPTER_IF_AP].netmask, &esp_ip[TCPIP_ADAPTER_IF_AP].gw, NULL, ethernetif_init, tcpip_input);
+                      &esp_ip[TCPIP_ADAPTER_IF_AP].netmask, &esp_ip[TCPIP_ADAPTER_IF_AP].gw, (void *)s, ethernetif_init, tcpip_input);
         }
 
         if (dhcps_flag) {
