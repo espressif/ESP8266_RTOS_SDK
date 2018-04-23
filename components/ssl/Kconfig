@@ -12,6 +12,8 @@ config SSL_USING_MBEDTLS
     bool "mbedTLS"
 config SSL_USING_AXTLS
     bool "axTLS"
+config SSL_USING_WOLFSSL
+    bool "wolfSSL"
 endchoice
 
 endmenu
