@@ -292,6 +292,7 @@ void tcpip_adapter_stop(uint8_t netif_index)
     }
 
     TCPIP_ATAPTER_LOG("stop netif[%d]\n", netif_index);
+    esp_close((int)esp_netif[netif_index]->state);
     netif_remove(esp_netif[netif_index]);
     os_free(esp_netif[netif_index]);
     esp_netif[netif_index] = NULL;
