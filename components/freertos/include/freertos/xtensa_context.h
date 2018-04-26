@@ -77,6 +77,7 @@ space to help manage the spilling of the register windows.
 #define XT_STK_A14              0x44    /* Call0 callee-save */
 #define XT_STK_A15              0x48    /* Call0 callee-save */
 #define XT_STK_SAR              0x4C
+#define XT_STK_EXCCAUSE         0x50
 
 #if XCHAL_HAVE_LOOPS
 #define XT_STK_LBEG             0x50

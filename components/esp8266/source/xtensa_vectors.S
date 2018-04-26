@@ -122,6 +122,9 @@ STRUCT_END(HighPriFrame)
 #define PRI_N_STACK_SIZE     512    /* default to 1 kB stack for each level-N handling */
 #define PRI_N_STACK_SIZE2    256    /* default to 1 kB stack for each level-N handling */
 
+#define PANIC_STK_FRMSZ      0x60
+
+    .global panicHandler
 
     //  Allocate save area and stack:
     //  (must use .bss, not .comm, because the subsequent .set does not work otherwise)
@@ -669,6 +672,8 @@ Double exceptions are not a normal occurrence. They indicate a bug of some kind.
     .align      4
     .literal_position
 _DoubleExceptionVector:
+    wsr     a0, EXCSAVE_1
+    j       _xt_ext_panic
 
     #if XCHAL_HAVE_DEBUG
     break   1, 4                            /* unhandled double exception */
@@ -692,9 +697,9 @@ Kernel Exception (including Level 1 Interrupt from kernel mode).
     .align      4
     .literal_position
 _KernelExceptionVector:
-
     wsr     a0, EXCSAVE_1                   /* preserve a0 */
-    call0   _xt_kernel_exc                  /* kernel exception handler */
+    j       _xt_ext_panic
+
     /* never returns here - call0 is used as a jump (see note at top) */
 
     .end        literal_prefix
@@ -768,7 +773,11 @@ _xt_user_exc:
     #endif
     beqi    a0, EXCCAUSE_SYSCALL, _xt_to_syscall_exc
     beqi    a0, EXCCAUSE_LOAD_STORE_ERROR, LoadStoreErrorHandler
+    beqi    a0, EXCCAUSE_LEVEL1INTERRUPT, _xt_user_entry1
 
+    j   _xt_ext_panic
+
+_xt_user_entry1:
     /* Allocate interrupt stack frame and save minimal context. */
     mov     a0, sp                          /* sp == a1 */
     addi    sp, sp, -XT_STK_FRMSZ           /* allocate interrupt stack frame */
@@ -1395,3 +1404,41 @@ nmi_rfi:
     rfi     XCHAL_NMILEVEL
 #endif
 #endif  /* NMI */
+
+    .global     _xt_ext_panic
+    .type       _xt_ext_panic, @function
+    .align      4
+    .literal_position
+_xt_ext_panic:
+    /* Allocate exception frame and save minimal context. */
+    mov     a0, sp
+    addi    sp, sp, -XT_STK_FRMSZ
+    s32i    a0, sp, XT_STK_A1
+
+    rsr     a0, PS                          /* save interruptee's PS */
+    s32i    a0, sp, XT_STK_PS
+    rsr     a0, EPC_1                       /* save interruptee's PC */
+    s32i    a0, sp, XT_STK_PC
+
+    s32i    a12, sp, XT_STK_A12             /* _xt_context_save requires A12- */
+    s32i    a13, sp, XT_STK_A13             /* A13 to have already been saved */
+    s32i    a14, sp, XT_STK_A14             
+    s32i    a15, sp, XT_STK_A15             
+    call0   _xt_context_save
+
+    /* Save exc cause and vaddr into exception frame */
+    rsr     a0, EXCCAUSE
+    s32i    a0, sp, XT_STK_EXCCAUSE
+
+    /* _xt_context_save seems to save the current a0, but we need the interuptees a0. Fix this. */
+    rsr     a0, EXCSAVE_1                   /* save interruptee's a0 */
+
+    s32i    a0, sp, XT_STK_A0
+
+    /* Set up PS for C, disable all interrupts except NMI and debug, and clear EXCM. */
+    movi    a0, PS_INTLEVEL(5) | PS_UM | PS_WOE
+    wsr     a0, PS
+
+    //Call panic handler
+    mov     a2, sp
+    call0   panicHandler
