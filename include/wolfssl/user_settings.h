@@ -48,6 +48,7 @@
 #define FREERTOS
 #define WOLFSSL_TYPES
 #define NO_FILESYSTEM
+#define WOLFSSL_ALT_CERT_CHAINS
 
 #ifdef WOLFSSL_TYPES
     #ifndef byte
