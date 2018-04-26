@@ -70,6 +70,43 @@ static int low_level_send_cb(esp_aio_t *aio)
     return 0;
 }
 
+/*
+ * @brief transform custom pbuf to LWIP core pbuf, LWIP may use input custom pbuf
+ *        to send ARP data directly
+ *
+ * @param pbuf LWIP pbuf pointer
+ *
+ * @return LWIP pbuf pointer which it not "PBUF_FLAG_IS_CUSTOM" attribute
+ */
+static inline struct pbuf *ethernetif_transform_pbuf(struct pbuf *pbuf)
+{
+    struct pbuf *p;
+
+    if (!(pbuf->flags & PBUF_FLAG_IS_CUSTOM)) {
+        /*
+         * Add ref to pbuf to avoid it to be freed by upper layer.
+         */
+        pbuf_ref(pbuf);
+        return pbuf;
+    }
+
+    p = pbuf_alloc(PBUF_RAW, pbuf->len, PBUF_RAM);
+    if (!p)
+        return NULL;
+
+    memcpy(p->payload, pbuf->payload, pbuf->len);
+
+    /*
+     * The input pbuf(named "pbuf") should not be freed, becasue it will be
+     * freed by upper layer.
+     * 
+     * The output pbuf(named "p") should not be freed either, becasue it will
+     * be freed at callback function "low_level_send_cb".
+     */
+
+    return p;
+}
+
 /**
  * This function should do the actual transmission of the packet. The packet is
  * contained in the pbuf that is passed to the function. This pbuf
@@ -100,7 +137,9 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
     pbuf_header(p, -ETH_PAD_SIZE); /* drop the padding word */
 #endif
 
-    pbuf_ref(p);
+    p = ethernetif_transform_pbuf(p);
+    if (!p)
+        return ERR_OK;
 
     aio.fd = (int)netif->state;
     aio.pbuf = p->payload;
