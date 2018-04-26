@@ -39,8 +39,8 @@
  * <delamer@inicotech.com>
  */
 
-#ifndef __LWIP_ETHIP6_H__
-#define __LWIP_ETHIP6_H__
+#ifndef LWIP_HDR_ETHIP6_H
+#define LWIP_HDR_ETHIP6_H
 
 #include "lwip/opt.h"
 
@@ -57,7 +57,7 @@ extern "C" {
 #endif
 
 
-err_t ethip6_output(struct netif *netif, struct pbuf *q, ip6_addr_t *ip6addr);
+err_t ethip6_output(struct netif *netif, struct pbuf *q, const ip6_addr_t *ip6addr);
 
 #ifdef __cplusplus
 }
@@ -65,4 +65,4 @@ err_t ethip6_output(struct netif *netif, struct pbuf *q, ip6_addr_t *ip6addr);
 
 #endif /* LWIP_IPV6 && LWIP_ETHERNET */
 
-#endif /* __LWIP_ETHIP6_H__ */
+#endif /* LWIP_HDR_ETHIP6_H */

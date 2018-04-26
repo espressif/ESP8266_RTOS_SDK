@@ -1,151 +1,171 @@
-/*****************************************************************************
-* lcp.h - Network Link Control Protocol header file.
-*
-* Copyright (c) 2003 by Marc Boucher, Services Informatiques (MBSI) inc.
-* portions Copyright (c) 1997 Global Election Systems Inc.
-*
-* The authors hereby grant permission to use, copy, modify, distribute,
-* and license this software and its documentation for any purpose, provided
-* that existing copyright notices are retained in all copies and that this
-* notice and the following disclaimer are included verbatim in any 
-* distributions. No written agreement, license, or royalty fee is required
-* for any of the authorized uses.
-*
-* THIS SOFTWARE IS PROVIDED BY THE CONTRIBUTORS *AS IS* AND ANY EXPRESS OR
-* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-* OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-* IN NO EVENT SHALL THE CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-* NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-* DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-* THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-* THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*
-******************************************************************************
-* REVISION HISTORY
-*
-* 03-01-01 Marc Boucher <marc@mbsi.ca>
-*   Ported to lwIP.
-* 97-11-05 Guy Lancaster <glanca@gesn.com>, Global Election Systems Inc.
-*   Original derived from BSD codes.
-*****************************************************************************/
 /*
  * lcp.h - Link Control Protocol definitions.
  *
- * Copyright (c) 1989 Carnegie Mellon University.
- * All rights reserved.
+ * Copyright (c) 1984-2000 Carnegie Mellon University. All rights reserved.
  *
- * Redistribution and use in source and binary forms are permitted
- * provided that the above copyright notice and this paragraph are
- * duplicated in all such forms and that any documentation,
- * advertising materials, and other materials related to such
- * distribution and use acknowledge that the software was developed
- * by Carnegie Mellon University.  The name of the
- * University may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
- * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- * $Id: lcp.h,v 1.4 2010/01/18 20:49:43 goldsimon Exp $
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * 3. The name "Carnegie Mellon University" must not be used to
+ *    endorse or promote products derived from this software without
+ *    prior written permission. For permission or any legal
+ *    details, please contact
+ *      Office of Technology Transfer
+ *      Carnegie Mellon University
+ *      5000 Forbes Avenue
+ *      Pittsburgh, PA  15213-3890
+ *      (412) 268-4387, fax: (412) 268-7395
+ *      tech-transfer@andrew.cmu.edu
+ *
+ * 4. Redistributions of any form whatsoever must retain the following
+ *    acknowledgment:
+ *    "This product includes software developed by Computing Services
+ *     at Carnegie Mellon University (http://www.cmu.edu/computing/)."
+ *
+ * CARNEGIE MELLON UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO
+ * THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS, IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY BE LIABLE
+ * FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
+ * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+ * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * $Id: lcp.h,v 1.20 2004/11/14 22:53:42 carlsonj Exp $
  */
 
+#include "netif/ppp/ppp_opts.h"
+#if PPP_SUPPORT /* don't build if not configured for use in lwipopts.h */
+
 #ifndef LCP_H
-#define LCP_H
+#define	LCP_H
+
+#include "ppp.h"
+
 /*
  * Options.
  */
-#define CI_MRU           1  /* Maximum Receive Unit */
-#define CI_ASYNCMAP      2  /* Async Control Character Map */
-#define CI_AUTHTYPE      3  /* Authentication Type */
-#define CI_QUALITY       4  /* Quality Protocol */
-#define CI_MAGICNUMBER   5  /* Magic Number */
-#define CI_PCOMPRESSION  7  /* Protocol Field Compression */
-#define CI_ACCOMPRESSION 8  /* Address/Control Field Compression */
-#define CI_CALLBACK      13 /* callback */
-#define CI_MRRU          17 /* max reconstructed receive unit; multilink */
-#define CI_SSNHF         18 /* short sequence numbers for multilink */
-#define CI_EPDISC        19 /* endpoint discriminator */
+#define CI_VENDOR	0	/* Vendor Specific */
+#define CI_MRU		1	/* Maximum Receive Unit */
+#define CI_ASYNCMAP	2	/* Async Control Character Map */
+#define CI_AUTHTYPE	3	/* Authentication Type */
+#define CI_QUALITY	4	/* Quality Protocol */
+#define CI_MAGICNUMBER	5	/* Magic Number */
+#define CI_PCOMPRESSION	7	/* Protocol Field Compression */
+#define CI_ACCOMPRESSION 8	/* Address/Control Field Compression */
+#define CI_FCSALTERN	9	/* FCS-Alternatives */
+#define CI_SDP		10	/* Self-Describing-Pad */
+#define CI_NUMBERED	11	/* Numbered-Mode */
+#define CI_CALLBACK	13	/* callback */
+#define CI_MRRU		17	/* max reconstructed receive unit; multilink */
+#define CI_SSNHF	18	/* short sequence numbers for multilink */
+#define CI_EPDISC	19	/* endpoint discriminator */
+#define CI_MPPLUS	22	/* Multi-Link-Plus-Procedure */
+#define CI_LDISC	23	/* Link-Discriminator */
+#define CI_LCPAUTH	24	/* LCP Authentication */
+#define CI_COBS		25	/* Consistent Overhead Byte Stuffing */
+#define CI_PREFELIS	26	/* Prefix Elision */
+#define CI_MPHDRFMT	27	/* MP Header Format */
+#define CI_I18N		28	/* Internationalization */
+#define CI_SDL		29	/* Simple Data Link */
 
 /*
  * LCP-specific packet types (code numbers).
  */
-#define PROTREJ          8  /* Protocol Reject */
-#define ECHOREQ          9  /* Echo Request */
-#define ECHOREP          10 /* Echo Reply */
-#define DISCREQ          11 /* Discard Request */
-#define CBCP_OPT         6  /* Use callback control protocol */
+#define PROTREJ		8	/* Protocol Reject */
+#define ECHOREQ		9	/* Echo Request */
+#define ECHOREP		10	/* Echo Reply */
+#define DISCREQ		11	/* Discard Request */
+#define IDENTIF		12	/* Identification */
+#define TIMEREM		13	/* Time Remaining */
+
+/* Value used as data for CI_CALLBACK option */
+#define CBCP_OPT	6	/* Use callback control protocol */
+
+#if 0 /* moved to ppp_opts.h */
+#define DEFMRU	1500		/* Try for this */
+#define MINMRU	128		/* No MRUs below this */
+#define MAXMRU	16384		/* Normally limit MRU to this */
+#endif /* moved to ppp_opts.h */
+
+/* An endpoint discriminator, used with multilink. */
+#define MAX_ENDP_LEN	20	/* maximum length of discriminator value */
+struct epdisc {
+    unsigned char	class_; /* -- The word "class" is reserved in C++. */
+    unsigned char	length;
+    unsigned char	value[MAX_ENDP_LEN];
+};
 
 /*
  * The state of options is described by an lcp_options structure.
  */
 typedef struct lcp_options {
-    u_int passive           : 1; /* Don't die if we don't get a response */
-    u_int silent            : 1; /* Wait for the other end to start first */
-    u_int restart           : 1; /* Restart vs. exit after close */
-    u_int neg_mru           : 1; /* Negotiate the MRU? */
-    u_int neg_asyncmap      : 1; /* Negotiate the async map? */
-    u_int neg_upap          : 1; /* Ask for UPAP authentication? */
-    u_int neg_chap          : 1; /* Ask for CHAP authentication? */
-    u_int neg_magicnumber   : 1; /* Ask for magic number? */
-    u_int neg_pcompression  : 1; /* HDLC Protocol Field Compression? */
-    u_int neg_accompression : 1; /* HDLC Address/Control Field Compression? */
-    u_int neg_lqr           : 1; /* Negotiate use of Link Quality Reports */
-    u_int neg_cbcp          : 1; /* Negotiate use of CBCP */
-#ifdef PPP_MULTILINK
-    u_int neg_mrru          : 1; /* Negotiate multilink MRRU */
-    u_int neg_ssnhf         : 1; /* Negotiate short sequence numbers */
-    u_int neg_endpoint      : 1; /* Negotiate endpoint discriminator */
-#endif
-    u_short mru;                 /* Value of MRU */
-#ifdef PPP_MULTILINK
-    u_short mrru;                /* Value of MRRU, and multilink enable */
-#endif
-    u_char chap_mdtype;          /* which MD type (hashing algorithm) */
-    u32_t asyncmap;              /* Value of async map */
+    unsigned int passive           :1; /* Don't die if we don't get a response */
+    unsigned int silent            :1; /* Wait for the other end to start first */
+#if 0 /* UNUSED */
+    unsigned int restart           :1; /* Restart vs. exit after close */
+#endif /* UNUSED */
+    unsigned int neg_mru           :1; /* Negotiate the MRU? */
+    unsigned int neg_asyncmap      :1; /* Negotiate the async map? */
+#if PAP_SUPPORT
+    unsigned int neg_upap          :1; /* Ask for UPAP authentication? */
+#endif /* PAP_SUPPORT */
+#if CHAP_SUPPORT
+    unsigned int neg_chap          :1; /* Ask for CHAP authentication? */
+#endif /* CHAP_SUPPORT */
+#if EAP_SUPPORT
+    unsigned int neg_eap           :1; /* Ask for EAP authentication? */
+#endif /* EAP_SUPPORT */
+    unsigned int neg_magicnumber   :1; /* Ask for magic number? */
+    unsigned int neg_pcompression  :1; /* HDLC Protocol Field Compression? */
+    unsigned int neg_accompression :1; /* HDLC Address/Control Field Compression? */
+#if LQR_SUPPORT
+    unsigned int neg_lqr           :1; /* Negotiate use of Link Quality Reports */
+#endif /* LQR_SUPPORT */
+    unsigned int neg_cbcp          :1; /* Negotiate use of CBCP */
+#ifdef HAVE_MULTILINK
+    unsigned int neg_mrru          :1; /* negotiate multilink MRRU */
+#endif /* HAVE_MULTILINK */
+    unsigned int neg_ssnhf         :1; /* negotiate short sequence numbers */
+    unsigned int neg_endpoint      :1; /* negotiate endpoint discriminator */
+
+    u16_t mru;			/* Value of MRU */
+#ifdef HAVE_MULTILINK
+    u16_t mrru;			/* Value of MRRU, and multilink enable */
+#endif /* MULTILINK */
+#if CHAP_SUPPORT
+    u8_t chap_mdtype;		/* which MD types (hashing algorithm) */
+#endif /* CHAP_SUPPORT */
+    u32_t asyncmap;		/* Value of async map */
     u32_t magicnumber;
-    int numloops;                /* Number of loops during magic number neg. */
-    u32_t lqr_period;            /* Reporting period for LQR 1/100ths second */
-#ifdef PPP_MULTILINK
-    struct epdisc endpoint;      /* endpoint discriminator */
-#endif
+    u8_t  numloops;		/* Number of loops during magic number neg. */
+#if LQR_SUPPORT
+    u32_t lqr_period;	/* Reporting period for LQR 1/100ths second */
+#endif /* LQR_SUPPORT */
+    struct epdisc endpoint;	/* endpoint discriminator */
 } lcp_options;
 
-/*
- * Values for phase from BSD pppd.h based on RFC 1661.
- */
-typedef enum {
-  PHASE_DEAD = 0,
-  PHASE_INITIALIZE,
-  PHASE_ESTABLISH,
-  PHASE_AUTHENTICATE,
-  PHASE_CALLBACK,
-  PHASE_NETWORK,
-  PHASE_TERMINATE
-} LinkPhase;
+void lcp_open(ppp_pcb *pcb);
+void lcp_close(ppp_pcb *pcb, const char *reason);
+void lcp_lowerup(ppp_pcb *pcb);
+void lcp_lowerdown(ppp_pcb *pcb);
+void lcp_sprotrej(ppp_pcb *pcb, u_char *p, int len);    /* send protocol reject */
 
+extern const struct protent lcp_protent;
 
-
-extern LinkPhase lcp_phase[NUM_PPP]; /* Phase of link session (RFC 1661) */
-extern lcp_options lcp_wantoptions[];
-extern lcp_options lcp_gotoptions[];
-extern lcp_options lcp_allowoptions[];
-extern lcp_options lcp_hisoptions[];
-extern ext_accm xmit_accm[];
-
-
-void lcp_init     (int);
-void lcp_open     (int);
-void lcp_close    (int, char *);
-void lcp_lowerup  (int);
-void lcp_lowerdown(int);
-void lcp_sprotrej (int, u_char *, int); /* send protocol reject */
-
-extern struct protent lcp_protent;
-
+#if 0 /* moved to ppp_opts.h */
 /* Default number of times we receive our magic number from the peer
    before deciding the link is looped-back. */
-#define DEFLOOPBACKFAIL 10
+#define DEFLOOPBACKFAIL	10
+#endif /* moved to ppp_opts.h */
 
 #endif /* LCP_H */
+#endif /* PPP_SUPPORT */

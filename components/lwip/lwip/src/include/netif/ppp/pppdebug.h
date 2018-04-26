@@ -33,6 +33,10 @@
 *
 *****************************************************************************
 */
+
+#include "netif/ppp/ppp_opts.h"
+#if PPP_SUPPORT /* don't build if not configured for use in lwipopts.h */
+
 #ifndef PPPDEBUG_H
 #define PPPDEBUG_H
 
@@ -45,29 +49,32 @@
 #define LOG_DETAIL    (PPP_DEBUG)
 #define LOG_DEBUG     (PPP_DEBUG)
 
-
-#define TRACELCP PPP_DEBUG
-
 #if PPP_DEBUG
 
-#define AUTHDEBUG(a, b) LWIP_DEBUGF(a, b)
-#define IPCPDEBUG(a, b) LWIP_DEBUGF(a, b)
-#define UPAPDEBUG(a, b) LWIP_DEBUGF(a, b)
-#define LCPDEBUG(a, b)  LWIP_DEBUGF(a, b)
-#define FSMDEBUG(a, b)  LWIP_DEBUGF(a, b)
-#define CHAPDEBUG(a, b) LWIP_DEBUGF(a, b)
+#define MAINDEBUG(a)    LWIP_DEBUGF(LWIP_DBG_LEVEL_WARNING, a)
+#define SYSDEBUG(a)     LWIP_DEBUGF(LWIP_DBG_LEVEL_WARNING, a)
+#define FSMDEBUG(a)     LWIP_DEBUGF(LWIP_DBG_LEVEL_WARNING, a)
+#define LCPDEBUG(a)     LWIP_DEBUGF(LWIP_DBG_LEVEL_WARNING, a)
+#define IPCPDEBUG(a)    LWIP_DEBUGF(LWIP_DBG_LEVEL_WARNING, a)
+#define IPV6CPDEBUG(a)  LWIP_DEBUGF(LWIP_DBG_LEVEL_WARNING, a)
+#define UPAPDEBUG(a)    LWIP_DEBUGF(LWIP_DBG_LEVEL_WARNING, a)
+#define CHAPDEBUG(a)    LWIP_DEBUGF(LWIP_DBG_LEVEL_WARNING, a)
 #define PPPDEBUG(a, b)  LWIP_DEBUGF(a, b)
 
 #else /* PPP_DEBUG */
 
-#define AUTHDEBUG(a, b)
-#define IPCPDEBUG(a, b)
-#define UPAPDEBUG(a, b)
-#define LCPDEBUG(a, b)
-#define FSMDEBUG(a, b)
-#define CHAPDEBUG(a, b)
+#define MAINDEBUG(a)
+#define SYSDEBUG(a)
+#define FSMDEBUG(a)
+#define LCPDEBUG(a)
+#define IPCPDEBUG(a)
+#define IPV6CPDEBUG(a)
+#define UPAPDEBUG(a)
+#define CHAPDEBUG(a)
 #define PPPDEBUG(a, b)
 
 #endif /* PPP_DEBUG */
 
 #endif /* PPPDEBUG_H */
+
+#endif /* PPP_SUPPORT */
