@@ -7,6 +7,8 @@
 - Version: 1.7.6
 
 ## freeRTOS
+- Source: https://github.com/aws/amazon-freertos
+- Version: 1.2.3(10.0.1)
 
 ## Lwip
 

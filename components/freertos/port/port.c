@@ -73,6 +73,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 #include "freertos/xtensa_rtos.h"
 
 #define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
@@ -176,6 +177,16 @@ void xPortSysTickHandle(void)
 portBASE_TYPE ICACHE_FLASH_ATTR
 xPortStartScheduler(void)
 {
+    /*
+     * TAG 1.2.3 FreeRTOS call "portDISABLE_INTERRUPTS" at file tasks.c line 1973, this is not at old one.
+     * This makes it to be a wrong value.
+     * 
+     * So we should initialize global value "cpu_sr" with a right value.
+     * 
+     * Todo: Remove this one when refactor startup function.
+     */
+    cpu_sr = 0x20;
+
     /*******software isr*********/
     _xt_isr_attach(ETS_SOFT_INUM, SoftIsrHdl, NULL);
     _xt_isr_unmask(1 << ETS_SOFT_INUM);
@@ -329,4 +340,26 @@ void __taskEXIT_CRITICAL(void)
 void __taskENTER_CRITICAL(void)
 {
     portENTER_CRITICAL();
+}
+
+signed portBASE_TYPE xTaskGenericCreate(TaskFunction_t pxTaskCode,
+                                        const signed char * const pcName,
+                                        unsigned short usStackDepth,
+                                        void *pvParameters,
+                                        unsigned portBASE_TYPE uxPriority,
+                                        TaskHandle_t *pxCreatedTask,
+                                        portSTACK_TYPE *puxStackBuffer,
+                                        const MemoryRegion_t * const xRegions)
+{
+    (void)puxStackBuffer;
+    (void)xRegions;
+    return xTaskCreate(pxTaskCode, (const char * const)pcName, usStackDepth,
+                       pvParameters, uxPriority, pxCreatedTask);
+}
+
+BaseType_t xQueueGenericReceive(QueueHandle_t xQueue, void * const pvBuffer,
+                                TickType_t xTicksToWait, const BaseType_t xJustPeeking)
+{
+    configASSERT(xJustPeeking == 0);
+    return xQueueReceive(xQueue, pvBuffer, xTicksToWait);
 }

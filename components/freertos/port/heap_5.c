@@ -147,14 +147,6 @@ typedef struct A_BLOCK_LINK
 #endif
 } BlockLink_t;
 
-
-/* Used by heap_5.c. */
-typedef struct HeapRegion
-{
-	uint8_t *pucStartAddress;
-	size_t xSizeInBytes;
-} HeapRegion_t;
-
 /*-----------------------------------------------------------*/
 
 /*
