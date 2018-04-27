@@ -298,26 +298,6 @@ void tcpip_adapter_stop(uint8_t netif_index)
     esp_netif[netif_index] = NULL;
 }
 
-void ieee80211_input(uint8_t netif_index, uint8_t* input, uint16_t len)
-{
-    struct pbuf* pb;
-
-    if (!TCPIP_ADAPTER_IF_VALID(netif_index)) {
-        TCPIP_ATAPTER_LOG("ERROR bad netif index:%d\n", netif_index);
-        return;
-    }
-
-    pb = pbuf_alloc(PBUF_MAC, len, PBUF_RAM);
-
-    if (pb == NULL) {
-        TCPIP_ATAPTER_LOG("ERROR NO MEMORY\n");
-        return;
-    }
-
-    memcpy((uint8_t*)(pb->payload), (uint8_t*)input, len);
-    ethernet_input(pb, esp_netif[netif_index]);
-}
-
 bool wifi_set_ip_info(WIFI_INTERFACE netif_index, struct ip_info* if_ip)
 {
     if (!TCPIP_ADAPTER_IF_VALID((uint8_t)netif_index)) {
