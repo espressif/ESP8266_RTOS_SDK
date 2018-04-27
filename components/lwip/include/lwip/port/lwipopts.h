@@ -37,6 +37,8 @@
 #define SOCKETS_MT
 
 //#define SOCKETS_TCP_TRACE
+
+#define LWIP_SUPPORT_CUSTOM_PBUF    1
 /*
    -----------------------------------------------
    ---------- Platform specific locking ----------

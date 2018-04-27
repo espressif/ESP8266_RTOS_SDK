@@ -40,9 +40,11 @@
 extern "C" {
 #endif
 
+#ifndef LWIP_SUPPORT_CUSTOM_PBUF
 /** Currently, the pbuf_custom code is only needed for one specific configuration
  * of IP_FRAG */
 #define LWIP_SUPPORT_CUSTOM_PBUF (IP_FRAG && !IP_FRAG_USES_STATIC_BUF && !LWIP_NETIF_TX_SINGLE_PBUF)
+#endif
 
 /* @todo: We need a mechanism to prevent wasting memory in every pbuf
    (TCP vs. UDP, IPv4 vs. IPv6: UDP/IPv4 packets may waste up to 28 bytes) */
