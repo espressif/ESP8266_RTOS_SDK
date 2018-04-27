@@ -524,7 +524,7 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait, const BaseT
  */
 #if ( configUSE_TICKLESS_IDLE != 0 )
 
-	static TickType_t prvGetExpectedIdleTime( void ) PRIVILEGED_FUNCTION;
+	TickType_t prvGetExpectedIdleTime( void ) PRIVILEGED_FUNCTION;
 
 #endif
 
@@ -2041,7 +2041,7 @@ void vTaskSuspendAll( void )
 
 #if ( configUSE_TICKLESS_IDLE != 0 )
 
-	static TickType_t prvGetExpectedIdleTime( void )
+	TickType_t prvGetExpectedIdleTime( void )
 	{
 	TickType_t xReturn;
 	UBaseType_t uxHigherPriorityReadyTasks = pdFALSE;

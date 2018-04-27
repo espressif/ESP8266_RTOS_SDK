@@ -96,6 +96,11 @@ extern "C" {
 #define portSTACK_TYPE	unsigned portLONG
 #define portBASE_TYPE	long
 
+#define BaseType_t      portBASE_TYPE
+#define TickType_t      unsigned portLONG
+#define UBaseType_t     unsigned portBASE_TYPE
+#define StackType_t     portSTACK_TYPE
+
 typedef unsigned portLONG portTickType;
 typedef unsigned int INT32U;
 #define portMAX_DELAY ( portTickType ) 0xffffffff
@@ -103,7 +108,7 @@ typedef unsigned int INT32U;
 
 /* Architecture specifics. */
 #define portSTACK_GROWTH			( -1 )
-#define portTICK_RATE_MS			( ( portTickType ) 1000 / configTICK_RATE_HZ )
+#define portTICK_PERIOD_MS			( ( portTickType ) 1000 / configTICK_RATE_HZ )
 #define portBYTE_ALIGNMENT			8
 /*-----------------------------------------------------------*/
 
