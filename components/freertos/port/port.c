@@ -176,6 +176,16 @@ void xPortSysTickHandle(void)
 portBASE_TYPE ICACHE_FLASH_ATTR
 xPortStartScheduler(void)
 {
+    /*
+     * TAG 1.2.3 FreeRTOS call "portDISABLE_INTERRUPTS" at file tasks.c line 1973, this is not at old one.
+     * This makes it to be a wrong value.
+     * 
+     * So we should initialize global value "cpu_sr" with a right value.
+     * 
+     * Todo: Remove this one when refactor startup function.
+     */
+    cpu_sr = 0x20;
+
     /*******software isr*********/
     _xt_isr_attach(ETS_SOFT_INUM, SoftIsrHdl, NULL);
     _xt_isr_unmask(1 << ETS_SOFT_INUM);
