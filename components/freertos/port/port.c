@@ -93,8 +93,7 @@ void vPortExitCritical(void);
 /*
  * See header file for description.
  */
-portSTACK_TYPE* ICACHE_FLASH_ATTR
-pxPortInitialiseStack(portSTACK_TYPE* pxTopOfStack, pdTASK_CODE pxCode, void* pvParameters)
+portSTACK_TYPE* pxPortInitialiseStack(portSTACK_TYPE* pxTopOfStack, pdTASK_CODE pxCode, void* pvParameters)
 {
 #define SET_STKREG(r,v) sp[(r) >> 2] = (portSTACK_TYPE)(v)
     portSTACK_TYPE* sp, *tp;
@@ -125,7 +124,7 @@ pxPortInitialiseStack(portSTACK_TYPE* pxTopOfStack, pdTASK_CODE pxCode, void* pv
     return sp;
 }
 
-void PendSV(char req)
+void IRAM_ATTR PendSV(char req)
 {
     if (req == 1) {
         vPortEnterCritical();
@@ -138,14 +137,14 @@ void PendSV(char req)
     }
 }
 
-void HDL_MAC_SIG_IN_LV1_ISR(void)
+void IRAM_ATTR HDL_MAC_SIG_IN_LV1_ISR(void)
 {
     PendSV(2);
 }
 
 extern portBASE_TYPE MacIsrSigPostDefHdl(void);
 
-void SoftIsrHdl(void* arg)
+void IRAM_ATTR SoftIsrHdl(void* arg)
 {
     ETS_NMI_LOCK();
 
@@ -164,7 +163,7 @@ void SoftIsrHdl(void* arg)
     ETS_NMI_UNLOCK();
 }
 
-void xPortSysTickHandle(void)
+void IRAM_ATTR xPortSysTickHandle(void)
 {
     if (xTaskIncrementTick() != pdFALSE) {
         vTaskSwitchContext();
@@ -174,8 +173,7 @@ void xPortSysTickHandle(void)
 /*
  * See header file for description.
  */
-portBASE_TYPE ICACHE_FLASH_ATTR
-xPortStartScheduler(void)
+portBASE_TYPE xPortStartScheduler(void)
 {
     /*
      * TAG 1.2.3 FreeRTOS call "portDISABLE_INTERRUPTS" at file tasks.c line 1973, this is not at old one.
@@ -203,8 +201,7 @@ xPortStartScheduler(void)
     return pdTRUE;
 }
 
-void ICACHE_FLASH_ATTR
-vPortEndScheduler(void)
+void vPortEndScheduler(void)
 {
     /* It is unlikely that the CM3 port will require this function as there
     is nothing to return to.  */
@@ -215,7 +212,7 @@ vPortEndScheduler(void)
 
 static char ClosedLv1Isr = 0;
 
-void vPortEnterCritical(void)
+void IRAM_ATTR vPortEnterCritical(void)
 {
     if (NMIIrqIsOn == 0) {
         if (ClosedLv1Isr != 1) {
@@ -227,7 +224,7 @@ void vPortEnterCritical(void)
 }
 /*-----------------------------------------------------------*/
 
-void vPortExitCritical(void)
+void IRAM_ATTR vPortExitCritical(void)
 {
     if (NMIIrqIsOn == 0) {
         if (uxCriticalNesting > 0) {
@@ -246,7 +243,7 @@ void vPortExitCritical(void)
     }
 }
 
-void ICACHE_FLASH_ATTR ShowCritical(void)
+void ShowCritical(void)
 {
     os_printf("ShowCritical:%d\n", uxCriticalNesting);
     os_printf("HdlMacSig:%d\n", HdlMacSig);
@@ -255,17 +252,17 @@ void ICACHE_FLASH_ATTR ShowCritical(void)
     ets_delay_us(50000);
 }
 
-void vPortETSIntrLock(void)
+void IRAM_ATTR vPortETSIntrLock(void)
 {
     ETS_INTR_LOCK();
 }
 
-void vPortETSIntrUnlock(void)
+void IRAM_ATTR vPortETSIntrUnlock(void)
 {
     ETS_INTR_UNLOCK();
 }
 
-void PortDisableInt_NoNest(void)
+void IRAM_ATTR PortDisableInt_NoNest(void)
 {
     if (NMIIrqIsOn == 0) {
         if (ClosedLv1Isr != 1) {
@@ -275,7 +272,7 @@ void PortDisableInt_NoNest(void)
     }
 }
 
-void PortEnableInt_NoNest(void)
+void IRAM_ATTR PortEnableInt_NoNest(void)
 {
     if (NMIIrqIsOn == 0) {
         if (ClosedLv1Isr == 1) {
@@ -286,7 +283,7 @@ void PortEnableInt_NoNest(void)
 }
 
 /*-----------------------------------------------------------*/
-void ICACHE_FLASH_ATTR ResetCcountVal(unsigned int cnt_val)
+void ResetCcountVal(unsigned int cnt_val)
 {
     asm volatile("wsr a2, ccount");
 }
@@ -294,14 +291,13 @@ void ICACHE_FLASH_ATTR ResetCcountVal(unsigned int cnt_val)
 _xt_isr_entry isr[16];
 char _xt_isr_status = 0;
 
-void ICACHE_FLASH_ATTR
-_xt_isr_attach(uint8 i, _xt_isr func, void* arg)
+void _xt_isr_attach(uint8 i, _xt_isr func, void* arg)
 {
     isr[i].handler = func;
     isr[i].arg = arg;
 }
 
-uint16 _xt_isr_handler(uint16 i)
+uint16 IRAM_ATTR _xt_isr_handler(uint16 i)
 {
     uint8 index;
 
@@ -332,12 +328,12 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
     os_printf("task [%s] stask overflow\n", pcTaskName);
 }
 
-void __taskEXIT_CRITICAL(void)
+void IRAM_ATTR __taskEXIT_CRITICAL(void)
 {
     portEXIT_CRITICAL();
 }
 
-void __taskENTER_CRITICAL(void)
+void IRAM_ATTR __taskENTER_CRITICAL(void)
 {
     portENTER_CRITICAL();
 }
