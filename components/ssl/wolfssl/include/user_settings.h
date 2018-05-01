@@ -31,6 +31,8 @@
 #define NO_MD5
 #define NO_DES3
 #define NO_DSA
+#define NO_RC4
+#define NO_RABBIT
 #define NO_OLD_TLS
 #define HAVE_ECC
 #define WC_NO_HARDEN
