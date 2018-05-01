@@ -15,6 +15,8 @@
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
 #include "lwip/dhcp.h"
+#include "lwip/errno.h"
+#include "lwip/prot/dhcp.h"
 #include "netif/etharp.h"
 #include "esp_wifi.h"
 #include "esp_timer.h"
@@ -32,10 +34,11 @@ struct tcpip_adapter_pbuf {
     struct netif        *netif;
 };
 
+u32_t LwipTimOutLim = 0; // For light sleep. time out. limit is 3000ms
+
 /* Avoid warning. No header file has include these function */
 err_t ethernetif_init(struct netif* netif);
 void system_station_got_ip_set();
-void netif_create_ip4_linklocal_address(struct netif* netif);
 
 static os_timer_t* get_ip_timer;
 static uint8_t dhcp_fail_time;
@@ -57,20 +60,22 @@ void esp_wifi_station_dhcpc_event(uint8_t netif_index)
 
 static void tcpip_adapter_dhcpc_done()
 {
-#define DHCP_BOUND        10
+    struct dhcp *clientdhcp = netif_dhcp_data(esp_netif[TCPIP_ADAPTER_IF_STA]) ;
+
     os_timer_disarm(get_ip_timer);
 
-    if (esp_netif[TCPIP_ADAPTER_IF_STA]->dhcp->state == DHCP_BOUND) {
+    if (clientdhcp->state == DHCP_STATE_BOUND) {
         /*send event here*/
         system_station_got_ip_set();
-        printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n", IP2STR(&(esp_netif[0]->ip_addr)),
-               IP2STR(&(esp_netif[0]->netmask)), IP2STR(&(esp_netif[0]->gw)));
-    } else if (dhcp_fail_time < 30) {
+        printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n", IP2STR(&(esp_netif[0]->ip_addr.u_addr.ip4)),
+               IP2STR(&(esp_netif[0]->netmask.u_addr.ip4)), IP2STR(&(esp_netif[0]->gw.u_addr.ip4)));
+    } else if (dhcp_fail_time < 100) {
         TCPIP_ATAPTER_LOG("dhcpc time(ms): %d\n", dhcp_fail_time * 200);
         dhcp_fail_time ++;
         os_timer_setfn(get_ip_timer, tcpip_adapter_dhcpc_done, NULL);
         os_timer_arm(get_ip_timer, 200, 1);
     } else {
+        wifi_station_dhcpc_event();
         TCPIP_ATAPTER_LOG("ERROR dhcp get ip error\n");
         free(get_ip_timer);
     }
@@ -208,24 +213,20 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
                 netif_add(esp_netif[netif_index], NULL, NULL, NULL, (void *)s, ethernetif_init, tcpip_input);
             }
         } else {
-            if ((esp_netif[netif_index]->flags & NETIF_FLAG_DHCP) == 0) {
-                if (dhcpc_flag) {
-                    printf("dhcp client start...\n");
-                    tcpip_adapter_station_dhcp_start();
+            if (dhcpc_flag) {
+                printf("dhcp client start...\n");
+                tcpip_adapter_station_dhcp_start();
+            } else {
+                if (esp_ip[TCPIP_ADAPTER_IF_STA].ip.addr != 0) {
+                    netif_set_addr(esp_netif[netif_index], &esp_ip[TCPIP_ADAPTER_IF_STA].ip,
+                                   &esp_ip[TCPIP_ADAPTER_IF_STA].netmask, &esp_ip[TCPIP_ADAPTER_IF_STA].gw);
+                    netif_set_up(esp_netif[netif_index]);
+                    system_station_got_ip_set();
+                    printf("ip: 0.0.0.0,mask: 0.0.0.0,gw: 0.0.0.0\n");
                 } else {
-                    if (esp_ip[TCPIP_ADAPTER_IF_STA].ip.addr != 0) {
-                        netif_set_addr(esp_netif[netif_index], &esp_ip[TCPIP_ADAPTER_IF_STA].ip,
-                                       &esp_ip[TCPIP_ADAPTER_IF_STA].netmask, &esp_ip[TCPIP_ADAPTER_IF_STA].gw);
-                        netif_set_up(esp_netif[netif_index]);
-                        system_station_got_ip_set();
-                        printf("ip: 0.0.0.0,mask: 0.0.0.0,gw: 0.0.0.0\n");
-                    } else {
-                        printf("check your static ip\n");
-                    }
+                    printf("check your static ip\n");
                 }
-
             }
-
         }
     } else if (netif_index == TCPIP_ADAPTER_IF_AP) {
         if (dhcps_flag) {
@@ -254,8 +255,8 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
         if (dhcps_flag) {
             dhcps_start(&esp_ip[TCPIP_ADAPTER_IF_AP]);
             printf("dhcp server start:(");
-            printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR, IP2STR(&(esp_netif[TCPIP_ADAPTER_IF_AP]->ip_addr)),
-                   IP2STR(&(esp_netif[TCPIP_ADAPTER_IF_AP]->netmask)), IP2STR(&(esp_netif[TCPIP_ADAPTER_IF_AP]->gw)));
+            printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR, IP2STR(&(esp_netif[TCPIP_ADAPTER_IF_AP]->ip_addr.u_addr.ip4)),
+                   IP2STR(&(esp_netif[TCPIP_ADAPTER_IF_AP]->netmask.u_addr.ip4)), IP2STR(&(esp_netif[TCPIP_ADAPTER_IF_AP]->gw.u_addr.ip4)));
             printf(")\n");
         }
 
@@ -318,9 +319,9 @@ bool wifi_get_ip_info(WIFI_INTERFACE netif_index, struct ip_info* if_ip)
     }
 
     TCPIP_ATAPTER_LOG("Get netif[%d] ip info\n", netif_index);
-    if_ip->ip = esp_netif[netif_index]->ip_addr;
-    if_ip->netmask = esp_netif[netif_index]->netmask;
-    if_ip->gw = esp_netif[netif_index]->gw;
+    if_ip->ip = esp_netif[netif_index]->ip_addr.u_addr.ip4;
+    if_ip->netmask = esp_netif[netif_index]->netmask.u_addr.ip4;
+    if_ip->gw = esp_netif[netif_index]->gw.u_addr.ip4;
     return true;
 }
 
@@ -331,14 +332,14 @@ bool wifi_create_linklocal_ip(uint8_t netif_index, bool ipv6)
         return false;
     }
 
-    netif_create_ip4_linklocal_address(esp_netif[netif_index]);
+    netif_create_ip6_linklocal_address(esp_netif[netif_index], ipv6);
     return true;
 }
 
-bool wifi_get_linklocal_ip(uint8_t netif_index, ipX_addr_t* linklocal)
+bool wifi_get_linklocal_ip(uint8_t netif_index, ip6_addr_t* linklocal)
 {
     if (TCPIP_ADAPTER_IF_VALID(netif_index)) {
-        memcpy(linklocal, &esp_netif[netif_index]->link_local_addr, sizeof(*linklocal));
+        memcpy(linklocal, ip_2_ip6(&esp_netif[netif_index]->ip6_addr[0]), sizeof(*linklocal));
     } else {
         TCPIP_ATAPTER_LOG("ERROR bad netif index:%d\n", netif_index);
         return false;
@@ -347,7 +348,7 @@ bool wifi_get_linklocal_ip(uint8_t netif_index, ipX_addr_t* linklocal)
     return true;
 }
 
-bool wifi_get_ipinfo_v6(uint8_t netif_index, uint8_t ip_index, ipX_addr_t* ipv6)
+bool wifi_get_ipinfo_v6(uint8_t netif_index, uint8_t ip_index, ip6_addr_t* ipv6)
 {
 #if LWIP_IPV6
 
@@ -402,7 +403,7 @@ void tcpip_adapter_sta_leave()
 
     netif_set_down(esp_netif[TCPIP_ADAPTER_IF_STA]);
 
-    if (esp_netif[TCPIP_ADAPTER_IF_STA]->flags & NETIF_FLAG_DHCP) {
+    if (dhcpc_flag) {
         dhcp_release(esp_netif[TCPIP_ADAPTER_IF_STA]);
         dhcp_stop(esp_netif[TCPIP_ADAPTER_IF_STA]);
         dhcp_cleanup(esp_netif[TCPIP_ADAPTER_IF_STA]);
@@ -506,7 +507,6 @@ enum dhcp_status wifi_station_dhcpc_status()
 
 bool wifi_station_dhcpc_set_maxtry(uint8_t num)
 {
-    DHCP_MAXRTX = num;
     return true;
 }
 
