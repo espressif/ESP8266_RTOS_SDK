@@ -15,6 +15,7 @@
 #include "c_types.h"
 #include "esp_misc.h"
 #include "lwip/sockets.h"
+#include "lwip/api.h"
 #include "ssl_client_crt.h"
 
 #define OPENSSL_DEMO_THREAD_NAME "ssl_demo"
@@ -71,7 +72,7 @@ LOCAL void openssl_demo_thread(void* p)
         ret = netconn_gethostbyname(OPENSSL_DEMO_TARGET_NAME, &target_ip);
     } while (ret);
 
-    printf("get target IP is "IPSTR"\n", IP2STR(&target_ip));
+    printf("get target IP is "IPSTR"\n", IP2STR(&(target_ip.u_addr.ip4)));
 
     printf("create SSL context ......");
     ctx = SSL_CTX_new(TLSv1_1_client_method());
@@ -144,11 +145,11 @@ LOCAL void openssl_demo_thread(void* p)
     printf("socket connect to remote ......");
     memset(&sock_addr, 0, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
-    sock_addr.sin_addr.s_addr = target_ip.addr;
+    sock_addr.sin_addr.s_addr = target_ip.u_addr.ip4.addr;
     sock_addr.sin_port = htons(OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = connect(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
     if (ret) {
-        printf("failed\n", OPENSSL_DEMO_TARGET_NAME);
+        printf("failed\n");
         goto failed5;
     }
     printf("OK\n");

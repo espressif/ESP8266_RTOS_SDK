@@ -14,6 +14,7 @@
 #include "freertos/task.h"
 #include "c_types.h"
 #include "lwip/sockets.h"
+#include "lwip/api.h"
 
 #define OPENSSL_DEMO_THREAD_NAME "ssl_demo"
 #define OPENSSL_DEMO_THREAD_STACK_WORDS 2048
@@ -56,10 +57,10 @@ LOCAL void openssl_demo_thread(void *p)
     do {
         ret = netconn_gethostbyname(OPENSSL_DEMO_TARGET_NAME, &target_ip);
     } while(ret);
-    os_printf("get target IP is %d.%d.%d.%d\n", (unsigned char)((target_ip.addr & 0x000000ff) >> 0),
-                                                (unsigned char)((target_ip.addr & 0x0000ff00) >> 8),
-                                                (unsigned char)((target_ip.addr & 0x00ff0000) >> 16),
-                                                (unsigned char)((target_ip.addr & 0xff000000) >> 24));
+    os_printf("get target IP is %d.%d.%d.%d\n", (unsigned char)((target_ip.u_addr.ip4.addr & 0x000000ff) >> 0),
+                                                (unsigned char)((target_ip.u_addr.ip4.addr & 0x0000ff00) >> 8),
+                                                (unsigned char)((target_ip.u_addr.ip4.addr & 0x00ff0000) >> 16),
+                                                (unsigned char)((target_ip.u_addr.ip4.addr & 0xff000000) >> 24));
 
     os_printf("create SSL context ......");
     ctx = SSL_CTX_new(TLSv1_1_client_method());
@@ -101,11 +102,11 @@ LOCAL void openssl_demo_thread(void *p)
     os_printf("socket connect to remote ......");
     memset(&sock_addr, 0, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
-    sock_addr.sin_addr.s_addr = target_ip.addr;
+    sock_addr.sin_addr.s_addr = target_ip.u_addr.ip4.addr;
     sock_addr.sin_port = htons(OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = connect(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
     if (ret) {
-        os_printf("failed\n", OPENSSL_DEMO_TARGET_NAME);
+        os_printf("failed\n");
         goto failed5;
     }
     os_printf("OK\n");
