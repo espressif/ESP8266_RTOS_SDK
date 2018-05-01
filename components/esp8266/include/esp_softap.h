@@ -63,7 +63,7 @@ struct station_info {
     STAILQ_ENTRY(station_info)     next;    /**< Information of next AP */
 
     uint8 bssid[6];                         /**< BSSID of AP */
-    struct ip_addr ip;                      /**< IP address of AP */
+    struct ip4_addr ip;                      /**< IP address of AP */
 };
 
 /**
