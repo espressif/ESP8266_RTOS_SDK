@@ -58,7 +58,6 @@ static void wolfssl_client(void* pv)
     struct sockaddr_in sock_addr;
     struct hostent* entry = NULL;
 
-#if CONFIG_CERT_AUTH
     uint32_t current_timestamp = 0;
     /*enable sntp for sync the time*/
     sntp_setoperatingmode(0);
@@ -69,9 +68,6 @@ static void wolfssl_client(void* pv)
         current_timestamp = sntp_get_current_timestamp();
         vTaskDelay(xDelay);
     } while (current_timestamp == 0);
-
-#endif
-
 
     while (1) {
 
@@ -119,7 +115,6 @@ static void wolfssl_client(void* pv)
         wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_PEER, NULL);
 #else
         wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_NONE, NULL);
-        ctx->verifyDepth = 0;
 #endif
 
         memset(&sock_addr, 0, sizeof(sock_addr));
