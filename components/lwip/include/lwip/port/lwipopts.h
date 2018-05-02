@@ -45,6 +45,9 @@
 #define __LWIP_HDR_LWIPOPTS_H__
 
 #include "sdkconfig.h"
+#include <stddef.h>
+#include "esp_libc.h"
+
 //#define SOCKETS_MT
 
 //#define SOCKETS_TCP_TRACE
@@ -190,6 +193,10 @@
 /**
  * Use DRAM instead of IRAM
  */
+extern void *pvPortMalloc( size_t xWantedSize, const char * file, unsigned line, unsigned char use_iram);
+extern void *pvPortZalloc( size_t xWantedSize, const char * file, unsigned line);
+extern void *pvPortCalloc(size_t count, size_t size, const char * file, unsigned line);
+extern void vPortFree(void *pv, const char * file, unsigned line);
 #define mem_clib_free os_free
 #define mem_clib_malloc os_malloc
 #define mem_clib_calloc os_calloc
@@ -703,6 +710,11 @@
  */
 
 #define SNTP_SERVER_DNS                 1
+
+#ifndef sntp_time_t
+typedef long sntp_time_t;
+#endif
+extern void sntp_set_system_time(sntp_time_t GMT_Time);
 #define SNTP_SET_SYSTEM_TIME            sntp_set_system_time
 /*
    ----------------------------------

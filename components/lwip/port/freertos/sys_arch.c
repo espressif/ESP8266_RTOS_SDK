@@ -365,7 +365,7 @@ sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize
     xTaskHandle CreatedTask;
     portBASE_TYPE result;
 
-    result = xTaskCreate(thread, (signed char *)name, stacksize, arg, prio, &CreatedTask);
+    result = xTaskCreate(thread, (const char *)name, stacksize, arg, prio, &CreatedTask);
 
     if (result == pdPASS) {
         return CreatedTask;

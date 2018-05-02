@@ -20,9 +20,6 @@
 #include "lwip/mem.h"
 #include "dhcpserver/dhcpserver.h"
 
-#ifndef LWIP_OPEN_SRC
-#include "net80211/ieee80211_var.h"
-#endif
 
 #ifdef MEMLEAK_DEBUG
 static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
@@ -354,10 +351,10 @@ static void send_offer(struct dhcps_msg* m)
     }
 
 #if DHCPS_DEBUG
-    SendOffer_err_t = udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    SendOffer_err_t = udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
     os_printf("dhcps: send_offer>>udp_sendto result %x\n", SendOffer_err_t);
 #else
-    udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
 #endif
 
     if (p->ref != 0) {
@@ -430,10 +427,10 @@ static void send_nak(struct dhcps_msg* m)
     }
 
 #if DHCPS_DEBUG
-    SendNak_err_t = udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    SendNak_err_t = udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
     os_printf("dhcps: send_nak>>udp_sendto result %x\n", SendNak_err_t);
 #else
-    udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
 #endif
 
     if (p->ref != 0) {
@@ -507,10 +504,10 @@ static void send_ack(struct dhcps_msg* m)
     }
 
 #if DHCPS_DEBUG
-    SendAck_err_t = udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    SendAck_err_t = udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
     os_printf("dhcps: send_ack>>udp_sendto result %x\n", SendAck_err_t);
 #else
-    udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
 #endif
 
     if (p->ref != 0) {
@@ -778,7 +775,7 @@ POOL_CHECK:
 
             memset(&client_address, 0x0, sizeof(client_address));
         }
-
+        extern bool wifi_softap_set_station_info(uint8_t*,ip4_addr_t*);
         if (wifi_softap_set_station_info(m->chaddr, &client_address) == false) {
             return 0;
         }
