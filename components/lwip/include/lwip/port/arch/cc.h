@@ -38,8 +38,7 @@
 
 #define EFAULT 14
 
-#define ERRNO
-#define LWIP_PROVIDE_ERRNO
+#define LWIP_ERRNO_INCLUDE "sys/errno.h"
 
 #if (1)
 #define BYTE_ORDER LITTLE_ENDIAN
@@ -47,7 +46,6 @@
 #define BYTE_ORDER BIG_ENDIAN
 #endif
 
-typedef unsigned long   mem_ptr_t;
 typedef int sys_prot_t;
 
 #define S16_F "d"

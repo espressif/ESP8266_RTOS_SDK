@@ -35,10 +35,9 @@ extern struct netif *esp_netif[2];
 //static u8_t old_xid[4] = {0};
 static const u32_t magic_cookie ICACHE_RODATA_ATTR STORE_ATTR = 0x63538263;
 static struct udp_pcb* pcb_dhcps = NULL;
-static struct ip_addr broadcast_dhcps;
-static struct ip_addr server_address;
-static struct ip_addr client_address;//added
-static struct ip_addr client_address_plus;
+static struct ip4_addr server_address;
+static struct ip4_addr client_address;//added
+static struct ip4_addr client_address_plus;
 
 static struct dhcps_lease dhcps_lease;
 //static bool dhcps_lease_flag = true;
@@ -150,7 +149,7 @@ static u8_t* add_msg_type(u8_t* optptr, u8_t type)
 ///////////////////////////////////////////////////////////////////////////////////
 static u8_t* add_offer_options(u8_t* optptr)
 {
-    struct ip_addr ipadd;
+    struct ip4_addr ipadd;
 
     ipadd.addr = *((u32_t*) &server_address);
 
@@ -267,7 +266,7 @@ static u8_t* add_end(u8_t* optptr)
 ///////////////////////////////////////////////////////////////////////////////////
 static void create_msg(struct dhcps_msg* m)
 {
-    struct ip_addr client;
+    struct ip4_addr client;
 
     client.addr = *((uint32_t*) &client_address);
 
@@ -355,10 +354,10 @@ static void send_offer(struct dhcps_msg* m)
     }
 
 #if DHCPS_DEBUG
-    SendOffer_err_t = udp_sendto(pcb_dhcps, p, &broadcast_dhcps, DHCPS_CLIENT_PORT);
+    SendOffer_err_t = udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
     os_printf("dhcps: send_offer>>udp_sendto result %x\n", SendOffer_err_t);
 #else
-    udp_sendto(pcb_dhcps, p, &broadcast_dhcps, DHCPS_CLIENT_PORT);
+    udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
 #endif
 
     if (p->ref != 0) {
@@ -431,10 +430,10 @@ static void send_nak(struct dhcps_msg* m)
     }
 
 #if DHCPS_DEBUG
-    SendNak_err_t = udp_sendto(pcb_dhcps, p, &broadcast_dhcps, DHCPS_CLIENT_PORT);
+    SendNak_err_t = udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
     os_printf("dhcps: send_nak>>udp_sendto result %x\n", SendNak_err_t);
 #else
-    udp_sendto(pcb_dhcps, p, &broadcast_dhcps, DHCPS_CLIENT_PORT);
+    udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
 #endif
 
     if (p->ref != 0) {
@@ -508,10 +507,10 @@ static void send_ack(struct dhcps_msg* m)
     }
 
 #if DHCPS_DEBUG
-    SendAck_err_t = udp_sendto(pcb_dhcps, p, &broadcast_dhcps, DHCPS_CLIENT_PORT);
+    SendAck_err_t = udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
     os_printf("dhcps: send_ack>>udp_sendto result %x\n", SendAck_err_t);
 #else
-    udp_sendto(pcb_dhcps, p, &broadcast_dhcps, DHCPS_CLIENT_PORT);
+    udp_sendto(pcb_dhcps, p, IP4_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
 #endif
 
     if (p->ref != 0) {
@@ -533,7 +532,7 @@ static void send_ack(struct dhcps_msg* m)
 ///////////////////////////////////////////////////////////////////////////////////
 static u8_t parse_options(u8_t* optptr, s16_t len)
 {
-    struct ip_addr client;
+    struct ip4_addr client;
     bool is_dhcp_parse_end = false;
     struct dhcps_state s;
 
@@ -663,14 +662,14 @@ static s16_t parse_msg(struct dhcps_msg* m, u16_t len)
         /*
          * ��¼���ε�xid�ţ�ͬʱ�����IP����
         */
-        struct ip_addr addr_tmp;
+        struct ip4_addr addr_tmp;
 //	                memcpy((char *)old_xid, (char *)m->xid, sizeof(m->xid));
 
 //	                {
         struct dhcps_pool* pdhcps_pool = NULL;
         list_node* pnode = NULL;
         list_node* pback_node = NULL;
-        struct ip_addr first_address;
+        struct ip4_addr first_address;
         bool flag = false;
 
 //						POOL_START:
@@ -747,7 +746,7 @@ static s16_t parse_msg(struct dhcps_msg* m, u16_t len)
 
 POOL_CHECK:
 
-        if ((client_address.addr > dhcps_lease.end_ip.addr) || (ip_addr_isany(&client_address))) {
+        if ((client_address.addr > dhcps_lease.end_ip.addr) || (ip4_addr_isany(&client_address))) {
             if (pnode != NULL) {
                 node_remove_from_list(&plist, pnode);
                 os_free(pnode);
@@ -814,7 +813,7 @@ POOL_CHECK:
 static void handle_dhcp(void* arg,
                         struct udp_pcb* pcb,
                         struct pbuf* p,
-                        struct ip_addr* addr,
+                        const ip_addr_t* addr,
                         u16_t port)
 {
     struct dhcps_msg* pmsg_dhcps = NULL;
@@ -972,10 +971,8 @@ static void wifi_softap_init_dhcps_lease(u32_t ip)
 ///////////////////////////////////////////////////////////////////////////////////
 void dhcps_start(struct ip_info* info)
 {
-    struct netif* apnetif = esp_netif[0x01];
-
-    if (apnetif->dhcps_pcb != NULL) {
-        udp_remove(apnetif->dhcps_pcb);
+    if (pcb_dhcps != NULL) {
+        udp_remove(pcb_dhcps);
     }
 
     pcb_dhcps = udp_new();
@@ -983,10 +980,6 @@ void dhcps_start(struct ip_info* info)
     if (pcb_dhcps == NULL || info == NULL) {
         os_printf("dhcps_start(): could not obtain pcb\n");
     }
-
-    apnetif->dhcps_pcb = pcb_dhcps;
-
-    IP4_ADDR(&broadcast_dhcps, 255, 255, 255, 255);
 
     server_address = info->ip;
     wifi_softap_init_dhcps_lease(server_address.addr);
@@ -1001,14 +994,12 @@ void dhcps_start(struct ip_info* info)
 
 void dhcps_stop(void)
 {
-    struct netif* apnetif = esp_netif[0x01];
 
     udp_disconnect(pcb_dhcps);
 
-//	dhcps_lease_flag = true;
-    if (apnetif->dhcps_pcb != NULL) {
-        udp_remove(apnetif->dhcps_pcb);
-        apnetif->dhcps_pcb = NULL;
+    if (pcb_dhcps != NULL) {
+        udp_remove(pcb_dhcps);
+        pcb_dhcps = NULL;
     }
 
     //udp_remove(pcb_dhcps);

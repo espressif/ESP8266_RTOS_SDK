@@ -27,8 +27,8 @@ typedef struct dhcps_msg {
 #ifndef LWIP_OPEN_SRC
 struct dhcps_lease {
     bool enable;
-    struct ip_addr start_ip;
-    struct ip_addr end_ip;
+    struct ip4_addr start_ip;
+    struct ip4_addr end_ip;
 };
 
 enum dhcps_offer_option {
@@ -39,7 +39,7 @@ enum dhcps_offer_option {
 #endif
 
 struct dhcps_pool {
-    struct ip_addr ip;
+    struct ip4_addr ip;
     u8_t mac[6];
     u32_t lease_timer;
 };
