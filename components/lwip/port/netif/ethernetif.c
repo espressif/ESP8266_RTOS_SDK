@@ -46,7 +46,7 @@ static void low_level_init(struct netif* netif)
 
     /* device capabilities */
     /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
-    netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
+    netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP | NETIF_FLAG_UP;
 
 #if LWIP_IGMP
     netif->flags |= NETIF_FLAG_IGMP;
@@ -289,7 +289,6 @@ int8_t ethernetif_init(struct netif* netif)
      * The last argument should be replaced with your link speed, in units
      * of bits per second.
      */
-    NETIF_INIT_SNMP(netif, snmp_ifType_ethernet_csmacd, LINK_SPEED_OF_YOUR_NETIF_IN_BPS);
 
     netif->name[0] = IFNAME0;
     netif->name[1] = IFNAME1;
@@ -302,9 +301,6 @@ int8_t ethernetif_init(struct netif* netif)
     netif->output_ip6 = ethip6_output;
 #endif /* LWIP_IPV6 */
     netif->linkoutput = low_level_output;
-
-    extern void wifi_station_dhcpc_event(void);
-    netif->dhcp_event = wifi_station_dhcpc_event;
 
     /* initialize the hardware */
     low_level_init(netif);

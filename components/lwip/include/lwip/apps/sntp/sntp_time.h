@@ -9,7 +9,7 @@
 #define SNTP_TIME_H_
 
 #include "lwip/opt.h"
-#include "lwip/timers.h"
+#include "lwip/timeouts.h"
 
 #define SECSPERMIN	60L
 #define MINSPERHOUR	60L
