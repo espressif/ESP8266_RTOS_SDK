@@ -1,8 +1,16 @@
+/**
+ * @file
+ * This file (together with sockets.h) aims to provide structs and functions from
+ * - arpa/inet.h
+ * - netinet/in.h
+ *
+ */
+
 /*
  * Copyright (c) 2001-2004 Swedish Institute of Computer Science.
- * All rights reserved. 
- * 
- * Redistribution and use in source and binary forms, with or without modification, 
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice,
@@ -11,30 +19,31 @@
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
  * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission. 
+ *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED 
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT 
- * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY 
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+ * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  *
  * This file is part of the lwIP TCP/IP stack.
- * 
+ *
  * Author: Adam Dunkels <adam@sics.se>
  *
  */
-#ifndef __LWIP_INET_H__
-#define __LWIP_INET_H__
+#ifndef LWIP_HDR_INET_H
+#define LWIP_HDR_INET_H
 
 #include "lwip/opt.h"
 #include "lwip/def.h"
 #include "lwip/ip_addr.h"
+#include "lwip/ip6_addr.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,9 +54,17 @@ extern "C" {
 #if !defined(in_addr_t) && !defined(IN_ADDR_T_DEFINED)
 typedef u32_t in_addr_t;
 #endif
-/** For compatibility with BSD code */
+
 struct in_addr {
   in_addr_t s_addr;
+};
+
+struct in6_addr {
+  union {
+    u32_t u32_addr[4];
+    u8_t  u8_addr[16];
+  } un;
+#define s6_addr  un.u8_addr
 };
 
 /** 255.255.255.255 */
@@ -59,7 +76,16 @@ struct in_addr {
 /** 255.255.255.255 */
 #define INADDR_BROADCAST    IPADDR_BROADCAST
 
-/* Definitions of the bits in an Internet address integer.
+/** This macro can be used to initialize a variable of type struct in6_addr
+    to the IPv6 wildcard address. */
+#define IN6ADDR_ANY_INIT {{{0,0,0,0}}}
+/** This macro can be used to initialize a variable of type struct in6_addr
+    to the IPv6 loopback address. */
+#define IN6ADDR_LOOPBACK_INIT {{{0,0,0,PP_HTONL(1)}}}
+/** This variable is initialized by the system to contain the wildcard IPv6 address. */
+extern const struct in6_addr in6addr_any;
+
+/* Definitions of the bits in an (IPv4) Internet address integer.
 
    On subnets, host and network parts are found according to
    the subnet mask, not these masks.  */
@@ -94,19 +120,53 @@ struct in_addr {
 
 #define IN_LOOPBACKNET      IP_LOOPBACKNET
 
-#define inet_addr_from_ipaddr(target_inaddr, source_ipaddr) ((target_inaddr)->s_addr = ip4_addr_get_u32(source_ipaddr))
-#define inet_addr_to_ipaddr(target_ipaddr, source_inaddr)   (ip4_addr_set_u32(target_ipaddr, (source_inaddr)->s_addr))
-/* ATTENTION: the next define only works because both s_addr and ip_addr_t are an u32_t effectively! */
-#define inet_addr_to_ipaddr_p(target_ipaddr_p, source_inaddr)   ((target_ipaddr_p) = (ip_addr_t*)&((source_inaddr)->s_addr))
+
+#ifndef INET_ADDRSTRLEN
+#define INET_ADDRSTRLEN     IP4ADDR_STRLEN_MAX
+#endif
+#if LWIP_IPV6
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN    IP6ADDR_STRLEN_MAX
+#endif
+#endif
+
+#if LWIP_IPV4
+
+#define inet_addr_from_ip4addr(target_inaddr, source_ipaddr) ((target_inaddr)->s_addr = ip4_addr_get_u32(source_ipaddr))
+#define inet_addr_to_ip4addr(target_ipaddr, source_inaddr)   (ip4_addr_set_u32(target_ipaddr, (source_inaddr)->s_addr))
+/* ATTENTION: the next define only works because both s_addr and ip4_addr_t are an u32_t effectively! */
+#define inet_addr_to_ip4addr_p(target_ip4addr_p, source_inaddr)   ((target_ip4addr_p) = (ip4_addr_t*)&((source_inaddr)->s_addr))
 
 /* directly map this to the lwip internal functions */
-#define inet_addr(cp)         ipaddr_addr(cp)
-#define inet_aton(cp, addr)   ipaddr_aton(cp, (ip_addr_t*)addr)
-#define inet_ntoa(addr)       ipaddr_ntoa((ip_addr_t*)&(addr))
-#define inet_ntoa_r(addr, buf, buflen) ipaddr_ntoa_r((ip_addr_t*)&(addr), buf, buflen)
+#define inet_addr(cp)                   ipaddr_addr(cp)
+#define inet_aton(cp, addr)             ip4addr_aton(cp, (ip4_addr_t*)addr)
+#define inet_ntoa(addr)                 ip4addr_ntoa((const ip4_addr_t*)&(addr))
+#define inet_ntoa_r(addr, buf, buflen)  ip4addr_ntoa_r((const ip4_addr_t*)&(addr), buf, buflen)
+
+#endif /* LWIP_IPV4 */
+
+#if LWIP_IPV6
+#define inet6_addr_from_ip6addr(target_in6addr, source_ip6addr) {(target_in6addr)->un.u32_addr[0] = (source_ip6addr)->addr[0]; \
+                                                                 (target_in6addr)->un.u32_addr[1] = (source_ip6addr)->addr[1]; \
+                                                                 (target_in6addr)->un.u32_addr[2] = (source_ip6addr)->addr[2]; \
+                                                                 (target_in6addr)->un.u32_addr[3] = (source_ip6addr)->addr[3];}
+#define inet6_addr_to_ip6addr(target_ip6addr, source_in6addr)   {(target_ip6addr)->addr[0] = (source_in6addr)->un.u32_addr[0]; \
+                                                                 (target_ip6addr)->addr[1] = (source_in6addr)->un.u32_addr[1]; \
+                                                                 (target_ip6addr)->addr[2] = (source_in6addr)->un.u32_addr[2]; \
+                                                                 (target_ip6addr)->addr[3] = (source_in6addr)->un.u32_addr[3];}
+/* ATTENTION: the next define only works because both in6_addr and ip6_addr_t are an u32_t[4] effectively! */
+#define inet6_addr_to_ip6addr_p(target_ip6addr_p, source_in6addr)   ((target_ip6addr_p) = (ip6_addr_t*)(source_in6addr))
+
+/* directly map this to the lwip internal functions */
+#define inet6_aton(cp, addr)            ip6addr_aton(cp, (ip6_addr_t*)addr)
+#define inet6_ntoa(addr)                ip6addr_ntoa((const ip6_addr_t*)&(addr))
+#define inet6_ntoa_r(addr, buf, buflen) ip6addr_ntoa_r((const ip6_addr_t*)&(addr), buf, buflen)
+
+#endif /* LWIP_IPV6 */
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __LWIP_INET_H__ */
+#endif /* LWIP_HDR_INET_H */

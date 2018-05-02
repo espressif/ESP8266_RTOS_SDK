@@ -142,9 +142,9 @@ typedef enum {
 } WIFI_INTERFACE;
 
 struct ip_info {
-    struct ip_addr ip;      /**< IP address */
-    struct ip_addr netmask; /**< netmask */
-    struct ip_addr gw;      /**< gateway */
+    struct ip4_addr ip;      /**< IP address */
+    struct ip4_addr netmask; /**< netmask */
+    struct ip4_addr gw;      /**< gateway */
 };
 
 /**
@@ -327,9 +327,9 @@ typedef struct {
 } Event_StaMode_AuthMode_Change_t;
 
 typedef struct {
-    struct ip_addr ip;      /**< IP address that ESP8266 station got from connected AP */
-    struct ip_addr mask;    /**< netmask that ESP8266 station got from connected AP */
-    struct ip_addr gw;      /**< gateway that ESP8266 station got from connected AP */
+    struct ip4_addr ip;      /**< IP address that ESP8266 station got from connected AP */
+    struct ip4_addr mask;    /**< netmask that ESP8266 station got from connected AP */
+    struct ip4_addr gw;      /**< gateway that ESP8266 station got from connected AP */
 } Event_StaMode_Got_IP_t;
 
 typedef struct {

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * SNTP client API
+ */
+
 /*
  * Copyright (c) 2007-2009 Frédéric Bernon, Simon Goldschmidt
  * All rights reserved.
@@ -32,7 +37,7 @@
 #ifndef LWIP_HDR_APPS_SNTP_H
 #define LWIP_HDR_APPS_SNTP_H
 
-#include "apps/sntp_opts.h"
+#include "lwip/apps/sntp_opts.h"
 #include "lwip/ip_addr.h"
 
 #ifdef __cplusplus
@@ -51,7 +56,7 @@ void sntp_stop(void);
 u8_t sntp_enabled(void);
 
 void sntp_setserver(u8_t idx, const ip_addr_t *addr);
-ip_addr_t sntp_getserver(u8_t idx);
+const ip_addr_t* sntp_getserver(u8_t idx);
 
 #if SNTP_SERVER_DNS
 void sntp_setservername(u8_t idx, char *server);

@@ -1,3 +1,8 @@
+/**
+ * @file
+ * SNTP client options list
+ */
+
 /*
  * Copyright (c) 2007-2009 Frédéric Bernon, Simon Goldschmidt
  * All rights reserved.
@@ -34,48 +39,53 @@
 
 #include "lwip/opt.h"
 
+/**
+ * @defgroup sntp_opts Options
+ * @ingroup sntp
+ * @{
+ */
+
 /** SNTP macro to change system time in seconds
  * Define SNTP_SET_SYSTEM_TIME_US(sec, us) to set the time in microseconds instead of this one
  * if you need the additional precision.
  */
-#ifndef SNTP_SET_SYSTEM_TIME
-#define SNTP_SET_SYSTEM_TIME(sec)   sntp_set_system_time(sec)
+#if !defined SNTP_SET_SYSTEM_TIME || defined __DOXYGEN__
+#define SNTP_SET_SYSTEM_TIME(sec)   LWIP_UNUSED_ARG(sec)
 #endif
 
 /** The maximum number of SNTP servers that can be set */
-#ifndef SNTP_MAX_SERVERS
-#define SNTP_MAX_SERVERS           1
+#if !defined SNTP_MAX_SERVERS || defined __DOXYGEN__
+#define SNTP_MAX_SERVERS           LWIP_DHCP_MAX_NTP_SERVERS
 #endif
 
 /** Set this to 1 to implement the callback function called by dhcp when
  * NTP servers are received. */
-#ifndef SNTP_GET_SERVERS_FROM_DHCP
-#define SNTP_GET_SERVERS_FROM_DHCP 0
+#if !defined SNTP_GET_SERVERS_FROM_DHCP || defined __DOXYGEN__
+#define SNTP_GET_SERVERS_FROM_DHCP LWIP_DHCP_GET_NTP_SRV
 #endif
 
-/* Set this to 1 to support DNS names (or IP address strings) to set sntp servers */
-#ifndef SNTP_SERVER_DNS
-#define SNTP_SERVER_DNS            1
-#endif
-
-/** One server address/name can be defined as default if SNTP_SERVER_DNS == 1:
- * #define SNTP_SERVER_ADDRESS "pool.ntp.org"
+/** Set this to 1 to support DNS names (or IP address strings) to set sntp servers
+ * One server address/name can be defined as default if SNTP_SERVER_DNS == 1:
+ * \#define SNTP_SERVER_ADDRESS "pool.ntp.org"
  */
+#if !defined SNTP_SERVER_DNS || defined __DOXYGEN__
+#define SNTP_SERVER_DNS            0
+#endif
 
 /**
  * SNTP_DEBUG: Enable debugging for SNTP.
  */
-#ifndef SNTP_DEBUG
+#if !defined SNTP_DEBUG || defined __DOXYGEN__
 #define SNTP_DEBUG                  LWIP_DBG_OFF
 #endif
 
 /** SNTP server port */
-#ifndef SNTP_PORT
+#if !defined SNTP_PORT || defined __DOXYGEN__
 #define SNTP_PORT                   123
 #endif
 
 /** Set this to 1 to allow config of SNTP server(s) by DNS name */
-#ifndef SNTP_SERVER_DNS
+#if !defined SNTP_SERVER_DNS || defined __DOXYGEN__
 #define SNTP_SERVER_DNS             0
 #endif
 
@@ -93,7 +103,7 @@
  *        currently a cozy number like one second. This check avoids using a
  *        server whose synchronization source has expired for a very long time.
  */
-#ifndef SNTP_CHECK_RESPONSE
+#if !defined SNTP_CHECK_RESPONSE || defined __DOXYGEN__
 #define SNTP_CHECK_RESPONSE         0
 #endif
 
@@ -103,14 +113,14 @@
  * which must return the delay in milliseconds as u32_t.
  * Turned off by default.
  */
-#ifndef SNTP_STARTUP_DELAY
+#if !defined SNTP_STARTUP_DELAY || defined __DOXYGEN__
 #define SNTP_STARTUP_DELAY          0
 #endif
 
 /** If you want the startup delay to be a function, define this
  * to a function (including the brackets) and define SNTP_STARTUP_DELAY to 1.
  */
-#ifndef SNTP_STARTUP_DELAY_FUNC
+#if !defined SNTP_STARTUP_DELAY_FUNC || defined __DOXYGEN__
 #define SNTP_STARTUP_DELAY_FUNC     SNTP_STARTUP_DELAY
 #endif
 
@@ -118,21 +128,21 @@
  * Also used as retry timeout - this shouldn't be too low.
  * Default is 3 seconds.
  */
-#ifndef SNTP_RECV_TIMEOUT
+#if !defined SNTP_RECV_TIMEOUT || defined __DOXYGEN__
 #define SNTP_RECV_TIMEOUT           3000
 #endif
 
 /** SNTP update delay - in milliseconds
  * Default is 1 hour. Must not be beolw 15 seconds by specification (i.e. 15000)
  */
-#ifndef SNTP_UPDATE_DELAY
+#if !defined SNTP_UPDATE_DELAY || defined __DOXYGEN__
 #define SNTP_UPDATE_DELAY           3600000
 #endif
 
 /** SNTP macro to get system time, used with SNTP_CHECK_RESPONSE >= 2
  * to send in request and compare in response.
  */
-#ifndef SNTP_GET_SYSTEM_TIME
+#if !defined SNTP_GET_SYSTEM_TIME || defined __DOXYGEN__
 #define SNTP_GET_SYSTEM_TIME(sec, us)     do { (sec) = 0; (us) = 0; } while(0)
 #endif
 
@@ -140,20 +150,24 @@
  * received is invalid.
  * This is doubled with each retry until SNTP_RETRY_TIMEOUT_MAX is reached.
  */
-#ifndef SNTP_RETRY_TIMEOUT
+#if !defined SNTP_RETRY_TIMEOUT || defined __DOXYGEN__
 #define SNTP_RETRY_TIMEOUT          SNTP_RECV_TIMEOUT
 #endif
 
 /** Maximum retry timeout (in milliseconds). */
-#ifndef SNTP_RETRY_TIMEOUT_MAX
+#if !defined SNTP_RETRY_TIMEOUT_MAX || defined __DOXYGEN__
 #define SNTP_RETRY_TIMEOUT_MAX      (SNTP_RETRY_TIMEOUT * 10)
 #endif
 
 /** Increase retry timeout with every retry sent
  * Default is on to conform to RFC.
  */
-#ifndef SNTP_RETRY_TIMEOUT_EXP
+#if !defined SNTP_RETRY_TIMEOUT_EXP || defined __DOXYGEN__
 #define SNTP_RETRY_TIMEOUT_EXP      1
 #endif
+
+/**
+ * @}
+ */
 
 #endif /* LWIP_HDR_APPS_SNTP_OPTS_H */

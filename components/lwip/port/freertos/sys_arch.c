@@ -346,7 +346,7 @@ sys_mutex_free(sys_mutex_t *pxMutex)
 u32_t
 sys_now(void)
 {
-    return xTaskGetTickCount();
+    return xTaskGetTickCount() * portTICK_RATE_MS;
 }
 
 /*-----------------------------------------------------------------------------------*/
