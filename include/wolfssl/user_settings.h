@@ -43,6 +43,8 @@
 #define NO_DES3
 #define NO_DSA
 #define NO_OLD_TLS
+#define NO_RC4
+#define NO_RABBIT
 #define HAVE_ECC
 #define WC_NO_HARDEN
 #define FREERTOS
