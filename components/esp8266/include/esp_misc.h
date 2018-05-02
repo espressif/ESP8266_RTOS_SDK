@@ -87,8 +87,8 @@ enum dhcp_status {
 
 struct dhcps_lease {
     bool enable;                /**< enable DHCP lease or not */
-    struct ip_addr start_ip;    /**< start IP of IP range */
-    struct ip_addr end_ip;      /**< end IP of IP range */
+    struct ip4_addr start_ip;    /**< start IP of IP range */
+    struct ip4_addr end_ip;      /**< end IP of IP range */
 };
 
 enum dhcps_offer_option {
