@@ -11,6 +11,8 @@
 - Version: 1.2.3(10.0.1)
 
 ## Lwip
+- Source: https://git.savannah.nongnu.org/git/lwip.git
+- Version: 2.0.3
 
 ## mbedTLS
 - Source: https://github.com/ARMmbed/mbedtls
