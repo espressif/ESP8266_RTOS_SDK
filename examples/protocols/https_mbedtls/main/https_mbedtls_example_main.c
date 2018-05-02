@@ -19,6 +19,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include <lwip/apps/sntp.h>
+
 #include "mbedtls/platform.h"
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl.h"

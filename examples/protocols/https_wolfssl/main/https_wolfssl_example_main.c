@@ -125,7 +125,7 @@ static void wolfssl_client(void* pv)
         memset(&sock_addr, 0, sizeof(sock_addr));
         sock_addr.sin_family = AF_INET;
         sock_addr.sin_port = htons(WEB_PORT);
-        memcpy(&sock_addr.sin_addr.s_addr, entry->h_addr_list[0], entry->h_length);
+        sock_addr.sin_addr.s_addr = ((struct in_addr*)(entry->h_addr))->s_addr;
 
         printf("Connecting to %s:%d...\n", WEB_SERVER, WEB_PORT);
         ret = connect(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
