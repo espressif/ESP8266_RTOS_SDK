@@ -31,11 +31,15 @@ static void microsecond_overflow_tick(void* arg)
 {
     uint32_t m = system_get_time();
 
+    vPortEnterCritical();
+
     if (m < microsecond_last_overflow_tick) {
         microsecond_overflow_count ++;
     }
 
     microsecond_last_overflow_tick = m;
+
+    vPortExitCritical();
 }
 
 /* Start a timer which period is 60s to check the overflow of microsecond. */
@@ -52,24 +56,41 @@ static void microsecond_overflow_set_check_timer(void)
 
 static void set_boot_time(uint64_t time_us)
 {
+    vPortEnterCritical();
+
     s_boot_time = time_us;
+
+    vPortExitCritical();
 }
 
 static uint64_t get_boot_time()
 {
     uint64_t result;
 
+    vPortEnterCritical();
+
     result = s_boot_time;
+
+    vPortExitCritical();
 
     return result;
 }
 
 static uint64_t get_time_since_boot()
 {
-    uint32_t m = system_get_time();
-    uint32_t c = microsecond_overflow_count + ((m < microsecond_last_overflow_tick) ? 1 : 0);
+    uint32_t m;
+    uint32_t c;
+    uint64_t microseconds;
 
-    uint64_t microseconds = c * (1LL << 32) + m;
+    m = system_get_time();
+
+    vPortEnterCritical();
+
+    c = microsecond_overflow_count + ((m < microsecond_last_overflow_tick) ? 1 : 0);
+
+    vPortExitCritical();
+
+    microseconds = c * (1LL << 32) + m;
 
     return microseconds;
 }
