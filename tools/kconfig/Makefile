@@ -2,6 +2,10 @@
 # Kernel configuration targets
 # These targets are used from top-level makefile
 
+# SRCDIR is kconfig source dir, allows for out-of-tree builds
+# if building in tree, SRCDIR==build dir
+SRCDIR := $(abspath $(dir $(firstword $(MAKEFILE_LIST))))
+
 PHONY += xconfig gconfig menuconfig config silentoldconfig \
 	localmodconfig localyesconfig clean
 
@@ -22,6 +26,22 @@ unexport CONFIG_
 CFLAGS :=
 CPPFLAGS :=
 LDFLAGS :=
+
+# Workaround for a bug on Windows if the mingw32 host compilers
+# are installed in addition to the MSYS ones. The kconfig tools
+# need to be compiled using the MSYS compiler.
+#
+# See https://github.com/espressif/esp-idf/issues/1296
+ifdef MSYSTEM
+ifeq ("$(MSYSTEM)", "MINGW32")
+ifeq ("$(CC)", "cc")
+CC := /usr/bin/gcc
+endif
+ifeq ("$(LD)", "ld")
+LD := /usr/bin/ld
+endif
+endif # MING32
+endif # MSYSTEM
 
 default: mconf conf
 
@@ -140,12 +160,21 @@ help:
 	@echo  '  tinyconfig	  - Configure the tiniest possible kernel'
 
 # lxdialog stuff
-check-lxdialog  := lxdialog/check-lxdialog.sh
+check-lxdialog  := $(SRCDIR)/lxdialog/check-lxdialog.sh
 
 # Use recursively expanded variables so we do not call gcc unless
 # we really need to do so. (Do not call gcc as part of make mrproper)
 CFLAGS += $(shell $(CONFIG_SHELL) $(check-lxdialog) -ccflags) \
                     -DLOCALE -MD
+
+%.o: $(SRCDIR)/%.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+
+lxdialog/%.o: $(SRCDIR)/lxdialog/%.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+
+%.o: %.c
+	$(CC) -I $(SRCDIR) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 # ===========================================================================
 # Shared Makefile for the various kconfig executables:
@@ -183,8 +212,11 @@ clean-files += $(all-objs) $(all-deps) conf mconf
 # Check that we have the required ncurses stuff installed for lxdialog (menuconfig)
 PHONY += dochecklxdialog
 $(addprefix ,$(lxdialog)): dochecklxdialog
-dochecklxdialog:
+dochecklxdialog: lxdialog
 	$(CONFIG_SHELL) $(check-lxdialog) -check $(CC) $(CFLAGS) $(LOADLIBES_mconf)
+
+lxdialog:
+	mkdir -p lxdialog
 
 always := dochecklxdialog
 
@@ -292,7 +324,7 @@ gconf.glade.h: gconf.glade
 	gconf.glade
 
 
-mconf: $(mconf-objs)
+mconf: lxdialog $(mconf-objs)
 	$(CC) -o $@ $(mconf-objs) $(LOADLIBES_mconf)
 
 conf: $(conf-objs)
@@ -300,15 +332,15 @@ conf: $(conf-objs)
 
 zconf.tab.c: zconf.lex.c
 
-zconf.lex.c: zconf.l
-	flex -L -P zconf -o zconf.lex.c zconf.l
+zconf.lex.c: $(SRCDIR)/zconf.l
+	flex -L -P zconf -o zconf.lex.c $<
 
-zconf.hash.c: zconf.gperf
+zconf.hash.c: $(SRCDIR)/zconf.gperf
 # strip CRs on Windows systems where gperf will otherwise barf on them
-	sed -E "s/\\x0D$$//" zconf.gperf | gperf -t --output-file zconf.hash.c -a -C -E -g -k '1,3,$$' -p -t
+	sed -E "s/\\x0D$$//" $< | gperf -t --output-file zconf.hash.c -a -C -E -g -k '1,3,$$' -p -t
 
-zconf.tab.c: zconf.y
-	bison -t -l -p zconf -o zconf.tab.c zconf.y
+zconf.tab.c: $(SRCDIR)/zconf.y
+	bison -t -l -p zconf -o zconf.tab.c $<
 
 clean:
 	rm -f $(clean-files)
