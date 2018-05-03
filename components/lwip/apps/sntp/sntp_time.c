@@ -11,8 +11,6 @@
 static s8_t sntp_time_timezone = 8;
 static u32_t sntp_time_realtime = 0;
 
-static int sntp_time_month;
-static int sntp_time_year;
 static char sntp_time_result[100];
 static sntp_tm_type sntp_time_rule[2];
 static sntp_tm sntp_time_result_buf;
@@ -33,7 +31,6 @@ static sntp_tm *sntp_mktm_r(const sntp_time_t *tim_p, sntp_tm *res, int is_gmtim
 {
   long days, rem;
   sntp_time_t lcltime;
-  int i;
   int y;
   int yleap;
   const int *ip;
@@ -188,61 +185,6 @@ static sntp_tm *sntp_localtime_r(const sntp_time_t *tim_p, sntp_tm *res)
 static sntp_tm *sntp_localtime(const sntp_time_t *tim_p)
 {
   return sntp_localtime_r (tim_p, &sntp_time_result_buf);
-}
-
-static int sntp_limitstime(int year)
-{
-  int days, year_days, years;
-  int i, j;
-
-  if (year < EPOCH_YEAR)
-    return 0;
-
-  sntp_time_year = year;
-
-  years = (year - EPOCH_YEAR);
-
-  year_days = years * 365 +
-    (years - 1 + EPOCH_YEARS_SINCE_LEAP) / 4 - (years - 1 + EPOCH_YEARS_SINCE_CENTURY) / 100 +
-    (years - 1 + EPOCH_YEARS_SINCE_LEAP_CENTURY) / 400;
-
-  for (i = 0; i < 2; ++i)
-    {
-      if (sntp_time_rule[i].ch == 'J')
-	days = year_days + sntp_time_rule[i].d + (isleap(year) && sntp_time_rule[i].d >= 60);
-      else if (sntp_time_rule[i].ch == 'D')
-	days = year_days + sntp_time_rule[i].d;
-      else
-	{
-	  int yleap = isleap(year);
-	  int m_day, m_wday, wday_diff;
-	  const int *ip = sntp_time_mon_lengths[yleap];
-
-	  days = year_days;
-
-	  for (j = 1; j < sntp_time_rule[i].m; ++j)
-	    days += ip[j-1];
-
-	  m_wday = (EPOCH_WDAY + days) % DAYSPERWEEK;
-
-	  wday_diff = sntp_time_rule[i].d - m_wday;
-	  if (wday_diff < 0)
-	    wday_diff += DAYSPERWEEK;
-	  m_day = (sntp_time_rule[i].n - 1) * DAYSPERWEEK + wday_diff;
-
-	  while (m_day >= ip[j-1])
-	    m_day -= DAYSPERWEEK;
-
-	  days += m_day;
-	}
-
-      /* store the change-over time in GMT form by adding offset */
-      sntp_time_rule[i].change = days * SECSPERDAY + sntp_time_rule[i].s + sntp_time_rule[i].offset;
-    }
-
-  sntp_time_month = (sntp_time_rule[0].change < sntp_time_rule[1].change);
-
-  return 1;
 }
 
 static char *sntp_asctime_r(sntp_tm *tim_p ,char *result)

@@ -24,20 +24,6 @@ typedef struct dhcps_msg {
     u8_t options[312];
 } dhcps_msg;
 
-#ifndef LWIP_OPEN_SRC
-struct dhcps_lease {
-    bool enable;
-    struct ip4_addr start_ip;
-    struct ip4_addr end_ip;
-};
-
-enum dhcps_offer_option {
-    OFFER_START = 0x00,
-    OFFER_ROUTER = 0x01,
-    OFFER_END
-};
-#endif
-
 struct dhcps_pool {
     struct ip4_addr ip;
     u8_t mac[6];
@@ -58,7 +44,6 @@ extern u32_t dhcps_lease_time;
 #define DHCP_REPLY          2
 #define DHCP_HTYPE_ETHERNET 1
 #define DHCP_HLEN_ETHERNET  6
-#define DHCP_MSG_LEN      236
 
 #define DHCPS_SERVER_PORT  67
 #define DHCPS_CLIENT_PORT  68

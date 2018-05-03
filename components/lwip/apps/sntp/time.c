@@ -20,6 +20,7 @@
  */
 #include "c_types.h"
 #include "esp_timer.h"
+#include "esp_system.h"
 
 #include "lwip/apps/sntp.h"
 #include "lwip/apps/sntp/time.h"
@@ -28,6 +29,8 @@
 static os_timer_t micros_overflow_timer;
 static uint32 micros_at_last_overflow_tick = 0;
 static uint32 micros_overflow_count = 0;
+
+extern void sntp_set_update_delay(uint32 ms);
 
 static void micros_overflow_tick(void * arg)
 {
