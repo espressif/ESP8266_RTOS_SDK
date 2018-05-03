@@ -1885,6 +1885,13 @@
 #define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
 
 /**
+ * Enable debug message printing.
+ */
+#if CONFIG_LWIP_DEBUG
+#define LWIP_DEBUG
+#endif
+
+/**
  * ETHARP_DEBUG: Enable debugging in etharp.c.
  */
 #if CONFIG_LWIP_ETHARP_DEBUG
@@ -2112,7 +2119,7 @@
 /**
  * IP6_DEBUG: Enable debugging for IPv6.
  */
-#if LWIP_DBG_ONIP6_DEBUG
+#if CONFIG_LWIP_IP6_DEBUG
 #define IP6_DEBUG                       LWIP_DBG_ON
 #endif
 /**
