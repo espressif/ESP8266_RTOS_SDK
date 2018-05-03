@@ -6,5 +6,5 @@ The SDK uses 'make' of esp-idf, and changed things are following:
 
 Information of esp-idf is following:
 
-URL: https://github.com/espressif/esp-idf
-tag: v3.1-dev
+commit: 48c3ad37
+
