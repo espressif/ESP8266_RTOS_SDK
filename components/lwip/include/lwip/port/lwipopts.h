@@ -711,11 +711,14 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
 
 #define SNTP_SERVER_DNS                 1
 
-#ifndef sntp_time_t
-typedef long sntp_time_t;
-#endif
-extern void sntp_set_system_time(sntp_time_t GMT_Time);
-#define SNTP_SET_SYSTEM_TIME            sntp_set_system_time
+#include <sys/time.h>
+
+#define SNTP_SET_SYSTEM_TIME_US(sec, us)  \
+    do { \
+        struct timeval tv = { .tv_sec = sec, .tv_usec = us }; \
+        settimeofday(&tv, NULL); \
+    } while (0);
+
 /*
    ----------------------------------
    ----- Multicast/IGMP options -----
@@ -2134,6 +2137,14 @@ extern void sntp_set_system_time(sntp_time_t GMT_Time);
 #if CONFIG_LWIP_IP6_DEBUG
 #define IP6_DEBUG                       LWIP_DBG_ON
 #endif
+
+/**
+ * SNTP_DEBUG: Enable debugging for SNTP.
+ */
+#if CONFIG_LWIP_SNTP_DEBUG
+#define SNTP_DEBUG                      LWIP_DBG_ON
+#endif
+
 /**
  * @}
  */
