@@ -128,8 +128,8 @@ function(idf_verify_environment)
     # Warn if the toolchain version doesn't match
     #
     # TODO: make these platform-specific for diff toolchains
-    gcc_version_check("5.2.0")
-    crosstool_version_check("1.22.0-80-g6c4433a")
+    #gcc_version_check("5.2.0")
+    #crosstool_version_check("1.22.0-80-g6c4433a")
 
 endfunction()
 
