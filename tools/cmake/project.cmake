@@ -83,7 +83,8 @@ macro(project name)
     # Now the configuration is loaded, set the toolchain appropriately
     #
     # TODO: support more toolchains than just ESP32
-    set(CMAKE_TOOLCHAIN_FILE $ENV{IDF_PATH}/tools/cmake/toolchain-esp32.cmake)
+    #set(CMAKE_TOOLCHAIN_FILE $ENV{IDF_PATH}/tools/cmake/toolchain-esp32.cmake)
+    set(CMAKE_TOOLCHAIN_FILE $ENV{IDF_PATH}/tools/cmake/toolchain-esp8266.cmake)
 
     # Declare the actual cmake-level project
     _project(${name} ASM C CXX)
