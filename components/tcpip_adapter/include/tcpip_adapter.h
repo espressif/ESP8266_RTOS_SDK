@@ -52,8 +52,8 @@ bool default_hostname;
 #define IFNAME1 'n'
 
 #ifdef CONFIG_TCPIP_ADAPER_DEBUG
-#define TAG ""
-#define TCPIP_ATAPTER_LOG(str, ...) printf(TAG __FILE__ " line: %d " str, __LINE__, ##__VA_ARGS__)
+#define TAG "TCPIP_ADAPTER"
+#define TCPIP_ATAPTER_LOG(str, ...) printf(TAG " line: %d " str, __LINE__, ##__VA_ARGS__)
 #else
 #define TCPIP_ATAPTER_LOG(str, ...)
 #endif
