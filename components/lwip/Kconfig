@@ -174,6 +174,11 @@ config LWIP_IP6_DEBUG
     depends on LWIP_DEBUG
     default n
 
+config LWIP_SNTP_DEBUG
+    bool "Enable debugging for SNTP."
+    depends on LWIP_DEBUG
+    default n
+
 config LWIP_SO_REUSE
     bool "Enable SO_REUSEADDR option"
     default n
