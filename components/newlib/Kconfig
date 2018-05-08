@@ -1,0 +1,41 @@
+menu "Newlib"
+
+config NEWLIB_ENABLE
+    bool "Enable newlib"
+    default y
+    help
+        If you need use you own C library, make this option disable. The libraries and
+        header files at this component will not be used.
+
+        Note: ABI of the C library of your own must be same as SDK.
+
+choice NEWLIB_LIBRARY_LEVEL
+    prompt "newlib level"
+    default NEWLIB_LIBRARY_LEVEL_NANO
+    depends on NEWLIB_ENABLE
+    help
+        Choose newlib library level.
+
+config NEWLIB_LIBRARY_LEVEL_NORMAL
+    bool "normal"
+    help
+        If you need 64-bit integer formatting support or C99 features, select this
+        option.
+
+config NEWLIB_LIBRARY_LEVEL_NANO
+    bool "nano"
+    help
+        The newlib library which has been compiled with so-called "nano"
+        formatting option. This option doesn't support 64-bit integer formats and C99
+        features, such as positional arguments.
+
+        For more details about "nano" formatting option, please see newlib readme file,
+        search for '--enable-newlib-nano-formatted-io':
+        https://sourceware.org/newlib/README
+
+        If you do not need 64-bit integer formatting support or C99 features, select this
+        option.
+
+endchoice
+
+endmenu
