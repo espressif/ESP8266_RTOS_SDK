@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "esp_common.h"
+#include "sdkconfig.h"
 #include "lwip/inet.h"
 #include "lwip/err.h"
 #include "lwip/pbuf.h"
@@ -41,7 +42,7 @@ static struct dhcps_lease dhcps_lease;
 static list_node* plist = NULL;
 static u8_t offer = 0xFF;
 static bool renew = false;
-#define DHCPS_LEASE_TIME_DEF	(120)
+#define DHCPS_LEASE_TIME_DEF	CONFIG_LWIP_DHCPS_LEASE_UNIT
 u32_t dhcps_lease_time = DHCPS_LEASE_TIME_DEF;  //minute
 /******************************************************************************
  * FunctionName : node_insert_to_list
