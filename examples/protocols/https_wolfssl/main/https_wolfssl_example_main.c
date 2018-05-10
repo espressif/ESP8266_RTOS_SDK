@@ -18,6 +18,7 @@
 
 #include <sys/socket.h>
 #include <netdb.h>
+#include "lwip/apps/sntp.h"
 
 #include <wolfssl/ssl.h>
 
@@ -46,6 +47,38 @@ const char send_data[] = REQUEST;
 const int32_t send_bytes = sizeof(send_data);
 char recv_data[1024] = {0};
 
+static void get_time()
+{
+    struct timeval now;
+    int sntp_retry_cnt = 0;
+    int sntp_retry_time = 0;
+
+    sntp_setoperatingmode(0);
+    sntp_setservername(0, WOLFSSL_DEMO_SNTP_SERVERS);
+    sntp_init();
+
+    while (1) {
+        for (int32_t i = 0; (i < (SNTP_RECV_TIMEOUT / 100)) && now.tv_sec < 1525952900; i++) {
+            vTaskDelay(100 / portTICK_RATE_MS);
+            gettimeofday(&now, NULL);
+        }
+
+        if (now.tv_sec < 1525952900) {
+            sntp_retry_time = SNTP_RECV_TIMEOUT << sntp_retry_cnt;
+
+            if (SNTP_RECV_TIMEOUT << (sntp_retry_cnt + 1) < SNTP_RETRY_TIMEOUT_MAX) {
+                sntp_retry_cnt ++;
+            }
+
+            printf("SNTP get time failed, retry after %d ms\n", sntp_retry_time);
+            vTaskDelay(sntp_retry_time / portTICK_RATE_MS);
+        } else {
+            printf("SNTP get time success\n");
+            break;
+        }
+    }
+}
+
 static void wolfssl_client(void* pv)
 {
     int32_t ret = 0;
@@ -58,16 +91,8 @@ static void wolfssl_client(void* pv)
     struct sockaddr_in sock_addr;
     struct hostent* entry = NULL;
 
-    uint32_t current_timestamp = 0;
-    /*enable sntp for sync the time*/
-    sntp_setoperatingmode(0);
-    sntp_setservername(0, WOLFSSL_DEMO_SNTP_SERVERS);
-    sntp_init();
-
-    do {
-        current_timestamp = sntp_get_current_timestamp();
-        vTaskDelay(xDelay);
-    } while (current_timestamp == 0);
+    /* CA date verification need system time */
+    get_time();
 
     while (1) {
 
@@ -216,7 +241,7 @@ void user_conn_init(void)
  *                We add this function to force users to set rf cal sector, since
  *                we don't know which sector is free in user's application.
  *                sector map for last several sectors : ABCCC
- *                A : rf cal/* Websocket example
+ *                A : rf cal
  *                B : rf init data
  *                C : sdk parameters
  * Parameters   : none
@@ -292,9 +317,10 @@ void user_init(void)
     // set AP parameter
     struct station_config config;
     bzero(&config, sizeof(struct station_config));
-    sprintf(config.ssid, CONFIG_WIFI_SSID);
-    sprintf(config.password, CONFIG_WIFI_PASSWORD);
+    sprintf((char*)config.ssid, CONFIG_WIFI_SSID);
+    sprintf((char*)config.password, CONFIG_WIFI_PASSWORD);
     wifi_station_set_config(&config);
 
     wifi_set_event_handler_cb(wifi_event_handler_cb);
+    wifi_set_sleep_type(0);
 }
