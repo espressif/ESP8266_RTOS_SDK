@@ -22,6 +22,13 @@ openssl req -new -key server.key -out server.csr -text -subj $LEVEL2_SUBJECT
 openssl req -new -key client.key -out client.csr -text -subj $LEVEL3_SUBJECT
 
 # generate the actual certs.
-openssl x509 -req -in ca.csr -out ca.crt -sha1 -days 5000 -signkey ca.key -text -extensions v3_ca
-openssl x509 -req -in server.csr -out server.crt -sha1 -CAcreateserial -days 5000 -CA ca.crt -CAkey ca.key -text -extensions v3_ca
-openssl x509 -req -in client.csr -out client.crt -sha1 -CAcreateserial -days 5000 -CA ca.crt -CAkey ca.key -text -extensions v3_ca
+openssl x509 -req -in ca.csr -out ca.pem -sha1 -days 5000 -signkey ca.key -text -extensions v3_ca
+openssl x509 -req -in server.csr -out server.pem -sha1 -CAcreateserial -days 5000 -CA ca.pem -CAkey ca.key -text -extensions v3_ca
+openssl x509 -req -in client.csr -out client.pem -sha1 -CAcreateserial -days 5000 -CA ca.pem -CAkey ca.key -text -extensions v3_ca
+
+rm *.csr
+rm *.srl
+
+mv ca.* ./main
+mv server.* ./main
+mv client.* ./main
