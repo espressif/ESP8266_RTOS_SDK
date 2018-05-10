@@ -21,7 +21,7 @@ menu "mbedTLS"
 
 config MBEDTLS_SSL_MAX_CONTENT_LEN
     int "TLS maximum message content length"
-    default 16384
+    default 4096
     range 512 16384
     help
         Maximum TLS message length (in bytes) supported by mbedTLS.
@@ -45,14 +45,12 @@ config MBEDTLS_DEBUG
    help
        Enable mbedTLS debugging functions at compile time.
 
-       If this option is enabled, you can include
-	   "mbedtls/esp_debug.h" and call mbedtls_esp_enable_debug_log()
-	   at runtime in order to enable mbedTLS debug output via the ESP
-	   log mechanism.
+       If this option is enabled, you must call mbedtls_esp_enable_debug_log
+	   at runtime in order to enable mbedTLS debug output.
 
 config MBEDTLS_HAVE_TIME
    bool "Enable mbedtls time"
-   default n
+   default y
    help
        System has time.h and time().
        The time does not need to be correct, only time differences are used,

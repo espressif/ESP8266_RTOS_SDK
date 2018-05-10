@@ -1972,7 +1972,7 @@
  * This module provides debugging functions.
  */
 #if CONFIG_MBEDTLS_DEBUG
-//#define MBEDTLS_DEBUG_C
+#define MBEDTLS_DEBUG_C
 #endif
 
 /**
@@ -2887,7 +2887,6 @@
 //#define MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES      50 /**< Maximum entries in cache */
 
 /* SSL options */
-extern unsigned int max_content_len;
 #define MBEDTLS_SSL_MAX_CONTENT_LEN             CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
 //#define MBEDTLS_SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
 //#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
