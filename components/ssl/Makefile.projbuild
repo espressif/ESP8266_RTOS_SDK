@@ -2,7 +2,7 @@
 # alternative config file
 
 #ifdef CONFIG_SSL_USING_MBEDTLS
-CPPFLAGS += -DMBEDTLS_CONFIG_FILE='"esp_config.h"'
+CPPFLAGS += -DMBEDTLS_CONFIG_FILE='"mbedtls/esp_config.h"'
 #endif
 
 #ifdef CONFIG_SSL_USING_WOLFSSL
