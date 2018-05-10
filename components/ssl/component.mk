@@ -17,8 +17,8 @@ COMPONENT_PRIV_INCLUDEDIRS := openssl/include/internal openssl/include/openssl o
 
 COMPONENT_SRCDIRS := openssl/source/library openssl/source/platform
 
-COMPONENT_ADD_INCLUDEDIRS += mbedtls/mbedtls/include mbedtls/port/include
-COMPONENT_SRCDIRS += mbedtls/mbedtls/library mbedtls/port
+COMPONENT_ADD_INCLUDEDIRS += mbedtls/mbedtls/include mbedtls/port/esp8266/include
+COMPONENT_SRCDIRS += mbedtls/mbedtls/library mbedtls/port/esp8266
 else
 COMPONENT_ADD_INCLUDEDIRS := axtls/include
 COMPONENT_SRCDIRS := axtls/source/ssl axtls/source/crypto
