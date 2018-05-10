@@ -6,7 +6,7 @@ if(CONFIG_SSL_USING_MBEDTLS)
 set(COMPONENT_ADD_INCLUDEDIRS
     openssl/include
     mbedtls/mbedtls/include
-    mbedtls/port/include)
+    mbedtls/port/esp8266/include)
 
 set(COMPONENT_PRIV_INCLUDEDIRS
     openssl/include/internal
@@ -17,7 +17,7 @@ set(COMPONENT_SRCDIRS
     openssl/source/library
     openssl/source/platform
     mbedtls/mbedtls/library
-    mbedtls/port)
+    mbedtls/port/esp8266)
 else()
 set(COMPONENT_ADD_INCLUDEDIRS include axtls/include)
 
