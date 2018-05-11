@@ -63,17 +63,6 @@ static void https_get_task()
     mbedtls_ssl_config conf;
     mbedtls_net_context server_fd;
 
-    uint32_t current_timestamp = 0;
-    /*enable sntp for sync the time*/
-    sntp_setoperatingmode(0);
-    sntp_setservername(0, HTTPS_MBEDTLS_SNTP_SERVERS);
-    sntp_init();
-
-    do {
-        current_timestamp = sntp_get_current_timestamp();
-        vTaskDelay(500 / portTICK_RATE_MS);
-    } while (current_timestamp == 0);
-
     mbedtls_ssl_init(&ssl);
     mbedtls_x509_crt_init(&cacert);
     mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -283,7 +272,7 @@ void wifi_event_handler_cb(System_Event_t* event)
  *                We add this function to force users to set rf cal sector, since
  *                we don't know which sector is free in user's application.
  *                sector map for last several sectors : ABCCC
- *                A : rf cal/* Websocket example
+ *                A : rf cal
  *                B : rf init data
  *                C : sdk parameters
  * Parameters   : none
@@ -336,8 +325,8 @@ void user_init()
     // set AP parameter
     struct station_config config;
     bzero(&config, sizeof(struct station_config));
-    sprintf(config.ssid, CONFIG_WIFI_SSID);
-    sprintf(config.password, CONFIG_WIFI_PASSWORD);
+    sprintf((char*)config.ssid, CONFIG_WIFI_SSID);
+    sprintf((char*)config.password, CONFIG_WIFI_PASSWORD);
     wifi_station_set_config(&config);
 
     wifi_set_event_handler_cb(wifi_event_handler_cb);
