@@ -3,6 +3,7 @@
 
 #define USE_DNS
 
+#include "sdkconfig.h"
 #include "esp_wifi.h"
 
 typedef struct dhcps_state {
@@ -70,8 +71,8 @@ extern u32_t dhcps_lease_time;
 #define DHCP_OPTION_END         255
 
 //#define USE_CLASS_B_NET 1
-#define DHCPS_DEBUG          0
-#define MAX_STATION_NUM      8
+#define DHCPS_DEBUG          CONFIG_LWIP_DHCP_SERVER_DEBUG
+#define MAX_STATION_NUM      CONFIG_LWIP_DHCPS_MAX_STATION_NUM
 
 #define DHCPS_STATE_OFFER 1
 #define DHCPS_STATE_DECLINE 2
