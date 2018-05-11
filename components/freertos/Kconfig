@@ -1,0 +1,12 @@
+menu "FreeRTOS"
+
+config FREERTOS_ENABLE_REENT
+    bool "Enable \"reent\" function"
+    default n
+    select NEWLIB_ENABLE
+    help
+        Enable "reent" function and FreeRTOS should use "reent" function of newlib.
+
+        The configuration will enable newlib.
+
+endmenu
