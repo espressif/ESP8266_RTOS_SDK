@@ -162,7 +162,7 @@ void esp_spiffs_deinit(u8_t format)
     }
 }
 
-int _open_r(struct _reent *r, const char *filename, int flags, int mode)
+int _spiffs_open_r(struct _reent *r, const char *filename, int flags, int mode)
 {
     spiffs_mode sm = 0;
     int res;
@@ -201,7 +201,7 @@ int _open_r(struct _reent *r, const char *filename, int flags, int mode)
     return res;
 }
 
-_ssize_t _read_r(struct _reent *r, int fd, void *buf, size_t len)
+_ssize_t _spiffs_read_r(struct _reent *r, int fd, void *buf, size_t len)
 {
 
     ssize_t res;
@@ -215,7 +215,7 @@ _ssize_t _read_r(struct _reent *r, int fd, void *buf, size_t len)
     return res;
 }
 
-_ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
+_ssize_t _spiffs_write_r(struct _reent *r, int fd, void *buf, size_t len)
 {
 
     if (fd < NUM_SYS_FD) {
@@ -226,7 +226,7 @@ _ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
     return res;
 }
 
-_off_t _lseek_r(struct _reent *r, int fd, _off_t where, int whence)
+_off_t _spiffs_lseek_r(struct _reent *r, int fd, _off_t where, int whence)
 {
 
     ssize_t res;
@@ -240,7 +240,7 @@ _off_t _lseek_r(struct _reent *r, int fd, _off_t where, int whence)
     return res;
 }
 
-int _close_r(struct _reent *r, int fd)
+int _spiffs_close_r(struct _reent *r, int fd)
 {
 
     if (fd < NUM_SYS_FD) {
@@ -251,21 +251,21 @@ int _close_r(struct _reent *r, int fd)
     return 0;
 }
 
-int _rename_r(struct _reent *r, const char *from, const char *to)
+int _spiffs_rename_r(struct _reent *r, const char *from, const char *to)
 {
 
     int res = SPIFFS_rename(&fs, (char *) from, (char *) to);
     return res;
 }
 
-int _unlink_r(struct _reent *r, const char *filename)
+int _spiffs_unlink_r(struct _reent *r, const char *filename)
 {
 
     int res = SPIFFS_remove(&fs, (char *) filename);
     return res;
 }
 
-int _fstat_r(struct _reent *r, int fd, struct stat *s)
+int _spiffs_fstat_r(struct _reent *r, int fd, struct stat *s)
 {
 
     int res;

@@ -77,6 +77,17 @@ extern "C" {
 #include    <xtensa/xtruntime.h>
 #include    "xtensa_rtos.h"
 
+#if defined(configUSE_NEWLIB_REENTRANT) && configUSE_NEWLIB_REENTRANT == 1
+#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+#include "esp_newlib.h"
+
+#define _impure_ptr _global_impure_ptr
+
+#undef _REENT_INIT_PTR
+#define _REENT_INIT_PTR(p) esp_reent_init(p)
+#endif
+#endif
+
 /*-----------------------------------------------------------
  * Port specific definitions.
  *
