@@ -21,6 +21,10 @@
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
 
+#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+#include "esp_newlib.h"
+#endif
+
 static uint32_t enter_critical_wrapper(void)
 {
     taskENTER_CRITICAL();
@@ -90,7 +94,9 @@ static void task_resume_all_wrapper(void)
 
 static void os_init_wrapper(void)
 {
-    /* empty function */
+#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+    esp_newlib_init();
+#endif
 }
 
 static void os_start_wrapper(void)

@@ -1,9 +1,9 @@
 gwen:
     crypto:     5fc5b4f
     espnow:     5fc5b4f
-    core:       06675a3
+    core:       0b78c0f
     minic:      5fc5b4f
-    net80211:   06675a3
+    net80211:   0b78c0f
     pp:         06675a3
     pwm:        5fc5b4f
     smartconfig:9ec59b5

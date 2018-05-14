@@ -86,7 +86,6 @@ typedef enum {
 #define REG_SET_BIT(_r, _b)     (*(volatile uint32 *)(_r) |= (_b))
 #define REG_CLR_BIT(_r, _b)     (*(volatile uint32 *)(_r) &= ~(_b))
 
-#define __packed            __attribute__((packed))
 #define STORE_ATTR          __attribute__((aligned(4)))
 
 #define SHMEM_ATTR
