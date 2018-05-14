@@ -38,6 +38,7 @@
 #include "lwip/mem.h"
 #include "arch/sys_arch.h"
 
+#define LWIP_THREAD_TLS 0
 
 /* Message queue constants. */
 #define archMESG_QUEUE_LENGTH	(100)//( 6 )
@@ -424,3 +425,69 @@ sys_arch_msleep(int ms)
 	vTaskDelay(ms / portTICK_RATE_MS);
 }
 
+#if LWIP_NETCONN_SEM_PER_THREAD
+
+static void sys_thread_sem_free(int index, void *data) // destructor for TLS semaphore
+{
+    sys_sem_t *sem = (sys_sem_t *)(data);
+
+    if (sem && *sem){
+        LWIP_DEBUGF(ESP_THREAD_SAFE_DEBUG, ("sem del, sem=%p\n", *sem));
+        vSemaphoreDelete(*sem);
+    }
+
+    if (sem) {
+        LWIP_DEBUGF(ESP_THREAD_SAFE_DEBUG, ("sem pointer del, sem_p=%p\n", sem));
+        free(sem);
+    }
+}
+
+/*
+ * get per thread semphore
+ */
+sys_sem_t* sys_thread_sem_init(void)
+{
+  sys_sem_t *sem = (sys_sem_t*)mem_malloc(sizeof(sys_sem_t*));
+
+    if (!sem){
+        LWIP_DEBUGF(ESP_THREAD_SAFE_DEBUG, "thread_sem_init: out of memory\n");
+        return 0;
+    }
+
+    *sem = xSemaphoreCreateBinary();
+    if (!(*sem)){
+        free(sem);
+        LWIP_DEBUGF(ESP_THREAD_SAFE_DEBUG, "thread_sem_init: out of memory\n");
+        return 0;
+    }
+
+    vTaskSetThreadLocalStoragePointerAndDelCallback(NULL, LWIP_THREAD_TLS, sem, sys_thread_sem_free);
+
+    return sem;
+}
+
+/*
+ * get per thread semphore
+ */
+sys_sem_t* sys_thread_sem_get(void)
+{
+    sys_sem_t *sem = pvTaskGetThreadLocalStoragePointer(NULL, LWIP_THREAD_TLS);
+
+    if (!sem) {
+        sem = sys_thread_sem_init();
+    }
+    LWIP_DEBUGF(ESP_THREAD_SAFE_DEBUG, ("sem_get s=%p\n", sem));
+
+    return sem;
+}
+
+void sys_thread_sem_deinit(void)
+{
+    sys_sem_t *sem = pvTaskGetThreadLocalStoragePointer(NULL, LWIP_THREAD_TLS);
+    if (sem != NULL) {
+        sys_thread_sem_free(LWIP_THREAD_TLS, sem);
+        vTaskSetThreadLocalStoragePointerAndDelCallback(NULL, LWIP_THREAD_TLS, NULL, NULL);
+    }
+}
+
+#endif

@@ -602,4 +602,9 @@ config LWIP_SNTP_DEBUG
     depends on LWIP_DEBUG
     default n
 
+config LWIP_THREAD_SAFE_DEBUG
+    bool "Enable debugging for LWIP thread safety."
+    depends on LWIP_DEBUG
+    default n
+
 endmenu

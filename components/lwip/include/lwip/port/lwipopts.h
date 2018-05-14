@@ -1313,7 +1313,7 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
  * The latter 2 can be invoked up by calling netconn_thread_init()/netconn_thread_cleanup().
  * Ports may call these for threads created with sys_thread_new().
  */
-#define LWIP_NETCONN_SEM_PER_THREAD     0
+#define LWIP_NETCONN_SEM_PER_THREAD     1
 
 /** LWIP_NETCONN_FULLDUPLEX==1: Enable code that allows reading from one thread,
  * writing from a 2nd thread and closing from a 3rd thread at the same time.
@@ -2144,6 +2144,12 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
  */
 #if CONFIG_LWIP_SNTP_DEBUG
 #define SNTP_DEBUG                      LWIP_DBG_ON
+#endif
+
+#ifdef CONFIG_LWIP_THREAD_SAFE_DEBUG
+#define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_ON
+#else
+#define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_OFF
 #endif
 
 /**
