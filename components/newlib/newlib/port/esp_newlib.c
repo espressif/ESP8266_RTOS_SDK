@@ -14,7 +14,9 @@
 
 #include <reent.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 /*
  * @brief Initialize global and thread's private reent object data. We add this instead of
@@ -57,8 +59,15 @@ int esp_newlib_init(void)
     if (!_GLOBAL_REENT->_stdin)
         goto err_in;
 
+    environ = malloc(sizeof(char*));
+    if (!environ)
+        goto environ_in;
+    environ[0] = NULL;
+
     return 0;
 
+environ_in:
+    fclose(_GLOBAL_REENT->_stdin);
 err_in:
     fclose(_GLOBAL_REENT->_stderr);
 err_fail:
