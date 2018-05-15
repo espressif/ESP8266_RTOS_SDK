@@ -323,6 +323,11 @@ uint16 IRAM_ATTR _xt_isr_handler(uint16 i)
     return i & ~(1 << index);
 }
 
+int xPortInIsrContext(void)
+{
+    return _xt_isr_status != 0;
+}
+
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
 {
     os_printf("task [%s] stask overflow\n", pcTaskName);

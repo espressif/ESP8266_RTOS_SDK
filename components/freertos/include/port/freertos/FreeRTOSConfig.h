@@ -143,7 +143,6 @@ NVIC value of 255. */
 #define configLIBRARY_KERNEL_INTERRUPT_PRIORITY	15
 
 // add it to menuconfig later
-#define CONFIG_FREERTOS_ENABLE_REENT
 #ifdef CONFIG_FREERTOS_ENABLE_REENT
 #define configUSE_NEWLIB_REENTRANT  1
 #endif

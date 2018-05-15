@@ -157,6 +157,15 @@ void vPortEndScheduler( void ) PRIVILEGED_FUNCTION;
 	void vPortStoreTaskMPUSettings( xMPU_SETTINGS *xMPUSettings, const struct xMEMORY_REGION * const xRegions, StackType_t *pxBottomOfStack, uint32_t ulStackDepth ) PRIVILEGED_FUNCTION;
 #endif
 
+/*
+ * @brief check if current at interrupt context
+ * 
+ * @param none
+ * 
+ * @return 1 if at interrupt context or 0
+ */
+int xPortInIsrContext(void);
+
 #ifdef __cplusplus
 }
 #endif

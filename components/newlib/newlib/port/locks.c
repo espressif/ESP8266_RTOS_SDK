@@ -14,32 +14,13 @@
 
 #include <sys/lock.h>
 #include <stdlib.h>
-#include <sys/reent.h>
-#include "esp_attr.h"
-#include "soc/cpu.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
-#include "freertos/portmacro.h"
-#include "freertos/task.h"
-#include "freertos/portable.h"
+#include <reent.h>
 
-/* Notes on our newlib lock implementation:
- *
- * - Use FreeRTOS mutex semaphores as locks.
- * - lock_t is int, but we store an xSemaphoreHandle there.
- * - Locks are no-ops until the FreeRTOS scheduler is running.
- * - Due to this, locks need to be lazily initialised the first time
- *   they are acquired. Initialisation/deinitialisation of locks is
- *   protected by lock_init_spinlock.
- * - Race conditions around lazy initialisation (via lock_acquire) are
- *   protected against.
- * - Anyone calling lock_close is reponsible for ensuring noone else
- *   is holding the lock at this time.
- * - Race conditions between lock_close & lock_init (for the same lock)
- *   are the responsibility of the caller.
- */
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "task.h"
 
-static portMUX_TYPE lock_init_spinlock = portMUX_INITIALIZER_UNLOCKED;
+#define portYIELD_FROM_ISR portYIELD
 
 /* Initialize the given lock by allocating a new mutex semaphore
    as the _lock_t value.
@@ -47,11 +28,12 @@ static portMUX_TYPE lock_init_spinlock = portMUX_INITIALIZER_UNLOCKED;
    Called by _lock_init*, also called by _lock_acquire* to lazily initialize locks that might have
    been initialised (to zero only) before the RTOS scheduler started.
 */
-static void IRAM_ATTR lock_init_generic(_lock_t *lock, uint8_t mutex_type) {
-    portENTER_CRITICAL(&lock_init_spinlock);
+
+static void lock_init_generic(_lock_t *lock, uint8_t mutex_type) {
+    portENTER_CRITICAL();
     if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED) {
         /* nothing to do until the scheduler is running */
-        portEXIT_CRITICAL(&lock_init_spinlock);
+        portEXIT_CRITICAL();
         return;
     }
 
@@ -82,15 +64,15 @@ static void IRAM_ATTR lock_init_generic(_lock_t *lock, uint8_t mutex_type) {
         }
         *lock = (_lock_t)new_sem;
     }
-    portEXIT_CRITICAL(&lock_init_spinlock);
+    portEXIT_CRITICAL();
 }
 
-void IRAM_ATTR _lock_init(_lock_t *lock) {
+void _lock_init(_lock_t *lock) {
     *lock = 0; // In case lock's memory is uninitialized
     lock_init_generic(lock, queueQUEUE_TYPE_MUTEX);
 }
 
-void IRAM_ATTR _lock_init_recursive(_lock_t *lock) {
+void _lock_init_recursive(_lock_t *lock) {
     *lock = 0; // In case lock's memory is uninitialized
     lock_init_generic(lock, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }
@@ -105,8 +87,8 @@ void IRAM_ATTR _lock_init_recursive(_lock_t *lock) {
    re-initialised if it is used again. Caller has to avoid doing
    this!
 */
-void IRAM_ATTR _lock_close(_lock_t *lock) {
-    portENTER_CRITICAL(&lock_init_spinlock);
+static void lock_close_generic(_lock_t *lock,  uint8_t mutex_type) {
+    portENTER_CRITICAL();
     if (*lock) {
         xSemaphoreHandle h = (xSemaphoreHandle)(*lock);
 #if (INCLUDE_xSemaphoreGetMutexHolder == 1)
@@ -115,13 +97,21 @@ void IRAM_ATTR _lock_close(_lock_t *lock) {
         vSemaphoreDelete(h);
         *lock = 0;
     }
-    portEXIT_CRITICAL(&lock_init_spinlock);
+    portEXIT_CRITICAL();
+}
+
+void _lock_close(_lock_t *lock) {
+    lock_close_generic(lock, queueQUEUE_TYPE_MUTEX);
+}
+
+void _lock_close_recursive(_lock_t *lock) {
+    lock_close_generic(lock, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }
 
 /* Acquire the mutex semaphore for lock. wait up to delay ticks.
    mutex_type is queueQUEUE_TYPE_RECURSIVE_MUTEX or queueQUEUE_TYPE_MUTEX
 */
-static int IRAM_ATTR lock_acquire_generic(_lock_t *lock, uint32_t delay, uint8_t mutex_type) {
+static int lock_acquire_generic(_lock_t *lock, uint32_t delay, uint8_t mutex_type) {
     xSemaphoreHandle h = (xSemaphoreHandle)(*lock);
     if (!h) {
         if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED) {
@@ -161,26 +151,26 @@ static int IRAM_ATTR lock_acquire_generic(_lock_t *lock, uint32_t delay, uint8_t
     return (success == pdTRUE) ? 0 : -1;
 }
 
-void IRAM_ATTR _lock_acquire(_lock_t *lock) {
+void _lock_acquire(_lock_t *lock) {
     lock_acquire_generic(lock, portMAX_DELAY, queueQUEUE_TYPE_MUTEX);
 }
 
-void IRAM_ATTR _lock_acquire_recursive(_lock_t *lock) {
+void _lock_acquire_recursive(_lock_t *lock) {
     lock_acquire_generic(lock, portMAX_DELAY, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }
 
-int IRAM_ATTR _lock_try_acquire(_lock_t *lock) {
+int _lock_try_acquire(_lock_t *lock) {
     return lock_acquire_generic(lock, 0, queueQUEUE_TYPE_MUTEX);
 }
 
-int IRAM_ATTR _lock_try_acquire_recursive(_lock_t *lock) {
+int _lock_try_acquire_recursive(_lock_t *lock) {
     return lock_acquire_generic(lock, 0, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }
 
 /* Release the mutex semaphore for lock.
    mutex_type is queueQUEUE_TYPE_RECURSIVE_MUTEX or queueQUEUE_TYPE_MUTEX
 */
-static void IRAM_ATTR lock_release_generic(_lock_t *lock, uint8_t mutex_type) {
+static void lock_release_generic(_lock_t *lock, uint8_t mutex_type) {
     xSemaphoreHandle h = (xSemaphoreHandle)(*lock);
     if (h == NULL) {
         /* This is probably because the scheduler isn't running yet,
@@ -207,10 +197,10 @@ static void IRAM_ATTR lock_release_generic(_lock_t *lock, uint8_t mutex_type) {
     }
 }
 
-void IRAM_ATTR _lock_release(_lock_t *lock) {
+void _lock_release(_lock_t *lock) {
     lock_release_generic(lock, queueQUEUE_TYPE_MUTEX);
 }
 
-void IRAM_ATTR _lock_release_recursive(_lock_t *lock) {
+void _lock_release_recursive(_lock_t *lock) {
     lock_release_generic(lock, queueQUEUE_TYPE_RECURSIVE_MUTEX);
 }
