@@ -3,7 +3,7 @@
 #
 
 ifdef CONFIG_SSL_USING_WOLFSSL
-COMPONENT_ADD_INCLUDEDIRS := wolfssl/include wolfssl/wolfssl
+COMPONENT_ADD_INCLUDEDIRS := wolfssl/include wolfssl/wolfssl wolfssl/wolfssl/wolfssl
 
 WOLFSSLLIB = wolfssl
 COMPONENT_ADD_LDFLAGS     := -L $(COMPONENT_PATH)/wolfssl/lib -lwolfssl
