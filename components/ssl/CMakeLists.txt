@@ -1,6 +1,6 @@
 
 if(CONFIG_SSL_USING_WOLFSSL)
-set(COMPONENT_ADD_INCLUDEDIRS include wolfssl/include)
+set(COMPONENT_ADD_INCLUDEDIRS include wolfssl/include wolfssl/wolfssl)
 else()
 if(CONFIG_SSL_USING_MBEDTLS)
 set(COMPONENT_ADD_INCLUDEDIRS
