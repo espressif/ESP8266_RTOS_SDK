@@ -4,18 +4,18 @@ set(COMPONENT_ADD_INCLUDEDIRS include wolfssl/include wolfssl/wolfssl wolfssl/wo
 else()
 if(CONFIG_SSL_USING_MBEDTLS)
 set(COMPONENT_ADD_INCLUDEDIRS
-    openssl/include
+    mbedtls/port/openssl/include
     mbedtls/mbedtls/include
     mbedtls/port/esp8266/include)
 
 set(COMPONENT_PRIV_INCLUDEDIRS
-    openssl/include/internal
-    openssl/include/openssl
-    openssl/include/platform)
+    mbedtls/port/openssl/include/internal
+    mbedtls/port/openssl/include/openssl
+    mbedtls/port/openssl/include/platform)
 
 set(COMPONENT_SRCDIRS
-    openssl/source/library
-    openssl/source/platform
+    mbedtls/port/openssl/source/library
+    mbedtls/port/openssl/source/platform
     mbedtls/mbedtls/library
     mbedtls/port/esp8266)
 else()
