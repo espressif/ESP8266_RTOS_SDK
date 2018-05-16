@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <reent.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -20,8 +22,7 @@ struct _reent *_global_impure_ptr = &impure_data;
 
 struct _reent *__getreent()
 {
-    extern char _xt_isr_status;
-
+#if configUSE_NEWLIB_REENTRANT == 1
     /*
      * Locking mutex(only mutex, not ISR mutex) at the following three
      * state may cause OS death. So we use a extra _reent data instead
@@ -32,7 +33,7 @@ struct _reent *__getreent()
      * So we command that use ets_printf(ROM function) instead of "printf"
      * at exception and system kernal critical state.
      */
-    if (_xt_isr_status 
+    if (xPortInIsrContext() 
         || !xTaskGetCurrentTaskHandle()
         || xTaskGetSchedulerState() != taskSCHEDULER_RUNNING)
         return &impure_data;
@@ -40,5 +41,6 @@ struct _reent *__getreent()
     /*
      * When scheduler starts, _global_impure_ptr = pxCurrentTCB->xNewLib_reent.
      */
+#endif
     return _global_impure_ptr;
 }
