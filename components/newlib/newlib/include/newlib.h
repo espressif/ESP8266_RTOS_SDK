@@ -69,7 +69,7 @@
 /* #undef _UINTPTR_EQ_ULONGLONG */
 
 /* Define if ivo supported in streamio.  */
-/* #undef _FVWRITE_IN_STREAMIO */
+#define _FVWRITE_IN_STREAMIO 1
 
 /* Define if fseek functions support seek optimization.  */
 #define _FSEEK_OPTIMIZATION 1
