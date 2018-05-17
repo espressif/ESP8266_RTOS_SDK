@@ -79,6 +79,8 @@ int _unlink_r(struct _reent *r, const char *filename)
 
 int _fstat_r(struct _reent *r, int fd, struct stat *s)
 {
+    s->st_mode = S_IFCHR;
+
     return 0;
 }
 
