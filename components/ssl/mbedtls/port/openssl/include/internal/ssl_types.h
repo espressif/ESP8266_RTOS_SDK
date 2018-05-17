@@ -170,8 +170,6 @@ struct ssl_ctx_st
 
     int read_ahead;
 
-    int read_buffer_len;
-
     X509_VERIFY_PARAM param;
 };
 
@@ -249,8 +247,6 @@ struct ssl_method_func_st {
     void (*ssl_set_fd)(SSL *ssl, int fd, int mode);
 
     int (*ssl_get_fd)(const SSL *ssl, int mode);
-
-    void (*ssl_set_bufflen)(SSL *ssl, int len);
 
     long (*ssl_get_verify_result)(const SSL *ssl);
 

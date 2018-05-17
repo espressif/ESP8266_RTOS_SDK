@@ -1309,27 +1309,6 @@ char *SSL_state_string_long(const SSL *ssl)
 }
 
 /**
- * @brief set the SSL context read buffer length
- */
-void SSL_CTX_set_default_read_buffer_len(SSL_CTX *ctx, size_t len)
-{
-    SSL_ASSERT3(ctx);
-
-    ctx->read_buffer_len = len;
-}
-
-/**
- * @brief set the SSL read buffer length
- */
-void SSL_set_default_read_buffer_len(SSL *ssl, size_t len)
-{
-    SSL_ASSERT3(ssl);
-    SSL_ASSERT3(len);
-
-    SSL_METHOD_CALL(set_bufflen, ssl, len);
-}
-
-/**
  * @brief set the SSL information callback function
  */
 void SSL_set_info_callback(SSL *ssl, void (*cb) (const SSL *ssl, int type, int val))
