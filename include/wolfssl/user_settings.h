@@ -33,16 +33,12 @@
 #define HAVE_PK_CALLBACKS
 #define WOLFSSL_KEY_GEN
 #define WOLFSSL_RIPEMD
-#define ESP_PLATFORM
-#define DEBUG_ESP_PLATFORM
 #define USE_WOLFSSL_IO
 #define WOLFSSL_STATIC_RSA
 #define NO_DH
 #define NO_MD4
-#define NO_MD5
 #define NO_DES3
 #define NO_DSA
-#define NO_OLD_TLS
 #define NO_RC4
 #define NO_RABBIT
 #define HAVE_ECC
@@ -51,6 +47,13 @@
 #define WOLFSSL_TYPES
 #define NO_FILESYSTEM
 #define WOLFSSL_ALT_CERT_CHAINS
+#define WOLFSSL_ALLOW_TLSV10
+#define WOLFSSL_SMALL_STACK
+#define SMALL_SESSION_CACHE
+
+#define SSL_CTX_use_certificate_ASN1(ctx,len,buf) wolfSSL_CTX_use_certificate_buffer(ctx,buf,len,WOLFSSL_FILETYPE_PEM)
+#define SSL_CTX_use_PrivateKey_ASN1(type,ctx,buf,len) wolfSSL_CTX_use_PrivateKey_buffer(ctx,buf,len, WOLFSSL_FILETYPE_PEM)
+#define SSL_CTX_load_verify_buffer(ctx,buf,len) wolfSSL_CTX_load_verify_buffer(ctx,buf,len, WOLFSSL_FILETYPE_PEM)
 
 #ifdef WOLFSSL_TYPES
     #ifndef byte
@@ -62,11 +65,8 @@
 #endif
 
 #ifndef CUSTOM_RAND_GENERATE_BLOCK
-
     /* To use define the following:*/
-    #define CUSTOM_RAND_GENERATE_BLOCK myRngFunc
-    extern int myRngFunc(byte* output, word32 sz);
-
+    #define CUSTOM_RAND_GENERATE_BLOCK os_get_random
 #endif
 
 #endif
