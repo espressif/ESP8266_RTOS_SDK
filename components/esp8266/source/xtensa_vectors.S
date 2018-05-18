@@ -142,6 +142,15 @@ LoadStoreErrorHandlerStack:
     .word   0       # a5
     .word   0       # a6
 
+LoadStoreErrorHandlerStack_reentry:
+    .word   0       # a0
+    .word   0       # (unused)
+    .word   0       # a2
+    .word   0       # a3
+    .word   0       # a4
+    .word   0       # a5
+    .word   0       # a6
+
 #if HAVE_XSR
     .data
     .global LABEL(_Pri_,_HandlerAddress)
@@ -169,11 +178,23 @@ LoadStoreErrorHandler:
 //        .global     LoadStoreErrorHandler
         .type   LoadStoreErrorHandler, @function
 
+        rsr     a0, excsave1    # restore a0 saved by UserExceptionVector
+        wsr     a1, excsave1    # save a1 to excsave1, a1 can be used as varalbe
+
+        movi    a1, LABEL(_Pri_,_NMICount)
+        l32i    a1, a1, 0
+
+        bnez    a1, LoadStoreErrorHandler_reentry
+        movi    sp, LoadStoreErrorHandlerStack
+        j       LoadStoreErrorHandler_common
+LoadStoreErrorHandler_reentry:
+        movi    sp, LoadStoreErrorHandlerStack_reentry
+LoadStoreErrorHandler_common:
+
         /* Registers are saved in the address corresponding to their register
          * number times 4.  This allows a quick and easy mapping later on when
          * needing to store the value to a particular register number. */
-        mov     a0, sp
-        movi    sp, LoadStoreErrorHandlerStack
+
         s32i    a0, sp, 0
         s32i    a2, sp, 0x08
         s32i    a3, sp, 0x0c
@@ -258,8 +279,7 @@ LoadStoreErrorHandler:
         l32i    a2, sp, 0x08
         l32i    a3, sp, 0x0c
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1    # restore a1 saved by UserExceptionVector
+        rsr     a1, excsave1    # restore a1 saved by UserExceptionVector
         rfe
 
 .LSE_assign_reg:
@@ -409,8 +429,7 @@ LoadStoreErrorHandler:
         l32i    a4, sp, 0x10
         l32i    a5, sp, 0x14
         l32i    a6, sp, 0x18
-        mov     a1, a0
-        rsr     a0, excsave1    # restore a1 saved by UserExceptionVector
+        rsr     a1, excsave1    # restore a1 saved by UserExceptionVector
         rfe
 
 .LSE_wrong_opcode:
@@ -422,14 +441,12 @@ LoadStoreErrorHandler:
         l32i    a2, sp, 0x08
         l32i    a3, sp, 0x0c
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         call0   user_fatal_exception_handler
 
         .balign 4
 .LSE_assign_a1:
         /* a1 is saved in excsave1, so just update that with the value, */
-        //wsr     a4, excsave1
         s32i    a4, sp, 0x04
         /* Then restore all regs and return */
         l32i    a0, sp, 0
@@ -437,7 +454,6 @@ LoadStoreErrorHandler:
         l32i    a3, sp, 0x0c
         l32i    a4, sp, 0x10
         l32i    a1, sp, 0x04
-        rsr     a0, excsave1
         rfe
 
         .balign 4
@@ -452,88 +468,77 @@ LoadStoreErrorHandler:
         mov     a5, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 6)
         mov     a6, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 7)
         mov     a7, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 8)
         mov     a8, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 9)
         mov     a9, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 10)
         mov     a10, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 11)
         mov     a11, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 12)
         mov     a12, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 13)
         mov     a13, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 14)
         mov     a14, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
         .org    .LSE_jumptable_base + (16 * 15)
         mov     a15, a4
         l32i    a2, sp, 0x08
         l32i    a4, sp, 0x10
-        mov     a1, a0
-        rsr     a0, excsave1
+        rsr     a1, excsave1
         rfe
 
 	.section    .UserEnter.text, "ax"
