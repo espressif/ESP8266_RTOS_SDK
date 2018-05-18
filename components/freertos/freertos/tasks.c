@@ -304,6 +304,9 @@ typedef struct tskTaskControlBlock
 
 	#if( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 )
 		void			*pvThreadLocalStoragePointers[ configNUM_THREAD_LOCAL_STORAGE_POINTERS ];
+	#if ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+		TlsDeleteCallbackFunction_t pvThreadLocalStoragePointersDelCallback[ configNUM_THREAD_LOCAL_STORAGE_POINTERS ];
+	#endif
 	#endif
 
 	#if( configGENERATE_RUN_TIME_STATS == 1 )
@@ -973,6 +976,9 @@ UBaseType_t x;
 		for( x = 0; x < ( UBaseType_t ) configNUM_THREAD_LOCAL_STORAGE_POINTERS; x++ )
 		{
 			pxNewTCB->pvThreadLocalStoragePointers[ x ] = NULL;
+			#if ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS == 1)
+			pxNewTCB->pvThreadLocalStoragePointersDelCallback[ x ] = NULL;
+			#endif
 		}
 	}
 	#endif
@@ -1107,6 +1113,22 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB )
 }
 /*-----------------------------------------------------------*/
 
+#if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 ) && ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+
+	static void prvDeleteTLS( TCB_t *pxTCB )
+	{
+		configASSERT( pxTCB );
+		for( int x = 0; x < ( UBaseType_t ) configNUM_THREAD_LOCAL_STORAGE_POINTERS; x++ )
+		{
+			if (pxTCB->pvThreadLocalStoragePointersDelCallback[ x ] != NULL)	//If del cb is set
+			{
+				pxTCB->pvThreadLocalStoragePointersDelCallback[ x ](x, pxTCB->pvThreadLocalStoragePointers[ x ]);	//Call del cb
+			}
+		}
+	}
+
+#endif /* ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 ) && ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS ) */
+
 #if ( INCLUDE_vTaskDelete == 1 )
 
 	void vTaskDelete( TaskHandle_t xTaskToDelete )
@@ -1169,6 +1191,9 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB )
 			else
 			{
 				--uxCurrentNumberOfTasks;
+#if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 ) && ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+				prvDeleteTLS( pxTCB );
+#endif
 				prvDeleteTCB( pxTCB );
 
 				/* Reset the next expected unblock time in case it referred to
@@ -3380,6 +3405,29 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 
 #if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS != 0 )
 
+#if ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+
+	void vTaskSetThreadLocalStoragePointerAndDelCallback( TaskHandle_t xTaskToSet, BaseType_t xIndex, void *pvValue , TlsDeleteCallbackFunction_t xDelCallback)
+	{
+	TCB_t *pxTCB;
+
+		if( xIndex < configNUM_THREAD_LOCAL_STORAGE_POINTERS )
+		{
+			taskENTER_CRITICAL();
+			pxTCB = prvGetTCBFromHandle( xTaskToSet );
+			pxTCB->pvThreadLocalStoragePointers[ xIndex ] = pvValue;
+			pxTCB->pvThreadLocalStoragePointersDelCallback[ xIndex ] = xDelCallback;
+			taskEXIT_CRITICAL();
+		}
+	}
+
+	void vTaskSetThreadLocalStoragePointer( TaskHandle_t xTaskToSet, BaseType_t xIndex, void *pvValue )
+	{
+		vTaskSetThreadLocalStoragePointerAndDelCallback( xTaskToSet, xIndex, pvValue, (TlsDeleteCallbackFunction_t)NULL );
+	}
+
+#else
+
 	void vTaskSetThreadLocalStoragePointer( TaskHandle_t xTaskToSet, BaseType_t xIndex, void *pvValue )
 	{
 	TCB_t *pxTCB;
@@ -3390,6 +3438,8 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 			pxTCB->pvThreadLocalStoragePointers[ xIndex ] = pvValue;
 		}
 	}
+
+#endif /* configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS */
 
 #endif /* configNUM_THREAD_LOCAL_STORAGE_POINTERS */
 /*-----------------------------------------------------------*/
@@ -3486,7 +3536,9 @@ static void prvCheckTasksWaitingTermination( void )
 				--uxDeletedTasksWaitingCleanUp;
 			}
 			taskEXIT_CRITICAL();
-
+#if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 ) && ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+			prvDeleteTLS( pxTCB );
+#endif
 			prvDeleteTCB( pxTCB );
 		}
 	}

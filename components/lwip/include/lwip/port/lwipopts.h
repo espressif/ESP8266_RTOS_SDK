@@ -390,13 +390,13 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
 /**
  * ARP_TABLE_SIZE: Number of active MAC-IP address pairs cached.
  */
-#define ARP_TABLE_SIZE                  10
+#define ARP_TABLE_SIZE                  CONFIG_LWIP_ARP_TABLE_SIZE
 
 /** the time an ARP entry stays valid after its last update,
  *  for ARP_TMR_INTERVAL = 1000, this is
  *  (60 * 5) seconds = 5 minutes.
  */
-#define ARP_MAXAGE                      300
+#define ARP_MAXAGE                      CONFIG_LWIP_ARP_MAXAGE
 
 /**
  * ARP_QUEUEING==1: Multiple outgoing packets are queued during hardware address
@@ -506,7 +506,7 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
  * PBUF_POOL_SIZE > IP_REASS_MAX_PBUFS so that the stack is still able to receive
  * packets even if the maximum amount of fragments is enqueued for reassembly!
  */
-#define IP_REASS_MAX_PBUFS              10
+#define IP_REASS_MAX_PBUFS              CONFIG_LWIP_IP_REASS_MAX_PBUFS
 
 /**
  * IP_DEFAULT_TTL: Default value for Time-To-Live used by transport layers.
@@ -518,13 +518,13 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
  * filter per pcb on udp and raw send operations. To enable broadcast filter
  * on recv operations, you also have to set IP_SOF_BROADCAST_RECV=1.
  */
-#define IP_SOF_BROADCAST                0
+#define IP_SOF_BROADCAST                CONFIG_LWIP_IP_SOF_BROADCAST
 
 /**
  * IP_SOF_BROADCAST_RECV (requires IP_SOF_BROADCAST=1) enable the broadcast
  * filter on recv operations.
  */
-#define IP_SOF_BROADCAST_RECV           0
+#define IP_SOF_BROADCAST_RECV           CONFIG_LWIP_IP_SOF_BROADCAST_RECV
 
 /**
  * IP_FORWARD_ALLOW_TX_ON_RX_NETIF==1: allow ip_forward() to send packets back
@@ -559,7 +559,7 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
  * LWIP_ICMP==1: Enable ICMP module inside the IP stack.
  * Be careful, disable that make your product non-compliant to RFC1122
  */
-#define LWIP_ICMP                       1
+#define LWIP_ICMP                       CONFIG_LWIP_ICMP
 
 /**
  * ICMP_TTL: Default value for Time-To-Live used by ICMP packets.
@@ -592,7 +592,7 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
 /**
  * LWIP_RAW==1: Enable application layer to hook into the IP layer itself.
  */
-#define LWIP_RAW                        0
+#define LWIP_RAW                        CONFIG_LWIP_RAW
 
 /**
  * LWIP_RAW==1: Enable application layer to hook into the IP layer itself.
@@ -733,7 +733,7 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
 /**
  * LWIP_IGMP==1: Turn on IGMP module.
  */
-#define LWIP_IGMP                       1
+#define LWIP_IGMP                       CONFIG_LWIP_IGMP
 
 /**
  * LWIP_MULTICAST_TX_OPTIONS==1: Enable multicast TX support like the socket options
@@ -770,7 +770,7 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
  * The first server can be initialized automatically by defining
  * DNS_SERVER_ADDRESS(ipaddr), where 'ipaddr' is an 'ip_addr_t*'
  */
-#define DNS_MAX_SERVERS                 2
+#define DNS_MAX_SERVERS                 CONFIG_DNS_MAX_SERVERS
 
 /** DNS do a name checking between the query and the response. */
 #define DNS_DOES_NAME_CHECK             1
@@ -1313,7 +1313,7 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
  * The latter 2 can be invoked up by calling netconn_thread_init()/netconn_thread_cleanup().
  * Ports may call these for threads created with sys_thread_new().
  */
-#define LWIP_NETCONN_SEM_PER_THREAD     0
+#define LWIP_NETCONN_SEM_PER_THREAD     1
 
 /** LWIP_NETCONN_FULLDUPLEX==1: Enable code that allows reading from one thread,
  * writing from a 2nd thread and closing from a 3rd thread at the same time.
@@ -1405,17 +1405,17 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
 /**
  * LWIP_SO_LINGER==1: Enable SO_LINGER processing.
  */
-#define LWIP_SO_LINGER                  0
+#define LWIP_SO_LINGER                  CONFIG_LWIP_SO_LINGER
 
 /**
  * If LWIP_SO_RCVBUF is used, this is the default value for recv_bufsize.
  */
-#define RECV_BUFSIZE_DEFAULT            INT_MAX
+#define RECV_BUFSIZE_DEFAULT            CONFIG_LWIP_RECV_BUFSIZE_DEFAULT
 
 /**
  * By default, TCP socket/netconn close waits 20 seconds max to send the FIN
  */
-#define LWIP_TCP_CLOSE_TIMEOUT_MS_DEFAULT 20000
+#define LWIP_TCP_CLOSE_TIMEOUT_MS_DEFAULT CONFIG_LWIP_TCP_CLOSE_TIMEOUT_MS_DEFAULT
 
 /**
  * SO_REUSE==1: Enable SO_REUSEADDR option.
@@ -1671,12 +1671,12 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
 /**
  * LWIP_IPV6==1: Enable IPv6
  */
-#define LWIP_IPV6                       1
+#define LWIP_IPV6                       CONFIG_LWIP_IPV6
 
 /**
  * LWIP_IPV6_NUM_ADDRESSES: Number of IPv6 addresses per netif.
  */
-#define LWIP_IPV6_NUM_ADDRESSES         3
+#define LWIP_IPV6_NUM_ADDRESSES         CONFIG_LWIP_IPV6_NUM_ADDRESSES
 
 /**
  * LWIP_IPV6_FORWARD==1: Forward IPv6 packets across netifs
@@ -2144,6 +2144,12 @@ extern void vPortFree(void *pv, const char * file, unsigned line);
  */
 #if CONFIG_LWIP_SNTP_DEBUG
 #define SNTP_DEBUG                      LWIP_DBG_ON
+#endif
+
+#ifdef CONFIG_LWIP_THREAD_SAFE_DEBUG
+#define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_ON
+#else
+#define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_OFF
 #endif
 
 /**

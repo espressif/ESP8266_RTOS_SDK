@@ -67,14 +67,15 @@ static void tcpip_adapter_dhcpc_done()
     if (clientdhcp->state == DHCP_STATE_BOUND) {
         /*send event here*/
         system_station_got_ip_set();
-        printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n", IP2STR(&(esp_netif[0]->ip_addr.u_addr.ip4)),
-               IP2STR(&(esp_netif[0]->netmask.u_addr.ip4)), IP2STR(&(esp_netif[0]->gw.u_addr.ip4)));
+        printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n", IP2STR(ip_2_ip4(&(esp_netif[0]->ip_addr))),
+               IP2STR(ip_2_ip4(&(esp_netif[0]->netmask))), IP2STR(ip_2_ip4(&(esp_netif[0]->gw))));
     } else if (dhcp_fail_time < 100) {
         TCPIP_ATAPTER_LOG("dhcpc time(ms): %d\n", dhcp_fail_time * 200);
         dhcp_fail_time ++;
         os_timer_setfn(get_ip_timer, tcpip_adapter_dhcpc_done, NULL);
         os_timer_arm(get_ip_timer, 200, 1);
     } else {
+        extern void wifi_station_dhcpc_event();
         wifi_station_dhcpc_event();
         TCPIP_ATAPTER_LOG("ERROR dhcp get ip error\n");
         free(get_ip_timer);
@@ -255,8 +256,8 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
         if (dhcps_flag) {
             dhcps_start(&esp_ip[TCPIP_ADAPTER_IF_AP]);
             printf("dhcp server start:(");
-            printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR, IP2STR(&(esp_netif[TCPIP_ADAPTER_IF_AP]->ip_addr.u_addr.ip4)),
-                   IP2STR(&(esp_netif[TCPIP_ADAPTER_IF_AP]->netmask.u_addr.ip4)), IP2STR(&(esp_netif[TCPIP_ADAPTER_IF_AP]->gw.u_addr.ip4)));
+            printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR, IP2STR((ip_2_ip4(&esp_netif[TCPIP_ADAPTER_IF_AP]->ip_addr))),
+                   IP2STR((ip_2_ip4(&esp_netif[TCPIP_ADAPTER_IF_AP]->netmask))), IP2STR((ip_2_ip4(&esp_netif[TCPIP_ADAPTER_IF_AP]->gw))));
             printf(")\n");
         }
 
@@ -318,10 +319,15 @@ bool wifi_get_ip_info(WIFI_INTERFACE netif_index, struct ip_info* if_ip)
         return false;
     }
 
+    if(if_ip == NULL){
+        TCPIP_ATAPTER_LOG("ERROR ip info is NULL\n");
+        return false;        
+    }
+
     TCPIP_ATAPTER_LOG("Get netif[%d] ip info\n", netif_index);
-    if_ip->ip = esp_netif[netif_index]->ip_addr.u_addr.ip4;
-    if_ip->netmask = esp_netif[netif_index]->netmask.u_addr.ip4;
-    if_ip->gw = esp_netif[netif_index]->gw.u_addr.ip4;
+    if_ip->ip.addr = ip_addr_get_ip4_u32(&esp_netif[netif_index]->ip_addr);
+    if_ip->netmask.addr = ip_addr_get_ip4_u32(&esp_netif[netif_index]->netmask);
+    if_ip->gw.addr = ip_addr_get_ip4_u32(&esp_netif[netif_index]->gw);
     return true;
 }
 
@@ -336,6 +342,7 @@ bool wifi_create_linklocal_ip(uint8_t netif_index, bool ipv6)
     return true;
 }
 
+#if LWIP_IPV6
 bool wifi_get_linklocal_ip(uint8_t netif_index, ip6_addr_t* linklocal)
 {
     if (TCPIP_ADAPTER_IF_VALID(netif_index)) {
@@ -350,7 +357,6 @@ bool wifi_get_linklocal_ip(uint8_t netif_index, ip6_addr_t* linklocal)
 
 bool wifi_get_ipinfo_v6(uint8_t netif_index, uint8_t ip_index, ip6_addr_t* ipv6)
 {
-#if LWIP_IPV6
 
     if (TCPIP_ADAPTER_IF_VALID(netif_index)) {
         memcpy(ipv6, &esp_netif[netif_index]->ip6_addr[ip_index], sizeof(ip6_addr_t));
@@ -359,9 +365,9 @@ bool wifi_get_ipinfo_v6(uint8_t netif_index, uint8_t ip_index, ip6_addr_t* ipv6)
         return false;
     }
 
-#endif
     return true;
 }
+#endif
 
 bool wifi_softap_dhcps_start(void)
 {

@@ -50,5 +50,16 @@ typedef xTaskHandle sys_thread_t;
 
 #define LWIP_COMPAT_MUTEX 0
 
+#if LWIP_NETCONN_SEM_PER_THREAD
+
+sys_sem_t* sys_thread_sem_init(void);
+void sys_thread_sem_deinit(void);
+sys_sem_t* sys_thread_sem_get(void);
+
+#define LWIP_NETCONN_THREAD_SEM_ALLOC() sys_thread_sem_init()
+#define LWIP_NETCONN_THREAD_SEM_FREE()  sys_thread_sem_deinit()
+#define LWIP_NETCONN_THREAD_SEM_GET()   sys_thread_sem_get()
+#endif
+
 #endif /* __SYS_ARCH_H__ */
 
