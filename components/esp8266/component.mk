@@ -7,7 +7,7 @@ COMPONENT_SRCDIRS := driver source
 
 LIBS ?=
 ifndef CONFIG_NO_BLOBS
-LIBS += airkiss cirom crypto espnow gcc hal core mirom net80211 \
+LIBS += airkiss crypto espnow gcc hal core net80211 \
         phy pp pwm smartconfig ssc wpa wps
 endif
 

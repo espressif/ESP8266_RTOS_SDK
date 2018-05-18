@@ -65,6 +65,8 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
+#include "sdkconfig.h"
+
 /*-----------------------------------------------------------
  * Application specific definitions.
  *
@@ -139,6 +141,11 @@ priority values, 0 to 15.  This must correspond to the
 configKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
 NVIC value of 255. */
 #define configLIBRARY_KERNEL_INTERRUPT_PRIORITY	15
+
+// add it to menuconfig later
+#ifdef CONFIG_FREERTOS_ENABLE_REENT
+#define configUSE_NEWLIB_REENTRANT  1
+#endif
 
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 #define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
