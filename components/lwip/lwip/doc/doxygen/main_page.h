@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @defgroup lwip lwIP
  *
  * @defgroup infrastructure Infrastructure
