@@ -20,7 +20,7 @@
      (((t) > 0x35A) ?            \
       (((t) >> 2) * ((APB_CLK_FREQ >> 4) / 250000) + ((t)&0x3) * ((APB_CLK_FREQ >> 4) / 1000000)) : \
       (((t) *(APB_CLK_FREQ>>4)) / 1000000)) :    \
-         0)
+     0)
 
 #define FRC1_ENABLE_TIMER   BIT7
 #define FRC1_AUTO_LOAD      BIT6
@@ -42,9 +42,9 @@ static void (* user_hw_timer_cb)(void) = NULL;
 
 bool frc1_auto_load = false;
 
-static void hw_timer_isr_cb(void *arg)
+static void hw_timer_isr_cb(void* arg)
 {
-    if(frc1_auto_load == false ) {
+    if (frc1_auto_load == false) {
         RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
                       DIVDED_BY_16 | TM_EDGE_INT);
     }
@@ -56,12 +56,13 @@ static void hw_timer_isr_cb(void *arg)
 
 void hw_timer_disarm(void)
 {
-    RTC_REG_WRITE(FRC1_CTRL_ADDRESS,0);
+    RTC_REG_WRITE(FRC1_CTRL_ADDRESS, 0);
 }
 
-void hw_timer_arm(uint32 val ,bool req)
+void hw_timer_arm(uint32 val, bool req)
 {
     frc1_auto_load = req;
+
     if (frc1_auto_load == true) {
         RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
                       FRC1_AUTO_LOAD | DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
@@ -81,6 +82,7 @@ void hw_timer_set_func(void (* user_hw_timer_cb_set)(void))
 void hw_timer_init(void)
 {
 #if 0
+
     if (req == 1) {
         RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
                       FRC1_AUTO_LOAD | DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
@@ -123,7 +125,7 @@ void hw_test_timer_cb(void)
 void user_init(void)
 {
     hw_timer_init();
-    hw_timer_set_func(hw_test_timer_cb,1);
+    hw_timer_set_func(hw_test_timer_cb, 1);
     hw_timer_arm(100);
 }
 #endif

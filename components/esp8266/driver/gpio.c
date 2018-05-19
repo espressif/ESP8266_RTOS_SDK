@@ -17,7 +17,7 @@
 
 #include "gpio.h"
 
-void gpio_config(GPIO_ConfigTypeDef *pGPIOConfig)
+void gpio_config(GPIO_ConfigTypeDef* pGPIOConfig)
 {
     uint16 gpio_pin_mask = pGPIOConfig->GPIO_Pin;
     uint32 io_reg;
@@ -111,7 +111,7 @@ uint32 gpio_input_get(void)
  * application-specific handler may wish to use gpio_intr_pending
  * to check for any additional pending interrupts before it returns.
  */
-void gpio_intr_handler_register(void *fn, void *arg)
+void gpio_intr_handler_register(void* fn, void* arg)
 {
     _xt_isr_attach(ETS_GPIO_INUM, fn, arg);
 }

@@ -18,6 +18,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #include "esp8266/gpio_register.h"
 
 #define ETS_GPIO_INTR_ENABLE()  _xt_isr_unmask(1 << ETS_GPIO_INUM)
@@ -95,8 +96,8 @@ typedef enum {
 typedef enum {
     GPIO_Mode_Input = 0x0,          /**< GPIO mode : Input */
     GPIO_Mode_Out_OD,               /**< GPIO mode : Output_OD */
-    GPIO_Mode_Output ,              /**< GPIO mode : Output */
-    GPIO_Mode_Sigma_Delta ,         /**< GPIO mode : Sigma_Delta */
+    GPIO_Mode_Output,               /**< GPIO mode : Output */
+    GPIO_Mode_Sigma_Delta,          /**< GPIO mode : Sigma_Delta */
 } GPIOMode_TypeDef;
 
 typedef enum {
@@ -127,104 +128,104 @@ typedef struct {
   * @{
   */
 
-/**  
+/**
   * @brief   Set GPIO pin output level.
-  * 
+  *
   * @param   gpio_no   : The GPIO sequence number.
-  * @param   bit_value : GPIO pin output level.  
-  *  
+  * @param   bit_value : GPIO pin output level.
+  *
   * @return  null
   */
 #define GPIO_OUTPUT_SET(gpio_no, bit_value) \
     gpio_output_conf(bit_value<<gpio_no, ((~bit_value)&0x01)<<gpio_no, 1<<gpio_no, 0)
 
-/**  
+/**
   * @brief   Set GPIO pin output level.
-  * 
+  *
   * @param   gpio_bits : The GPIO bit number.
-  * @param   bit_value : GPIO pin output level.  
-  *  
+  * @param   bit_value : GPIO pin output level.
+  *
   * @return  null
   */
 #define GPIO_OUTPUT(gpio_bits, bit_value) \
     if(bit_value) gpio_output_conf(gpio_bits, 0, gpio_bits, 0);\
     else gpio_output_conf(0, gpio_bits, gpio_bits, 0)
 
-/**  
+/**
   * @brief   Disable GPIO pin output.
-  * 
+  *
   * @param   gpio_no : The GPIO sequence number.
-  *  
+  *
   * @return  null
   */
 #define GPIO_DIS_OUTPUT(gpio_no)    gpio_output_conf(0, 0, 0, 1<<gpio_no)
 
-/**  
+/**
   * @brief   Enable GPIO pin intput.
-  * 
+  *
   * @param   gpio_bits : The GPIO bit number.
-  *  
+  *
   * @return  null
   */
 #define GPIO_AS_INPUT(gpio_bits)    gpio_output_conf(0, 0, 0, gpio_bits)
 
-/**  
+/**
   * @brief   Enable GPIO pin output.
-  * 
+  *
   * @param   gpio_bits : The GPIO bit number.
-  *  
+  *
   * @return  null
   */
 #define GPIO_AS_OUTPUT(gpio_bits)   gpio_output_conf(0, 0, gpio_bits, 0)
 
-/**  
+/**
   * @brief   Sample the level of GPIO input.
-  * 
+  *
   * @param   gpio_no : The GPIO sequence number.
-  *  
-  * @return  the level of GPIO input 
+  *
+  * @return  the level of GPIO input
   */
 #define GPIO_INPUT_GET(gpio_no)     ((gpio_input_get()>>gpio_no)&BIT(0))
 
-/**  
+/**
   * @brief   Enable GPIO16 output.
-  * 
+  *
   * @param   null
-  *  
+  *
   * @return  null
   */
 void gpio16_output_conf(void);
 
-/**  
+/**
   * @brief   Set GPIO16 output level.
-  * 
+  *
   * @param   uint8 value : GPIO16 output level.
-  *  
+  *
   * @return  null
   */
 void gpio16_output_set(uint8 value);
 
-/**  
+/**
   * @brief   Enable GPIO pin intput.
-  * 
+  *
   * @param   null
-  *  
+  *
   * @return  null
   */
 void gpio16_input_conf(void);
 
-/**  
+/**
   * @brief   Sample the value of GPIO16 input.
-  * 
+  *
   * @param   null
-  *  
+  *
   * @return  the level  of GPIO16 input.
   */
 uint8 gpio16_input_get(void);
 
-/**  
+/**
   * @brief   Configure Gpio pins out or input.
-  * 
+  *
   * @param   uint32 set_mask     : Set the output for the high bit, the
   *                                corresponding bit is 1, the output of high,
   *                                the corresponding bit is 0, do not change the state.
@@ -238,51 +239,51 @@ uint8 gpio16_input_get(void);
   */
 void gpio_output_conf(uint32 set_mask, uint32 clear_mask, uint32 enable_mask, uint32 disable_mask);
 
-/**  
+/**
   * @brief   Register an application-specific interrupt handler for GPIO pin interrupts.
-  * 
+  *
   * @param   void *fn:interrupt handler for GPIO pin interrupts.
   * @param   void *arg:interrupt handler's arg
-  *  
+  *
   * @return  null
   */
-void gpio_intr_handler_register(void *fn, void *arg);
+void gpio_intr_handler_register(void* fn, void* arg);
 
-/**  
+/**
   * @brief   Configure GPIO wake up to light sleep,Only level way is effective.
-  * 
+  *
   * @param   uint32 i : Gpio sequence number
   * @param   GPIO_INT_TYPE intr_state : the level of wake up to light sleep
-  *  
+  *
   * @return  null
   */
 void gpio_pin_wakeup_enable(uint32 i, GPIO_INT_TYPE intr_state);
 
-/**  
+/**
   * @brief   Disable GPIO wake up to light sleep.
-  * 
+  *
   * @param   null
-  *  
+  *
   * @return  null
   */
 void gpio_pin_wakeup_disable();
 
-/**  
+/**
   * @brief   Config interrupt types of GPIO pin.
-  * 
+  *
   * @param   uint32 i : The GPIO sequence number.
   * @param   GPIO_INT_TYPE intr_state : GPIO interrupt types.
-  *  
+  *
   * @return  null
   */
 void gpio_pin_intr_state_set(uint32 i, GPIO_INT_TYPE intr_state);
 
-/**  
+/**
   * @brief   Sample the value of GPIO input pins and returns a bitmask.
-  * 
+  *
   * @param   null
-  *  
-  * @return  bitmask of GPIO pins input 
+  *
+  * @return  bitmask of GPIO pins input
   */
 uint32 gpio_input_get(void);
 
