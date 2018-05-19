@@ -72,7 +72,7 @@ void __ShowRegValue(const char* func, uint32_t line)
  * @brief Based on pAttr initialize SPI module.
  *
  */
-void ICACHE_FLASH_ATTR SPIInit(SpiNum spiNum, SpiAttr* pAttr)
+void SPIInit(SpiNum spiNum, SpiAttr* pAttr)
 {
     if ((spiNum > SpiNum_HSPI)
             || (NULL == pAttr)) {
@@ -189,7 +189,7 @@ void ICACHE_FLASH_ATTR SPIInit(SpiNum spiNum, SpiAttr* pAttr)
  * @brief Set address value by master mode.
  *
  */
-void ICACHE_FLASH_ATTR SPIMasterCfgAddr(SpiNum spiNum, uint32_t addr)
+void SPIMasterCfgAddr(SpiNum spiNum, uint32_t addr)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
@@ -203,7 +203,7 @@ void ICACHE_FLASH_ATTR SPIMasterCfgAddr(SpiNum spiNum, uint32_t addr)
  * @brief Set command value by master mode.
  *
  */
-void ICACHE_FLASH_ATTR SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd)
+void SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
@@ -218,7 +218,7 @@ void ICACHE_FLASH_ATTR SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd)
  * @brief Send data to slave.
  *
  */
-int ICACHE_FLASH_ATTR SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
+int SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
 {
     char idx = 0;
 
@@ -300,7 +300,7 @@ int ICACHE_FLASH_ATTR SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
  * @brief Receive data from slave.
  *
  */
-int ICACHE_FLASH_ATTR SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
+int SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
 {
     char idx = 0;
 
@@ -390,7 +390,7 @@ int ICACHE_FLASH_ATTR SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
  * @brief Load data to send buffer by slave mode.
  *
  */
-int ICACHE_FLASH_ATTR SPISlaveSendData(SpiNum spiNum, uint32_t* pInData, uint8_t outLen)
+int SPISlaveSendData(SpiNum spiNum, uint32_t* pInData, uint8_t outLen)
 {
     if (NULL == pInData) {
         return -1;
@@ -409,7 +409,7 @@ int ICACHE_FLASH_ATTR SPISlaveSendData(SpiNum spiNum, uint32_t* pInData, uint8_t
  * @brief Configurate slave prepare for receive data.
  *
  */
-int ICACHE_FLASH_ATTR SPISlaveRecvData(SpiNum spiNum, void(*isrFunc)(void*))
+int SPISlaveRecvData(SpiNum spiNum, void(*isrFunc)(void*))
 {
     if ((spiNum > SpiNum_HSPI)) {
         return -1;
@@ -437,7 +437,7 @@ int ICACHE_FLASH_ATTR SPISlaveRecvData(SpiNum spiNum, void(*isrFunc)(void*))
  * @brief Send data to slave(ESP8266 register of RD_STATUS or WR_STATUS).
  *
  */
-void ICACHE_FLASH_ATTR SPIMasterSendStatus(SpiNum spiNum, uint8_t data)
+void SPIMasterSendStatus(SpiNum spiNum, uint8_t data)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
@@ -468,7 +468,7 @@ void ICACHE_FLASH_ATTR SPIMasterSendStatus(SpiNum spiNum, uint8_t data)
  * @brief Receive status register from slave(ESP8266).
  *
  */
-int ICACHE_FLASH_ATTR SPIMasterRecvStatus(SpiNum spiNum)
+int SPIMasterRecvStatus(SpiNum spiNum)
 {
     if (spiNum > SpiNum_HSPI) {
         return -1;
@@ -503,7 +503,7 @@ int ICACHE_FLASH_ATTR SPIMasterRecvStatus(SpiNum spiNum)
  * @brief Select SPI CS pin.
  *
  */
-void ICACHE_FLASH_ATTR SPICsPinSelect(SpiNum spiNum, SpiPinCS pinCs)
+void SPICsPinSelect(SpiNum spiNum, SpiPinCS pinCs)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
@@ -518,7 +518,7 @@ void ICACHE_FLASH_ATTR SPICsPinSelect(SpiNum spiNum, SpiPinCS pinCs)
  * @brief Enable SPI interrupt source.
  *
  */
-void ICACHE_FLASH_ATTR SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc)
+void SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
@@ -531,7 +531,7 @@ void ICACHE_FLASH_ATTR SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc)
  * @brief Disable SPI interrupt source.
  *
  */
-void ICACHE_FLASH_ATTR SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc)
+void SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
@@ -544,7 +544,7 @@ void ICACHE_FLASH_ATTR SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc)
  * @brief Clear all of SPI interrupt source.
  *
  */
-void ICACHE_FLASH_ATTR SPIIntClear(SpiNum spiNum)
+void SPIIntClear(SpiNum spiNum)
 {
     if (spiNum > SpiNum_HSPI) {
         return;

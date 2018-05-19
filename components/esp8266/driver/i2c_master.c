@@ -31,8 +31,7 @@ LOCAL uint8 m_nLastSCL;
  *                uint8 SCL
  * Returns      : NONE
 *******************************************************************************/
-LOCAL void ICACHE_FLASH_ATTR
-i2c_master_setDC(uint8 SDA, uint8 SCL)
+LOCAL void i2c_master_setDC(uint8 SDA, uint8 SCL)
 {
     SDA &= 0x01;
     SCL &= 0x01;
@@ -60,8 +59,7 @@ i2c_master_setDC(uint8 SDA, uint8 SCL)
  * Parameters   : NONE
  * Returns      : uint8 - SDA bit value
 *******************************************************************************/
-LOCAL uint8 ICACHE_FLASH_ATTR
-i2c_master_getDC(void)
+LOCAL uint8 i2c_master_getDC(void)
 {
     uint8 sda_out;
     ETS_INTR_LOCK();
@@ -76,8 +74,7 @@ i2c_master_getDC(void)
  * Parameters   : NONE
  * Returns      : NONE
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-i2c_master_init(void)
+void i2c_master_init(void)
 {
     uint8 i;
 
@@ -110,8 +107,7 @@ i2c_master_init(void)
  * Parameters   : NONE
  * Returns      : NONE
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-i2c_master_gpio_init(void)
+void i2c_master_gpio_init(void)
 {
     ETS_GPIO_INTR_DISABLE() ;
 //    ETS_INTR_LOCK();
@@ -138,8 +134,7 @@ i2c_master_gpio_init(void)
  * Parameters   : NONE
  * Returns      : NONE
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-i2c_master_start(void)
+void i2c_master_start(void)
 {
     i2c_master_setDC(1, m_nLastSCL);
     i2c_master_wait(5);
@@ -155,8 +150,7 @@ i2c_master_start(void)
  * Parameters   : NONE
  * Returns      : NONE
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-i2c_master_stop(void)
+void i2c_master_stop(void)
 {
     i2c_master_wait(5);
 
@@ -174,8 +168,7 @@ i2c_master_stop(void)
  * Parameters   : uint8 level - 0 or 1
  * Returns      : NONE
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-i2c_master_setAck(uint8 level)
+void i2c_master_setAck(uint8 level)
 {
     i2c_master_setDC(m_nLastSDA, 0);
     i2c_master_wait(5);
@@ -195,8 +188,7 @@ i2c_master_setAck(uint8 level)
  * Parameters   : NONE
  * Returns      : uint8 - ack value, 0 or 1
 *******************************************************************************/
-uint8 ICACHE_FLASH_ATTR
-i2c_master_getAck(void)
+uint8 i2c_master_getAck(void)
 {
     uint8 retVal;
     i2c_master_setDC(m_nLastSDA, 0);
@@ -220,8 +212,7 @@ i2c_master_getAck(void)
 * Parameters   : NONE
 * Returns      : true : get ack ; false : get nack
 *******************************************************************************/
-bool ICACHE_FLASH_ATTR
-i2c_master_checkAck(void)
+bool i2c_master_checkAck(void)
 {
     if (i2c_master_getAck()) {
         return FALSE;
@@ -236,8 +227,7 @@ i2c_master_checkAck(void)
 * Parameters   : NONE
 * Returns      : NONE
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-i2c_master_send_ack(void)
+void i2c_master_send_ack(void)
 {
     i2c_master_setAck(0x0);
 }
@@ -248,8 +238,7 @@ i2c_master_send_ack(void)
 * Parameters   : NONE
 * Returns      : NONE
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-i2c_master_send_nack(void)
+void i2c_master_send_nack(void)
 {
     i2c_master_setAck(0x1);
 }
@@ -260,8 +249,7 @@ i2c_master_send_nack(void)
  * Parameters   : NONE
  * Returns      : uint8 - readed value
 *******************************************************************************/
-uint8 ICACHE_FLASH_ATTR
-i2c_master_readByte(void)
+uint8 i2c_master_readByte(void)
 {
     uint8 retVal = 0;
     uint8 k, i;
@@ -300,8 +288,7 @@ i2c_master_readByte(void)
  * Parameters   : uint8 wrdata - write value
  * Returns      : NONE
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-i2c_master_writeByte(uint8 wrdata)
+void i2c_master_writeByte(uint8 wrdata)
 {
     uint8 dat;
     sint8 i;
