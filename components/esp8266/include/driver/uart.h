@@ -93,15 +93,15 @@ typedef struct {
     UART_ParityMode parity;    // chip size in byte
     UART_StopBits   stop_bits;
     UART_HwFlowCtrl flow_ctrl;
-    uint8           UART_RxFlowThresh ;
-    uint32          UART_InverseMask;
+    uint8_t           UART_RxFlowThresh ;
+    uint32_t          UART_InverseMask;
 } UART_ConfigTypeDef;
 
 typedef struct {
-    uint32 UART_IntrEnMask;
-    uint8  UART_RX_TimeOutIntrThresh;
-    uint8  UART_TX_FifoEmptyIntrThresh;
-    uint8  UART_RX_FifoFullIntrThresh;
+    uint32_t UART_IntrEnMask;
+    uint8_t  UART_RX_TimeOutIntrThresh;
+    uint8_t  UART_TX_FifoEmptyIntrThresh;
+    uint8_t  UART_RX_FifoFullIntrThresh;
 } UART_IntrConfTypeDef;
 
 //=======================================
@@ -144,21 +144,21 @@ void UART_ResetFifo(UART_Port uart_no);
   * @brief  Clear uart interrupt flags.
   *
   * @param   UART_Port uart_no : UART0 or UART1
-  * @param   uint32 clr_mask : To clear the interrupt bits
+  * @param   uint32_t clr_mask : To clear the interrupt bits
   *
   * @return  null
   */
-void UART_ClearIntrStatus(UART_Port uart_no, uint32 clr_mask);
+void UART_ClearIntrStatus(UART_Port uart_no, uint32_t clr_mask);
 
 /**
   * @brief   Enable uart interrupts .
   *
   * @param   UART_Port uart_no : UART0 or UART1
-  * @param   uint32 ena_mask : To enable the interrupt bits
+  * @param   uint32_t ena_mask : To enable the interrupt bits
   *
   * @return  null
   */
-void UART_SetIntrEna(UART_Port uart_no, uint32 ena_mask);
+void UART_SetIntrEna(UART_Port uart_no, uint32_t ena_mask);
 
 /**
   * @brief   Register an application-specific interrupt handler for Uarts interrupts.
@@ -233,22 +233,22 @@ void UART_SetParity(UART_Port uart_no, UART_ParityMode Parity_mode) ;
   * @brief   Configure the Baud rate.
   *
   * @param   UART_Port uart_no : UART0 or UART1
-  * @param   uint32 baud_rate : the Baud rate
+  * @param   uint32_t baud_rate : the Baud rate
   *
   * @return  null
   */
-void UART_SetBaudrate(UART_Port uart_no, uint32 baud_rate);
+void UART_SetBaudrate(UART_Port uart_no, uint32_t baud_rate);
 
 /**
   * @brief   Configure Hardware flow control.
   *
   * @param   UART_Port uart_no : UART0 or UART1
   * @param   UART_HwFlowCtrl flow_ctrl : Hardware flow control mode
-  * @param   uint8 rx_thresh : threshold of Hardware flow control
+  * @param   uint8_t rx_thresh : threshold of Hardware flow control
   *
   * @return  null
   */
-void UART_SetFlowCtrl(UART_Port uart_no, UART_HwFlowCtrl flow_ctrl, uint8 rx_thresh);
+void UART_SetFlowCtrl(UART_Port uart_no, UART_HwFlowCtrl flow_ctrl, uint8_t rx_thresh);
 
 /**
   * @brief   Configure trigging signal of uarts.

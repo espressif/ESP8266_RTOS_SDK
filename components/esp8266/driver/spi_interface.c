@@ -457,7 +457,7 @@ void SPIMasterSendStatus(SpiNum spiNum, uint8_t data)
     SET_PERI_REG_BITS(SPI_USER1(spiNum), SPI_USR_MOSI_BITLEN,
                       ((sizeof(data) << 3) - 1), SPI_USR_MOSI_BITLEN_S);
 
-    WRITE_PERI_REG(SPI_W0(spiNum), (uint32)(data));
+    WRITE_PERI_REG(SPI_W0(spiNum), (uint32_t)(data));
     // Start SPI
     SET_PERI_REG_MASK(SPI_CMD(spiNum), SPI_USR);
 
@@ -496,7 +496,7 @@ int SPIMasterRecvStatus(SpiNum spiNum)
     (void)(READ_PERI_REG(SPI_W0(spiNum)) & 0xff);
     SHOWREG();
 
-    return (uint8)(READ_PERI_REG(SPI_W0(spiNum)) & 0xff);
+    return (uint8_t)(READ_PERI_REG(SPI_W0(spiNum)) & 0xff);
 }
 
 /**

@@ -43,15 +43,15 @@ void hw_timer_init(void);
 /**
   * @brief   Set a trigger timer delay to enable this timer.
   *
-  * @param   uint32 val : Timing
+  * @param   uint32_t val : Timing
   *    - In autoload mode, range : 50 ~ 0x7fffff
   *    - In non-autoload mode, range : 10 ~ 0x7fffff
   *
-  * @param   uint8 req : 0, not autoload; 1, autoload mode.
+  * @param   uint8_t req : 0, not autoload; 1, autoload mode.
   *
   * @return  null
   */
-void hw_timer_arm(uint32 val, bool req);
+void hw_timer_arm(uint32_t val, bool req);
 
 /**
   * @brief   disable this timer.
@@ -67,7 +67,7 @@ void hw_timer_disarm(void);
   *
   *         For enabled timer, timer callback has to be set.
   *
-  * @param   uint32 val : Timing
+  * @param   uint32_t val : Timing
   *    - In autoload mode, range : 50 ~ 0x7fffff
   *    - In non-autoload mode, range : 10 ~ 0x7fffff
   *

@@ -59,7 +59,7 @@ void hw_timer_disarm(void)
     RTC_REG_WRITE(FRC1_CTRL_ADDRESS, 0);
 }
 
-void hw_timer_arm(uint32 val, bool req)
+void hw_timer_arm(uint32_t val, bool req)
 {
     frc1_auto_load = req;
 
@@ -102,18 +102,18 @@ void hw_timer_init(void)
 #if 0
 #include "hw_timer.h"
 
-#define REG_WRITE(_r,_v)    (*(volatile uint32 *)(_r)) = (_v)
-#define REG_READ(_r)        (*(volatile uint32 *)(_r))
+#define REG_WRITE(_r,_v)    (*(volatile uint32_t *)(_r)) = (_v)
+#define REG_READ(_r)        (*(volatile uint32_t *)(_r))
 #define WDEV_NOW()          REG_READ(0x3ff20c00)
 
-uint32 tick_now2 = 0;
+uint32_t tick_now2 = 0;
 void hw_test_timer_cb(void)
 {
     static uint16 j = 0;
     j++;
 
     if ((WDEV_NOW() - tick_now2) >= 1000000) {
-        static uint32 idx = 1;
+        static uint32_t idx = 1;
         tick_now2 = WDEV_NOW();
         os_printf("b%u:%d\n", idx++, j);
         j = 0;

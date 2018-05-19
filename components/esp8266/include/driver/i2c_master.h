@@ -117,7 +117,7 @@ void i2c_master_start(void);
   *
   * @return  null
   */
-void i2c_master_setAck(uint8 level);
+void i2c_master_setAck(uint8_t level);
 
 /**
   * @brief   confirm if peer send ack.
@@ -126,7 +126,7 @@ void i2c_master_setAck(uint8 level);
   *
   * @return  null
   */
-uint8 i2c_master_getAck(void);
+uint8_t i2c_master_getAck(void);
 
 /**
   * @brief   read Byte from i2c bus.
@@ -135,16 +135,16 @@ uint8 i2c_master_getAck(void);
   *
   * @return  the byte which read from i2c bus.
   */
-uint8 i2c_master_readByte(void);
+uint8_t i2c_master_readByte(void);
 
 /**
   * @brief   write wrdata value(one byte) into i2c.
   *
-  * @param uint8 wrdata:write value
+  * @param uint8_t wrdata:write value
   *
   * @return  null
   */
-void i2c_master_writeByte(uint8 wrdata);
+void i2c_master_writeByte(uint8_t wrdata);
 
 /**
   * @brief   i2c_master_checkAck.

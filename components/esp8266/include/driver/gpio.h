@@ -19,6 +19,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #include "esp8266/gpio_register.h"
 
 #define ETS_GPIO_INTR_ENABLE()  _xt_isr_unmask(1 << ETS_GPIO_INUM)
@@ -106,7 +108,7 @@ typedef enum {
 } GPIO_Pullup_IF;
 
 typedef struct {
-    uint16           GPIO_Pin;      /**< GPIO pin */
+    uint16_t           GPIO_Pin;      /**< GPIO pin */
     GPIOMode_TypeDef GPIO_Mode;     /**< GPIO mode */
     GPIO_Pullup_IF   GPIO_Pullup;   /**< GPIO pullup */
     GPIO_INT_TYPE    GPIO_IntrType; /**< GPIO interrupt type */
@@ -199,11 +201,11 @@ void gpio16_output_conf(void);
 /**
   * @brief   Set GPIO16 output level.
   *
-  * @param   uint8 value : GPIO16 output level.
+  * @param   uint8_t value : GPIO16 output level.
   *
   * @return  null
   */
-void gpio16_output_set(uint8 value);
+void gpio16_output_set(uint8_t value);
 
 /**
   * @brief   Enable GPIO pin intput.
@@ -221,23 +223,23 @@ void gpio16_input_conf(void);
   *
   * @return  the level  of GPIO16 input.
   */
-uint8 gpio16_input_get(void);
+uint8_t gpio16_input_get(void);
 
 /**
   * @brief   Configure Gpio pins out or input.
   *
-  * @param   uint32 set_mask     : Set the output for the high bit, the
+  * @param   uint32_t set_mask     : Set the output for the high bit, the
   *                                corresponding bit is 1, the output of high,
   *                                the corresponding bit is 0, do not change the state.
-  * @param   uint32 set_mask     : Set the output for the high bit, the
+  * @param   uint32_t set_mask     : Set the output for the high bit, the
   *                                corresponding bit is 1, the output of low,
   *                                the corresponding bit is 0, do not change the state.
-  * @param   uint32 enable_mask  : Enable Output
-  * @param   uint32 disable_mask : Enable Input
+  * @param   uint32_t enable_mask  : Enable Output
+  * @param   uint32_t disable_mask : Enable Input
   *
   * @return  null
   */
-void gpio_output_conf(uint32 set_mask, uint32 clear_mask, uint32 enable_mask, uint32 disable_mask);
+void gpio_output_conf(uint32_t set_mask, uint32_t clear_mask, uint32_t enable_mask, uint32_t disable_mask);
 
 /**
   * @brief   Register an application-specific interrupt handler for GPIO pin interrupts.
@@ -252,12 +254,12 @@ void gpio_intr_handler_register(void* fn, void* arg);
 /**
   * @brief   Configure GPIO wake up to light sleep,Only level way is effective.
   *
-  * @param   uint32 i : Gpio sequence number
+  * @param   uint32_t i : Gpio sequence number
   * @param   GPIO_INT_TYPE intr_state : the level of wake up to light sleep
   *
   * @return  null
   */
-void gpio_pin_wakeup_enable(uint32 i, GPIO_INT_TYPE intr_state);
+void gpio_pin_wakeup_enable(uint32_t i, GPIO_INT_TYPE intr_state);
 
 /**
   * @brief   Disable GPIO wake up to light sleep.
@@ -271,12 +273,12 @@ void gpio_pin_wakeup_disable();
 /**
   * @brief   Config interrupt types of GPIO pin.
   *
-  * @param   uint32 i : The GPIO sequence number.
+  * @param   uint32_t i : The GPIO sequence number.
   * @param   GPIO_INT_TYPE intr_state : GPIO interrupt types.
   *
   * @return  null
   */
-void gpio_pin_intr_state_set(uint32 i, GPIO_INT_TYPE intr_state);
+void gpio_pin_intr_state_set(uint32_t i, GPIO_INT_TYPE intr_state);
 
 /**
   * @brief   Sample the value of GPIO input pins and returns a bitmask.
@@ -285,7 +287,7 @@ void gpio_pin_intr_state_set(uint32 i, GPIO_INT_TYPE intr_state);
   *
   * @return  bitmask of GPIO pins input
   */
-uint32 gpio_input_get(void);
+uint32_t gpio_input_get(void);
 
 /**
   * @}
