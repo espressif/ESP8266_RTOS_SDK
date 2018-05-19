@@ -34,7 +34,7 @@ typedef struct _os_event_ {
 xTaskHandle xUartTaskHandle;
 xQueueHandle xQueueUart;
 
-LOCAL STATUS uart_tx_one_char(uint8 uart, uint8 TxChar)
+static STATUS uart_tx_one_char(uint8 uart, uint8 TxChar)
 {
     while (true) {
         uint32 fifo_cnt = READ_PERI_REG(UART_STATUS(uart)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S);
@@ -48,7 +48,7 @@ LOCAL STATUS uart_tx_one_char(uint8 uart, uint8 TxChar)
     return OK;
 }
 
-LOCAL void uart1_write_char(char c)
+static void uart1_write_char(char c)
 {
     if (c == '\n') {
         uart_tx_one_char(UART1, '\r');
@@ -59,7 +59,7 @@ LOCAL void uart1_write_char(char c)
     }
 }
 
-LOCAL void uart0_write_char(char c)
+static void uart0_write_char(char c)
 {
     if (c == '\n') {
         uart_tx_one_char(UART0, '\r');
@@ -71,7 +71,7 @@ LOCAL void uart0_write_char(char c)
 }
 
 #if 0
-LOCAL void uart_rx_intr_handler_ssc(void *arg)
+static void uart_rx_intr_handler_ssc(void *arg)
 {
     /* uart0 and uart1 intr combine togther, when interrupt occur, see reg 0x3ff20020, bit2, bit0 represents
       * uart1 and uart0 respectively
@@ -97,7 +97,7 @@ LOCAL void uart_rx_intr_handler_ssc(void *arg)
     portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
-LOCAL void uart_config(uint8 uart_no, UartDevice *uart)
+static void uart_config(uint8 uart_no, UartDevice *uart)
 {
     if (uart_no == UART1) {
         PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_U1TXD_BK);
@@ -136,7 +136,7 @@ LOCAL void uart_config(uint8 uart_no, UartDevice *uart)
 #endif
 
 #if 0
-LOCAL void uart_task(void *pvParameters)
+static void uart_task(void *pvParameters)
 {
     os_event_t e;
 
@@ -315,7 +315,7 @@ void UART_IntrConfig(UART_Port uart_no,  UART_IntrConfTypeDef* pUARTIntrConf)
     SET_PERI_REG_MASK(UART_INT_ENA(uart_no), pUARTIntrConf->UART_IntrEnMask);
 }
 
-LOCAL void uart0_rx_intr_handler(void* para)
+static void uart0_rx_intr_handler(void* para)
 {
     /* uart0 and uart1 intr combine togther, when interrupt occur, see reg 0x3ff20020, bit2, bit0 represents
     * uart1 and uart0 respectively

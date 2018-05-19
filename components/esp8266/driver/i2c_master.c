@@ -20,8 +20,8 @@
 
 #include "i2c_master.h"
 
-LOCAL uint8 m_nLastSDA;
-LOCAL uint8 m_nLastSCL;
+static uint8 m_nLastSDA;
+static uint8 m_nLastSCL;
 
 /******************************************************************************
  * FunctionName : i2c_master_setDC
@@ -31,7 +31,7 @@ LOCAL uint8 m_nLastSCL;
  *                uint8 SCL
  * Returns      : NONE
 *******************************************************************************/
-LOCAL void i2c_master_setDC(uint8 SDA, uint8 SCL)
+static void i2c_master_setDC(uint8 SDA, uint8 SCL)
 {
     SDA &= 0x01;
     SCL &= 0x01;
@@ -59,7 +59,7 @@ LOCAL void i2c_master_setDC(uint8 SDA, uint8 SCL)
  * Parameters   : NONE
  * Returns      : uint8 - SDA bit value
 *******************************************************************************/
-LOCAL uint8 i2c_master_getDC(void)
+static uint8 i2c_master_getDC(void)
 {
     uint8 sda_out;
     ETS_INTR_LOCK();
