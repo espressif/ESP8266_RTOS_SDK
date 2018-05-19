@@ -86,7 +86,7 @@ ifeq ($(ESPTOOLPY_FLASHFREQ),"80m")
 ESP8266_FREQDIV ?= 15
 endif
 
-ESP8266_BINSCRIPT ?= python $(IDF_PATH)/tools/gen_appbin.py
+ESP8266_BINSCRIPT ?= $(PYTHON) $(IDF_PATH)/tools/gen_appbin.py
 
 ifdef DEBUG_BIN_PARAM
 $(info mode:$(ESP8266_BOOTMODE) flash:$(ESP8266_FLASHMODE) freqdiv:$(ESP8266_FREQDIV), size_map:$(ESP8266_SIZEMAP))
