@@ -17,12 +17,15 @@
  * @brief Defines and Macros for the SPI.
  */
 
-#include "spi_interface.h"
-#include "esp8266/eagle_soc.h"
+#include <stdint.h>
+
 #include "esp8266/ets_sys.h"
 #include "esp8266/pin_mux_register.h"
-#include "esp_libc.h"
-#include "freertos/portmacro.h"
+
+#include "spi_interface.h"
+
+#include "FreeRTOS.h"
+
 //*****************************************************************************
 //
 // Make sure all of the definitions in this header have a C binding.

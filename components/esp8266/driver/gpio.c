@@ -12,8 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp_common.h"
-#include "freertos/portmacro.h"
+
+#include <stdint.h>
+
+#include "esp8266/eagle_soc.h"
+#include "esp8266/pin_mux_register.h"
+
+#include "FreeRTOS.h"
 
 #include "gpio.h"
 

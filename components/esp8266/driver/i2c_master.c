@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "c_types.h"
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "esp8266/ets_sys.h"
 #include "esp_misc.h"
-#include "gpio.h"
-#include "freertos/portmacro.h"
 
+#include "gpio.h"
 #include "i2c_master.h"
+
+#include "FreeRTOS.h"
 
 static uint8_t m_nLastSDA;
 static uint8_t m_nLastSCL;
@@ -215,9 +218,9 @@ uint8_t i2c_master_getAck(void)
 bool i2c_master_checkAck(void)
 {
     if (i2c_master_getAck()) {
-        return FALSE;
+        return false;
     } else {
-        return TRUE;
+        return true;
     }
 }
 

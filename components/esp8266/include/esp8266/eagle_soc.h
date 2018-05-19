@@ -25,6 +25,8 @@
 #ifndef _EAGLE_SOC_H_
 #define _EAGLE_SOC_H_
 
+#include <stdint.h>
+
 //Register Bits{{
 #define BIT31   0x80000000
 #define BIT30   0x40000000
@@ -64,8 +66,8 @@
 #define ETS_UNCACHED_ADDR(addr) (addr)
 #define ETS_CACHED_ADDR(addr)   (addr)
 
-#define READ_PERI_REG(addr)                             (*((volatile uint32 *)ETS_UNCACHED_ADDR(addr)))
-#define WRITE_PERI_REG(addr, val)                       (*((volatile uint32 *)ETS_UNCACHED_ADDR(addr))) = (uint32)(val)
+#define READ_PERI_REG(addr)                             (*((volatile uint32_t *)ETS_UNCACHED_ADDR(addr)))
+#define WRITE_PERI_REG(addr, val)                       (*((volatile uint32_t *)ETS_UNCACHED_ADDR(addr))) = (uint32_t)(val)
 #define CLEAR_PERI_REG_MASK(reg, mask)                  WRITE_PERI_REG((reg), (READ_PERI_REG(reg) & (~(mask))))
 #define SET_PERI_REG_MASK(reg, mask)                    WRITE_PERI_REG((reg), (READ_PERI_REG(reg) | (mask)))
 #define GET_PERI_REG_BITS(reg, hipos, lowpos)           ((READ_PERI_REG(reg) >> (lowpos)) & ((1 << ((hipos) - (lowpos) + 1)) - 1))

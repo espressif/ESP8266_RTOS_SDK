@@ -12,8 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp_common.h"
-#include "freertos/portmacro.h"
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "esp8266/ets_sys.h"
+#include "esp8266/eagle_soc.h"
+#include "esp8266/timer_register.h"
+
+#include "FreeRTOS.h"
 
 #define US_TO_RTC_TIMER_TICKS(t)          \
     ((t) ?          \

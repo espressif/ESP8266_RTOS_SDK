@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp_common.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#include "esp8266/pin_mux_register.h"
+#include "esp8266/uart_register.h"
+#include "esp8266/rom_functions.h"
+
+#include "esp_misc.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
 #include "uart.h"
-#include "esp8266/rom_functions.h"
 
 enum {
     UART_EVENT_RX_CHAR,
