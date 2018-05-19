@@ -19,7 +19,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "mqtt/MQTTClient.h"
+#include "MQTTClient.h"
 
 #include "user_config.h"
 
