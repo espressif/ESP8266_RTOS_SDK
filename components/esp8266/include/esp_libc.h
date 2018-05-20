@@ -118,7 +118,7 @@ bool ICACHE_FLASH_ATTR check_memleak_debug_enable(void)
 #define os_free(s) \
 do{\
     static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-    vPortFree(s, mem_debug_file, __LINE__);\
+    vPortFree_trace(s, mem_debug_file, __LINE__);\
 }while(0)
 #endif
 
@@ -126,7 +126,7 @@ do{\
 #define os_malloc(s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-        pvPortMalloc(s, mem_debug_file, __LINE__, false);  \
+        pvPortMalloc_trace(s, mem_debug_file, __LINE__, false);  \
     })
 #endif
 
@@ -134,7 +134,7 @@ do{\
 #define os_malloc_iram(s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-        pvPortMalloc(s, mem_debug_file, __LINE__, true);  \
+        pvPortMalloc_trace(s, mem_debug_file, __LINE__, true);  \
     })
 #endif
 
@@ -142,7 +142,7 @@ do{\
 #define os_calloc(p, s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-        pvPortCalloc(p, s, mem_debug_file, __LINE__);  \
+        pvPortCalloc_trace(p, s, mem_debug_file, __LINE__);  \
     })
 #endif
 
@@ -150,7 +150,7 @@ do{\
 #define os_realloc(p, s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-        pvPortRealloc(p, s, mem_debug_file, __LINE__);  \
+        pvPortRealloc_trace(p, s, mem_debug_file, __LINE__);  \
     })
 #endif
 
@@ -158,7 +158,7 @@ do{\
 #define os_zalloc(s)    \
     ({  \
         static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;    \
-        pvPortZalloc(s, mem_debug_file, __LINE__);  \
+        pvPortZalloc_trace(s, mem_debug_file, __LINE__);  \
     })
 #endif
 
