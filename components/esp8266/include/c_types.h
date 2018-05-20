@@ -86,20 +86,6 @@ typedef enum {
 #define REG_SET_BIT(_r, _b)     (*(volatile uint32 *)(_r) |= (_b))
 #define REG_CLR_BIT(_r, _b)     (*(volatile uint32 *)(_r) &= ~(_b))
 
-#define STORE_ATTR          __attribute__((aligned(4)))
-
-#define SHMEM_ATTR
-
-#ifdef ICACHE_FLASH
-#define ICACHE_FLASH_ATTR __attribute__((section(".irom0.text")))
-#else
-#define ICACHE_FLASH_ATTR
-#endif
-
-#define DMEM_ATTR           __attribute__((section(".bss")))
-#define IRAM_ATTR           __attribute__((section(".text")))
-#define ICACHE_RODATA_ATTR  __attribute__((section(".irom.text")))
-
 #ifndef __cplusplus
 #define BOOL            bool
 #define TRUE            true
