@@ -19,6 +19,7 @@
 #include "esp8266/ets_sys.h"
 #include "esp8266/eagle_soc.h"
 #include "esp8266/uart_register.h"
+#include "freertos/portmacro.h"
 
 /*
  * Todo: panic output UART ID, we may add it to 'kconfig' to select target UART.

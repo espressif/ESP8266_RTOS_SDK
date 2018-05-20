@@ -19,6 +19,7 @@
 #endif
 
 #include <sys/types.h>
+#include "esp_libc.h"
 
 #if defined(MBEDTLS_ENTROPY_HARDWARE_ALT)
 /**
@@ -34,6 +35,6 @@ int mbedtls_hardware_poll( void *data,
 {
     os_get_random(output, len);
     *olen = len;
+    return 0;
 }
 #endif
-
