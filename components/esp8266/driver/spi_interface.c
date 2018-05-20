@@ -24,6 +24,7 @@
 #include "esp8266/ets_sys.h"
 #include "esp8266/pin_mux_register.h"
 #include "esp_libc.h"
+#include "freertos/portmacro.h"
 //*****************************************************************************
 //
 // Make sure all of the definitions in this header have a C binding.
@@ -457,7 +458,7 @@ int ICACHE_FLASH_ATTR SPIMasterRecvStatus(SpiNum spiNum)
 
     while (READ_PERI_REG(SPI_CMD(spiNum))&SPI_USR);
 
-    uint8_t data = (uint8)(READ_PERI_REG(SPI_W0(spiNum)) & 0xff);
+    (void)(READ_PERI_REG(SPI_W0(spiNum)) & 0xff);
     SHOWREG();
 
     return (uint8)(READ_PERI_REG(SPI_W0(spiNum)) & 0xff);

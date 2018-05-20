@@ -78,8 +78,10 @@ Called after minimal context has been saved, with interrupts disabled.
 RTOS port can call0 _xt_context_save to save the rest of the context.
 May only be called from assembly code by the 'call0' instruction.
 */
-// void XT_RTOS_INT_ENTER(void)
 #define XT_RTOS_INT_ENTER   _xt_int_enter
+#ifndef __ASSEMBLER__
+void XT_RTOS_INT_ENTER();
+#endif
 
 /*
 Inform RTOS of completion of an interrupt handler, and give control to
@@ -91,8 +93,10 @@ leaving only a minimal part of the context to be restored by the exit
 dispatcher. This function does not return to the place it was called from.
 May only be called from assembly code by the 'call0' instruction.
 */
-// void XT_RTOS_INT_EXIT(void)
 #define XT_RTOS_INT_EXIT    _xt_int_exit
+#ifndef __ASSEMBLER__
+void XT_RTOS_INT_EXIT();
+#endif
 
 /*
 Inform RTOS of the occurrence of a tick timer interrupt.
@@ -100,8 +104,10 @@ If RTOS has no tick timer, leave XT_RTOS_TIMER_INT undefined.
 May be coded in or called from C or assembly, per ABI conventions.
 RTOS may optionally define XT_TICK_PER_SEC in its own way (eg. macro).
 */
-// void XT_RTOS_TIMER_INT(void)
 #define XT_RTOS_TIMER_INT   _xt_timer_int
+#ifndef __ASSEMBLER__
+void XT_RTOS_TIMER_INT();
+#endif
 
 /*
 Return in a15 the base address of the co-processor state save area for the 

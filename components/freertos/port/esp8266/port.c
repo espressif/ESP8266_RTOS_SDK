@@ -75,6 +75,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "freertos/xtensa_rtos.h"
+#include "esp8266/rom_functions.h"
 
 #define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
 
@@ -90,6 +91,10 @@ static unsigned portBASE_TYPE uxCriticalNesting = 0;
 
 void vPortEnterCritical(void);
 void vPortExitCritical(void);
+
+void _xt_timer_int1(void);
+
+
 /*
  * See header file for description.
  */
@@ -237,7 +242,7 @@ void IRAM_ATTR vPortExitCritical(void)
                 }
             }
         } else {
-            ets_printf("E:C:%d\n", uxCriticalNesting);
+            ets_printf("E:C:%lu\n", uxCriticalNesting);
             PORT_ASSERT((uxCriticalNesting > 0));
         }
     }
@@ -245,9 +250,9 @@ void IRAM_ATTR vPortExitCritical(void)
 
 void ShowCritical(void)
 {
-    os_printf("ShowCritical:%d\n", uxCriticalNesting);
-    os_printf("HdlMacSig:%d\n", HdlMacSig);
-    os_printf("SWReq:%d\n", SWReq);
+    os_printf("ShowCritical:%lu\n", uxCriticalNesting);
+    os_printf("HdlMacSig:%c\n", HdlMacSig);
+    os_printf("SWReq:%c\n", SWReq);
 
     ets_delay_us(50000);
 }

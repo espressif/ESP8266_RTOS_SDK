@@ -126,7 +126,9 @@ typedef enum
     SpiPinCS_2 = 2,
 } SpiPinCS;
 
+#ifndef __GNUC__
 #pragma pack (1)
+#endif
 
 /**
  * @brief SPI attribute
@@ -137,7 +139,11 @@ typedef struct
     SpiSubMode     subMode;        ///< SPI SPI_CPOL SPI_CPHA mode
     SpiSpeed       speed;          ///< SPI Clock
     SpiBitOrder    bitOrder;       ///< SPI bit order
-} SpiAttr;
+} SpiAttr
+#ifndef __GNUC__
+__attribute ((packed))
+#endif
+;
 
 /**
  * @brief SPI attribute
@@ -150,9 +156,15 @@ typedef struct
     uint8_t     addrLen;        ///< Address byte length
     uint32_t    *data;          ///< Point to data buffer
     uint8_t     dataLen;        ///< Data byte length.
-} SpiData;
+} SpiData
+#ifndef __GNUC__
+__attribute ((packed))
+#endif
+;
 
+#ifndef __GNUC__
 #pragma upack (1)
+#endif
 
 #define SHOWREG() __ShowRegValue(__func__, __LINE__);
 

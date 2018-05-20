@@ -42,7 +42,7 @@ static void *task_create_wrapper(void *task_func, const char *name, uint32_t sta
     portBASE_TYPE ret;
     xTaskHandle handle;
 
-    ret = xTaskCreate(task_func, (const signed char *)name, stack_depth, param, prio, &handle);
+    ret = xTaskCreate(task_func, name, stack_depth, param, prio, &handle);
 
     return ret == pdPASS ? handle : NULL;
 }
@@ -248,7 +248,7 @@ static uint32_t get_free_heap_size_wrapper(void)
 
 static void *timer_create_wrapper(const char *name, uint32_t period_ticks, bool auto_load, void *arg, void (*cb)(void *timer))
 {
-    return xTimerCreate((const signed char *)name, period_ticks, auto_load, arg, (tmrTIMER_CALLBACK)cb);
+    return xTimerCreate(name, period_ticks, auto_load, arg, (tmrTIMER_CALLBACK)cb);
 }
 
 static void *timer_get_arg_wrapper(void *timer)

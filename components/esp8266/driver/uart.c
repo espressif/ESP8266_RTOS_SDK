@@ -29,6 +29,7 @@
 #include "freertos/queue.h"
 
 #include "uart.h"
+#include "esp8266/rom_functions.h"
 
 enum {
     UART_EVENT_RX_CHAR,
@@ -82,6 +83,7 @@ uart0_write_char(char c)
     }
 }
 
+#if 0
 LOCAL void
 uart_rx_intr_handler_ssc(void *arg)
 {
@@ -109,7 +111,6 @@ uart_rx_intr_handler_ssc(void *arg)
     portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
-#if 0
 LOCAL void
 uart_config(uint8 uart_no, UartDevice *uart)
 {
@@ -149,6 +150,7 @@ uart_config(uint8 uart_no, UartDevice *uart)
 }
 #endif
 
+#if 0
 LOCAL void
 uart_task(void *pvParameters)
 {
@@ -170,7 +172,6 @@ uart_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-#if 0
 void
 uart_init(void)
 {
@@ -351,11 +352,9 @@ uart0_rx_intr_handler(void *para)
     /* uart0 and uart1 intr combine togther, when interrupt occur, see reg 0x3ff20020, bit2, bit0 represents
     * uart1 and uart0 respectively
     */
-    uint8 RcvChar;
     uint8 uart_no = UART0;//UartDev.buff_uart_no;
     uint8 fifo_len = 0;
     uint8 buf_idx = 0;
-    uint8 fifo_tmp[128] = {0};
 
     uint32 uart_intr_status = READ_PERI_REG(UART_INT_ST(uart_no)) ;
 
