@@ -21,6 +21,7 @@
 #include "esp8266/ets_sys.h"
 #include "esp8266/eagle_soc.h"
 #include "esp8266/uart_register.h"
+#include "FreeRTOS.h"
 
 #define PANIC_UART 0
 
@@ -91,7 +92,11 @@ void _sbrk_r(void *ptr, int incr)
 
 void *_malloc_r(struct _reent *r, size_t n)
 {
+#ifndef MEMLEAK_DEBUG
     return pvPortMalloc(n);
+#else
+    return pvPortMalloc_trace(n, NULL, 0, false);
+#endif
 }
 
 void *_realloc_r(struct _reent *r, void *old_ptr, size_t n)

@@ -313,10 +313,13 @@ size_t xPortWantedSizeAlign(size_t xWantedSize)
 	return xWantedSize;
 }
 
-#ifndef MEMLEAK_DEBUG
 void *pvPortMalloc( size_t xWantedSize )
-#else
-void *pvPortMalloc( size_t xWantedSize, const char * file, unsigned line, bool use_iram)
+#ifdef MEMLEAK_DEBUG
+{
+    return pvPortMalloc_trace( xWantedSize, NULL, 0, false );
+}
+
+void *pvPortMalloc_trace( size_t xWantedSize, const char * file, unsigned line, bool use_iram )
 #endif
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
@@ -492,12 +495,16 @@ static bool is_inited = false;
 
 	return pvReturn;
 }
+
 /*-----------------------------------------------------------*/
 
-#ifndef MEMLEAK_DEBUG
 void vPortFree( void *pv )
-#else
-void vPortFree(void *pv, const char * file, unsigned line)
+#ifdef MEMLEAK_DEBUG
+{
+    return vPortFree_trace( pv, NULL, 0 );
+}
+
+void vPortFree_trace( void *pv, const char * file, unsigned line )
 #endif
 {
 uint8_t *puc = ( uint8_t * ) pv;
@@ -556,6 +563,7 @@ BlockLink_t *pxLink;
 		}
 	}
 }
+
 /*-----------------------------------------------------------*/
 
 #ifndef MEMLEAK_DEBUG
@@ -615,12 +623,12 @@ void *realloc(void *ptr, size_t nbytes) __attribute__((alias("pvPortRealloc")));
 #else
 
 /*-----------------------------------------------------------*/
-void *pvPortCalloc(size_t count, size_t size, const char * file, unsigned line)
+void *pvPortCalloc_trace(size_t count, size_t size, const char * file, unsigned line)
 {
   void *p;
 //ets_printf("1,");
   /* allocate 'count' objects of size 'size' */
-  p = pvPortMalloc(count * size, file, line, false);
+  p = pvPortMalloc_trace(count * size, file, line, false);
 //ets_printf("2,");
   if (p) {
     /* zero the memory */
@@ -629,59 +637,70 @@ void *pvPortCalloc(size_t count, size_t size, const char * file, unsigned line)
 //ets_printf("3,");
   return p;
 }
-/*-----------------------------------------------------------*/
-
-void *pvPortZalloc(size_t size, const char * file, unsigned line)
-{
-     return pvPortCalloc(1, size, file, line);
+void *pvPortCalloc(size_t count, size_t size) {
+    return pvPortCalloc_trace(count, size, NULL, 0);
 }
 /*-----------------------------------------------------------*/
 
-void *pvPortRealloc(void *mem, size_t newsize, const char *file, unsigned line)
+void *pvPortZalloc_trace(size_t size, const char * file, unsigned line)
+{
+     return pvPortCalloc_trace(1, size, file, line);
+}
+void *pvPortZalloc(size_t size) {
+    return pvPortZalloc_trace( size, NULL, 0 );
+}
+
+/*-----------------------------------------------------------*/
+
+void *pvPortRealloc_trace(void *mem, size_t newsize, const char *file, unsigned line)
 {
     if (newsize == 0) {
-        vPortFree(mem, file, line);
+        vPortFree_trace(mem, file, line);
         return NULL;
     }
 
     void *p;
-    p = pvPortMalloc(newsize, file, line, false);
+    p = pvPortMalloc_trace(newsize, file, line, false);
     if (p) {
         /* zero the memory */
         if (mem != NULL) {
             memcpy(p, mem, newsize);
-            vPortFree(mem, file, line);
+            vPortFree_trace(mem, file, line);
         }
     }
     return p;
+}
+
+void *pvPortRealloc(void *mem, size_t newsize) {
+    return pvPortRealloc_trace(mem, newsize, NULL, 0 );
 }
 /*-----------------------------------------------------------*/
 //For user
 void *malloc(size_t nbytes)
 {
 //ets_printf("u_m\n");
-	return pvPortMalloc( nbytes, mem_debug_file, 0, false);
+	return pvPortMalloc_trace( nbytes, mem_debug_file, 0, false);
 }
 
 void free(void *ptr)
 {
 //ets_printf("u_f\n");
-	vPortFree(ptr, mem_debug_file, 0);
+	vPortFree_trace(ptr, mem_debug_file, 0);
 }
 
 void *zalloc(size_t nbytes)
 {
-	return pvPortZalloc(nbytes, mem_debug_file, 0);
+	return pvPortZalloc_trace(nbytes, mem_debug_file, 0);
 }
 
 void *calloc(size_t count, size_t nbytes)
 {
-	return pvPortCalloc(count, nbytes, mem_debug_file, 0);
+	return pvPortCalloc_trace(count, nbytes, mem_debug_file, 0);
 }
 
 void *realloc(void *ptr, size_t nbytes)
 {
-	return pvPortRealloc(ptr, nbytes, mem_debug_file, 0);
+	return pvPortRealloc_trace(ptr, nbytes, mem_debug_file, 0);
 }
 
 /*

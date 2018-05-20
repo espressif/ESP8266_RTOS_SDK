@@ -194,10 +194,6 @@
 /**
  * Use DRAM instead of IRAM
  */
-extern void *pvPortMalloc( size_t xWantedSize, const char * file, unsigned line, bool use_iram);
-extern void *pvPortZalloc( size_t xWantedSize, const char * file, unsigned line);
-extern void *pvPortCalloc(size_t count, size_t size, const char * file, unsigned line);
-extern void vPortFree(void *pv, const char * file, unsigned line);
 #define mem_clib_free os_free
 #define mem_clib_malloc os_malloc
 #define mem_clib_calloc os_calloc
