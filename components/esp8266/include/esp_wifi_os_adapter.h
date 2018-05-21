@@ -28,6 +28,10 @@ extern "C" {
 #define OSI_QUEUE_SEND_BACK          1
 #define OSI_QUEUE_SEND_OVERWRITE     2
 
+#define OSI_MALLOC_CAP_32BIT         (1 << 1)
+#define OSI_MALLOC_CAP_8BIT          (1 << 2)
+#define OSI_MALLOC_CAP_DMA           (1 << 3)
+
 typedef struct {
     uint32_t (*enter_critical)(void);
     void (*exit_critical)(uint32_t tmp);
@@ -74,7 +78,10 @@ typedef struct {
     bool (*timer_stop)(void *timer, uint32_t ticks);
     bool (*timer_delete)(void *timer, uint32_t ticks);
 
-    void *(*malloc)(uint32_t size);
+    void *(*malloc)(uint32_t size, uint32_t cap);
+    void *(*zalloc)(uint32_t size, uint32_t cap);
+    void *(*realloc)(void *ptr, uint32_t size, uint32_t cap);
+    void *(*calloc)(uint32_t cnt, uint32_t size, uint32_t cap);
     void (*free)(void *p);
     uint32_t (*get_free_heap_size)(void);
 
