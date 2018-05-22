@@ -118,6 +118,11 @@ task.h is included from an application file. */
 #include "esp8266/ets_sys.h"
 #include "esp8266/rom_functions.h"
 
+#ifdef MEMLEAK_DEBUG
+#include "spi_flash.h"
+extern SpiFlashChip flashchip;
+#endif
+
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 #define mtCOVERAGE_TEST_MARKER()
@@ -212,9 +217,6 @@ check_memleak_debug_enable()
     return 0;
 }
 #ifdef MEMLEAK_DEBUG 
-#include "spi_flash.h"
-//extern SpiFlashChip *flashchip;
-extern SpiFlashChip flashchip;
 void prvInsertBlockIntoUsedList(BlockLink_t *pxBlockToInsert)
 {
         BlockLink_t *pxIterator;
@@ -227,24 +229,9 @@ void prvInsertBlockIntoUsedList(BlockLink_t *pxBlockToInsert)
         yFreeBytesRemaining += pxBlockToInsert->xBlockSize;
 }
 
-static const char *ICACHE_FLASH_ATTR
-vGetFileName(char *file_name_out, const char *file_name_in)
-{
-	if (((uint32)file_name_in & 0x40200000) == 0x40200000) {
-		uint16 str_len = ((strlen(file_name_in) - 1) / 4 + 1) * 4;
-
-		if (str_len > 32) {
-			str_len = 32;
-		}
-
-		memcpy(file_name_out, file_name_in, str_len);
-		file_name_out[str_len] = 0;
-
-		return file_name_out;
-	}
-
-	return file_name_in;
-}
+#define SPI_FLASH_START ((void *)0x40100000)
+#define SPI_FLASH_SIZE 0x100000
+#define SPI_FLASH_END (SPI_FLASH_START + SPI_FLASH_SIZE)
 
 void pvShowMalloc()
 {
@@ -258,11 +245,32 @@ void pvShowMalloc()
 //ets_printf("sh1,");
 	os_printf("--------Show Malloc--------\n");
 	for( pxIterator = &yStart; pxIterator->pxNextFreeBlock != NULL;pxIterator = pxIterator->pxNextFreeBlock) {
-		char file_name[33];
-		const char *file_name_printf;
+        BlockLink_t *blk = pxIterator->pxNextFreeBlock;
 //ets_printf("sh2,");
-		file_name_printf = vGetFileName(file_name, pxIterator->pxNextFreeBlock->file);
-		os_printf("F:%s\tL:%u\tmalloc %d\t@ %p\n", file_name_printf, pxIterator->pxNextFreeBlock->line, pxIterator->pxNextFreeBlock->xBlockSize - 0x80000000, ( void * ) ( ( ( unsigned char * ) pxIterator->pxNextFreeBlock ) + uxHeapStructSize));
+		const char *basename = blk->file;
+		/* This matches a similar check that vGetFileName() used to
+		 * do, but the code seems fine without it
+		if (SPI_FLASH_START <= (void *)basename && (void *)basename < SPI_FLASH_END) {
+			basename = NULL;
+		}
+		*/
+		/* The file contains the absolute path, try to shorten in by
+		 * looking for path separators. Checks for both UNIX and
+		 * Windows separators. */
+		if (basename) {
+			basename = strrchr(basename, '/');
+			if (basename) {
+				basename++;
+			} else {
+				basename = strrchr(blk->file, '\\');
+				if (basename) {
+					basename++;
+				}
+			}
+		} else {
+			basename = "";
+		}
+		os_printf("F:%-30sL:%4u malloc %10d @ %p\n", basename, blk->line, blk->xBlockSize - 0x80000000, ( void * ) ( ( ( unsigned char * ) blk ) + uxHeapStructSize));
 //ets_printf("sh3,");
 //		ets_delay_us(2000);
         system_soft_wdt_feed();
