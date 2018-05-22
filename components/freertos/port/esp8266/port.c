@@ -80,14 +80,14 @@
 #define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
 
 extern char NMIIrqIsOn;
-static char HdlMacSig = 0;
-static char SWReq = 0;
+static uint8_t HdlMacSig = 0;
+static uint8_t SWReq = 0;
 
 unsigned cpu_sr;
 
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */
-static unsigned portBASE_TYPE uxCriticalNesting = 0;
+static unsigned int uxCriticalNesting = 0;
 
 void vPortEnterCritical(void);
 void vPortExitCritical(void);
@@ -242,7 +242,7 @@ void IRAM_ATTR vPortExitCritical(void)
                 }
             }
         } else {
-            ets_printf("E:C:%lu\n", uxCriticalNesting);
+            ets_printf("E:C:%u\n", uxCriticalNesting);
             PORT_ASSERT((uxCriticalNesting > 0));
         }
     }
@@ -250,9 +250,9 @@ void IRAM_ATTR vPortExitCritical(void)
 
 void ShowCritical(void)
 {
-    os_printf("ShowCritical:%lu\n", uxCriticalNesting);
-    os_printf("HdlMacSig:%c\n", HdlMacSig);
-    os_printf("SWReq:%c\n", SWReq);
+    os_printf("ShowCritical:%u\n", uxCriticalNesting);
+    os_printf("HdlMacSig:%u\n", HdlMacSig);
+    os_printf("SWReq:%u\n", SWReq);
 
     ets_delay_us(50000);
 }
