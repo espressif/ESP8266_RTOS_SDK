@@ -114,7 +114,7 @@ void *_calloc_r(struct _reent *r, size_t c, size_t s)
     return p;
 }
 
-void *_free_r(struct _reent *r, void *ptr)
+void _free_r(struct _reent *r, void *ptr)
 {
     vPortFree(ptr);
 }

@@ -68,7 +68,7 @@ void TimerCountdown(Timer* timer, unsigned int timeout)
 int TimerLeftMS(Timer* timer)
 {
     xTaskCheckForTimeOut(&timer->xTimeOut, &timer->xTicksToWait); /* updates xTicksToWait to the number left */
-    return (timer->xTicksToWait < 0) ? 0 : (timer->xTicksToWait * portTICK_RATE_MS);
+    return timer->xTicksToWait * portTICK_RATE_MS;
 }
 
 
@@ -90,7 +90,6 @@ static int esp_read(Network* n, unsigned char* buffer, unsigned int len, unsigne
     portTickType xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
     xTimeOutType xTimeOut;
     int recvLen = 0;
-    int recv_timeout = timeout_ms;
     int rc = 0;
 
     struct timeval timeout;
@@ -128,7 +127,6 @@ static int esp_write(Network* n, unsigned char* buffer, unsigned int len, unsign
     portTickType xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
     xTimeOutType xTimeOut;
     int sentLen = 0;
-    int send_timeout = timeout_ms;
     int rc = 0;
     int readysock;
 

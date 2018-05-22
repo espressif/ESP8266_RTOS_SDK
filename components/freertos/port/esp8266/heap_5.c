@@ -116,12 +116,11 @@ task.h is included from an application file. */
 #include "freertos/task.h"
 
 #include "esp8266/ets_sys.h"
+#include "esp8266/rom_functions.h"
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 #define mtCOVERAGE_TEST_MARKER()
-#define traceFREE(...)
-#define traceMALLOC(...)
 
 #if 1
 #define mem_printf(fmt, args...) ets_printf(fmt,## args)
@@ -253,7 +252,7 @@ void pvShowMalloc()
 		const char *file_name_printf;
 //ets_printf("sh2,");
 		file_name_printf = vGetFileName(file_name, pxIterator->pxNextFreeBlock->file);
-		os_printf("F:%s\tL:%u\tmalloc %d\t@ %x\n", file_name_printf, pxIterator->pxNextFreeBlock->line, pxIterator->pxNextFreeBlock->xBlockSize - 0x80000000, ( void * ) ( ( ( unsigned char * ) pxIterator->pxNextFreeBlock ) + uxHeapStructSize));
+		os_printf("F:%s\tL:%u\tmalloc %d\t@ %p\n", file_name_printf, pxIterator->pxNextFreeBlock->line, pxIterator->pxNextFreeBlock->xBlockSize - 0x80000000, ( void * ) ( ( ( unsigned char * ) pxIterator->pxNextFreeBlock ) + uxHeapStructSize));
 //ets_printf("sh3,");
 //		ets_delay_us(2000);
         system_soft_wdt_feed();
@@ -531,7 +530,7 @@ BlockLink_t *pxLink;
 				ETS_INTR_LOCK();
 #ifdef MEMLEAK_DEBUG
 				if(prvRemoveBlockFromUsedList(pxLink) < 0){
-					ets_printf("%x already freed\n", pv);
+					ets_printf("%p already freed\n", pv);
 				}
 				else
 #endif
@@ -865,4 +864,3 @@ const HeapRegion_t *pxHeapRegion;
     yFreeBytesRemaining = 0;
 #endif
 }
-
