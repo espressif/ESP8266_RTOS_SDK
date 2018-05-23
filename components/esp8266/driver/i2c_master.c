@@ -10,7 +10,9 @@
 *******************************************************************************/
 #include "c_types.h"
 #include "esp8266/ets_sys.h"
+#include "esp_misc.h"
 #include "gpio.h"
+#include "freertos/portmacro.h"
 
 #include "i2c_master.h"
 

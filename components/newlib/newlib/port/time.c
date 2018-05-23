@@ -19,6 +19,8 @@
 #include "esp_system.h"
 #include "esp_timer.h"
 
+#include "FreeRTOS.h"
+
 static uint64_t s_boot_time;
 
 static os_timer_t microsecond_overflow_timer;

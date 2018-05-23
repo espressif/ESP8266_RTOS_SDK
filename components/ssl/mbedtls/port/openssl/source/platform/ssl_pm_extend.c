@@ -173,9 +173,9 @@ int base64_encode(uint8* dst, size_t dlen, size_t* olen,
 
         *olen = p - dst;
         *p  = 0;
-
-        return 0;
     }
+
+    return 0;
 }
 
 /*
@@ -214,7 +214,7 @@ int SSL_CTX_load_verify_locations(SSL_CTX* ctx, const char* CAfile,
                                   const char* CApath)
 {
     X509* cacrt = NULL;
-    cacrt = d2i_X509(NULL, CAfile, strlen(CAfile));
+    cacrt = d2i_X509(NULL, (const unsigned char *)CAfile, strlen(CAfile));
 
     if (cacrt) {
         SSL_CTX_add_client_CA(ctx, cacrt);
@@ -343,7 +343,7 @@ If buf is NULL , the error string is placed in a static buffer.
 */
 char* ERR_error_string(unsigned long e, char* ret)
 {
-    return;
+    return NULL;
 }
 
 /*

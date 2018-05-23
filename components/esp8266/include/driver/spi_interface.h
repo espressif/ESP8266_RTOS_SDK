@@ -126,8 +126,6 @@ typedef enum
     SpiPinCS_2 = 2,
 } SpiPinCS;
 
-#pragma pack (1)
-
 /**
  * @brief SPI attribute
  */
@@ -151,8 +149,6 @@ typedef struct
     uint32_t    *data;          ///< Point to data buffer
     uint8_t     dataLen;        ///< Data byte length.
 } SpiData;
-
-#pragma upack (1)
 
 #define SHOWREG() __ShowRegValue(__func__, __LINE__);
 

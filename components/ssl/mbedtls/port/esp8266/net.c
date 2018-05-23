@@ -128,7 +128,10 @@ int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host, const char 
  */
 int mbedtls_net_bind( mbedtls_net_context *ctx, const char *bind_ip, const char *port, int proto )
 {
-    int n, ret;
+#if SO_REUSE
+    int n;
+#endif
+    int ret;
     struct addrinfo hints, *addr_list, *cur;
 
     if( ( ret = net_prepare() ) != 0 )
