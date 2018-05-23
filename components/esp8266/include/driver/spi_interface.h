@@ -1,19 +1,17 @@
-/**
- *  spi_interface.h
- *
- * Defines and Macros for the SPI.
- *
- * Copyright @ 2015 Espressif System Co., Ltd.
- * All Rights Reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are NOT permitted except as agreed by
- * Espressif System Co., Ltd.
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- */
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /**
  * @file spi_interface.h
  * @brief Defines and Macros for the SPI.
@@ -49,8 +47,7 @@ extern "C"
  * @brief Support HSPI and SPI module.
  *
  */
-typedef enum
-{
+typedef enum {
     SpiNum_SPI   = 0,
     SpiNum_HSPI  = 1,
 } SpiNum;
@@ -59,8 +56,7 @@ typedef enum
  * @brief The SPI module can work in either master or slave mode.
  *
  */
-typedef enum
-{
+typedef enum {
     SpiMode_Master = 0,
     SpiMode_Slave  = 1,
 } SpiMode;
@@ -75,8 +71,7 @@ typedef enum
  *   1        0        2
  *   1        1        3
  */
-typedef enum
-{
+typedef enum {
     SpiSubMode_0 = 0,
     SpiSubMode_1 = 1,
     SpiSubMode_2 = 2,
@@ -89,8 +84,7 @@ typedef enum
  * @attention Max speed 80MHz
  *
  */
-typedef enum
-{
+typedef enum {
     SpiSpeed_2MHz  = 40 - 1,
     SpiSpeed_5MHz  = 16 - 1,
     SpiSpeed_10MHz = 8 - 1,
@@ -102,15 +96,13 @@ typedef enum
  * @brief The SPI mode working speed.
  *
  */
-typedef enum
-{
+typedef enum {
     SpiBitOrder_MSBFirst = 0,
     SpiBitOrder_LSBFirst = 1,
 } SpiBitOrder;
 
 // @brief SPI interrupt soource defined.
-typedef enum
-{
+typedef enum {
     SpiIntSrc_TransDoneEn = SPI_TRANS_DONE_EN,
     SpiIntSrc_WrStaDoneEn = SPI_SLV_WR_STA_DONE_EN,
     SpiIntSrc_RdStaDoneEn = SPI_SLV_RD_STA_DONE_EN,
@@ -119,8 +111,7 @@ typedef enum
 } SpiIntSrc;
 
 // @brief SPI CS pin.
-typedef enum
-{
+typedef enum {
     SpiPinCS_0 = 0,
     SpiPinCS_1 = 1,
     SpiPinCS_2 = 2,
@@ -129,8 +120,7 @@ typedef enum
 /**
  * @brief SPI attribute
  */
-typedef struct
-{
+typedef struct {
     SpiMode        mode;           ///< Master or slave mode
     SpiSubMode     subMode;        ///< SPI SPI_CPOL SPI_CPHA mode
     SpiSpeed       speed;          ///< SPI Clock
@@ -140,13 +130,12 @@ typedef struct
 /**
  * @brief SPI attribute
  */
-typedef struct
-{
+typedef struct {
     uint16_t    cmd;            ///< Command value
     uint8_t     cmdLen;         ///< Command byte length
-    uint32_t    *addr;          ///< Point to address value
+    uint32_t*    addr;          ///< Point to address value
     uint8_t     addrLen;        ///< Address byte length
-    uint32_t    *data;          ///< Point to data buffer
+    uint32_t*    data;          ///< Point to data buffer
     uint8_t     dataLen;        ///< Data byte length.
 } SpiData;
 
@@ -156,7 +145,7 @@ typedef struct
  * @brief Print debug information.
  *
  */
-void __ShowRegValue(const char * func, uint32_t line);
+void __ShowRegValue(const char* func, uint32_t line);
 
 /**
  * @brief Initialize SPI module.
@@ -204,7 +193,7 @@ void SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd);
  *
  * @return int, -1:indicates failure,others indicates success.
  */
- int SPIMasterSendData(SpiNum spiNum, SpiData* pInData);
+int SPIMasterSendData(SpiNum spiNum, SpiData* pInData);
 
 /**
  * @brief Receive data from slave by master.
@@ -217,7 +206,7 @@ void SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd);
  * @return int, -1:indicates failure,others indicates success.
  *
  */
- int SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData);
+int SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData);
 
 /**
  * @brief Load data to slave send buffer.
@@ -231,7 +220,7 @@ void SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd);
  *
  * @return int, -1:indicates failure,others indicates success.
  */
-int SPISlaveSendData(SpiNum spiNum, uint32_t *pInData, uint8_t outLen);
+int SPISlaveSendData(SpiNum spiNum, uint32_t* pInData, uint8_t outLen);
 
 /**
  * @brief Receive data by slave.

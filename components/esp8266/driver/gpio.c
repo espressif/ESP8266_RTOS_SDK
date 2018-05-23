@@ -1,38 +1,33 @@
-/*
- * ESPRSSIF MIT License
- *
- * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
- *
- * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
- * it is free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
- * to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- */
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#include "esp_common.h"
-#include "freertos/portmacro.h"
+
+#include <stdint.h>
+
+#include "esp8266/eagle_soc.h"
+#include "esp8266/pin_mux_register.h"
+
+#include "FreeRTOS.h"
 
 #include "gpio.h"
 
-void gpio_config(GPIO_ConfigTypeDef *pGPIOConfig)
+void gpio_config(GPIO_ConfigTypeDef* pGPIOConfig)
 {
-    uint16 gpio_pin_mask = pGPIOConfig->GPIO_Pin;
-    uint32 io_reg;
-    uint8 io_num = 0;
-    uint32 pin_reg;
+    uint16_t gpio_pin_mask = pGPIOConfig->GPIO_Pin;
+    uint32_t io_reg;
+    uint8_t io_num = 0;
+    uint32_t pin_reg;
 
     if (pGPIOConfig->GPIO_Mode == GPIO_Mode_Input) {
         GPIO_AS_INPUT(gpio_pin_mask);
@@ -94,7 +89,7 @@ void gpio_config(GPIO_ConfigTypeDef *pGPIOConfig)
  * writes is significant, calling code should divide a single call
  * into multiple calls.
  */
-void gpio_output_conf(uint32 set_mask, uint32 clear_mask, uint32 enable_mask, uint32 disable_mask)
+void gpio_output_conf(uint32_t set_mask, uint32_t clear_mask, uint32_t enable_mask, uint32_t disable_mask)
 {
     GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, set_mask);
     GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, clear_mask);
@@ -105,7 +100,7 @@ void gpio_output_conf(uint32 set_mask, uint32 clear_mask, uint32 enable_mask, ui
 /*
  * Sample the value of GPIO input pins and returns a bitmask.
  */
-uint32 gpio_input_get(void)
+uint32_t gpio_input_get(void)
 {
     return GPIO_REG_READ(GPIO_IN_ADDRESS);
 }
@@ -121,7 +116,7 @@ uint32 gpio_input_get(void)
  * application-specific handler may wish to use gpio_intr_pending
  * to check for any additional pending interrupts before it returns.
  */
-void gpio_intr_handler_register(void *fn, void *arg)
+void gpio_intr_handler_register(void* fn, void* arg)
 {
     _xt_isr_attach(ETS_GPIO_INUM, fn, arg);
 }
@@ -129,9 +124,9 @@ void gpio_intr_handler_register(void *fn, void *arg)
 /*
   only highlevel and lowlevel intr can use for wakeup
 */
-void gpio_pin_wakeup_enable(uint32 i, GPIO_INT_TYPE intr_state)
+void gpio_pin_wakeup_enable(uint32_t i, GPIO_INT_TYPE intr_state)
 {
-    uint32 pin_reg;
+    uint32_t pin_reg;
 
     if ((intr_state == GPIO_PIN_INTR_LOLEVEL) || (intr_state == GPIO_PIN_INTR_HILEVEL)) {
         portENTER_CRITICAL();
@@ -148,8 +143,8 @@ void gpio_pin_wakeup_enable(uint32 i, GPIO_INT_TYPE intr_state)
 
 void gpio_pin_wakeup_disable(void)
 {
-    uint8  i;
-    uint32 pin_reg;
+    uint8_t  i;
+    uint32_t pin_reg;
 
     for (i = 0; i < GPIO_PIN_COUNT; i++) {
         pin_reg = GPIO_REG_READ(GPIO_PIN_ADDR(i));
@@ -163,9 +158,9 @@ void gpio_pin_wakeup_disable(void)
     }
 }
 
-void gpio_pin_intr_state_set(uint32 i, GPIO_INT_TYPE intr_state)
+void gpio_pin_intr_state_set(uint32_t i, GPIO_INT_TYPE intr_state)
 {
-    uint32 pin_reg;
+    uint32_t pin_reg;
 
     portENTER_CRITICAL();
 
@@ -180,34 +175,34 @@ void gpio_pin_intr_state_set(uint32 i, GPIO_INT_TYPE intr_state)
 void gpio16_output_conf(void)
 {
     WRITE_PERI_REG(PAD_XPD_DCDC_CONF,
-                   (READ_PERI_REG(PAD_XPD_DCDC_CONF) & 0xffffffbc) | (uint32)0x1); 	// mux configuration for XPD_DCDC to output rtc_gpio0
+                   (READ_PERI_REG(PAD_XPD_DCDC_CONF) & 0xffffffbc) | (uint32_t)0x1); 	// mux configuration for XPD_DCDC to output rtc_gpio0
 
     WRITE_PERI_REG(RTC_GPIO_CONF,
-                   (READ_PERI_REG(RTC_GPIO_CONF) & (uint32)0xfffffffe) | (uint32)0x0);	//mux configuration for out enable
+                   (READ_PERI_REG(RTC_GPIO_CONF) & (uint32_t)0xfffffffe) | (uint32_t)0x0);	//mux configuration for out enable
 
     WRITE_PERI_REG(RTC_GPIO_ENABLE,
-                   (READ_PERI_REG(RTC_GPIO_ENABLE) & (uint32)0xfffffffe) | (uint32)0x1);	//out enable
+                   (READ_PERI_REG(RTC_GPIO_ENABLE) & (uint32_t)0xfffffffe) | (uint32_t)0x1);	//out enable
 }
 
-void gpio16_output_set(uint8 value)
+void gpio16_output_set(uint8_t value)
 {
     WRITE_PERI_REG(RTC_GPIO_OUT,
-                   (READ_PERI_REG(RTC_GPIO_OUT) & (uint32)0xfffffffe) | (uint32)(value & 1));
+                   (READ_PERI_REG(RTC_GPIO_OUT) & (uint32_t)0xfffffffe) | (uint32_t)(value & 1));
 }
 
 void gpio16_input_conf(void)
 {
     WRITE_PERI_REG(PAD_XPD_DCDC_CONF,
-                   (READ_PERI_REG(PAD_XPD_DCDC_CONF) & 0xffffffbc) | (uint32)0x1); 	// mux configuration for XPD_DCDC and rtc_gpio0 connection
+                   (READ_PERI_REG(PAD_XPD_DCDC_CONF) & 0xffffffbc) | (uint32_t)0x1); 	// mux configuration for XPD_DCDC and rtc_gpio0 connection
 
     WRITE_PERI_REG(RTC_GPIO_CONF,
-                   (READ_PERI_REG(RTC_GPIO_CONF) & (uint32)0xfffffffe) | (uint32)0x0);	//mux configuration for out enable
+                   (READ_PERI_REG(RTC_GPIO_CONF) & (uint32_t)0xfffffffe) | (uint32_t)0x0);	//mux configuration for out enable
 
     WRITE_PERI_REG(RTC_GPIO_ENABLE,
-                   READ_PERI_REG(RTC_GPIO_ENABLE) & (uint32)0xfffffffe);	//out disable
+                   READ_PERI_REG(RTC_GPIO_ENABLE) & (uint32_t)0xfffffffe);	//out disable
 }
 
-uint8 gpio16_input_get(void)
+uint8_t gpio16_input_get(void)
 {
-    return (uint8)(READ_PERI_REG(RTC_GPIO_IN_DATA) & 1);
+    return (uint8_t)(READ_PERI_REG(RTC_GPIO_IN_DATA) & 1);
 }

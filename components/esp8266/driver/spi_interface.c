@@ -1,30 +1,31 @@
-/**
- *  spi_interface.c
- *
- * Defines and Macros for the SPI.
- *
- * Copyright @ 2015 Espressif System Co., Ltd.
- * All Rights Reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are NOT permitted except as agreed by
- * Espressif System Co., Ltd.
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- */
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /**
  * @file spi_interface.c
  * @brief Defines and Macros for the SPI.
  */
 
-#include "spi_interface.h"
-#include "esp8266/eagle_soc.h"
+#include <stdint.h>
+
 #include "esp8266/ets_sys.h"
 #include "esp8266/pin_mux_register.h"
-#include "esp_libc.h"
-#include "freertos/portmacro.h"
+
+#include "spi_interface.h"
+
+#include "FreeRTOS.h"
+
 //*****************************************************************************
 //
 // Make sure all of the definitions in this header have a C binding.
@@ -38,7 +39,7 @@ extern "C"
 // Show the spi registers.
 #define SHOWDEBUG
 
-void __ShowRegValue(const char * func, uint32_t line)
+void __ShowRegValue(const char* func, uint32_t line)
 {
 #ifndef SHOWDEBUG
     int i;
@@ -63,6 +64,7 @@ void __ShowRegValue(const char * func, uint32_t line)
         printf(" ADDR[0x%08x],Value[0x%08x]\r\n", regAddr, READ_PERI_REG(regAddr));
         regAddr += 4;
     }
+
 #endif
 }
 
@@ -73,32 +75,36 @@ void __ShowRegValue(const char * func, uint32_t line)
  * @brief Based on pAttr initialize SPI module.
  *
  */
-void ICACHE_FLASH_ATTR SPIInit(SpiNum spiNum, SpiAttr* pAttr)
+void SPIInit(SpiNum spiNum, SpiAttr* pAttr)
 {
     if ((spiNum > SpiNum_HSPI)
-        || (NULL == pAttr)) {
+            || (NULL == pAttr)) {
         return;
     }
+
     // SPI_CPOL & SPI_CPHA
     switch (pAttr->subMode) {
-    case SpiSubMode_1:
-        CLEAR_PERI_REG_MASK(SPI_PIN(spiNum), SPI_IDLE_EDGE);
-        SET_PERI_REG_MASK(SPI_USER(spiNum),  SPI_CK_OUT_EDGE); // CHPA_FALLING_EDGE_SAMPLE
-        break;
-    case SpiSubMode_2:
-        SET_PERI_REG_MASK(SPI_PIN(spiNum), SPI_IDLE_EDGE);
-        SET_PERI_REG_MASK(SPI_USER(spiNum),  SPI_CK_OUT_EDGE); // CHPA_FALLING_EDGE_SAMPLE
-        break;
-    case SpiSubMode_3:
-        SET_PERI_REG_MASK(SPI_PIN(spiNum), SPI_IDLE_EDGE);
-        CLEAR_PERI_REG_MASK(SPI_USER(spiNum),  SPI_CK_OUT_EDGE);
-        break;
-    case SpiSubMode_0:
-    default:
-        CLEAR_PERI_REG_MASK(SPI_PIN(spiNum), SPI_IDLE_EDGE);
-        CLEAR_PERI_REG_MASK(SPI_USER(spiNum),  SPI_CK_OUT_EDGE);
-        // To do nothing
-        break;
+        case SpiSubMode_1:
+            CLEAR_PERI_REG_MASK(SPI_PIN(spiNum), SPI_IDLE_EDGE);
+            SET_PERI_REG_MASK(SPI_USER(spiNum),  SPI_CK_OUT_EDGE); // CHPA_FALLING_EDGE_SAMPLE
+            break;
+
+        case SpiSubMode_2:
+            SET_PERI_REG_MASK(SPI_PIN(spiNum), SPI_IDLE_EDGE);
+            SET_PERI_REG_MASK(SPI_USER(spiNum),  SPI_CK_OUT_EDGE); // CHPA_FALLING_EDGE_SAMPLE
+            break;
+
+        case SpiSubMode_3:
+            SET_PERI_REG_MASK(SPI_PIN(spiNum), SPI_IDLE_EDGE);
+            CLEAR_PERI_REG_MASK(SPI_USER(spiNum),  SPI_CK_OUT_EDGE);
+            break;
+
+        case SpiSubMode_0:
+        default:
+            CLEAR_PERI_REG_MASK(SPI_PIN(spiNum), SPI_IDLE_EDGE);
+            CLEAR_PERI_REG_MASK(SPI_USER(spiNum),  SPI_CK_OUT_EDGE);
+            // To do nothing
+            break;
     }
 
     // SPI bit order
@@ -121,10 +127,12 @@ void ICACHE_FLASH_ATTR SPIInit(SpiNum spiNum, SpiAttr* pAttr)
         // SPI mode type
         CLEAR_PERI_REG_MASK(SPI_SLAVE(spiNum), SPI_SLAVE_MODE);
         // SPI Send buffer
-        CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MISO_HIGHPART );// By default slave send buffer C0-C7
+        CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MISO_HIGHPART); // By default slave send buffer C0-C7
+
         // SPI Speed
         if (1 < (pAttr->speed)) {
             CLEAR_PERI_REG_MASK(SPI_CLOCK(spiNum), SPI_CLK_EQU_SYSCLK);
+
             if (spiNum == SpiNum_HSPI) {
                 CLEAR_PERI_REG_MASK(PERIPHS_IO_MUX_CONF_U, SPI1_CLK_EQU_SYS_CLK);
             }
@@ -136,8 +144,9 @@ void ICACHE_FLASH_ATTR SPIInit(SpiNum spiNum, SpiAttr* pAttr)
         } else {
             WRITE_PERI_REG(SPI_CLOCK(spiNum), SPI_CLK_EQU_SYSCLK); // 80Mhz speed
         }
+
         // By default format:CMD+ADDR+DATA
-        SET_PERI_REG_MASK(SPI_USER(spiNum), SPI_CS_SETUP | SPI_CS_HOLD | SPI_USR_MOSI );
+        SET_PERI_REG_MASK(SPI_USER(spiNum), SPI_CS_SETUP | SPI_CS_HOLD | SPI_USR_MOSI);
 
         //delay num
         SET_PERI_REG_MASK(SPI_CTRL2(spiNum), ((0x1 & SPI_MISO_DELAY_NUM) << SPI_MISO_DELAY_NUM_S));
@@ -183,11 +192,12 @@ void ICACHE_FLASH_ATTR SPIInit(SpiNum spiNum, SpiAttr* pAttr)
  * @brief Set address value by master mode.
  *
  */
-void ICACHE_FLASH_ATTR SPIMasterCfgAddr(SpiNum spiNum, uint32_t addr)
+void SPIMasterCfgAddr(SpiNum spiNum, uint32_t addr)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
     }
+
     // Set address
     WRITE_PERI_REG(SPI_ADDR(spiNum), addr);
 }
@@ -196,11 +206,12 @@ void ICACHE_FLASH_ATTR SPIMasterCfgAddr(SpiNum spiNum, uint32_t addr)
  * @brief Set command value by master mode.
  *
  */
-void ICACHE_FLASH_ATTR SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd)
+void SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
     }
+
     // SPI_USER2 bit28-31 is cmd length,cmd bit length is value(0-15)+1,
     // bit15-0 is cmd value.
     SET_PERI_REG_BITS(SPI_USER2(spiNum), SPI_USR_COMMAND_VALUE, cmd, SPI_USR_COMMAND_VALUE_S);
@@ -210,16 +221,20 @@ void ICACHE_FLASH_ATTR SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd)
  * @brief Send data to slave.
  *
  */
-int ICACHE_FLASH_ATTR SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
+int SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
 {
     char idx = 0;
+
     if ((spiNum > SpiNum_HSPI)
-        || (NULL == pInData)
-        || (64 < pInData->dataLen)) {
+            || (NULL == pInData)
+            || (64 < pInData->dataLen)) {
         return -1;
     }
-    uint32_t *value = pInData->data;
+
+    uint32_t* value = pInData->data;
+
     while (READ_PERI_REG(SPI_CMD(spiNum))&SPI_USR);
+
     // Set command by user.
     if (pInData->cmdLen != 0) {
         // Max command length 16 bits.
@@ -234,6 +249,7 @@ int ICACHE_FLASH_ATTR SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
         SET_PERI_REG_BITS(SPI_USER2(spiNum), SPI_USR_COMMAND_BITLEN,
                           0, SPI_USR_COMMAND_BITLEN_S);
     }
+
     // Set Address by user.
     if (pInData->addrLen == 0) {
         CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_ADDR);
@@ -243,6 +259,7 @@ int ICACHE_FLASH_ATTR SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
         if (NULL == pInData->addr) {
             return -1;
         }
+
         SET_PERI_REG_BITS(SPI_USER1(spiNum), SPI_USR_ADDR_BITLEN,
                           ((pInData->addrLen << 3) - 1), SPI_USR_ADDR_BITLEN_S);
         // Enable address
@@ -250,18 +267,22 @@ int ICACHE_FLASH_ATTR SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
         // Load address
         SPIMasterCfgAddr(spiNum, *pInData->addr);
     }
+
     // Set data by user.
     if (pInData->dataLen != 0) {
         if (NULL == value) {
             return -1;
         }
+
         // Enable MOSI
         SET_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MOSI);
         CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MISO);
+
         // Load send buffer
         do {
             WRITE_PERI_REG((SPI_W0(spiNum) + (idx << 2)), *value++);
         } while (++idx < (pInData->dataLen / 4));
+
         // Set data send buffer length.Max data length 64 bytes.
         SET_PERI_REG_BITS(SPI_USER1(spiNum), SPI_USR_MOSI_BITLEN, ((pInData->dataLen << 3) - 1), SPI_USR_MOSI_BITLEN_S);
     } else {
@@ -270,6 +291,7 @@ int ICACHE_FLASH_ATTR SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
         SET_PERI_REG_BITS(SPI_USER1(spiNum), SPI_USR_MOSI_BITLEN,
                           0, SPI_USR_MOSI_BITLEN_S);
     }
+
     // Start send data
     SET_PERI_REG_MASK(SPI_CMD(spiNum), SPI_USR);
 
@@ -281,16 +303,19 @@ int ICACHE_FLASH_ATTR SPIMasterSendData(SpiNum spiNum, SpiData* pInData)
  * @brief Receive data from slave.
  *
  */
-int ICACHE_FLASH_ATTR SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
+int SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
 {
     char idx = 0;
+
     if ((spiNum > SpiNum_HSPI)
-        || (NULL == pOutData)) {
+            || (NULL == pOutData)) {
         return -1;
     }
 
-    uint32_t *value = pOutData->data;
+    uint32_t* value = pOutData->data;
+
     while (READ_PERI_REG(SPI_CMD(spiNum))&SPI_USR);
+
     // Set command by user.
     if (pOutData->cmdLen != 0) {
         // Max command length 16 bits.
@@ -305,6 +330,7 @@ int ICACHE_FLASH_ATTR SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
         SET_PERI_REG_BITS(SPI_USER2(spiNum), SPI_USR_COMMAND_BITLEN,
                           0, SPI_USR_COMMAND_BITLEN_S);
     }
+
     // Set Address by user.
     if (pOutData->addrLen == 0) {
         CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_ADDR);
@@ -314,6 +340,7 @@ int ICACHE_FLASH_ATTR SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
         if (NULL == pOutData->addr) {
             return -1;
         }
+
         SET_PERI_REG_BITS(SPI_USER1(spiNum), SPI_USR_ADDR_BITLEN,
                           ((pOutData->addrLen << 3) - 1), SPI_USR_ADDR_BITLEN_S);
         // Enable address
@@ -321,11 +348,13 @@ int ICACHE_FLASH_ATTR SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
         // Load address
         SPIMasterCfgAddr(spiNum, *pOutData->addr);
     }
+
     // Set data by user.
     if (pOutData->dataLen != 0) {
         if (NULL == value) {
             return -1;
         }
+
         // Clear MOSI enable
         CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MOSI);
         // Enable MOSI
@@ -341,13 +370,16 @@ int ICACHE_FLASH_ATTR SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
 
     //CLEAR FIFO DATA
     int fifo_idx = 0;
+
     do {
         WRITE_PERI_REG(SPI_W0(spiNum) + (fifo_idx << 2), 0);
     } while (++fifo_idx < (pOutData->dataLen / 4));
 
     // Start send data
     SET_PERI_REG_MASK(SPI_CMD(spiNum), SPI_USR);
+
     while (READ_PERI_REG(SPI_CMD(spiNum))&SPI_USR);
+
     // Read data out
     do {
         *pOutData->data++ = READ_PERI_REG(SPI_W0(spiNum) + (idx << 2));
@@ -361,15 +393,18 @@ int ICACHE_FLASH_ATTR SPIMasterRecvData(SpiNum spiNum, SpiData* pOutData)
  * @brief Load data to send buffer by slave mode.
  *
  */
-int ICACHE_FLASH_ATTR SPISlaveSendData(SpiNum spiNum, uint32_t *pInData, uint8_t outLen)
+int SPISlaveSendData(SpiNum spiNum, uint32_t* pInData, uint8_t outLen)
 {
     if (NULL == pInData) {
         return -1;
     }
+
     char i;
+
     for (i = 0; i < outLen; ++i) {
         WRITE_PERI_REG((SPI_W8(spiNum) + (i << 2)), *pInData++);
     }
+
     return 0;
 }
 
@@ -377,7 +412,7 @@ int ICACHE_FLASH_ATTR SPISlaveSendData(SpiNum spiNum, uint32_t *pInData, uint8_t
  * @brief Configurate slave prepare for receive data.
  *
  */
-int ICACHE_FLASH_ATTR SPISlaveRecvData(SpiNum spiNum, void(*isrFunc)(void*))
+int SPISlaveRecvData(SpiNum spiNum, void(*isrFunc)(void*))
 {
     if ((spiNum > SpiNum_HSPI)) {
         return -1;
@@ -390,8 +425,8 @@ int ICACHE_FLASH_ATTR SPISlaveRecvData(SpiNum spiNum, void(*isrFunc)(void*))
     // Maybe enable slave transmission liston
     SET_PERI_REG_MASK(SPI_CMD(spiNum), SPI_USR);
     //
-     _xt_isr_attach(ETS_SPI_INUM, isrFunc, NULL);
-   // ETS_SPI_INTR_ATTACH(isrFunc, NULL);
+    _xt_isr_attach(ETS_SPI_INUM, isrFunc, NULL);
+    // ETS_SPI_INTR_ATTACH(isrFunc, NULL);
     // Enable isr
     ETS_SPI_INTR_ENABLE();
 
@@ -405,12 +440,14 @@ int ICACHE_FLASH_ATTR SPISlaveRecvData(SpiNum spiNum, void(*isrFunc)(void*))
  * @brief Send data to slave(ESP8266 register of RD_STATUS or WR_STATUS).
  *
  */
-void ICACHE_FLASH_ATTR SPIMasterSendStatus(SpiNum spiNum, uint8_t data)
+void SPIMasterSendStatus(SpiNum spiNum, uint8_t data)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
     }
+
     while (READ_PERI_REG(SPI_CMD(spiNum))&SPI_USR);
+
     // Enable MOSI
     SET_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MOSI);
     CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MISO | SPI_USR_DUMMY | SPI_USR_ADDR);
@@ -423,7 +460,7 @@ void ICACHE_FLASH_ATTR SPIMasterSendStatus(SpiNum spiNum, uint8_t data)
     SET_PERI_REG_BITS(SPI_USER1(spiNum), SPI_USR_MOSI_BITLEN,
                       ((sizeof(data) << 3) - 1), SPI_USR_MOSI_BITLEN_S);
 
-    WRITE_PERI_REG(SPI_W0(spiNum), (uint32)(data));
+    WRITE_PERI_REG(SPI_W0(spiNum), (uint32_t)(data));
     // Start SPI
     SET_PERI_REG_MASK(SPI_CMD(spiNum), SPI_USR);
 
@@ -434,13 +471,14 @@ void ICACHE_FLASH_ATTR SPIMasterSendStatus(SpiNum spiNum, uint8_t data)
  * @brief Receive status register from slave(ESP8266).
  *
  */
-int ICACHE_FLASH_ATTR SPIMasterRecvStatus(SpiNum spiNum)
+int SPIMasterRecvStatus(SpiNum spiNum)
 {
     if (spiNum > SpiNum_HSPI) {
         return -1;
     }
 
     while (READ_PERI_REG(SPI_CMD(spiNum))&SPI_USR);
+
     // Enable MISO
     SET_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MISO);
     CLEAR_PERI_REG_MASK(SPI_USER(spiNum), SPI_USR_MOSI | SPI_USR_DUMMY | SPI_USR_ADDR);
@@ -461,18 +499,19 @@ int ICACHE_FLASH_ATTR SPIMasterRecvStatus(SpiNum spiNum)
     (void)(READ_PERI_REG(SPI_W0(spiNum)) & 0xff);
     SHOWREG();
 
-    return (uint8)(READ_PERI_REG(SPI_W0(spiNum)) & 0xff);
+    return (uint8_t)(READ_PERI_REG(SPI_W0(spiNum)) & 0xff);
 }
 
 /**
  * @brief Select SPI CS pin.
  *
  */
-void ICACHE_FLASH_ATTR SPICsPinSelect(SpiNum spiNum, SpiPinCS pinCs)
+void SPICsPinSelect(SpiNum spiNum, SpiPinCS pinCs)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
     }
+
     // clear select
     SET_PERI_REG_BITS(SPI_PIN(spiNum), 3, 0, 0);
     SET_PERI_REG_MASK(SPI_PIN(spiNum), pinCs);
@@ -482,11 +521,12 @@ void ICACHE_FLASH_ATTR SPICsPinSelect(SpiNum spiNum, SpiPinCS pinCs)
  * @brief Enable SPI interrupt source.
  *
  */
-void ICACHE_FLASH_ATTR SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc)
+void SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
     }
+
     SET_PERI_REG_MASK(SPI_SLAVE(spiNum), intSrc);
 }
 
@@ -494,11 +534,12 @@ void ICACHE_FLASH_ATTR SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc)
  * @brief Disable SPI interrupt source.
  *
  */
-void ICACHE_FLASH_ATTR SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc)
+void SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
     }
+
     CLEAR_PERI_REG_MASK(SPI_SLAVE(spiNum), intSrc);
 }
 
@@ -506,11 +547,12 @@ void ICACHE_FLASH_ATTR SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc)
  * @brief Clear all of SPI interrupt source.
  *
  */
-void ICACHE_FLASH_ATTR SPIIntClear(SpiNum spiNum)
+void SPIIntClear(SpiNum spiNum)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
     }
+
     CLEAR_PERI_REG_MASK(SPI_SLAVE(spiNum), SpiIntSrc_TransDoneEn
                         | SpiIntSrc_WrStaDoneEn
                         | SpiIntSrc_RdStaDoneEn

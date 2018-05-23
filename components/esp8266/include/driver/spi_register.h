@@ -1,7 +1,16 @@
-/*
- *  Copyright (c) 2010 - 2011 Espressif System
- *
- */
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #ifndef SPI_REGISTER_H_INCLUDED
 #define SPI_REGISTER_H_INCLUDED
@@ -35,9 +44,9 @@
 #define SPI_FASTRD_MODE (BIT(13))
 
 #define SPI_CTRL1(i)                         (REG_SPI_BASE(i)  + 0xc)
-#define  SPI_CS_HOLD_DELAY  0xf  
+#define  SPI_CS_HOLD_DELAY  0xf
 #define  SPI_CS_HOLD_DELAY_S   28
-#define  SPI_CS_HOLD_DELAY_RES  0xfff 
+#define  SPI_CS_HOLD_DELAY_RES  0xfff
 #define  SPI_CS_HOLD_DELAY_RES_S   16
 
 
@@ -178,26 +187,26 @@
 #define SPI_SLV_RDBUF_CMD_VALUE 0x000000FF
 #define SPI_SLV_RDBUF_CMD_VALUE_S 0
 
-#define SPI_W0(i) 							(REG_SPI_BASE(i) +0x40)
-#define SPI_W1(i) 							(REG_SPI_BASE(i) +0x44)
-#define SPI_W2(i) 							(REG_SPI_BASE(i) +0x48)
-#define SPI_W3(i) 							(REG_SPI_BASE(i) +0x4C)
-#define SPI_W4(i) 							(REG_SPI_BASE(i) +0x50)
-#define SPI_W5(i) 							(REG_SPI_BASE(i) +0x54)
-#define SPI_W6(i) 							(REG_SPI_BASE(i) +0x58)
-#define SPI_W7(i) 							(REG_SPI_BASE(i) +0x5C)
-#define SPI_W8(i) 							(REG_SPI_BASE(i) +0x60)
-#define SPI_W9(i) 							(REG_SPI_BASE(i) +0x64)
-#define SPI_W10(i) 							(REG_SPI_BASE(i) +0x68)
-#define SPI_W11(i) 							(REG_SPI_BASE(i) +0x6C)
-#define SPI_W12(i) 							(REG_SPI_BASE(i) +0x70)
-#define SPI_W13(i) 							(REG_SPI_BASE(i) +0x74)
-#define SPI_W14(i) 							(REG_SPI_BASE(i) +0x78)
-#define SPI_W15(i) 							(REG_SPI_BASE(i) +0x7C)
+#define SPI_W0(i)                           (REG_SPI_BASE(i) +0x40)
+#define SPI_W1(i)                           (REG_SPI_BASE(i) +0x44)
+#define SPI_W2(i)                           (REG_SPI_BASE(i) +0x48)
+#define SPI_W3(i)                           (REG_SPI_BASE(i) +0x4C)
+#define SPI_W4(i)                           (REG_SPI_BASE(i) +0x50)
+#define SPI_W5(i)                           (REG_SPI_BASE(i) +0x54)
+#define SPI_W6(i)                           (REG_SPI_BASE(i) +0x58)
+#define SPI_W7(i)                           (REG_SPI_BASE(i) +0x5C)
+#define SPI_W8(i)                           (REG_SPI_BASE(i) +0x60)
+#define SPI_W9(i)                           (REG_SPI_BASE(i) +0x64)
+#define SPI_W10(i)                          (REG_SPI_BASE(i) +0x68)
+#define SPI_W11(i)                          (REG_SPI_BASE(i) +0x6C)
+#define SPI_W12(i)                          (REG_SPI_BASE(i) +0x70)
+#define SPI_W13(i)                          (REG_SPI_BASE(i) +0x74)
+#define SPI_W14(i)                          (REG_SPI_BASE(i) +0x78)
+#define SPI_W15(i)                          (REG_SPI_BASE(i) +0x7C)
 
-#define SPI_EXT2(i)                           (REG_SPI_BASE(i)  + 0xF8)
+#define SPI_EXT2(i)                         (REG_SPI_BASE(i)  + 0xF8)
 
-#define SPI_EXT3(i)                           (REG_SPI_BASE(i)  + 0xFC)
+#define SPI_EXT3(i)                         (REG_SPI_BASE(i)  + 0xFC)
 #define SPI_INT_HOLD_ENA 0x00000003
 #define SPI_INT_HOLD_ENA_S 0
 #endif // SPI_REGISTER_H_INCLUDED

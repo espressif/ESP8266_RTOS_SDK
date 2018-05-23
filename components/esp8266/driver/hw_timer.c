@@ -1,36 +1,33 @@
-/*
- * ESPRSSIF MIT License
- *
- * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
- *
- * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
- * it is free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
- * to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- */
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#include "esp_common.h"
-#include "freertos/portmacro.h"
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "esp8266/ets_sys.h"
+#include "esp8266/eagle_soc.h"
+#include "esp8266/timer_register.h"
+
+#include "FreeRTOS.h"
 
 #define US_TO_RTC_TIMER_TICKS(t)          \
     ((t) ?          \
      (((t) > 0x35A) ?            \
       (((t) >> 2) * ((APB_CLK_FREQ >> 4) / 250000) + ((t)&0x3) * ((APB_CLK_FREQ >> 4) / 1000000)) : \
       (((t) *(APB_CLK_FREQ>>4)) / 1000000)) :    \
-         0)
+     0)
 
 #define FRC1_ENABLE_TIMER   BIT7
 #define FRC1_AUTO_LOAD      BIT6
@@ -52,9 +49,9 @@ static void (* user_hw_timer_cb)(void) = NULL;
 
 bool frc1_auto_load = false;
 
-static void hw_timer_isr_cb(void *arg)
+static void hw_timer_isr_cb(void* arg)
 {
-    if(frc1_auto_load == false ) {
+    if (frc1_auto_load == false) {
         RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
                       DIVDED_BY_16 | TM_EDGE_INT);
     }
@@ -66,12 +63,13 @@ static void hw_timer_isr_cb(void *arg)
 
 void hw_timer_disarm(void)
 {
-    RTC_REG_WRITE(FRC1_CTRL_ADDRESS,0);
+    RTC_REG_WRITE(FRC1_CTRL_ADDRESS, 0);
 }
 
-void hw_timer_arm(uint32 val ,bool req)
+void hw_timer_arm(uint32_t val, bool req)
 {
     frc1_auto_load = req;
+
     if (frc1_auto_load == true) {
         RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
                       FRC1_AUTO_LOAD | DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
@@ -91,6 +89,7 @@ void hw_timer_set_func(void (* user_hw_timer_cb_set)(void))
 void hw_timer_init(void)
 {
 #if 0
+
     if (req == 1) {
         RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
                       FRC1_AUTO_LOAD | DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
@@ -110,18 +109,18 @@ void hw_timer_init(void)
 #if 0
 #include "hw_timer.h"
 
-#define REG_WRITE(_r,_v)    (*(volatile uint32 *)(_r)) = (_v)
-#define REG_READ(_r)        (*(volatile uint32 *)(_r))
+#define REG_WRITE(_r,_v)    (*(volatile uint32_t *)(_r)) = (_v)
+#define REG_READ(_r)        (*(volatile uint32_t *)(_r))
 #define WDEV_NOW()          REG_READ(0x3ff20c00)
 
-uint32 tick_now2 = 0;
+uint32_t tick_now2 = 0;
 void hw_test_timer_cb(void)
 {
     static uint16 j = 0;
     j++;
 
     if ((WDEV_NOW() - tick_now2) >= 1000000) {
-        static uint32 idx = 1;
+        static uint32_t idx = 1;
         tick_now2 = WDEV_NOW();
         os_printf("b%u:%d\n", idx++, j);
         j = 0;
@@ -133,7 +132,7 @@ void hw_test_timer_cb(void)
 void user_init(void)
 {
     hw_timer_init();
-    hw_timer_set_func(hw_test_timer_cb,1);
+    hw_timer_set_func(hw_test_timer_cb, 1);
     hw_timer_arm(100);
 }
 #endif
