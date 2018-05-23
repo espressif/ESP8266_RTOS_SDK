@@ -124,6 +124,9 @@ STRUCT_END(HighPriFrame)
 
 #define PANIC_STK_FRMSZ      0x60
 
+
+#define CHIP_INTERRUPT_STK_MAX 1024
+
     .global panicHandler
 
     //  Allocate save area and stack:
@@ -158,6 +161,14 @@ LABEL(_Pri_,_HandlerAddress):   .space 4
     .global LABEL(_Pri_, _NMICount)
 LABEL(_Pri_,_NMICount):   .space 4
 #endif
+
+    .section    .data, "aw"
+    .global     _chip_interrupt_stk, _chip_interrupt_tmp
+    .align      16
+_chip_interrupt_stk:
+    .space       CHIP_INTERRUPT_STK_MAX
+_chip_interrupt_tmp:
+    .word        0
 
 /*************************** LoadStoreError Handler **************************/
 
@@ -442,7 +453,7 @@ LoadStoreErrorHandler_common:
         l32i    a3, sp, 0x0c
         l32i    a4, sp, 0x10
         rsr     a1, excsave1
-        call0   user_fatal_exception_handler
+        call0   _xt_ext_panic
 
         .balign 4
 .LSE_assign_a1:
@@ -642,7 +653,7 @@ _DebugExceptionVector:
     jx      a3
     #else
     wsr     a0, EXCSAVE+XCHAL_DEBUGLEVEL    /* save original a0 somewhere */
-    call0   user_fatal_exception_handler                       /* does not return */
+    call0   _xt_ext_panic                       /* does not return */
     rfi     XCHAL_DEBUGLEVEL                /* make a0 point here not later */
     #endif
 
@@ -671,7 +682,7 @@ _DoubleExceptionVector:
     #if XCHAL_HAVE_DEBUG
     break   1, 4                            /* unhandled double exception */
     #endif
-    call0   user_fatal_exception_handler                       /* does not return */
+    call0   _xt_ext_panic                       /* does not return */
     rfde                                    /* make a0 point here not later */
 
     .end        literal_prefix
@@ -705,7 +716,7 @@ _xt_kernel_exc:
     #if XCHAL_HAVE_DEBUG
     break   1, 0                            /* unhandled kernel exception */
     #endif
-    call0   user_fatal_exception_handler                       /* does not return */
+    call0   _xt_ext_panic                       /* does not return */
     rfe                                     /* make a0 point here not there */
 
 
@@ -847,7 +858,7 @@ _xt_user_entry1:
     #if XCHAL_HAVE_DEBUG
     break   1, 1                            /* unhandled user exception */
     #endif
-    call0   user_fatal_exception_handler
+    call0   _xt_ext_panic
 
     /* Handle level 1 interrupts. OK to enable med-pri interrupts now. */
 .L_xt_user_int:
@@ -909,7 +920,15 @@ _xt_user_entry1:
     sub     a2,  a2,  a3                    /* clear timer int from mask */
     #endif
 3:
+    movi    a0, _chip_interrupt_tmp
+    s32i    a1, a0, 0
+    mov     a1, a0
+
 	call0	_xt_isr_handler
+
+    movi    a0, _chip_interrupt_tmp
+    l32i    a1, a0, 0
+
 	bnez	a2, .Ln_xt_user_int_timer
     #endif
 4:
@@ -921,7 +940,7 @@ _xt_user_entry1:
     break   1, 1                            /* unhandled user exception    */
                                             /* EXCCAUSE == 4 (level 1 int) */
     #endif
-    call0   user_fatal_exception_handler
+    call0   _xt_ext_panic
 
     /* Done handling after XT_RTOS_INT_ENTER. Give control to RTOS. */
 .L_xt_user_done:

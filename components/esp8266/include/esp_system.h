@@ -97,8 +97,9 @@ typedef enum {
     FLASH_SIZE_32M_MAP_2048_2048,    /**<  attention: don't support now ,just compatible for nodemcu;
                                            Flash size : 32Mbits. Map : 2048KBytes + 2048KBytes */
     FLASH_SIZE_64M_MAP_1024_1024,     /**<  Flash size : 64Mbits. Map : 1024KBytes + 1024KBytes */
-    FLASH_SIZE_128M_MAP_1024_1024     /**<  Flash size : 128Mbits. Map : 1024KBytes + 1024KBytes */
+    FLASH_SIZE_128M_MAP_1024_1024,    /**<  Flash size : 128Mbits. Map : 1024KBytes + 1024KBytes */
 
+    FALSH_SIZE_MAP_MAX
 } flash_size_map;
 
 /**
