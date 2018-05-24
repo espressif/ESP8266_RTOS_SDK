@@ -202,6 +202,14 @@ struct bss_info {
     uint32_t reserved:28;               /**< bit: 4..31 reserved */
 };
 
+typedef enum {
+    OK = 0,
+    FAIL,
+    PENDING,
+    BUSY,
+    CANCEL,
+} STATUS;
+
 /**
   * @brief  Callback function for wifi_station_scan.
   *

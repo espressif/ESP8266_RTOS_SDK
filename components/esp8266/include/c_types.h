@@ -63,15 +63,6 @@ typedef double   real64;
 
 #define __le16      u16
 
-/* probably should not put STATUS here */
-typedef enum {
-    OK = 0,
-    FAIL,
-    PENDING,
-    BUSY,
-    CANCEL,
-} STATUS;
-
 #define BIT(nr)     (1UL << (nr))
 
 #define REG_WRITE(_r, _v)       (*(volatile uint32 *)(_r)) = (_v)
