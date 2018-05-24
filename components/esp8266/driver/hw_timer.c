@@ -122,7 +122,7 @@ void hw_test_timer_cb(void)
     if ((WDEV_NOW() - tick_now2) >= 1000000) {
         static uint32_t idx = 1;
         tick_now2 = WDEV_NOW();
-        os_printf("b%u:%d\n", idx++, j);
+        printf("b%u:%d\n", idx++, j);
         j = 0;
     }
 

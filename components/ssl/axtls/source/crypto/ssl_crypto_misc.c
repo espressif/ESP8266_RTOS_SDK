@@ -104,7 +104,7 @@ int get_file(const char *filename, uint8_t **buf)
 	stream = open(filename, 0x18);
 	if (stream < 0) {
 #ifdef CONFIG_SSL_FULL_MODE
-		os_printf("file '%s' does not exist\n", filename);
+		printf("file '%s' does not exist\n", filename);
 #endif
 		return -1;
 	}

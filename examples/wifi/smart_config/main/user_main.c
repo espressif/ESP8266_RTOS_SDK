@@ -63,15 +63,15 @@ static void airkiss_wifilan_time_callback(void)
 	ret = airkiss_lan_pack(AIRKISS_LAN_SSDP_NOTIFY_CMD,
 		DEVICE_TYPE, DEVICE_ID, 0, 0, lan_buf, &lan_buf_len, &akconf);
 	if (ret != AIRKISS_LAN_PAKE_READY) {
-		os_printf("Pack lan packet error!");
+		printf("Pack lan packet error!");
 		return;
 	}
 	
 	ret = espconn_sendto(&pssdpudpconn, lan_buf, lan_buf_len);
 	if (ret != 0) {
-		os_printf("UDP send error!");
+		printf("UDP send error!");
 	}
-	os_printf("Finish send notify!\n");
+	printf("Finish send notify!\n");
 }
 
 static void airkiss_wifilan_recv_callbk(void *arg, char *pdata, unsigned short len)
@@ -85,9 +85,9 @@ static void airkiss_wifilan_recv_callbk(void *arg, char *pdata, unsigned short l
 	switch (ret){
 	case AIRKISS_LAN_SSDP_REQ:
 		espconn_get_connection_info(&pssdpudpconn, &pcon_info, 0);
-		os_printf("remote ip: %d.%d.%d.%d \r\n",pcon_info->remote_ip[0],pcon_info->remote_ip[1],
+		printf("remote ip: %d.%d.%d.%d \r\n",pcon_info->remote_ip[0],pcon_info->remote_ip[1],
 			                                    pcon_info->remote_ip[2],pcon_info->remote_ip[3]);
-		os_printf("remote port: %d \r\n",pcon_info->remote_port);
+		printf("remote port: %d \r\n",pcon_info->remote_port);
       
         pssdpudpconn.proto.udp->remote_port = pcon_info->remote_port;
 		memcpy(pssdpudpconn.proto.udp->remote_ip,pcon_info->remote_ip,4);
@@ -98,23 +98,23 @@ static void airkiss_wifilan_recv_callbk(void *arg, char *pdata, unsigned short l
 			DEVICE_TYPE, DEVICE_ID, 0, 0, lan_buf, &lan_buf_len, &akconf);
 		
 		if (packret != AIRKISS_LAN_PAKE_READY) {
-			os_printf("Pack lan packet error!");
+			printf("Pack lan packet error!");
 			return;
 		}
 
-		os_printf("\r\n\r\n");
+		printf("\r\n\r\n");
 		for (i=0; i<lan_buf_len; i++)
-			os_printf("%c",lan_buf[i]);
-		os_printf("\r\n\r\n");
+			printf("%c",lan_buf[i]);
+		printf("\r\n\r\n");
 		
 		packret = espconn_sendto(&pssdpudpconn, lan_buf, lan_buf_len);
 		if (packret != 0) {
-			os_printf("LAN UDP Send err!");
+			printf("LAN UDP Send err!");
 		}
 		
 		break;
 	default:
-		os_printf("Pack is not ssdq req!%d\r\n",ret);
+		printf("Pack is not ssdq req!%d\r\n",ret);
 		break;
 	}
 }

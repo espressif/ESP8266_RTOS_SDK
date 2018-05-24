@@ -65,9 +65,9 @@ static void wait_for_connection_ready(uint8_t flag)
 {
     os_timer_disarm(&timer);
     if(wifi_station_connected()){
-        os_printf("connected\n");
+        printf("connected\n");
     } else {
-        os_printf("reconnect after 2s\n");
+        printf("reconnect after 2s\n");
         os_timer_setfn(&timer, (os_timer_func_t *)wait_for_connection_ready, NULL);
         os_timer_arm(&timer, 2000, 0);
     }
@@ -80,7 +80,7 @@ static void on_wifi_connect(){
 }
 
 static void on_wifi_disconnect(uint8_t reason){
-    os_printf("disconnect %d\n", reason);
+    printf("disconnect %d\n", reason);
 }
 
 /******************************************************************************

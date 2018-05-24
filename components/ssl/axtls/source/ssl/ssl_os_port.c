@@ -90,10 +90,10 @@ EXP_FUNC int STDCALL getdomainname(char *buf, int buf_size)
 
 static const char * out_of_mem_str = "out of memory %s %d\n";
 
-#define exit_now	os_printf
+#define exit_now    printf
 //#define SSL_LOG
 #ifdef	SSL_LOG
-#define debug_now	os_printf
+#define debug_now   printf
 #else
 #define debug_now
 #endif
@@ -126,7 +126,7 @@ void add(MEM_INFO alloc_info)
         ptr_next = ptr_next->next;                
     }
 	if(mem_flag) {
-		os_printf("mem_leak_info =%p\n",mem_leak_info);
+		printf("mem_leak_info =%p\n",mem_leak_info);
 		mem_flag = 0;
 		report_mem_leak();
 	}
@@ -277,20 +277,20 @@ void report_mem_leak(void)
 
     char *info;
 	sys_mutex_lock(&mem_mutex);
-	os_printf("ptr_start =%p\n",ptr_start);
+	printf("ptr_start =%p\n",ptr_start);
 	info = (char *)zalloc(name_length);
 	if(info) {
         for(leak_info = ptr_start; leak_info != NULL; leak_info = leak_info->next)
         {
-			os_printf("%p\n",leak_info);
+			printf("%p\n",leak_info);
             sprintf(info, "address : %p\n", leak_info->mem_info.address);
-            os_printf("%s\n",info);
+            printf("%s\n",info);
             sprintf(info, "size    : %d bytes\n", leak_info->mem_info.size);            
-            os_printf("%s\n",info);
+            printf("%s\n",info);
             snprintf(info,name_length,"file    : %s\n", leak_info->mem_info.file_name);
-            os_printf("%s\n",info);
+            printf("%s\n",info);
             sprintf(info, "line    : %d\n", leak_info->mem_info.line);
-            os_printf("%s\n",info);
+            printf("%s\n",info);
         }
 		clear();
 		free(info);

@@ -366,7 +366,7 @@ int x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX *cert)
     if (asn1_compare_dn(cert->ca_cert_dn, cert->cert_dn) == 0)
     {
 #if CONFIG_SSL_DISPLAY_MODE
-    	os_printf("a self-signed certificate that is not in the CA store\n");
+        printf("a self-signed certificate that is not in the CA store\n");
 #endif
         is_self_signed = 1;
         ctx = cert->rsa_ctx->bi_ctx;
@@ -376,7 +376,7 @@ int x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX *cert)
 
     gettimeofday(&tv, (void*)&cert->not_before);
 #if CONFIG_SSL_DISPLAY_MODE
-    os_printf("before %u, tv_sec %u, after %u\n",cert->not_before, tv.tv_sec, cert->not_after);
+    printf("before %u, tv_sec %u, after %u\n",cert->not_before, tv.tv_sec, cert->not_after);
 #endif
     /* check the not before date */
     if (tv.tv_sec < cert->not_before)
@@ -400,7 +400,7 @@ int x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX *cert)
        if (ca_cert_ctx != NULL) 
        {
 #if CONFIG_SSL_DISPLAY_MODE
-    	   os_printf("look for a trusted cert\n");
+           printf("look for a trusted cert\n");
 #endif
             /* go thu the CA store */
             while (i < CONFIG_X509_MAX_CA_CERTS && ca_cert_ctx->cert[i])
@@ -410,7 +410,7 @@ int x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX *cert)
                 {
                     /* use this CA certificate for signature verification */
 #if CONFIG_SSL_DISPLAY_MODE
-                	os_printf("use the CA certificate for signature verification\n");
+                    printf("use the CA certificate for signature verification\n");
 #endif
                     match_ca_cert = 1;
                     ctx = ca_cert_ctx->cert[i]->rsa_ctx->bi_ctx;
@@ -461,7 +461,7 @@ int x509_verify(const CA_CERT_CTX *ca_cert_ctx, const X509_CTX *cert)
             ret = X509_VFY_ERROR_BAD_SIGNATURE;
 
 #if CONFIG_SSL_DISPLAY_MODE
-        os_printf("check the signature ok\n");
+        printf("check the signature ok\n");
 #endif
 //        bi_free(ctx, cert_sig);//comment the line for check signature by LiuH at 20150.06.11
     }
