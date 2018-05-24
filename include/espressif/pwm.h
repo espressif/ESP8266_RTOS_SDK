@@ -1,5 +1,5 @@
 /*
- * ESPRSSIF MIT License
+ * ESPRESSIF MIT License
  *
  * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
  *
@@ -25,115 +25,186 @@
 #ifndef __PWM_H__
 #define __PWM_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** \defgroup Driver_APIs Driver APIs
-  * @brief Driver APIs
-  */
-
-/** @addtogroup Driver_APIs
-  * @{
-  */
-
-/** \defgroup PWM_Driver_APIs PWM Driver APIs
-  * @brief PWM driver APIs
-  */
-
-/** @addtogroup PWM_Driver_APIs
-  * @{
-  */
-
-struct pwm_param {
-    uint32 period;      /**< PWM period */
-    uint32 freq;        /**< PWM frequency */
-    uint32 duty[8];     /**< PWM duty */
-};
-
-#define PWM_DEPTH 1023
 
 /**
-  * @brief     PWM function initialization, including GPIO, frequency and duty cycle.
+  * @brief  PWM function initialization, including GPIO, frequency and duty cycle.
   *
   * @attention This API can be called only once.
   *
-  * @param     uint32 period : pwm frequency
-  * @param     uint32 *duty : duty cycle
-  * @param     uint32 pwm_channel_num : PWM channel number
-  * @param     uint32 (*pin_info_list)[3] : GPIO parameter of PWM channel, it is a pointer
-  *                                         of n x 3 array which defines GPIO register, IO
-  *                                         reuse of corresponding pin and GPIO number.
+  * @param  uint32_t period : PWM period, unit : us.
+  *         e.g.: For 1KHz PWM, period is 1000 us.
+  * @param  uint32_t *duty : duty cycle of each channels.
+  * @param  uint32_t pwm_channel_num : PWM channel number, maximum is 8
+  * @param  uint32_t (*pin_info_list)[3] : GPIO parameter of PWM channel, it is a pointer
+  *         of n x 3 array which defines GPIO register, IO reuse of corresponding pin and GPIO number.
   *
-  * @return    null
+  * @return  null
   */
-void pwm_init(uint32 period, uint32 *duty, uint32 pwm_channel_num, uint32(*pin_info_list)[3]);
+void pwm_init(uint32_t period, uint32_t *duty, uint32_t pwm_channel_num, uint32_t(*pin_info_list)[3]);
 
 /**
-  * @brief     Set the duty cycle of a PWM channel.
+  * @brief   Set the duty cycle of a PWM channel.
+  *          Set the time that high level or low(if you reverse the output of this channel)
+  *          signal will last, the duty cycle cannot exceed the period.
+  *        
+  * @attention After set configuration, pwm_start needs to be called to take effect.
   *
-  *            Set the time that high level signal will last, duty depends on period,
-  *            the maximum value can be 1023.
-  *           
+  * @param   uint32_t duty : duty cycle
+  * @param   uint8_t channel_num : PWM channel number
+  *          the channel_num cannot exceed the value initialized by pwm_init.
+  *
+  * @return  null
+  */
+void pwm_set_duty(uint32_t duty, uint8_t channel_num);
+
+/**
+  * @brief   Get the duty cycle of a PWM channel.
+  *
+  * @param   uint8_t channel_num : PWM channel number
+  *          the channel_num cannot exceed the value initialized by pwm_init.
+  *
+  * @return  Duty cycle of specified channel
+  */
+uint32_t pwm_get_duty(uint8_t channel_num);
+
+/**
+  * @brief   Set PWM period, unit : us.
   *
   * @attention After set configuration, pwm_start needs to be called to take effect.
   *
-  * @param     uint32 duty : duty cycle
-  * @param     uint8 channel : PWM channel number
+  * @param   uint32_t period : PWM period, unit : us
+  *          For example, for 1KHz PWM, period is 1000.
   *
-  * @return    null
+  * @return  null
   */
-void pwm_set_duty(uint32 duty, uint8 channel);
+void pwm_set_period(uint32_t period);
 
 /**
-  * @brief  Get the duty cycle of a PWM channel.
+  * @brief   Get PWM period, unit : us.
   *
-  * @param  uint8 channel : PWM channel number
+  * @param   null
   *
-  * @return Duty cycle of PWM output.
+  * @return  PWM period, unit : us
   */
-uint32 pwm_get_duty(uint8 channel);
+uint32_t pwm_get_period(void);
 
 /**
-  * @brief     Set PWM period, unit : us.
-  *
-  *            For example, for 1KHz PWM, period is 1000 us.
-  *
-  * @attention After set configuration, pwm_start needs to be called to take effect.
-  *
-  * @param     uint32 period : PWM period, unit : us.
-  *
-  * @return    null
-  */
-void pwm_set_period(uint32 period);
-
-/**
-  * @brief  Get PWM period, unit : us.
-  *
-  * @param  null
-  *
-  * @return PWM period, unit : us.
-  */
-uint32 pwm_get_period(void);
-
-/**
-  * @brief  Starts PWM. 
+  * @brief   Starts PWM. 
   *
   * @attention This function needs to be called after PWM configuration is changed.
   *
-  * @param  null
+  * @param   null
   *
-  * @return null
+  * @return  null
   */
 void pwm_start(void);
 
 /**
-  * @}
+  * @brief  Stop all PWM channel.
+  *         Stop PWM and set the output of each channel to the specified level.
+  *         Calling pwm_start can re-start PWM output.
+  *
+  * @param  uint32_t stop_level : Out put level after PWM is stoped
+  *         e.g.: We initialize 8 channels, if stop_level_mask = 0x0f,
+  *         channel 0,1,2 and 3 will output high level, and channel 4,5,6 and 7 will output low level.
+  *
+  * @return null
   */
+void pwm_stop(uint32_t stop_level_mask);
 
 /**
-  * @}
+  * @brief  Set the duty cycle of all channels.
+  *
+  * @attention After set configuration, pwm_start needs to be called to take effect.
+  *
+  * @param  uint32_t *duty : An array that store the duty cycle of each channel,
+  *         the array elements number needs to be the same as the number of channels.
+  *
+  * @return null
   */
+void pwm_set_dutys(uint32_t *duty);
+
+/**
+  * @brief   Set the phase of a PWM channel.
+  *
+  * @attention After set configuration, pwm_start needs to be called to take effect.
+  *
+  * @param   int phase : The phase of this PWM channel, the phase range is (-180 ~ 180).
+  * @param   uint8_t channel_num : PWM channel number
+  *          the channel_num cannot exceed the value initialized by pwm_init.
+  *
+  * @return  null
+  */
+void pwm_set_phase(int phase, uint8_t channel_num);
+
+/**
+  * @brief   Set the phase of all channels.
+  *
+  * @attention After set configuration, pwm_start needs to be called to take effect.
+  *
+  * @param   int *phase : An array that store the phase of each channel,
+  *          the array elements number needs to be the same as the number of channels.
+  *
+  * @return  null
+  */
+void pwm_set_phases(int *phase);
+
+/**
+  * @brief   Get the phase of a PWM channel.
+  *
+  * @param   uint8_t channel_num : PWM channel number
+  *          the channel_num cannot exceed the value initialized by pwm_init.
+  *
+  * @return  PWM phase of specified channel.
+  */
+int pwm_get_phase(uint8_t channel_num);
+
+/**
+  * @brief   Set PWM period and duty of each PWM channel.
+  *
+  * @attention After set configuration, pwm_start needs to be called to take effect.
+  *
+  * @param   uint32_t period : PWM period, unit : us
+  *          For example, for 1KHz PWM, period is 1000.
+  * @param  uint32_t *duty : An array that store the duty cycle of each channel,
+  *         the array elements number needs to be the same as the number of channels.
+  *
+  * @return  null
+  */
+void pwm_set_period_dutys(uint32_t period, uint32_t *duty);
+
+/**
+  * @brief  Set the inverting output PWM channel.
+  *
+  * @attention After set configuration, pwm_start needs to be called to take effect.
+  *
+  * @param  uint16_t channel_mask : The channel bitmask that used to reverse the output
+  *         e.g.: We initialize 8 channels, if channel_mask = 0x0f, channels 0, 1, 2 and 3 will reverse the output.
+  *
+  * @return null
+  */
+void pwm_set_channel_reverse(uint16_t channel_mask);
+
+/**
+  * @brief  Clear the inverting output PWM channel.
+  *         This function only works for the PWM channel that is already in the inverted output states.
+  *
+  * @attention After set configuration, pwm_start needs to be called to take effect.
+  *
+  * @param  uint16_t channel_mask : The channel bitmask that need to clear
+  *         e.g.: The outputs of channels 0, 1, 2 and 3 are already in inverted state. If channel_mask = 0x07,
+  *         the output of channel 0, 1, and 2 will return to normal, the channel 3 will keep inverting output.
+  *
+  * @return  null
+  */
+void pwm_clear_channel_reverse(uint16_t channel_mask);
+
 
 #ifdef __cplusplus
 }
