@@ -16,7 +16,6 @@
 //#include <dirent.h>
 #include <unistd.h>
 
-#include "esp_common.h"
 #include "testrunner.h"
 
 static struct {

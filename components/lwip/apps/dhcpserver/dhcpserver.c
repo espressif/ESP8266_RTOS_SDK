@@ -16,7 +16,8 @@
 #include <string.h>
 #include <strings.h>
 
-#include "esp_common.h"
+#include "esp_misc.h"
+
 #include "sdkconfig.h"
 #include "lwip/inet.h"
 #include "lwip/err.h"

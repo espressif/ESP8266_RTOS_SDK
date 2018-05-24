@@ -12,7 +12,6 @@
 #include "lwip/ip_addr.h"
 #include "esp_libc.h"
 #include "esp_misc.h"
-#include "esp_common.h"
 #include "esp_wifi.h"
 #include "esp_sta.h"
 #include "esp_softap.h"

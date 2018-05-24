@@ -7,7 +7,12 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-#include "esp_common.h"
+#include <stdint.h>
+#include <stddef.h>
+
+#include "esp_system.h"
+#include "esp_timer.h"
+
 #include "user_config.h"
 
 static os_timer_t timer;
