@@ -204,11 +204,6 @@ static HeapRegion_t xHeapRegions[] =
 #define vPortFree_t(pv) vPortFree(pv)
 #define pvPortCalloc_t(count, size) pvPortCalloc(count, size)
 #endif
-/*-----------------------------------------------------------*/
-
-#ifdef MEMLEAK_DEBUG
-static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = "user_app";
-#endif
 
 /*-----------------------------------------------------------*/
 bool ICACHE_FLASH_ATTR __attribute__((weak))

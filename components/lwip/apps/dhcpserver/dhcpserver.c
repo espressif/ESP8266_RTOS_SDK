@@ -21,17 +21,12 @@
 #include "lwip/mem.h"
 #include "dhcpserver/dhcpserver.h"
 
-
-#ifdef MEMLEAK_DEBUG
-static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
-#endif
-
 extern struct netif *esp_netif[2];
 
 ////////////////////////////////////////////////////////////////////////////////////
 //static const uint8_t xid[4] = {0xad, 0xde, 0x12, 0x23};
 //static u8_t old_xid[4] = {0};
-static const u32_t magic_cookie ICACHE_RODATA_ATTR STORE_ATTR = 0x63538263;
+static const u32_t magic_cookie = 0x63538263;
 static struct udp_pcb* pcb_dhcps = NULL;
 static struct ip4_addr server_address;
 static struct ip4_addr client_address;//added

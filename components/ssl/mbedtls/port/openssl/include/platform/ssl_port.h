@@ -65,7 +65,5 @@ extern void vPortFree(void *pv);
 
 #define SSL_DEBUG_LOG printf
 
-#define LOCAL_ATRR ICACHE_RODATA_ATTR STORE_ATTR
-
 #endif
 
