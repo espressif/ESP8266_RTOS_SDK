@@ -84,12 +84,6 @@ typedef enum {
 #define REG_SET_BIT(_r, _b)     (*(volatile uint32 *)(_r) |= (_b))
 #define REG_CLR_BIT(_r, _b)     (*(volatile uint32 *)(_r) &= ~(_b))
 
-#ifndef __cplusplus
-#define BOOL            bool
-#define TRUE            true
-#define FALSE           false
-#endif /* !__cplusplus */
-
 #ifdef __cplusplus
 }
 #endif
