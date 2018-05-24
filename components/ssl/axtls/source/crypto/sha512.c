@@ -84,7 +84,7 @@ static const uint64_t k[80] =
 /**
 * Initialize the SHA512 context
 */
-void ICACHE_FLASH_ATTR SHA512_Init(SHA512_CTX *ctx)
+void SHA512_Init(SHA512_CTX *ctx)
 {
     ctx->h_dig.h[0] = 0x6A09E667F3BCC908ULL;
     ctx->h_dig.h[1] = 0xBB67AE8584CAA73BULL;
@@ -98,7 +98,7 @@ void ICACHE_FLASH_ATTR SHA512_Init(SHA512_CTX *ctx)
     ctx->totalSize = 0;
 }
  
-static void ICACHE_FLASH_ATTR SHA512_Process(SHA512_CTX *ctx)
+static void SHA512_Process(SHA512_CTX *ctx)
 {
     int t;
     uint64_t temp1;
@@ -157,7 +157,7 @@ static void ICACHE_FLASH_ATTR SHA512_Process(SHA512_CTX *ctx)
 /**
 * Accepts an array of octets as the next portion of the message.
 */
-void ICACHE_FLASH_ATTR SHA512_Update(SHA512_CTX *ctx, const uint8_t * msg, int len)
+void SHA512_Update(SHA512_CTX *ctx, const uint8_t * msg, int len)
 {
     // Process the incoming data
     while (len > 0)
@@ -190,7 +190,7 @@ void ICACHE_FLASH_ATTR SHA512_Update(SHA512_CTX *ctx, const uint8_t * msg, int l
 /**
 * Return the 512-bit message digest into the user's array
 */
-void ICACHE_FLASH_ATTR SHA512_Final(uint8_t *digest, SHA512_CTX *ctx)
+void SHA512_Final(uint8_t *digest, SHA512_CTX *ctx)
 {
     int i;
     size_t paddingSize;
