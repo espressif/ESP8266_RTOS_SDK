@@ -31,7 +31,7 @@ wifi_state_cb_t on_client_disconnect = NULL;
 volatile bool wifi_station_static_ip = false;
 volatile bool wifi_station_is_connected = false;
 
-void ICACHE_FLASH_ATTR wifi_event_handler_cb(System_Event_t *event)
+void wifi_event_handler_cb(System_Event_t *event)
 {
     static bool station_was_connected = false;
     if (event == NULL) {
@@ -98,27 +98,27 @@ void ICACHE_FLASH_ATTR wifi_event_handler_cb(System_Event_t *event)
     }
 }
 
-void ICACHE_FLASH_ATTR set_on_station_first_connect(wifi_state_cb_t cb){
+void set_on_station_first_connect(wifi_state_cb_t cb){
     on_station_first_connect = cb;
 }
 
-void ICACHE_FLASH_ATTR set_on_station_connect(wifi_state_cb_t cb){
+void set_on_station_connect(wifi_state_cb_t cb){
     on_station_connect = cb;
 }
 
-void ICACHE_FLASH_ATTR set_on_station_disconnect(wifi_disco_cb_t cb){
+void set_on_station_disconnect(wifi_disco_cb_t cb){
     on_station_disconnect = cb;
 }
 
-void ICACHE_FLASH_ATTR set_on_client_connect(wifi_state_cb_t cb){
+void set_on_client_connect(wifi_state_cb_t cb){
     on_client_connect = cb;
 }
 
-void ICACHE_FLASH_ATTR set_on_client_disconnect(wifi_state_cb_t cb){
+void set_on_client_disconnect(wifi_state_cb_t cb){
     on_client_disconnect = cb;
 }
 
-bool ICACHE_FLASH_ATTR wifi_set_mode(WIFI_MODE mode){
+bool wifi_set_mode(WIFI_MODE mode){
     if(!mode){
         bool s = wifi_set_opmode(mode);
         wifi_fpm_open();
@@ -130,14 +130,14 @@ bool ICACHE_FLASH_ATTR wifi_set_mode(WIFI_MODE mode){
     return wifi_set_opmode(mode);
 }
 
-WIFI_MODE ICACHE_FLASH_ATTR init_esp_wifi(){
+WIFI_MODE init_esp_wifi(){
     wifi_set_event_handler_cb(wifi_event_handler_cb);
     WIFI_MODE mode = wifi_get_opmode_default();
     wifi_set_mode(mode);
     return mode;
 }
 
-bool ICACHE_FLASH_ATTR start_wifi_station(const char * ssid, const char * pass){
+bool start_wifi_station(const char * ssid, const char * pass){
     WIFI_MODE mode = wifi_get_opmode();
     if((mode & STATION_MODE) == 0){
         mode |= STATION_MODE;
@@ -171,7 +171,7 @@ bool ICACHE_FLASH_ATTR start_wifi_station(const char * ssid, const char * pass){
     return wifi_station_connect();
 }
 
-bool ICACHE_FLASH_ATTR stop_wifi_station(){
+bool stop_wifi_station(){
     WIFI_MODE mode = wifi_get_opmode();
     mode &= ~STATION_MODE;
     if(!wifi_set_mode(mode)){
@@ -181,7 +181,7 @@ bool ICACHE_FLASH_ATTR stop_wifi_station(){
     return true;
 }
 
-bool ICACHE_FLASH_ATTR start_wifi_ap(const char * ssid, const char * pass){
+bool start_wifi_ap(const char * ssid, const char * pass){
     WIFI_MODE mode = wifi_get_opmode();
     if((mode & SOFTAP_MODE) == 0){
         mode |= SOFTAP_MODE;
@@ -203,7 +203,7 @@ bool ICACHE_FLASH_ATTR start_wifi_ap(const char * ssid, const char * pass){
     return wifi_softap_set_config(&config);
 }
 
-bool ICACHE_FLASH_ATTR stop_wifi_ap(){
+bool stop_wifi_ap(){
     WIFI_MODE mode = wifi_get_opmode();
     mode &= ~SOFTAP_MODE;
     if(!wifi_set_mode(mode)){
@@ -213,7 +213,7 @@ bool ICACHE_FLASH_ATTR stop_wifi_ap(){
     return true;
 }
 
-bool ICACHE_FLASH_ATTR wifi_station_connected(){
+bool wifi_station_connected(){
     if(!wifi_station_is_connected){
         return false;
     }
@@ -226,7 +226,7 @@ bool ICACHE_FLASH_ATTR wifi_station_connected(){
     return wifi_station_is_connected;
 }
 
-bool ICACHE_FLASH_ATTR wifi_ap_enabled(){
+bool wifi_ap_enabled(){
     return !!(wifi_get_opmode() & SOFTAP_MODE);
 }
 

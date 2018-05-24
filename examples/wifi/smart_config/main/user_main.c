@@ -43,8 +43,7 @@ const airkiss_config_t akconf =
 	0,
 };
 
-LOCAL void ICACHE_FLASH_ATTR
-airkiss_wifilan_time_callback(void)
+LOCAL void airkiss_wifilan_time_callback(void)
 {
 	uint16 i;
 	airkiss_lan_ret_t ret;
@@ -75,8 +74,7 @@ airkiss_wifilan_time_callback(void)
 	os_printf("Finish send notify!\n");
 }
 
-LOCAL void ICACHE_FLASH_ATTR
-airkiss_wifilan_recv_callbk(void *arg, char *pdata, unsigned short len)
+LOCAL void airkiss_wifilan_recv_callbk(void *arg, char *pdata, unsigned short len)
 {
 	uint16 i;
 	remot_info* pcon_info = NULL;
@@ -121,8 +119,7 @@ airkiss_wifilan_recv_callbk(void *arg, char *pdata, unsigned short len)
 	}
 }
 
-void ICACHE_FLASH_ATTR
-airkiss_start_discover(void)
+void airkiss_start_discover(void)
 {
 	ssdp_udp.local_port = DEFAULT_LAN_PORT;
 	pssdpudpconn.type = ESPCONN_UDP;
@@ -136,8 +133,7 @@ airkiss_start_discover(void)
 }
 
 
-void ICACHE_FLASH_ATTR
-smartconfig_done(sc_status status, void *pdata)
+void smartconfig_done(sc_status status, void *pdata)
 {
     switch(status) {
         case SC_STATUS_WAIT:
@@ -181,8 +177,7 @@ smartconfig_done(sc_status status, void *pdata)
 	
 }
 
-void ICACHE_FLASH_ATTR
-smartconfig_task(void *pvParameters)
+void smartconfig_task(void *pvParameters)
 {
     smartconfig_start(smartconfig_done);
     
@@ -244,8 +239,7 @@ uint32 user_rf_cal_sector_set(void)
  * Parameters   : none
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR
-user_init(void)
+void user_init(void)
 {
     printf("SDK version:%s\n", system_get_sdk_version());
 

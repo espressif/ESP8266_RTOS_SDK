@@ -80,7 +80,7 @@ int os_get_random(unsigned char *buf, size_t len);
  * please copy following codes to user_main.c.
 #include "esp_libc.h"
 
-bool ICACHE_FLASH_ATTR check_memleak_debug_enable(void)
+bool check_memleak_debug_enable(void)
 {
     return MEMLEAK_DEBUG_ENABLE;
 }

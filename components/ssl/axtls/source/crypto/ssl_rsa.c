@@ -36,7 +36,7 @@
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_crypto.h"
 
-void ICACHE_FLASH_ATTR RSA_priv_key_new(RSA_CTX **ctx, 
+void RSA_priv_key_new(RSA_CTX **ctx,
         const uint8_t *modulus, int mod_len,
         const uint8_t *pub_exp, int pub_len,
         const uint8_t *priv_exp, int priv_len
@@ -71,7 +71,7 @@ void ICACHE_FLASH_ATTR RSA_priv_key_new(RSA_CTX **ctx,
 #endif
 }
 
-void ICACHE_FLASH_ATTR RSA_pub_key_new(RSA_CTX **ctx, 
+void RSA_pub_key_new(RSA_CTX **ctx,
         const uint8_t *modulus, int mod_len,
         const uint8_t *pub_exp, int pub_len)
 {
@@ -95,7 +95,7 @@ void ICACHE_FLASH_ATTR RSA_pub_key_new(RSA_CTX **ctx,
 /**
  * Free up any RSA context resources.
  */
-void ICACHE_FLASH_ATTR RSA_free(RSA_CTX *rsa_ctx)
+void RSA_free(RSA_CTX *rsa_ctx)
 {
     BI_CTX *bi_ctx;
     if (rsa_ctx == NULL)                /* deal with ptrs that are null */
@@ -137,7 +137,7 @@ void ICACHE_FLASH_ATTR RSA_free(RSA_CTX *rsa_ctx)
  * @return  The number of bytes that were originally encrypted. -1 on error.
  * @see http://www.rsasecurity.com/rsalabs/node.asp?id=2125
  */
-int ICACHE_FLASH_ATTR RSA_decrypt(const RSA_CTX *ctx, const uint8_t *in_data, 
+int RSA_decrypt(const RSA_CTX *ctx, const uint8_t *in_data,
                             uint8_t *out_data, int out_len, int is_decryption)
 {
     const int byte_size = ctx->num_octets;
@@ -201,7 +201,7 @@ int ICACHE_FLASH_ATTR RSA_decrypt(const RSA_CTX *ctx, const uint8_t *in_data,
 /**
  * Performs m = c^d mod n
  */
-bigint *ICACHE_FLASH_ATTR RSA_private(const RSA_CTX *c, bigint *bi_msg)
+bigint *RSA_private(const RSA_CTX *c, bigint *bi_msg)
 {
 #ifdef CONFIG_BIGINT_CRT
     return bi_crt(c->bi_ctx, bi_msg, c->dP, c->dQ, c->p, c->q, c->qInv);
@@ -217,7 +217,7 @@ bigint *ICACHE_FLASH_ATTR RSA_private(const RSA_CTX *c, bigint *bi_msg)
 /**
  * Used for diagnostics.
  */
-void ICACHE_FLASH_ATTR RSA_print(const RSA_CTX *rsa_ctx) 
+void RSA_print(const RSA_CTX *rsa_ctx)
 {
     if (rsa_ctx == NULL)
         return;
@@ -235,7 +235,7 @@ void ICACHE_FLASH_ATTR RSA_print(const RSA_CTX *rsa_ctx)
 /**
  * Performs c = m^e mod n
  */
-bigint *ICACHE_FLASH_ATTR RSA_public(const RSA_CTX * c, bigint *bi_msg)
+bigint *RSA_public(const RSA_CTX * c, bigint *bi_msg)
 {
     c->bi_ctx->mod_offset = BIGINT_M_OFFSET;
     return bi_mod_power(c->bi_ctx, bi_msg, c->e);
@@ -245,7 +245,7 @@ bigint *ICACHE_FLASH_ATTR RSA_public(const RSA_CTX * c, bigint *bi_msg)
  * Use PKCS1.5 for encryption/signing.
  * see http://www.rsasecurity.com/rsalabs/node.asp?id=2125
  */
-int ICACHE_FLASH_ATTR RSA_encrypt(const RSA_CTX *ctx, const uint8_t *in_data, uint16_t in_len, 
+int RSA_encrypt(const RSA_CTX *ctx, const uint8_t *in_data, uint16_t in_len,
         uint8_t *out_data, int is_signing)
 {
     int byte_size = ctx->num_octets;

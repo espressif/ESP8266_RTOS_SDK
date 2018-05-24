@@ -39,7 +39,7 @@
 /**
  * Get ready for an encrypt/decrypt operation
  */
-void ICACHE_FLASH_ATTR RC4_setup(RC4_CTX *ctx, const uint8_t *key, int length)
+void RC4_setup(RC4_CTX *ctx, const uint8_t *key, int length)
 {
     int i, j = 0, k = 0, a;
     uint8_t *m;
@@ -68,7 +68,7 @@ void ICACHE_FLASH_ATTR RC4_setup(RC4_CTX *ctx, const uint8_t *key, int length)
  * this is a stream cipher).
  * NOTE: *msg and *out must be the same pointer (performance tweak)
  */
-void ICACHE_FLASH_ATTR RC4_crypt(RC4_CTX *ctx, const uint8_t *msg, uint8_t *out, int length)
+void RC4_crypt(RC4_CTX *ctx, const uint8_t *msg, uint8_t *out, int length)
 { 
     int i;
     uint8_t *m, x, y, a, b;

@@ -41,7 +41,7 @@
  * Perform HMAC-MD5
  * NOTE: does not handle keys larger than the block size.
  */
-void ICACHE_FLASH_ATTR ssl_hmac_md5(const uint8_t *msg, int length, const uint8_t *key, 
+void ssl_hmac_md5(const uint8_t *msg, int length, const uint8_t *key,
         int key_len, uint8_t *digest)
 {
     MD5_CTX context;
@@ -76,7 +76,7 @@ void ICACHE_FLASH_ATTR ssl_hmac_md5(const uint8_t *msg, int length, const uint8_
  * Perform HMAC-SHA1
  * NOTE: does not handle keys larger than the block size.
  */
-void ICACHE_FLASH_ATTR ssl_hmac_sha1(const uint8_t *msg, int length, const uint8_t *key, 
+void ssl_hmac_sha1(const uint8_t *msg, int length, const uint8_t *key,
         int key_len, uint8_t *digest)
 {
     SHA1_CTX context;

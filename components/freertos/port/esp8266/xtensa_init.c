@@ -39,8 +39,7 @@ Compute and initialize at run-time the tick divisor (the number of
 processor clock cycles in an RTOS tick, used to set the tick timer).
 Called when the processor clock frequency is not known at compile-time.
 */
-void ICACHE_FLASH_ATTR
-_xt_tick_divisor_init(void)
+void _xt_tick_divisor_init(void)
 {
     #ifdef XT_BOARD
     _xt_tick_divisor = xtbsp_clock_freq_hz() / XT_TICK_PER_SEC;

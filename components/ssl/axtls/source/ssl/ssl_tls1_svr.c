@@ -46,7 +46,7 @@ static int process_cert_verify(SSL *ssl);
 /*
  * Establish a new SSL connection to an SSL client.
  */
-EXP_FUNC SSL * ICACHE_FLASH_ATTR STDCALL ICACHE_FLASH_ATTR ssl_server_new(SSL_CTX *ssl_ctx, int client_fd)
+EXP_FUNC SSL * STDCALL ssl_server_new(SSL_CTX *ssl_ctx, int client_fd)
 {
     SSL *ssl;
 
@@ -64,7 +64,7 @@ EXP_FUNC SSL * ICACHE_FLASH_ATTR STDCALL ICACHE_FLASH_ATTR ssl_server_new(SSL_CT
 /*
  * Process the handshake record.
  */
-int ICACHE_FLASH_ATTR do_svr_handshake(SSL *ssl, int handshake_type, uint8_t *buf, int hs_len)
+int do_svr_handshake(SSL *ssl, int handshake_type, uint8_t *buf, int hs_len)
 {
     int ret = SSL_OK;
     ssl->hs_status = SSL_NOT_OK;            /* not connected */
@@ -112,7 +112,7 @@ int ICACHE_FLASH_ATTR do_svr_handshake(SSL *ssl, int handshake_type, uint8_t *bu
 /* 
  * Process a client hello message.
  */
-static int ICACHE_FLASH_ATTR process_client_hello(SSL *ssl)
+static int process_client_hello(SSL *ssl)
 {
     uint8_t *buf = ssl->bm_data;
     int pkt_size = ssl->bm_index;
@@ -250,7 +250,7 @@ error:
 /*
  * Send the entire server hello sequence
  */
-static int ICACHE_FLASH_ATTR send_server_hello_sequence(SSL *ssl)
+static int send_server_hello_sequence(SSL *ssl)
 {
     int ret;
 
@@ -295,7 +295,7 @@ static int ICACHE_FLASH_ATTR send_server_hello_sequence(SSL *ssl)
 /*
  * Send a server hello message.
  */
-static int ICACHE_FLASH_ATTR send_server_hello(SSL *ssl)
+static int send_server_hello(SSL *ssl)
 {
     uint8_t *buf = ssl->bm_data;
     int offset = 0;
@@ -355,7 +355,7 @@ static int ICACHE_FLASH_ATTR send_server_hello(SSL *ssl)
 /*
  * Send the server hello done message.
  */
-static int ICACHE_FLASH_ATTR send_server_hello_done(SSL *ssl)
+static int send_server_hello_done(SSL *ssl)
 {
     uint8_t g_hello_done_ram[4];
 
@@ -370,7 +370,7 @@ static int ICACHE_FLASH_ATTR send_server_hello_done(SSL *ssl)
  * our RSA private key) and then work out the master key. Initialise the
  * ciphers.
  */
-static int ICACHE_FLASH_ATTR process_client_key_xchg(SSL *ssl)
+static int process_client_key_xchg(SSL *ssl)
 {
     uint8_t *buf = &ssl->bm_data[ssl->dc->bm_proc_index];
     int pkt_size = ssl->bm_index;
@@ -436,7 +436,7 @@ static const uint8_t g_cert_request[] = { HS_CERT_REQ, 0, 0, 4, 1, 0, 0, 0 };
 /*
  * Send the certificate request message.
  */
-static int ICACHE_FLASH_ATTR send_certificate_request(SSL *ssl)
+static int send_certificate_request(SSL *ssl)
 {
     uint8_t g_cert_request_ram[8];
 
@@ -450,7 +450,7 @@ static int ICACHE_FLASH_ATTR send_certificate_request(SSL *ssl)
  * Ensure the client has the private key by first decrypting the packet and
  * then checking the packet digests.
  */
-static int ICACHE_FLASH_ATTR process_cert_verify(SSL *ssl)
+static int process_cert_verify(SSL *ssl)
 {
     uint8_t *buf = &ssl->bm_data[ssl->dc->bm_proc_index];
     int pkt_size = ssl->bm_index;

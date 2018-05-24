@@ -46,7 +46,7 @@
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_EVP_DigestInit(MD5_CTX *ctx, uint8 *out)
+void esp_EVP_DigestInit(MD5_CTX *ctx, uint8 *out)
 {
 	return ;
 }
@@ -59,7 +59,7 @@ void ICACHE_FLASH_ATTR esp_EVP_DigestInit(MD5_CTX *ctx, uint8 *out)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_EVP_DigestUpdate(MD5_CTX *ctx, const uint8_t *input, int ilen)
+void esp_EVP_DigestUpdate(MD5_CTX *ctx, const uint8_t *input, int ilen)
 {
 	return;
 }
@@ -72,7 +72,7 @@ void ICACHE_FLASH_ATTR esp_EVP_DigestUpdate(MD5_CTX *ctx, const uint8_t *input, 
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_EVP_DigestFinal(MD5_CTX *ctx, uint8_t *output, uint16* olen)
+void esp_EVP_DigestFinal(MD5_CTX *ctx, uint8_t *output, uint16* olen)
 {
 	return ;
 }
@@ -85,7 +85,7 @@ void ICACHE_FLASH_ATTR esp_EVP_DigestFinal(MD5_CTX *ctx, uint8_t *output, uint16
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-char *ICACHE_FLASH_ATTR esp_EVP_sha1(void)
+char *esp_EVP_sha1(void)
 {
 	return NULL;
 }
@@ -98,7 +98,7 @@ char *ICACHE_FLASH_ATTR esp_EVP_sha1(void)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-char *ICACHE_FLASH_ATTR esp_EVP_cleanup(void)
+char *esp_EVP_cleanup(void)
 {
 	return NULL;
 }
@@ -122,7 +122,7 @@ static const unsigned char base64_enc_map[64] =
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-EXP_FUNC int STDCALL ICACHE_FLASH_ATTR esp_base64_encode(uint8 *dst, size_t dlen, size_t *olen,
+EXP_FUNC int STDCALL esp_base64_encode(uint8 *dst, size_t dlen, size_t *olen,
         const uint8_t *src, size_t slen)
 {
 	size_t i, n;
@@ -193,7 +193,7 @@ static char *key_password = NULL;
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR esp_SSLv23_server_method(void) { return NULL; }
+void *esp_SSLv23_server_method(void) { return NULL; }
 
 /******************************************************************************
  * FunctionName : esp_SSLv3_server_method
@@ -203,7 +203,7 @@ void *ICACHE_FLASH_ATTR esp_SSLv23_server_method(void) { return NULL; }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR esp_SSLv3_server_method(void) { return NULL; }
+void *esp_SSLv3_server_method(void) { return NULL; }
 
 /******************************************************************************
  * FunctionName : esp_TLSv1_server_method
@@ -213,7 +213,7 @@ void *ICACHE_FLASH_ATTR esp_SSLv3_server_method(void) { return NULL; }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR esp_TLSv1_server_method(void) { return NULL; }
+void *esp_TLSv1_server_method(void) { return NULL; }
 
 /******************************************************************************
  * FunctionName : esp_TLSv1_1_server_method
@@ -223,7 +223,7 @@ void *ICACHE_FLASH_ATTR esp_TLSv1_server_method(void) { return NULL; }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR esp_TLSv1_1_server_method(void) { return NULL; }
+void *esp_TLSv1_1_server_method(void) { return NULL; }
 
 /******************************************************************************
  * FunctionName : esp_TLSv1_1_client_method
@@ -233,7 +233,7 @@ void *ICACHE_FLASH_ATTR esp_TLSv1_1_server_method(void) { return NULL; }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR esp_TLSv1_1_client_method(void) { return NULL; }
+void *esp_TLSv1_1_client_method(void) { return NULL; }
 
 /******************************************************************************
  * FunctionName : esp_SSLv23_client_method
@@ -243,7 +243,7 @@ void *ICACHE_FLASH_ATTR esp_TLSv1_1_client_method(void) { return NULL; }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR esp_SSLv23_client_method(void) { return NULL; }
+void *esp_SSLv23_client_method(void) { return NULL; }
 
 /******************************************************************************
  * FunctionName : esp_SSLv3_client_method
@@ -253,7 +253,7 @@ void *ICACHE_FLASH_ATTR esp_SSLv23_client_method(void) { return NULL; }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR esp_SSLv3_client_method(void) { return NULL; }
+void *esp_SSLv3_client_method(void) { return NULL; }
 
 /******************************************************************************
  * FunctionName : esp_TLSv1_client_method
@@ -263,7 +263,7 @@ void *ICACHE_FLASH_ATTR esp_SSLv3_client_method(void) { return NULL; }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR esp_TLSv1_client_method(void) { return NULL; }
+void *esp_TLSv1_client_method(void) { return NULL; }
 
 /******************************************************************************
  * FunctionName : esp_ssl_CTX_new
@@ -273,7 +273,7 @@ void *ICACHE_FLASH_ATTR esp_TLSv1_client_method(void) { return NULL; }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-SSL_CTX *ICACHE_FLASH_ATTR esp_ssl_CTX_new(ssl_func_type_t meth)
+SSL_CTX *esp_ssl_CTX_new(ssl_func_type_t meth)
 {
 	uint32_t options;
 	options = SSL_SERVER_VERIFY_LATER | SSL_DISPLAY_CERTS | SSL_NO_DEFAULT_KEY;
@@ -291,7 +291,7 @@ SSL_CTX *ICACHE_FLASH_ATTR esp_ssl_CTX_new(ssl_func_type_t meth)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_CTX_set_option(SSL_CTX *ssl_ctx, uint32_t options)
+int esp_ssl_CTX_set_option(SSL_CTX *ssl_ctx, uint32_t options)
 {
 	ssl_ctx->options = options;
     return 1;
@@ -305,7 +305,7 @@ int ICACHE_FLASH_ATTR esp_ssl_CTX_set_option(SSL_CTX *ssl_ctx, uint32_t options)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_ssl_CTX_free(SSL_CTX *ssl_ctx)
+void esp_ssl_CTX_free(SSL_CTX *ssl_ctx)
 {
     os_free(ssl_ctx->bonus_attr);
     ssl_ctx_free(ssl_ctx);
@@ -319,7 +319,7 @@ void ICACHE_FLASH_ATTR esp_ssl_CTX_free(SSL_CTX *ssl_ctx)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-SSL *ICACHE_FLASH_ATTR esp_ssl_new(SSL_CTX *ssl_ctx)
+SSL *esp_ssl_new(SSL_CTX *ssl_ctx)
 {
     SSL *ssl;
     ssl_func_type_t ssl_func_type;
@@ -351,7 +351,7 @@ SSL *ICACHE_FLASH_ATTR esp_ssl_new(SSL_CTX *ssl_ctx)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_set_fd(SSL *s, int fd)
+int esp_ssl_set_fd(SSL *s, int fd)
 {
     s->client_fd = fd;
     return 1;   /* always succeeds */
@@ -360,7 +360,7 @@ int ICACHE_FLASH_ATTR esp_ssl_set_fd(SSL *s, int fd)
 /*
  * Do the handshaking from the beginning.
  */
-int ICACHE_FLASH_ATTR do_server_accept(SSL *ssl)
+int do_server_accept(SSL *ssl)
 {
     int ret = SSL_OK;
 	
@@ -394,7 +394,7 @@ int ICACHE_FLASH_ATTR do_server_accept(SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_accept(SSL *ssl)
+int esp_ssl_accept(SSL *ssl)
 {
     return do_server_accept(ssl) == SSL_OK ? 1 : -1;
 }
@@ -408,7 +408,7 @@ int ICACHE_FLASH_ATTR esp_ssl_accept(SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_connect(SSL *ssl)
+int esp_ssl_connect(SSL *ssl)
 {
 	ssl->version = SSL_PROTOCOL_VERSION_MAX;
 	SET_SSL_FLAG(SSL_IS_CLIENT);
@@ -424,7 +424,7 @@ int ICACHE_FLASH_ATTR esp_ssl_connect(SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_ssl_free(SSL *ssl)
+void esp_ssl_free(SSL *ssl)
 {
     ssl_free(ssl);
 }
@@ -437,7 +437,7 @@ void ICACHE_FLASH_ATTR esp_ssl_free(SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_read(SSL *ssl, void *buf, int num)
+int esp_ssl_read(SSL *ssl, void *buf, int num)
 {
     uint8_t *read_buf = NULL;
     int ret;
@@ -470,7 +470,7 @@ int ICACHE_FLASH_ATTR esp_ssl_read(SSL *ssl, void *buf, int num)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_write(SSL *ssl, const void *buf, int num)
+int esp_ssl_write(SSL *ssl, const void *buf, int num)
 {
     return ssl_write(ssl, buf, num);
 }
@@ -483,7 +483,7 @@ int ICACHE_FLASH_ATTR esp_ssl_write(SSL *ssl, const void *buf, int num)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_CTX_use_certificate_file(SSL_CTX *ssl_ctx, const char *file, int type)
+int esp_ssl_CTX_use_certificate_file(SSL_CTX *ssl_ctx, const char *file, int type)
 {
     return (ssl_obj_load(ssl_ctx, SSL_OBJ_X509_CERT, file, NULL) == SSL_OK);
 }
@@ -496,7 +496,7 @@ int ICACHE_FLASH_ATTR esp_ssl_CTX_use_certificate_file(SSL_CTX *ssl_ctx, const c
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_CTX_use_certificate_auth_file(SSL_CTX *ssl_ctx, const char *file, int type)
+int esp_ssl_CTX_use_certificate_auth_file(SSL_CTX *ssl_ctx, const char *file, int type)
 {
     return (ssl_obj_load(ssl_ctx, SSL_OBJ_X509_CACERT, file, NULL) == SSL_OK);
 }
@@ -509,7 +509,7 @@ int ICACHE_FLASH_ATTR esp_ssl_CTX_use_certificate_auth_file(SSL_CTX *ssl_ctx, co
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_CTX_use_PrivateKey_file(SSL_CTX *ssl_ctx, const char *file, int type)
+int esp_ssl_CTX_use_PrivateKey_file(SSL_CTX *ssl_ctx, const char *file, int type)
 {
     return (ssl_obj_load(ssl_ctx, SSL_OBJ_RSA_KEY, file, key_password) == SSL_OK);
 }
@@ -522,7 +522,7 @@ int ICACHE_FLASH_ATTR esp_ssl_CTX_use_PrivateKey_file(SSL_CTX *ssl_ctx, const ch
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR SSL_CTX_use_certificate_ASN1(SSL_CTX *ssl_ctx, int len, const uint8_t *d)
+int SSL_CTX_use_certificate_ASN1(SSL_CTX *ssl_ctx, int len, const uint8_t *d)
 {
     return (ssl_obj_memory_load(ssl_ctx,
                         SSL_OBJ_X509_CERT, d, len, NULL) == SSL_OK);
@@ -536,13 +536,13 @@ int ICACHE_FLASH_ATTR SSL_CTX_use_certificate_ASN1(SSL_CTX *ssl_ctx, int len, co
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR SSL_CTX_set_session_id_context(SSL_CTX *ctx, const unsigned char *sid_ctx,
+int SSL_CTX_set_session_id_context(SSL_CTX *ctx, const unsigned char *sid_ctx,
         unsigned int sid_ctx_len)
 {
     return 1;
 }
 
-//int ICACHE_FLASH_ATTR esp_ssl_CTX_set_verify_depth(SSL_CTX *ctx)
+//int esp_ssl_CTX_set_verify_depth(SSL_CTX *ctx)
 //{
 //    return 1;
 //}
@@ -555,7 +555,7 @@ int ICACHE_FLASH_ATTR SSL_CTX_set_session_id_context(SSL_CTX *ctx, const unsigne
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_CTX_use_certificate_chain_file(SSL_CTX *ssl_ctx, const char *file)
+int esp_ssl_CTX_use_certificate_chain_file(SSL_CTX *ssl_ctx, const char *file)
 {
     return (ssl_obj_load(ssl_ctx,SSL_OBJ_X509_CERT, file, NULL) == SSL_OK);
 }
@@ -568,7 +568,7 @@ int ICACHE_FLASH_ATTR esp_ssl_CTX_use_certificate_chain_file(SSL_CTX *ssl_ctx, c
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR SSL_shutdown(SSL *ssl)
+int SSL_shutdown(SSL *ssl)
 {
     return 1;
 }
@@ -582,7 +582,7 @@ int ICACHE_FLASH_ATTR SSL_shutdown(SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-SSL_SESSION *ICACHE_FLASH_ATTR SSL_get1_session(SSL *ssl)
+SSL_SESSION *SSL_get1_session(SSL *ssl)
 {
     return (SSL_SESSION *)ssl_get_session_id(ssl); /* note: wrong cast */
 }
@@ -595,7 +595,7 @@ SSL_SESSION *ICACHE_FLASH_ATTR SSL_get1_session(SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR SSL_set_session(SSL *ssl, SSL_SESSION *session)
+int SSL_set_session(SSL *ssl, SSL_SESSION *session)
 {
     memcpy(ssl->session_id, (uint8_t *)session, SSL_SESSION_ID_SIZE);
     return 1;
@@ -609,7 +609,7 @@ int ICACHE_FLASH_ATTR SSL_set_session(SSL *ssl, SSL_SESSION *session)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR SSL_SESSION_free(SSL_SESSION *session) { }
+void SSL_SESSION_free(SSL_SESSION *session) { }
 /*** end get/set session ***/
 
 /******************************************************************************
@@ -620,7 +620,7 @@ void ICACHE_FLASH_ATTR SSL_SESSION_free(SSL_SESSION *session) { }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-long ICACHE_FLASH_ATTR SSL_CTX_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg)
+long SSL_CTX_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg)
 {
     return 0;
 }
@@ -633,7 +633,7 @@ long ICACHE_FLASH_ATTR SSL_CTX_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_ssl_CTX_set_verify(SSL_CTX *ctx, int mode,
+void esp_ssl_CTX_set_verify(SSL_CTX *ctx, int mode,
         int (*verify_callback)(int, void *)) { }
 
 /******************************************************************************
@@ -644,7 +644,7 @@ void ICACHE_FLASH_ATTR esp_ssl_CTX_set_verify(SSL_CTX *ctx, int mode,
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_ssl_CTX_set_verify_depth(SSL_CTX *ctx, int depth) { }
+void esp_ssl_CTX_set_verify_depth(SSL_CTX *ctx, int depth) { }
 
 /******************************************************************************
  * FunctionName : esp_ssl_set_fd
@@ -654,7 +654,7 @@ void ICACHE_FLASH_ATTR esp_ssl_CTX_set_verify_depth(SSL_CTX *ctx, int depth) { }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
+int esp_ssl_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
         const char *CApath)
 {
     return 1;
@@ -668,7 +668,7 @@ int ICACHE_FLASH_ATTR esp_ssl_CTX_load_verify_locations(SSL_CTX *ctx, const char
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR SSL_load_client_CA_file(const char *file)
+void *SSL_load_client_CA_file(const char *file)
 {
     return (void *)file;
 }
@@ -681,7 +681,7 @@ void *ICACHE_FLASH_ATTR SSL_load_client_CA_file(const char *file)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR SSL_CTX_set_client_CA_list(SSL_CTX *ssl_ctx, void *file)
+void SSL_CTX_set_client_CA_list(SSL_CTX *ssl_ctx, void *file)
 {
     ssl_obj_load(ssl_ctx, SSL_OBJ_X509_CERT, (const char *)file, NULL);
 }
@@ -694,7 +694,7 @@ void ICACHE_FLASH_ATTR SSL_CTX_set_client_CA_list(SSL_CTX *ssl_ctx, void *file)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR SSLv23_method(void) { }
+void SSLv23_method(void) { }
 
 /******************************************************************************
  * FunctionName : esp_ssl_set_fd
@@ -704,7 +704,7 @@ void ICACHE_FLASH_ATTR SSLv23_method(void) { }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR SSL_CTX_set_default_passwd_cb(SSL_CTX *ctx, void *cb) { }
+void SSL_CTX_set_default_passwd_cb(SSL_CTX *ctx, void *cb) { }
 
 /******************************************************************************
  * FunctionName : esp_ssl_set_fd
@@ -714,7 +714,7 @@ void ICACHE_FLASH_ATTR SSL_CTX_set_default_passwd_cb(SSL_CTX *ctx, void *cb) { }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR SSL_CTX_set_default_passwd_cb_userdata(SSL_CTX *ctx, void *u)
+void SSL_CTX_set_default_passwd_cb_userdata(SSL_CTX *ctx, void *u)
 {
     key_password = (char *)u;
 }
@@ -727,7 +727,7 @@ void ICACHE_FLASH_ATTR SSL_CTX_set_default_passwd_cb_userdata(SSL_CTX *ctx, void
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR SSL_peek(SSL *ssl, void *buf, int num)
+int SSL_peek(SSL *ssl, void *buf, int num)
 {
     memcpy(buf, ssl->bm_data, num);
     return num;
@@ -741,7 +741,7 @@ int ICACHE_FLASH_ATTR SSL_peek(SSL *ssl, void *buf, int num)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR SSL_set_bio(SSL *ssl, void *rbio, void *wbio) { }
+void SSL_set_bio(SSL *ssl, void *rbio, void *wbio) { }
 
 /******************************************************************************
  * FunctionName : esp_ssl_set_fd
@@ -751,7 +751,7 @@ void ICACHE_FLASH_ATTR SSL_set_bio(SSL *ssl, void *rbio, void *wbio) { }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-long ICACHE_FLASH_ATTR esp_ssl_get_verify_result(const SSL *ssl)
+long esp_ssl_get_verify_result(const SSL *ssl)
 {
     return ssl_handshake_status(ssl);
 }
@@ -764,7 +764,7 @@ long ICACHE_FLASH_ATTR esp_ssl_get_verify_result(const SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR SSL_state(SSL *ssl)
+int SSL_state(SSL *ssl)
 {
     return 0x03; // ok state
 }
@@ -778,7 +778,7 @@ int ICACHE_FLASH_ATTR SSL_state(SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void *ICACHE_FLASH_ATTR esp_ssl_get_peer_certificate(const SSL *ssl)
+void *esp_ssl_get_peer_certificate(const SSL *ssl)
 {
     return &ssl->ssl_ctx->certs[0];
 }
@@ -791,7 +791,7 @@ void *ICACHE_FLASH_ATTR esp_ssl_get_peer_certificate(const SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR SSL_clear(SSL *ssl)
+int SSL_clear(SSL *ssl)
 {
     return 1;
 }
@@ -804,7 +804,7 @@ int ICACHE_FLASH_ATTR SSL_clear(SSL *ssl)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_CTX_check_private_key(const SSL_CTX *ctx)
+int esp_ssl_CTX_check_private_key(const SSL_CTX *ctx)
 {
     return 1;
 }
@@ -817,7 +817,7 @@ int ICACHE_FLASH_ATTR esp_ssl_CTX_check_private_key(const SSL_CTX *ctx)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR SSL_CTX_set_cipher_list(SSL *s, const char *str)
+int SSL_CTX_set_cipher_list(SSL *s, const char *str)
 {
     return 1;
 }
@@ -830,7 +830,7 @@ int ICACHE_FLASH_ATTR SSL_CTX_set_cipher_list(SSL *s, const char *str)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_get_error(const SSL *ssl, int ret)
+int esp_ssl_get_error(const SSL *ssl, int ret)
 {
 //    ssl_display_error(ret);
     return 0;   /* TODO: return proper return code */
@@ -844,7 +844,7 @@ int ICACHE_FLASH_ATTR esp_ssl_get_error(const SSL *ssl, int ret)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR SSL_CTX_set_options(SSL_CTX *ssl_ctx, int option) {}
+void SSL_CTX_set_options(SSL_CTX *ssl_ctx, int option) {}
 
 /******************************************************************************
  * FunctionName : esp_ssl_set_fd
@@ -854,7 +854,7 @@ void ICACHE_FLASH_ATTR SSL_CTX_set_options(SSL_CTX *ssl_ctx, int option) {}
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_library_init(void ) { return 1; }
+int esp_ssl_library_init(void ) { return 1; }
 
 /******************************************************************************
  * FunctionName : esp_ssl_set_fd
@@ -864,16 +864,16 @@ int ICACHE_FLASH_ATTR esp_ssl_library_init(void ) { return 1; }
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR SSL_load_error_strings(void ) {}
-//void ICACHE_FLASH_ATTR ERR_print_errors_fp(FILE *fp) {}
+void SSL_load_error_strings(void ) {}
+//void ERR_print_errors_fp(FILE *fp) {}
 //
 //#ifndef CONFIG_SSL_SKELETON_MODE
-//long ICACHE_FLASH_ATTR SSL_CTX_get_timeout(const SSL_CTX *ssl_ctx) {
+//long SSL_CTX_get_timeout(const SSL_CTX *ssl_ctx) {
 //                            return CONFIG_SSL_EXPIRY_TIME*3600; }
-//long ICACHE_FLASH_ATTR SSL_CTX_set_timeout(SSL_CTX *ssl_ctx, long t) {
+//long SSL_CTX_set_timeout(SSL_CTX *ssl_ctx, long t) {
 //                            return SSL_CTX_get_timeout(ssl_ctx); }
 //#endif
-//void ICACHE_FLASH_ATTR BIO_printf(FILE *f, const char *format, ...)
+//void BIO_printf(FILE *f, const char *format, ...)
 //{
 //    va_list(ap);
 //    va_start(ap, format);
@@ -881,8 +881,8 @@ void ICACHE_FLASH_ATTR SSL_load_error_strings(void ) {}
 //    va_end(ap);
 //}
 //
-//void* ICACHE_FLASH_ATTR BIO_s_null(void) { return NULL; }
-//FILE *ICACHE_FLASH_ATTR BIO_new(bio_func_type_t func)
+//void* BIO_s_null(void) { return NULL; }
+//FILE *BIO_new(bio_func_type_t func)
 //{
 //    if (func == BIO_s_null)
 //        return fopen("/dev/null", "r");
@@ -890,8 +890,8 @@ void ICACHE_FLASH_ATTR SSL_load_error_strings(void ) {}
 //        return NULL;
 //}
 //
-//FILE *ICACHE_FLASH_ATTR BIO_new_fp(FILE *stream, int close_flag) { return stream; }
-//int ICACHE_FLASH_ATTR BIO_free(FILE *a) { if (a != stdout && a != stderr) fclose(a); return 1; }
+//FILE *BIO_new_fp(FILE *stream, int close_flag) { return stream; }
+//int BIO_free(FILE *a) { if (a != stdout && a != stderr) fclose(a); return 1; }
 //
 
 /******************************************************************************
@@ -902,7 +902,7 @@ void ICACHE_FLASH_ATTR SSL_load_error_strings(void ) {}
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ssl_CTX_set_default_verify_paths(SSL_CTX *ssl_ctx)
+int esp_ssl_CTX_set_default_verify_paths(SSL_CTX *ssl_ctx)
 {
 	return 1;
 }
@@ -915,7 +915,7 @@ int ICACHE_FLASH_ATTR esp_ssl_CTX_set_default_verify_paths(SSL_CTX *ssl_ctx)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-X509_CTX * ICACHE_FLASH_ATTR esp_X509_store_ctx_get_current_cert(X509_CTX * store)
+X509_CTX * esp_X509_store_ctx_get_current_cert(X509_CTX * store)
 {
 	return NULL;
 }
@@ -928,7 +928,7 @@ X509_CTX * ICACHE_FLASH_ATTR esp_X509_store_ctx_get_current_cert(X509_CTX * stor
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_X509_free(X509_CTX * x509_CTX)
+void esp_X509_free(X509_CTX * x509_CTX)
 {
 //	x509_free(x509_CTX);
 }
@@ -941,7 +941,7 @@ void ICACHE_FLASH_ATTR esp_X509_free(X509_CTX * x509_CTX)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_X509_NAME_oneline(X509_CTX * x509_CTX)
+void esp_X509_NAME_oneline(X509_CTX * x509_CTX)
 {
 	x509_free(x509_CTX);
 }
@@ -955,7 +955,7 @@ void ICACHE_FLASH_ATTR esp_X509_NAME_oneline(X509_CTX * x509_CTX)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-char* ICACHE_FLASH_ATTR esp_X509_get_issuer_name(X509_CTX * x509_CTX)
+char* esp_X509_get_issuer_name(X509_CTX * x509_CTX)
 {
 	return NULL;
 }
@@ -968,7 +968,7 @@ char* ICACHE_FLASH_ATTR esp_X509_get_issuer_name(X509_CTX * x509_CTX)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-char* ICACHE_FLASH_ATTR esp_X509_get_subject_name(X509_CTX * x509_CTX)
+char* esp_X509_get_subject_name(X509_CTX * x509_CTX)
 {
 	return NULL;
 }
@@ -981,7 +981,7 @@ char* ICACHE_FLASH_ATTR esp_X509_get_subject_name(X509_CTX * x509_CTX)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_X509_STORE_CTX_get_error_depth(X509_CTX * x509_CTX)
+void esp_X509_STORE_CTX_get_error_depth(X509_CTX * x509_CTX)
 {
 //	x509_free(x509_CTX);
 }
@@ -994,7 +994,7 @@ void ICACHE_FLASH_ATTR esp_X509_STORE_CTX_get_error_depth(X509_CTX * x509_CTX)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-char* ICACHE_FLASH_ATTR esp_X509_STORE_CTX_get_error(X509_CTX * x509_CTX)
+char* esp_X509_STORE_CTX_get_error(X509_CTX * x509_CTX)
 {
 	return NULL;
 }
@@ -1007,7 +1007,7 @@ char* ICACHE_FLASH_ATTR esp_X509_STORE_CTX_get_error(X509_CTX * x509_CTX)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-char* ICACHE_FLASH_ATTR esp_X509_verify_cert_error_string(X509_CTX * x509_CTX)
+char* esp_X509_verify_cert_error_string(X509_CTX * x509_CTX)
 {
 	return NULL;
 }
@@ -1020,7 +1020,7 @@ char* ICACHE_FLASH_ATTR esp_X509_verify_cert_error_string(X509_CTX * x509_CTX)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-int ICACHE_FLASH_ATTR esp_ERR_get_error(void)
+int esp_ERR_get_error(void)
 {
 	return 0;
 }
@@ -1033,7 +1033,7 @@ int ICACHE_FLASH_ATTR esp_ERR_get_error(void)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_ERR_error_string_n(uint32 error, char* out, uint32 olen)
+void esp_ERR_error_string_n(uint32 error, char* out, uint32 olen)
 {
 	return;
 }
@@ -1046,7 +1046,7 @@ void ICACHE_FLASH_ATTR esp_ERR_error_string_n(uint32 error, char* out, uint32 ol
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_ERR_error_string(uint32 error, char* out)
+void esp_ERR_error_string(uint32 error, char* out)
 {
 	return;
 }
@@ -1059,7 +1059,7 @@ void ICACHE_FLASH_ATTR esp_ERR_error_string(uint32 error, char* out)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_ERR_free_strings(void)
+void esp_ERR_free_strings(void)
 {
 
 }
@@ -1072,7 +1072,7 @@ void ICACHE_FLASH_ATTR esp_ERR_free_strings(void)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void ICACHE_FLASH_ATTR esp_CRYPTO_cleanup_all_ex_data(void)
+void esp_CRYPTO_cleanup_all_ex_data(void)
 {
 
 }
@@ -1085,12 +1085,12 @@ void ICACHE_FLASH_ATTR esp_CRYPTO_cleanup_all_ex_data(void)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-const char* ICACHE_FLASH_ATTR esp_ERR_strerror(uint32 error)
+const char* esp_ERR_strerror(uint32 error)
 {
 	return lwip_strerr(error);
 }
 
-void ICACHE_FLASH_ATTR esp_ssl_sleep(uint16 mseconds)
+void esp_ssl_sleep(uint16 mseconds)
 {
 	vTaskDelay(mseconds / portTICK_RATE_MS);
 }
@@ -1104,7 +1104,7 @@ esp_ssl_pending()
 
 }
 
-bool ICACHE_FLASH_ATTR esp_ssl_fragment_length_negotiation(SSL* ssl, int fragmet_level)
+bool esp_ssl_fragment_length_negotiation(SSL* ssl, int fragmet_level)
 {
 	return ssl_fragment_length_negotiation(ssl, fragmet_level);
 }

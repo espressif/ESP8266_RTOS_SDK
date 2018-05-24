@@ -64,7 +64,7 @@ const char unsupported_str[] = "Error: Feature not supported\n";
  * Retrieve a file and put it into memory
  * @return The size of the file, or -1 on failure.
  */
-int ICACHE_FLASH_ATTR get_file(const char *filename, uint8_t **buf)
+int get_file(const char *filename, uint8_t **buf)
 {
 #ifdef FILE
     int total_bytes = 0;
@@ -139,7 +139,7 @@ int ICACHE_FLASH_ATTR get_file(const char *filename, uint8_t **buf)
  * - On Linux use /dev/urandom
  * - If none of these work then use a custom RNG.
  */
-EXP_FUNC void STDCALL ICACHE_FLASH_ATTR RNG_initialize()
+EXP_FUNC void STDCALL RNG_initialize()
 {
 #if !defined(WIN32) && defined(CONFIG_USE_DEV_URANDOM)
 //    rng_fd = ax_open("/dev/urandom", O_RDONLY);
@@ -169,7 +169,7 @@ EXP_FUNC void STDCALL ICACHE_FLASH_ATTR RNG_initialize()
 /**
  * If no /dev/urandom, then initialise the RNG with something interesting.
  */
-EXP_FUNC void STDCALL ICACHE_FLASH_ATTR RNG_custom_init(const uint8_t *seed_buf, int size)
+EXP_FUNC void STDCALL RNG_custom_init(const uint8_t *seed_buf, int size)
 {
 #if defined(WIN32) || defined(CONFIG_WIN32_USE_CRYPTO_LIB)
     int i;
@@ -182,7 +182,7 @@ EXP_FUNC void STDCALL ICACHE_FLASH_ATTR RNG_custom_init(const uint8_t *seed_buf,
 /**
  * Terminate the RNG engine.
  */
-EXP_FUNC void STDCALL ICACHE_FLASH_ATTR RNG_terminate(void)
+EXP_FUNC void STDCALL RNG_terminate(void)
 {
 #ifndef WIN32
 //    close(rng_fd);
@@ -194,7 +194,7 @@ EXP_FUNC void STDCALL ICACHE_FLASH_ATTR RNG_terminate(void)
 /**
  * Set a series of bytes with a random number. Individual bytes can be 0
  */
-EXP_FUNC int STDCALL ICACHE_FLASH_ATTR get_random(int num_rand_bytes, uint8_t *rand_data)
+EXP_FUNC int STDCALL get_random(int num_rand_bytes, uint8_t *rand_data)
 {
 #if !defined(WIN32) && defined(CONFIG_USE_DEV_URANDOM)
 //    /* use the Linux default */
@@ -244,7 +244,7 @@ EXP_FUNC int STDCALL ICACHE_FLASH_ATTR get_random(int num_rand_bytes, uint8_t *r
 /**
  * Set a series of bytes with a random number. Individual bytes are not zero.
  */
-int ICACHE_FLASH_ATTR get_random_NZ(int num_rand_bytes, uint8_t *rand_data)
+int get_random_NZ(int num_rand_bytes, uint8_t *rand_data)
 {
     int i;
     if (get_random(num_rand_bytes, rand_data))
@@ -266,13 +266,13 @@ int ICACHE_FLASH_ATTR get_random_NZ(int num_rand_bytes, uint8_t *rand_data)
 int hex_finish;
 int hex_index;
 
-static void ICACHE_FLASH_ATTR print_hex_init(int finish)
+static void print_hex_init(int finish)
 {
     hex_finish = finish;
     hex_index = 0;
 }
 
-static void ICACHE_FLASH_ATTR print_hex(uint8_t hex)
+static void print_hex(uint8_t hex)
 {
     static int column;
 
@@ -307,7 +307,7 @@ static void ICACHE_FLASH_ATTR print_hex(uint8_t hex)
  * @param data     [in]    The start of data to use
  * @param ...      [in]    Any additional arguments
  */
-EXP_FUNC void STDCALL ICACHE_FLASH_ATTR print_blob(const char *format, 
+EXP_FUNC void STDCALL print_blob(const char *format,
         const uint8_t *data, int size, ...)
 {
 //    int i;
@@ -349,7 +349,7 @@ static const uint8_t map[128] =
     49,  50,  51, 255, 255, 255, 255, 255
 };
 
-EXP_FUNC int STDCALL ICACHE_FLASH_ATTR base64_decode(const char *in, int len,
+EXP_FUNC int STDCALL base64_decode(const char *in, int len,
                     uint8_t *out, int *outlen)
 {
     int g, t, x, y, z;

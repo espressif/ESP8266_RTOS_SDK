@@ -206,7 +206,7 @@ void remove_mem_info (void * mem_ref)
 }
 #endif
 
-EXP_FUNC void * ICACHE_FLASH_ATTR ax_malloc(size_t s, const char* file, int line)
+EXP_FUNC void * ax_malloc(size_t s, const char* file, int line)
 {
     void *x;
 
@@ -219,7 +219,7 @@ EXP_FUNC void * ICACHE_FLASH_ATTR ax_malloc(size_t s, const char* file, int line
 
     return x;
 }
-EXP_FUNC void * ICACHE_FLASH_ATTR ax_realloc(void *y, size_t s, const char* file, int line)
+EXP_FUNC void * ax_realloc(void *y, size_t s, const char* file, int line)
 {
     void *x;
 
@@ -232,7 +232,7 @@ EXP_FUNC void * ICACHE_FLASH_ATTR ax_realloc(void *y, size_t s, const char* file
 
     return x;
 }
-EXP_FUNC void * ICACHE_FLASH_ATTR ax_calloc(size_t n, size_t s, const char* file, int line)
+EXP_FUNC void * ax_calloc(size_t n, size_t s, const char* file, int line)
 {
     void *x;
 	//unsigned total_size =0;
@@ -246,7 +246,7 @@ EXP_FUNC void * ICACHE_FLASH_ATTR ax_calloc(size_t n, size_t s, const char* file
 
     return x;
 }
-EXP_FUNC void * ICACHE_FLASH_ATTR ax_zalloc(size_t s, const char* file, int line)
+EXP_FUNC void * ax_zalloc(size_t s, const char* file, int line)
 {
     void *x;
 
@@ -259,7 +259,7 @@ EXP_FUNC void * ICACHE_FLASH_ATTR ax_zalloc(size_t s, const char* file, int line
 
     return x;
 }
-EXP_FUNC void ICACHE_FLASH_ATTR ax_free(void *p, const char* file, int line)
+EXP_FUNC void ax_free(void *p, const char* file, int line)
 {
 	if(p) {
    		debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, p,0, system_get_free_heap_size());
