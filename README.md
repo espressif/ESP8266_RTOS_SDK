@@ -170,3 +170,35 @@ git pull
 ```
 
 The ``git pull`` command is fetching and merging changes from ESP8266_RTOS_SDK repository on GitHub.
+
+# Developers
+
+*This section is for developers of ESP8266_RTOS_SDK itself*
+
+## Code style
+
+We use clang-format to automatically format the code in this
+repository. Instead of having an outdated textual description of the
+code style we encourage you to look at the current code and follow that
+and clang-format's rules are available in [.clang-format](.clang-format).
+
+For more information on clang-format see [the home
+page](https://clang.llvm.org/docs/ClangFormat.html) and [style
+options](https://clang.llvm.org/docs/ClangFormatStyleOptions.html)
+
+## The reformat tool
+
+`tools/reformat` is a tool to expand tabs and run clang-format on the
+entire repository.
+
+Usage: `tools/reformat [-e] [-c]`
+
+* `-e` runs untabbing (replace tab characters with 4 spaces)
+* `-c` runs clang-format.
+
+It uses `tools/find-files` to find files in the repository. The
+tool reads `tools/find-files.ini` (see the current version
+[here](tools/find-files.ini)) and tags each file it finds with attributes
+explaining what should be done with the file.
+
+The tools are written in bash and Python.
