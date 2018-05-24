@@ -81,7 +81,7 @@ static int get_pbe_params(uint8_t *buf, int *offset,
 /*
  * Take a raw pkcs8 block and then decrypt it and turn it into a normal key.
  */
-int ICACHE_FLASH_ATTR pkcs8_decode(SSL_CTX *ssl_ctx, SSLObjLoader *ssl_obj, const char *password)
+int pkcs8_decode(SSL_CTX *ssl_ctx, SSLObjLoader *ssl_obj, const char *password)
 {
     uint8_t *buf = ssl_obj->buf;
     int len, offset = 0;
@@ -129,7 +129,7 @@ error:
 /*
  * Take the unencrypted pkcs8 and turn it into a private key 
  */
-static int ICACHE_FLASH_ATTR p8_add_key(SSL_CTX *ssl_ctx, uint8_t *priv_key)
+static int p8_add_key(SSL_CTX *ssl_ctx, uint8_t *priv_key)
 {
     uint8_t *buf = priv_key;
     int len, offset = 0;
@@ -152,7 +152,7 @@ error:
 /*
  * Create the unicode password 
  */
-static char * ICACHE_FLASH_ATTR make_uni_pass(const char *password, int *uni_pass_len)
+static char * make_uni_pass(const char *password, int *uni_pass_len)
 {
     int pass_len = 0, i;
     char *uni_pass;
@@ -180,7 +180,7 @@ static char * ICACHE_FLASH_ATTR make_uni_pass(const char *password, int *uni_pas
 /*
  * Decrypt a pkcs8 block.
  */
-static int ICACHE_FLASH_ATTR p8_decrypt(const char *uni_pass, int uni_pass_len,
+static int p8_decrypt(const char *uni_pass, int uni_pass_len,
                         const uint8_t *salt, int iter, 
                         uint8_t *priv_key, int priv_key_len, int id)
 {
@@ -227,7 +227,7 @@ static int ICACHE_FLASH_ATTR p8_decrypt(const char *uni_pass, int uni_pass_len,
  * Take a raw pkcs12 block and the decrypt it and turn it into a certificate(s)
  * and keys.
  */
-int ICACHE_FLASH_ATTR pkcs12_decode(SSL_CTX *ssl_ctx, SSLObjLoader *ssl_obj, const char *password)
+int pkcs12_decode(SSL_CTX *ssl_ctx, SSLObjLoader *ssl_obj, const char *password)
 {
     uint8_t *buf = ssl_obj->buf;
     int len, iterations, auth_safes_start, 
@@ -424,7 +424,7 @@ error:
 /*
  * Retrieve the salt/iteration details from a PBE block.
  */
-static int ICACHE_FLASH_ATTR get_pbe_params(uint8_t *buf, int *offset, 
+static int get_pbe_params(uint8_t *buf, int *offset,
         const uint8_t **salt, int *iterations)
 {
     static const uint8_t pbeSH1RC4[] = /* pbeWithSHAAnd128BitRC4  */

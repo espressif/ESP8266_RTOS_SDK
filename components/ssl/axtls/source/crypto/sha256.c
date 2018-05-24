@@ -62,7 +62,7 @@ static const uint8_t sha256_padding[64] =
 /**
  * Initialize the SHA256 context 
  */
-void ICACHE_FLASH_ATTR SHA256_Init(SHA256_CTX *ctx)
+void SHA256_Init(SHA256_CTX *ctx)
 {
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -77,7 +77,7 @@ void ICACHE_FLASH_ATTR SHA256_Init(SHA256_CTX *ctx)
     ctx->state[7] = 0x5BE0CD19;
 }
 
-static void ICACHE_FLASH_ATTR SHA256_Process(const uint8_t digest[64], SHA256_CTX *ctx)
+static void SHA256_Process(const uint8_t digest[64], SHA256_CTX *ctx)
 {
     uint32_t temp1, temp2, W[64];
     uint32_t A, B, C, D, E, F, G, H;
@@ -211,7 +211,7 @@ static void ICACHE_FLASH_ATTR SHA256_Process(const uint8_t digest[64], SHA256_CT
 /**
  * Accepts an array of octets as the next portion of the message.
  */
-void ICACHE_FLASH_ATTR SHA256_Update(SHA256_CTX *ctx, const uint8_t * msg, int len)
+void SHA256_Update(SHA256_CTX *ctx, const uint8_t * msg, int len)
 {
     uint32_t left = ctx->total[0] & 0x3F;
     uint32_t fill = 64 - left;
@@ -247,7 +247,7 @@ void ICACHE_FLASH_ATTR SHA256_Update(SHA256_CTX *ctx, const uint8_t * msg, int l
 /**
  * Return the 256-bit message digest into the user's array
  */
-void ICACHE_FLASH_ATTR SHA256_Final(uint8_t *digest, SHA256_CTX *ctx)
+void SHA256_Final(uint8_t *digest, SHA256_CTX *ctx)
 {
     uint32_t last, padn;
     uint32_t high, low;

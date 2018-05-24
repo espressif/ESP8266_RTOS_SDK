@@ -64,7 +64,7 @@ typedef struct
     ssl_func_type_t ssl_func_type;
 } OPENSSL_CTX;
 
-SSL_CTX *ICACHE_FLASH_ATTR SSL_CTX_new(ssl_func_type_t meth)
+SSL_CTX *SSL_CTX_new(ssl_func_type_t meth)
 {
     SSL_CTX *ssl_ctx = ssl_ctx_new(0, 5);
     ssl_ctx->bonus_attr = SSL_MALLOC(sizeof(OPENSSL_CTX));
@@ -72,13 +72,13 @@ SSL_CTX *ICACHE_FLASH_ATTR SSL_CTX_new(ssl_func_type_t meth)
     return ssl_ctx;
 }
 
-void ICACHE_FLASH_ATTR SSL_CTX_free(SSL_CTX *ssl_ctx)
+void SSL_CTX_free(SSL_CTX *ssl_ctx)
 {
 	SSL_FREE(ssl_ctx->bonus_attr);
     ssl_ctx_free(ssl_ctx);
 }
 
-SSL *ICACHE_FLASH_ATTR SSL_new(SSL_CTX *ssl_ctx)
+SSL *SSL_new(SSL_CTX *ssl_ctx)
 {
     SSL *ssl;
     ssl_func_type_t ssl_func_type;
@@ -102,13 +102,13 @@ SSL *ICACHE_FLASH_ATTR SSL_new(SSL_CTX *ssl_ctx)
     return ssl;
 }
 
-int ICACHE_FLASH_ATTR SSL_set_fd(SSL *s, int fd)
+int SSL_set_fd(SSL *s, int fd)
 {
     s->client_fd = fd;
     return 1;   /* always succeeds */
 }
 
-int ICACHE_FLASH_ATTR SSL_accept(SSL *ssl)
+int SSL_accept(SSL *ssl)
 {
     while (ssl_read(ssl, NULL) == SSL_OK)
     {
@@ -120,18 +120,18 @@ int ICACHE_FLASH_ATTR SSL_accept(SSL *ssl)
 }
 
 #ifdef CONFIG_SSL_ENABLE_CLIENT
-int ICACHE_FLASH_ATTR SSL_connect(SSL *ssl)
+int SSL_connect(SSL *ssl)
 {
     return do_client_connect(ssl) == SSL_OK ? 1 : -1;
 }
 #endif
 
-void ICACHE_FLASH_ATTR SSL_free(SSL *ssl)
+void SSL_free(SSL *ssl)
 {
     ssl_free(ssl);
 }
 
-int ICACHE_FLASH_ATTR SSL_read(SSL *ssl, void *buf, int num)
+int SSL_read(SSL *ssl, void *buf, int num)
 {
     uint8_t *read_buf;
     int ret;
@@ -146,158 +146,158 @@ int ICACHE_FLASH_ATTR SSL_read(SSL *ssl, void *buf, int num)
     return ret;
 }
 
-int ICACHE_FLASH_ATTR SSL_write(SSL *ssl, const void *buf, int num)
+int SSL_write(SSL *ssl, const void *buf, int num)
 {
     return ssl_write(ssl, buf, num);
 }
 
-int ICACHE_FLASH_ATTR SSL_CTX_use_certificate_file(SSL_CTX *ssl_ctx, const char *file, int type)
+int SSL_CTX_use_certificate_file(SSL_CTX *ssl_ctx, const char *file, int type)
 {
     return (ssl_obj_load(ssl_ctx, SSL_OBJ_X509_CERT, file, NULL) == SSL_OK);
 }
 
-int ICACHE_FLASH_ATTR SSL_CTX_use_PrivateKey_file(SSL_CTX *ssl_ctx, const char *file, int type)
+int SSL_CTX_use_PrivateKey_file(SSL_CTX *ssl_ctx, const char *file, int type)
 {
     return (ssl_obj_load(ssl_ctx, SSL_OBJ_RSA_KEY, file, key_password) == SSL_OK);
 }
 
-int ICACHE_FLASH_ATTR SSL_CTX_use_certificate_ASN1(SSL_CTX *ssl_ctx, int len, const uint8_t *d)
+int SSL_CTX_use_certificate_ASN1(SSL_CTX *ssl_ctx, int len, const uint8_t *d)
 {
     return (ssl_obj_memory_load(ssl_ctx, 
                         SSL_OBJ_X509_CERT, d, len, NULL) == SSL_OK);
 }
 
-int ICACHE_FLASH_ATTR SSL_CTX_set_session_id_context(SSL_CTX *ctx, const unsigned char *sid_ctx,
+int SSL_CTX_set_session_id_context(SSL_CTX *ctx, const unsigned char *sid_ctx,
         unsigned int sid_ctx_len)
 {
     return 1;
 }
 
-int ICACHE_FLASH_ATTR SSL_CTX_set_default_verify_paths(SSL_CTX *ctx)
+int SSL_CTX_set_default_verify_paths(SSL_CTX *ctx)
 {
     return 1;
 }
 
-int ICACHE_FLASH_ATTR SSL_CTX_use_certificate_chain_file(SSL_CTX *ssl_ctx, const char *file)
+int SSL_CTX_use_certificate_chain_file(SSL_CTX *ssl_ctx, const char *file)
 {
     return (ssl_obj_load(ssl_ctx, 
                         SSL_OBJ_X509_CERT, file, NULL) == SSL_OK);
 }
 
-int ICACHE_FLASH_ATTR SSL_shutdown(SSL *ssl)
+int SSL_shutdown(SSL *ssl)
 {
     return 1;
 }
 
 /*** get/set session ***/
-SSL_SESSION *ICACHE_FLASH_ATTR SSL_get1_session(SSL *ssl)
+SSL_SESSION *SSL_get1_session(SSL *ssl)
 {
     return (SSL_SESSION *)ssl_get_session_id(ssl); /* note: wrong cast */
 }
 
-int ICACHE_FLASH_ATTR SSL_set_session(SSL *ssl, SSL_SESSION *session)
+int SSL_set_session(SSL *ssl, SSL_SESSION *session)
 {
     memcpy(ssl->session_id, (uint8_t *)session, SSL_SESSION_ID_SIZE);
     return 1;
 }
 
-void ICACHE_FLASH_ATTR SSL_SESSION_free(SSL_SESSION *session) { }
+void SSL_SESSION_free(SSL_SESSION *session) { }
 /*** end get/set session ***/
 
-long ICACHE_FLASH_ATTR SSL_CTX_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg)
+long SSL_CTX_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg)
 {
     return 0;
 }
 
-void ICACHE_FLASH_ATTR SSL_CTX_set_verify(SSL_CTX *ctx, int mode,
+void SSL_CTX_set_verify(SSL_CTX *ctx, int mode,
         int (*verify_callback)(int, void *)) { }
 
-void ICACHE_FLASH_ATTR SSL_CTX_set_verify_depth(SSL_CTX *ctx, int depth) { }
+void SSL_CTX_set_verify_depth(SSL_CTX *ctx, int depth) { }
 
-int ICACHE_FLASH_ATTR SSL_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
+int SSL_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
         const char *CApath)
 {
     return 1;
 }
 
-void *ICACHE_FLASH_ATTR SSL_load_client_CA_file(const char *file)
+void *SSL_load_client_CA_file(const char *file)
 {
     return (void *)file;
 }
 
-void ICACHE_FLASH_ATTR SSL_CTX_set_client_CA_list(SSL_CTX *ssl_ctx, void *file)
+void SSL_CTX_set_client_CA_list(SSL_CTX *ssl_ctx, void *file)
 {
     ssl_obj_load(ssl_ctx, SSL_OBJ_X509_CERT, (const char *)file, NULL);
 }
 
-void ICACHE_FLASH_ATTR SSLv23_method(void) { }
+void SSLv23_method(void) { }
 
-void ICACHE_FLASH_ATTR SSL_CTX_set_default_passwd_cb(SSL_CTX *ctx, void *cb) { }
+void SSL_CTX_set_default_passwd_cb(SSL_CTX *ctx, void *cb) { }
 
-void ICACHE_FLASH_ATTR SSL_CTX_set_default_passwd_cb_userdata(SSL_CTX *ctx, void *u)
+void SSL_CTX_set_default_passwd_cb_userdata(SSL_CTX *ctx, void *u)
 {
     key_password = (char *)u;
 }
 
-int ICACHE_FLASH_ATTR SSL_peek(SSL *ssl, void *buf, int num)
+int SSL_peek(SSL *ssl, void *buf, int num)
 {
     memcpy(buf, ssl->bm_data, num);
     return num;
 }
 
-void ICACHE_FLASH_ATTR SSL_set_bio(SSL *ssl, void *rbio, void *wbio) { }
+void SSL_set_bio(SSL *ssl, void *rbio, void *wbio) { }
 
-long ICACHE_FLASH_ATTR SSL_get_verify_result(const SSL *ssl)
+long SSL_get_verify_result(const SSL *ssl)
 {
     return ssl_handshake_status(ssl);
 }
 
-int ICACHE_FLASH_ATTR SSL_state(SSL *ssl)
+int SSL_state(SSL *ssl)
 {
     return 0x03; // ok state
 }
 
 /** end of could do better list */
 
-void *ICACHE_FLASH_ATTR SSL_get_peer_certificate(const SSL *ssl)
+void *SSL_get_peer_certificate(const SSL *ssl)
 {
     return &ssl->ssl_ctx->certs[0];
 }
 
-int ICACHE_FLASH_ATTR SSL_clear(SSL *ssl)
+int SSL_clear(SSL *ssl)
 {
     return 1;
 }
 
 
-int ICACHE_FLASH_ATTR SSL_CTX_check_private_key(const SSL_CTX *ctx)
+int SSL_CTX_check_private_key(const SSL_CTX *ctx)
 {
     return 1;
 }
 
-int ICACHE_FLASH_ATTR SSL_CTX_set_cipher_list(SSL *s, const char *str)
+int SSL_CTX_set_cipher_list(SSL *s, const char *str)
 {
     return 1;
 }
 
-int ICACHE_FLASH_ATTR SSL_get_error(const SSL *ssl, int ret)
+int SSL_get_error(const SSL *ssl, int ret)
 {
     ssl_display_error(ret);
     return 0;   /* TODO: return proper return code */
 }
 
-void ICACHE_FLASH_ATTR SSL_CTX_set_options(SSL_CTX *ssl_ctx, int option) {}
-int ICACHE_FLASH_ATTR SSL_library_init(void ) { return 1; }
-void ICACHE_FLASH_ATTR SSL_load_error_strings(void ) {}
-void ICACHE_FLASH_ATTR ERR_print_errors_fp(FILE *fp) {}
+void SSL_CTX_set_options(SSL_CTX *ssl_ctx, int option) {}
+int SSL_library_init(void ) { return 1; }
+void SSL_load_error_strings(void ) {}
+void ERR_print_errors_fp(FILE *fp) {}
 
 #ifndef CONFIG_SSL_SKELETON_MODE
-long ICACHE_FLASH_ATTR SSL_CTX_get_timeout(const SSL_CTX *ssl_ctx) { 
+long SSL_CTX_get_timeout(const SSL_CTX *ssl_ctx) {
                             return CONFIG_SSL_EXPIRY_TIME*3600; }
-long ICACHE_FLASH_ATTR SSL_CTX_set_timeout(SSL_CTX *ssl_ctx, long t) { 
+long SSL_CTX_set_timeout(SSL_CTX *ssl_ctx, long t) {
                             return SSL_CTX_get_timeout(ssl_ctx); }
 #endif
-void ICACHE_FLASH_ATTR BIO_printf(FILE *f, const char *format, ...)
+void BIO_printf(FILE *f, const char *format, ...)
 {
     va_list(ap);
     va_start(ap, format);
@@ -305,8 +305,8 @@ void ICACHE_FLASH_ATTR BIO_printf(FILE *f, const char *format, ...)
     va_end(ap);
 }
 
-void* ICACHE_FLASH_ATTR BIO_s_null(void) { return NULL; }
-FILE *ICACHE_FLASH_ATTR BIO_new(bio_func_type_t func)
+void* BIO_s_null(void) { return NULL; }
+FILE *BIO_new(bio_func_type_t func)
 {
     if (func == BIO_s_null)
         return fopen("/dev/null", "r");
@@ -314,8 +314,8 @@ FILE *ICACHE_FLASH_ATTR BIO_new(bio_func_type_t func)
         return NULL;
 }
 
-FILE *ICACHE_FLASH_ATTR BIO_new_fp(FILE *stream, int close_flag) { return stream; }
-int ICACHE_FLASH_ATTR BIO_free(FILE *a) { if (a != stdout && a != stderr) fclose(a); return 1; }
+FILE *BIO_new_fp(FILE *stream, int close_flag) { return stream; }
+int BIO_free(FILE *a) { if (a != stdout && a != stderr) fclose(a); return 1; }
 
 
 

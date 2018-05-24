@@ -206,11 +206,11 @@ static HeapRegion_t xHeapRegions[] =
 #endif
 
 /*-----------------------------------------------------------*/
-bool ICACHE_FLASH_ATTR __attribute__((weak))
-check_memleak_debug_enable()
+bool __attribute__((weak)) check_memleak_debug_enable(void)
 {
     return 0;
 }
+
 #ifdef MEMLEAK_DEBUG 
 void prvInsertBlockIntoUsedList(BlockLink_t *pxBlockToInsert)
 {
