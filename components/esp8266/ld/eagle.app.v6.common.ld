@@ -102,26 +102,6 @@ SECTIONS
     _etext = .;
   } >iram1_0_seg :iram1_0_phdr
 
-  .irom0.text : ALIGN(4)
-  {
-    _irom0_text_start = ABSOLUTE(.);
-    *libuser.a:(.rodata.* .rodata)
-    *libcirom.a:(.rodata.* .rodata)
-    *libmbedtls.a:(.rodata.* .rodata)
-    *libssl.a:(.rodata.* .rodata)
-    *libopenssl.a:(.rodata.* .rodata)
-    *libplatforms.a:(.rodata.* .rodata)
-    *(.irom0.literal .irom.literal .irom.text.literal .irom0.text .irom.text)
-    *(.literal.* .text.*)
-
-    . = ALIGN(16);
-    __start_ksymatabesp_socket = .;
-    *(ksymatabesp_socket)
-    __stop_ksymatabesp_socket = .;
-
-    _irom0_text_end = ABSOLUTE(.);
-  } >irom0_0_seg :irom0_0_phdr
-
   .data : ALIGN(4)
   {
     _data_start = ABSOLUTE(.);
@@ -142,8 +122,7 @@ SECTIONS
   .rodata : ALIGN(4)
   {
     _rodata_start = ABSOLUTE(.);
-    *(.rodata)
-    *(.rodata.*)
+    *libpp.a:(.rodata.* .rodata)
     *(.gnu.linkonce.r.*)
     *(.rodata1)
     __XT_EXCEPTION_TABLE__ = ABSOLUTE(.);
@@ -210,6 +189,20 @@ SECTIONS
 /*    _stack_sentry = ALIGN(0x8); */
   } >dram0_0_seg :dram0_0_bss_phdr
 /* __stack = 0x3ffc8000; */
+
+  .irom0.text : ALIGN(4)
+  {
+    _irom0_text_start = ABSOLUTE(.);
+    *(.rodata.* .rodata .irom0.literal .irom.literal .irom.text.literal .irom0.text .irom.text)
+    *(.literal.* .text.*)
+
+    . = ALIGN(16);
+    __start_ksymatabesp_socket = .;
+    *(ksymatabesp_socket)
+    __stop_ksymatabesp_socket = .;
+
+    _irom0_text_end = ABSOLUTE(.);
+  } >irom0_0_seg :irom0_0_phdr
 
   .lit4 : ALIGN(4)
   {
