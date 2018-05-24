@@ -126,8 +126,22 @@ void vPortDefineHeapRegions( const HeapRegion_t * const pxHeapRegions ) PRIVILEG
 /*
  * Map to the memory management routines required for the port.
  */
-//void *pvPortMalloc( size_t xSize ) PRIVILEGED_FUNCTION;
-//void vPortFree( void *pv ) PRIVILEGED_FUNCTION;
+void *pvPortMalloc( size_t xSize ) PRIVILEGED_FUNCTION;
+void *pvPortZalloc( size_t xWantedSize ) PRIVILEGED_FUNCTION;
+void *pvPortCalloc( size_t count, size_t size ) PRIVILEGED_FUNCTION;
+void *pvPortRealloc( void *pv, size_t newsize ) PRIVILEGED_FUNCTION;
+void vPortFree( void *pv ) PRIVILEGED_FUNCTION;
+
+#ifdef MEMLEAK_DEBUG
+void *pvPortMalloc_trace( size_t xWantedSize, const char * file, unsigned line, bool use_iram ) PRIVILEGED_FUNCTION;
+void *pvPortZalloc_trace( size_t xWantedSize, const char * file, unsigned line ) PRIVILEGED_FUNCTION;
+void *pvPortCalloc_trace( size_t count, size_t size, const char * file, unsigned line ) PRIVILEGED_FUNCTION;
+void *pvPortRealloc_trace( void *pv, size_t newsize, const char *file, unsigned line ) PRIVILEGED_FUNCTION;
+void vPortFree_trace( void *pv, const char * file, unsigned line ) PRIVILEGED_FUNCTION;
+
+void pvShowMalloc();
+#endif
+
 void vPortInitialiseBlocks( void ) PRIVILEGED_FUNCTION;
 size_t xPortGetFreeHeapSize( void ) PRIVILEGED_FUNCTION;
 size_t xPortGetMinimumEverFreeHeapSize( void ) PRIVILEGED_FUNCTION;

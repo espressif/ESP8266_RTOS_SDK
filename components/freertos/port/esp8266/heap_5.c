@@ -118,6 +118,11 @@ task.h is included from an application file. */
 #include "esp8266/ets_sys.h"
 #include "esp8266/rom_functions.h"
 
+#ifdef MEMLEAK_DEBUG
+#include "spi_flash.h"
+extern SpiFlashChip flashchip;
+#endif
+
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
 #define mtCOVERAGE_TEST_MARKER()
@@ -189,6 +194,16 @@ static HeapRegion_t xHeapRegions[] =
     { NULL, 0 },
     { NULL, 0 }
 };
+
+#ifdef MEMLEAK_DEBUG
+#define pvPortMalloc_t(xWantedSize) pvPortMalloc_trace(xWantedSize, file, line, false)
+#define vPortFree_t(pv) vPortFree_trace(pv, file, line)
+#define pvPortCalloc_t(count, size) pvPortCalloc_trace(count, size, file, line)
+#else
+#define pvPortMalloc_t(xWantedSize) pvPortMalloc(xWantedSize)
+#define vPortFree_t(pv) vPortFree(pv)
+#define pvPortCalloc_t(count, size) pvPortCalloc(count, size)
+#endif
 /*-----------------------------------------------------------*/
 
 #ifdef MEMLEAK_DEBUG
@@ -202,9 +217,6 @@ check_memleak_debug_enable()
     return 0;
 }
 #ifdef MEMLEAK_DEBUG 
-#include "spi_flash.h"
-//extern SpiFlashChip *flashchip;
-extern SpiFlashChip flashchip;
 void prvInsertBlockIntoUsedList(BlockLink_t *pxBlockToInsert)
 {
         BlockLink_t *pxIterator;
@@ -217,24 +229,9 @@ void prvInsertBlockIntoUsedList(BlockLink_t *pxBlockToInsert)
         yFreeBytesRemaining += pxBlockToInsert->xBlockSize;
 }
 
-static const char *ICACHE_FLASH_ATTR
-vGetFileName(char *file_name_out, const char *file_name_in)
-{
-	if (((uint32)file_name_in & 0x40200000) == 0x40200000) {
-		uint16 str_len = ((strlen(file_name_in) - 1) / 4 + 1) * 4;
-
-		if (str_len > 32) {
-			str_len = 32;
-		}
-
-		memcpy(file_name_out, file_name_in, str_len);
-		file_name_out[str_len] = 0;
-
-		return file_name_out;
-	}
-
-	return file_name_in;
-}
+#define SPI_FLASH_START ((void *)0x40100000)
+#define SPI_FLASH_SIZE 0x100000
+#define SPI_FLASH_END (SPI_FLASH_START + SPI_FLASH_SIZE)
 
 void pvShowMalloc()
 {
@@ -248,11 +245,32 @@ void pvShowMalloc()
 //ets_printf("sh1,");
 	os_printf("--------Show Malloc--------\n");
 	for( pxIterator = &yStart; pxIterator->pxNextFreeBlock != NULL;pxIterator = pxIterator->pxNextFreeBlock) {
-		char file_name[33];
-		const char *file_name_printf;
+        BlockLink_t *blk = pxIterator->pxNextFreeBlock;
 //ets_printf("sh2,");
-		file_name_printf = vGetFileName(file_name, pxIterator->pxNextFreeBlock->file);
-		os_printf("F:%s\tL:%u\tmalloc %d\t@ %p\n", file_name_printf, pxIterator->pxNextFreeBlock->line, pxIterator->pxNextFreeBlock->xBlockSize - 0x80000000, ( void * ) ( ( ( unsigned char * ) pxIterator->pxNextFreeBlock ) + uxHeapStructSize));
+		const char *basename = blk->file;
+		/* This matches a similar check that vGetFileName() used to
+		 * do, but the code seems fine without it
+		if (SPI_FLASH_START <= (void *)basename && (void *)basename < SPI_FLASH_END) {
+			basename = NULL;
+		}
+		*/
+		/* The file contains the absolute path, try to shorten in by
+		 * looking for path separators. Checks for both UNIX and
+		 * Windows separators. */
+		if (basename) {
+			basename = strrchr(basename, '/');
+			if (basename) {
+				basename++;
+			} else {
+				basename = strrchr(blk->file, '\\');
+				if (basename) {
+					basename++;
+				}
+			}
+		} else {
+			basename = "";
+		}
+		os_printf("F:%-30sL:%4u malloc %10d @ %p\n", basename, blk->line, blk->xBlockSize - 0x80000000, ( void * ) ( ( ( unsigned char * ) blk ) + uxHeapStructSize));
 //ets_printf("sh3,");
 //		ets_delay_us(2000);
         system_soft_wdt_feed();
@@ -313,10 +331,13 @@ size_t xPortWantedSizeAlign(size_t xWantedSize)
 	return xWantedSize;
 }
 
-#ifndef MEMLEAK_DEBUG
 void *pvPortMalloc( size_t xWantedSize )
-#else
-void *pvPortMalloc( size_t xWantedSize, const char * file, unsigned line, bool use_iram)
+#ifdef MEMLEAK_DEBUG
+{
+    return pvPortMalloc_trace( xWantedSize, NULL, 0, false );
+}
+
+void *pvPortMalloc_trace( size_t xWantedSize, const char * file, unsigned line, bool use_iram )
 #endif
 {
 BlockLink_t *pxBlock, *pxPreviousBlock, *pxNewBlockLink;
@@ -492,12 +513,17 @@ static bool is_inited = false;
 
 	return pvReturn;
 }
+void *malloc(size_t nbytes) __attribute__((alias("pvPortMalloc")));
+
 /*-----------------------------------------------------------*/
 
-#ifndef MEMLEAK_DEBUG
 void vPortFree( void *pv )
-#else
-void vPortFree(void *pv, const char * file, unsigned line)
+#ifdef MEMLEAK_DEBUG
+{
+    return vPortFree_trace( pv, NULL, 0 );
+}
+
+void vPortFree_trace( void *pv, const char * file, unsigned line )
 #endif
 {
 uint8_t *puc = ( uint8_t * ) pv;
@@ -556,71 +582,23 @@ BlockLink_t *pxLink;
 		}
 	}
 }
-/*-----------------------------------------------------------*/
-
-#ifndef MEMLEAK_DEBUG
-void *malloc(size_t nbytes) __attribute__((alias("pvPortMalloc")));
 void free(void *ptr) __attribute__((alias("vPortFree")));
 
 /*-----------------------------------------------------------*/
 
 void *pvPortCalloc(size_t count, size_t size)
+#ifdef MEMLEAK_DEBUG
 {
-  void *p;
-
-  /* allocate 'count' objects of size 'size' */
-  p = pvPortMalloc(count * size);
-  if (p) {
-    /* zero the memory */
-    memset(p, 0, count * size);
-  }
-  return p;
+    return pvPortCalloc_trace(count, size, NULL, 0);
 }
 
-void *calloc(size_t count, size_t nbytes) __attribute__((alias("pvPortCalloc")));
-
-/*-----------------------------------------------------------*/
-
-void *pvPortZalloc(size_t size)
-{
-     return pvPortCalloc(1, size);	
-}
-
-void *zalloc(size_t nbytes) __attribute__((alias("pvPortZalloc")));
-
-/*-----------------------------------------------------------*/
-
-void *pvPortRealloc(void *mem, size_t newsize)
-{
-    if (newsize == 0) {
-        vPortFree(mem);
-        return NULL;
-    }
-
-    void *p;
-    p = pvPortMalloc(newsize);
-    if (p) {
-        /* zero the memory */
-        if (mem != NULL) {
-            memcpy(p, mem, newsize);
-            vPortFree(mem);
-        }
-    }
-    return p;
-}
-
-void *realloc(void *ptr, size_t nbytes) __attribute__((alias("pvPortRealloc")));
-/*-----------------------------------------------------------*/
-
-#else
-
-/*-----------------------------------------------------------*/
-void *pvPortCalloc(size_t count, size_t size, const char * file, unsigned line)
+void *pvPortCalloc_trace(size_t count, size_t size, const char * file, unsigned line)
+#endif
 {
   void *p;
 //ets_printf("1,");
   /* allocate 'count' objects of size 'size' */
-  p = pvPortMalloc(count * size, file, line, false);
+  p = pvPortMalloc_t(count * size);
 //ets_printf("2,");
   if (p) {
     /* zero the memory */
@@ -629,69 +607,51 @@ void *pvPortCalloc(size_t count, size_t size, const char * file, unsigned line)
 //ets_printf("3,");
   return p;
 }
+
+void *calloc(size_t count, size_t nbytes) __attribute__((alias("pvPortCalloc")));
+
 /*-----------------------------------------------------------*/
 
-void *pvPortZalloc(size_t size, const char * file, unsigned line)
+void *pvPortRealloc(void *mem, size_t newsize)
+#ifdef MEMLEAK_DEBUG
 {
-     return pvPortCalloc(1, size, file, line);
+    return pvPortRealloc_trace(mem, newsize, NULL, 0);
 }
-/*-----------------------------------------------------------*/
-
-void *pvPortRealloc(void *mem, size_t newsize, const char *file, unsigned line)
+void *pvPortRealloc_trace(void *mem, size_t newsize, const char *file, unsigned line)
+#endif
 {
     if (newsize == 0) {
-        vPortFree(mem, file, line);
+        vPortFree_t(mem);
         return NULL;
     }
 
     void *p;
-    p = pvPortMalloc(newsize, file, line, false);
+    p = pvPortMalloc_t(newsize);
     if (p) {
         /* zero the memory */
         if (mem != NULL) {
             memcpy(p, mem, newsize);
-            vPortFree(mem, file, line);
+            vPortFree_t(mem);
         }
     }
     return p;
 }
+
+void *realloc(void *ptr, size_t nbytes) __attribute__((alias("pvPortRealloc")));
+
 /*-----------------------------------------------------------*/
-//For user
-void *malloc(size_t nbytes)
-{
-//ets_printf("u_m\n");
-	return pvPortMalloc( nbytes, mem_debug_file, 0, false);
-}
 
-void free(void *ptr)
+void *pvPortZalloc(size_t size)
+#ifdef MEMLEAK_DEBUG
 {
-//ets_printf("u_f\n");
-	vPortFree(ptr, mem_debug_file, 0);
+    return pvPortZalloc_trace( size, NULL, 0 );
 }
-
-void *zalloc(size_t nbytes)
-{
-	return pvPortZalloc(nbytes, mem_debug_file, 0);
-}
-
-void *calloc(size_t count, size_t nbytes)
-{
-	return pvPortCalloc(count, nbytes, mem_debug_file, 0);
-}
-
-void *realloc(void *ptr, size_t nbytes)
-{
-	return pvPortRealloc(ptr, nbytes, mem_debug_file, 0);
-}
-
-/*
-void *malloc(size_t nbytes) __attribute__((alias("malloc1")));
-void free(void *ptr) __attribute__((alias("free1")));
-void *calloc(size_t count, size_t nbytes) __attribute__((alias("zalloc1")));
-void *zalloc(size_t nbytes) __attribute__((alias("calloc1")));
-void *realloc(void *ptr, size_t nbytes) __attribute__((alias("realloc1")));
-*/
+void *pvPortZalloc_trace(size_t size, const char * file, unsigned line)
 #endif
+{
+     return pvPortCalloc_t(1, size);
+}
+void *zalloc(size_t nbytes) __attribute__((alias("pvPortZalloc")));
 
 size_t xPortGetFreeHeapSize( void )
 {
