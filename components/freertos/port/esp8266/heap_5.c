@@ -334,7 +334,7 @@ size_t xPortWantedSizeAlign(size_t xWantedSize)
 void *pvPortMalloc( size_t xWantedSize )
 #ifdef MEMLEAK_DEBUG
 {
-    return pvPortMalloc_trace( xWantedSize, NULL, 0, false );
+    return pvPortMalloc_trace( xWantedSize, __FILE__, __LINE__, false );
 }
 
 void *pvPortMalloc_trace( size_t xWantedSize, const char * file, unsigned line, bool use_iram )
@@ -520,7 +520,7 @@ void *malloc(size_t nbytes) __attribute__((alias("pvPortMalloc")));
 void vPortFree( void *pv )
 #ifdef MEMLEAK_DEBUG
 {
-    return vPortFree_trace( pv, NULL, 0 );
+    return vPortFree_trace( pv, __FILE__, __LINE__ );
 }
 
 void vPortFree_trace( void *pv, const char * file, unsigned line )
@@ -589,7 +589,7 @@ void free(void *ptr) __attribute__((alias("vPortFree")));
 void *pvPortCalloc(size_t count, size_t size)
 #ifdef MEMLEAK_DEBUG
 {
-    return pvPortCalloc_trace(count, size, NULL, 0);
+    return pvPortCalloc_trace(count, size, __FILE__, __LINE__);
 }
 
 void *pvPortCalloc_trace(size_t count, size_t size, const char * file, unsigned line)
@@ -615,7 +615,7 @@ void *calloc(size_t count, size_t nbytes) __attribute__((alias("pvPortCalloc")))
 void *pvPortRealloc(void *mem, size_t newsize)
 #ifdef MEMLEAK_DEBUG
 {
-    return pvPortRealloc_trace(mem, newsize, NULL, 0);
+    return pvPortRealloc_trace(mem, newsize, __FILE__, __LINE__);
 }
 void *pvPortRealloc_trace(void *mem, size_t newsize, const char *file, unsigned line)
 #endif
@@ -644,7 +644,7 @@ void *realloc(void *ptr, size_t nbytes) __attribute__((alias("pvPortRealloc")));
 void *pvPortZalloc(size_t size)
 #ifdef MEMLEAK_DEBUG
 {
-    return pvPortZalloc_trace( size, NULL, 0 );
+    return pvPortZalloc_trace( size, __FILE__, __LINE__ );
 }
 void *pvPortZalloc_trace(size_t size, const char * file, unsigned line)
 #endif
