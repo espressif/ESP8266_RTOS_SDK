@@ -1,11 +1,11 @@
 gwen:
-    crypto:     5fc5b4f
-    espnow:     5fc5b4f
-    core:       0b78c0f
+    crypto:     0181338
+    espnow:     0181338
+    core:       0181338
     minic:      5fc5b4f
-    net80211:   0b78c0f
-    pp:         06675a3
-    pwm:        5fc5b4f
+    net80211:   0181338
+    pp:         0181338
+    pwm:        0181338
     smartconfig:9ec59b5
-    wpa:        06675a3
-    wps:        06675a3
+    wpa:        0181338
+    wps:        0181338
