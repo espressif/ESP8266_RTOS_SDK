@@ -16,7 +16,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
-LOCAL void user_wps_status_cb(int status)
+static void user_wps_status_cb(int status)
 {   
     printf("scan status %d\n", status);
     switch (status) {
@@ -31,7 +31,7 @@ LOCAL void user_wps_status_cb(int status)
     }
 }
 
-LOCAL void user_wps_start(void)
+static void user_wps_start(void)
 {
     wifi_wps_disable();
     wifi_wps_enable(WPS_TYPE_PBC);
@@ -87,7 +87,7 @@ uint32 user_rf_cal_sector_set(void)
 
     return rf_cal_sec;
 }
-LOCAL void wps_task(void *pvParameters)
+static void wps_task(void *pvParameters)
 {
     wifi_set_opmode(STATION_MODE);
     user_wps_start();

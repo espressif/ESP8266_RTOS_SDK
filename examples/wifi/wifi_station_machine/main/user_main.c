@@ -61,7 +61,7 @@ uint32 user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-LOCAL void wait_for_connection_ready(uint8 flag)
+static void wait_for_connection_ready(uint8 flag)
 {
     os_timer_disarm(&timer);
     if(wifi_station_connected()){
@@ -73,13 +73,13 @@ LOCAL void wait_for_connection_ready(uint8 flag)
     }
 }
 
-LOCAL void on_wifi_connect(){
+static void on_wifi_connect(){
     os_timer_disarm(&timer);
     os_timer_setfn(&timer, (os_timer_func_t *)wait_for_connection_ready, NULL);
     os_timer_arm(&timer, 100, 0);
 }
 
-LOCAL void on_wifi_disconnect(uint8_t reason){
+static void on_wifi_disconnect(uint8_t reason){
     os_printf("disconnect %d\n", reason);
 }
 

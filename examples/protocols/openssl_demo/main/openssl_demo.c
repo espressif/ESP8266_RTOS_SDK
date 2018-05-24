@@ -34,14 +34,14 @@
 
 #define OPENSSL_DEMO_RECV_BUF_LEN 1024
 
-LOCAL xTaskHandle openssl_handle;
+static xTaskHandle openssl_handle;
 
-LOCAL char send_data[] = OPENSSL_DEMO_REQUEST;
-LOCAL int send_bytes = sizeof(send_data);
+static char send_data[] = OPENSSL_DEMO_REQUEST;
+static int send_bytes = sizeof(send_data);
 
-LOCAL char recv_buf[OPENSSL_DEMO_RECV_BUF_LEN];
+static char recv_buf[OPENSSL_DEMO_RECV_BUF_LEN];
 
-LOCAL void openssl_demo_thread(void *p)
+static void openssl_demo_thread(void *p)
 {
     int ret;
 
