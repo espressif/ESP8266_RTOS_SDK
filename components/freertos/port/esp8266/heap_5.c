@@ -106,6 +106,7 @@
  *
  */
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 /* Defining MPU_WRAPPERS_INCLUDED_FROM_API_FILE prevents task.h from redefining
@@ -239,7 +240,7 @@ void pvShowMalloc()
 	Wait_SPI_Idle(&flashchip);
 	Cache_Read_Enable_New();
 //ets_printf("sh1,");
-	os_printf("--------Show Malloc--------\n");
+	printf("--------Show Malloc--------\n");
 	for( pxIterator = &yStart; pxIterator->pxNextFreeBlock != NULL;pxIterator = pxIterator->pxNextFreeBlock) {
         BlockLink_t *blk = pxIterator->pxNextFreeBlock;
 //ets_printf("sh2,");
@@ -266,38 +267,38 @@ void pvShowMalloc()
 		} else {
 			basename = "";
 		}
-		os_printf("F:%-30sL:%4u malloc %10d @ %p\n", basename, blk->line, blk->xBlockSize - 0x80000000, ( void * ) ( ( ( unsigned char * ) blk ) + uxHeapStructSize));
+		printf("F:%-30sL:%4u malloc %10d @ %p\n", basename, blk->line, blk->xBlockSize - 0x80000000, ( void * ) ( ( ( unsigned char * ) blk ) + uxHeapStructSize));
 //ets_printf("sh3,");
 //		ets_delay_us(2000);
         system_soft_wdt_feed();
 	}
-	os_printf("--------Free %d--------\n\n", xFreeBytesRemaining);
+	printf("--------Free %d--------\n\n", xFreeBytesRemaining);
 
 #if 0
-	uint32 last_link = (uint32)yStart.pxNextFreeBlock;
-	uint32 index = 0;
-	os_printf("'*':used, '-'free, each %d bytes\n", portBYTE_ALIGNMENT_v);
-	os_printf("%x:", last_link);
+	uint32_t last_link = (uint32_t)yStart.pxNextFreeBlock;
+	uint32_t index = 0;
+	printf("'*':used, '-'free, each %d bytes\n", portBYTE_ALIGNMENT_v);
+	printf("%x:", last_link);
 	for( pxIterator = &yStart; pxIterator->pxNextFreeBlock != NULL;pxIterator = pxIterator->pxNextFreeBlock) {
-	    uint16 i;
-	    for (i = 0; i < ((uint32)pxIterator->pxNextFreeBlock - last_link) / portBYTE_ALIGNMENT_v; i++) {
+	    uint16_t i;
+	    for (i = 0; i < ((uint32_t)pxIterator->pxNextFreeBlock - last_link) / portBYTE_ALIGNMENT_v; i++) {
 	        index++;
-	        os_printf("-");
+	        printf("-");
 	        if (index % 64 == 0) {
-	            os_printf("\n%x:", (uint32)yStart.pxNextFreeBlock + index * portBYTE_ALIGNMENT_v);
+	            printf("\n%x:", (uint32_t)yStart.pxNextFreeBlock + index * portBYTE_ALIGNMENT_v);
 	        }
 	    }
 	    for (i = 0; i < pxIterator->pxNextFreeBlock->xBlockSize / portBYTE_ALIGNMENT_v; i++) {
 	        index++;
-	        os_printf("*");
+	        printf("*");
 	        if (index % 64 == 0) {
-	            os_printf("\n%x:", (uint32)yStart.pxNextFreeBlock + index * portBYTE_ALIGNMENT_v);
+	            printf("\n%x:", (uint32_t)yStart.pxNextFreeBlock + index * portBYTE_ALIGNMENT_v);
             }
 	    }
-	    last_link = ((uint32)pxIterator->pxNextFreeBlock + pxIterator->pxNextFreeBlock->xBlockSize);
+	    last_link = ((uint32_t)pxIterator->pxNextFreeBlock + pxIterator->pxNextFreeBlock->xBlockSize);
         system_soft_wdt_feed();
     }
-	os_printf("\n\n");
+	printf("\n\n");
 #endif
 
 //ets_printf("sh4\n");
@@ -343,10 +344,10 @@ static bool is_inited = false;
     if (!is_inited) {
         void vPortDefineHeapRegions( const HeapRegion_t * const pxHeapRegions );
         xHeapRegions[0].pucStartAddress = ( uint8_t * )&_heap_start;
-        xHeapRegions[0].xSizeInBytes = (( size_t)( 0x40000000 - (uint32)&_heap_start));
+        xHeapRegions[0].xSizeInBytes = (( size_t)( 0x40000000 - (uint32_t)&_heap_start));
         
         xHeapRegions[1].pucStartAddress = ( uint8_t * )&_lit4_end;
-        xHeapRegions[1].xSizeInBytes = (( size_t)( 0x4010C000 - (uint32)&_lit4_end));
+        xHeapRegions[1].xSizeInBytes = (( size_t)( 0x4010C000 - (uint32_t)&_lit4_end));
 
         is_inited = true;
         vPortDefineHeapRegions(xHeapRegions);
@@ -400,7 +401,7 @@ static bool is_inited = false;
                 than the block being inserted. */
                 for( pxIterator = &xStart; pxIterator->pxNextFreeBlock != 0; pxIterator = pxIterator->pxNextFreeBlock )
                 {
-                    if ((line == 0 || use_iram == true) && (uint32)pxIterator->pxNextFreeBlock > 0x40000000 && pxIterator->pxNextFreeBlock->xBlockSize > xWantedSize) {
+                    if ((line == 0 || use_iram == true) && (uint32_t)pxIterator->pxNextFreeBlock > 0x40000000 && pxIterator->pxNextFreeBlock->xBlockSize > xWantedSize) {
                         pxPreviousBlock = pxIterator;
                         pxBlock = pxIterator->pxNextFreeBlock;
                         break;
@@ -552,7 +553,7 @@ BlockLink_t *pxLink;
 				ETS_INTR_LOCK();
 #ifdef MEMLEAK_DEBUG
 				if(prvRemoveBlockFromUsedList(pxLink) < 0){
-					ets_printf("%p already freed\n", pv);
+					printf("%p already freed\n", pv);
 				}
 				else
 #endif

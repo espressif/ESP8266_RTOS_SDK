@@ -25,7 +25,10 @@
 #ifndef __UPGRADE_H__
 #define __UPGRADE_H__
 
-#include "lwip/sockets.h"
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <sys/socket.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,12 +76,12 @@ typedef void (*upgrade_states_check_callback)(void *arg);
 struct upgrade_server_info {
     struct sockaddr_in sockaddrin;          /**< socket of upgrading */
     upgrade_states_check_callback check_cb; /**< callback of upgrading */
-    uint32 check_times;                     /**< time out of upgrading, unit : ms */
-    uint8 pre_version[16];                  /**< previous version of firmware */
-    uint8 upgrade_version[16];              /**< the new version of firmware */
-    uint8 *url;                             /**< the url of upgrading server */
+    uint32_t check_times;                     /**< time out of upgrading, unit : ms */
+    uint8_t pre_version[16];                  /**< previous version of firmware */
+    uint8_t upgrade_version[16];              /**< the new version of firmware */
+    uint8_t *url;                             /**< the url of upgrading server */
     void *pclient_param;
-    uint8 upgrade_flag;                     /**< true, upgrade succeed; false, upgrade fail */
+    uint8_t upgrade_flag;                     /**< true, upgrade succeed; false, upgrade fail */
 };
 
 /**
@@ -88,7 +91,7 @@ struct upgrade_server_info {
   *
   * @return null
   */
-void system_upgrade_init();
+void system_upgrade_init(void);
 
 /**
   * @brief  Upgrade function de-initialization.
@@ -97,7 +100,7 @@ void system_upgrade_init();
   *
   * @return null
   */
-void system_upgrade_deinit();
+void system_upgrade_deinit(void);
 
 /**
  * @brief  Upgrade function de-initialization.
@@ -107,7 +110,7 @@ void system_upgrade_deinit();
  *
  * @return null
  */
-bool system_upgrade(uint8 *data, uint32 len);
+bool system_upgrade(uint8_t *data, uint32_t len);
 
 #ifdef UPGRADE_SSL_ENABLE
 

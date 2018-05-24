@@ -22,8 +22,10 @@
  *
  */
 
-#ifndef __ESPWPS_H__
-#define __ESPWPS_H__
+#ifndef __ESP_WPS_H__
+#define __ESP_WPS_H__
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {

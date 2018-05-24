@@ -67,6 +67,9 @@
  *----------------------------------------------------------*/
 
 /* Scheduler includes. */
+
+#include <stdint.h>
+
 #include <xtensa/config/core.h>
 #include <xtensa/tie/xt_interrupt.h>
 #include <xtensa/tie/xt_timer.h>
@@ -75,6 +78,11 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "freertos/xtensa_rtos.h"
+
+#include "esp_attr.h"
+#include "esp_libc.h"
+
+#include "esp8266/ets_sys.h"
 #include "esp8266/rom_functions.h"
 
 #define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
@@ -242,7 +250,7 @@ void IRAM_ATTR vPortExitCritical(void)
                 }
             }
         } else {
-            ets_printf("E:C:%u\n", uxCriticalNesting);
+            ets_printf(DRAM_STR("E:C:%u\n"), uxCriticalNesting);
             PORT_ASSERT((uxCriticalNesting > 0));
         }
     }
@@ -296,15 +304,15 @@ void ResetCcountVal(unsigned int cnt_val)
 _xt_isr_entry isr[16];
 char _xt_isr_status = 0;
 
-void _xt_isr_attach(uint8 i, _xt_isr func, void* arg)
+void _xt_isr_attach(uint8_t i, _xt_isr func, void* arg)
 {
     isr[i].handler = func;
     isr[i].arg = arg;
 }
 
-uint16 IRAM_ATTR _xt_isr_handler(uint16 i)
+uint16_t IRAM_ATTR _xt_isr_handler(uint16_t i)
 {
-    uint8 index;
+    uint8_t index;
 
     if (i & (1 << ETS_WDT_INUM)) {
         index = ETS_WDT_INUM;

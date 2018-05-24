@@ -25,6 +25,8 @@
 #ifndef __PWM_H__
 #define __PWM_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -46,9 +48,9 @@ extern "C" {
   */
 
 struct pwm_param {
-    uint32 period;      /**< PWM period */
-    uint32 freq;        /**< PWM frequency */
-    uint32 duty[8];     /**< PWM duty */
+    uint32_t period;      /**< PWM period */
+    uint32_t freq;        /**< PWM frequency */
+    uint32_t duty[8];     /**< PWM duty */
 };
 
 #define PWM_DEPTH 1023
@@ -58,16 +60,16 @@ struct pwm_param {
   *
   * @attention This API can be called only once.
   *
-  * @param     uint32 period : pwm frequency
-  * @param     uint32 *duty : duty cycle
-  * @param     uint32 pwm_channel_num : PWM channel number
-  * @param     uint32 (*pin_info_list)[3] : GPIO parameter of PWM channel, it is a pointer
+  * @param     uint32_t period : pwm frequency
+  * @param     uint32_t *duty : duty cycle
+  * @param     uint32_t pwm_channel_num : PWM channel number
+  * @param     uint32_t (*pin_info_list)[3] : GPIO parameter of PWM channel, it is a pointer
   *                                         of n x 3 array which defines GPIO register, IO
   *                                         reuse of corresponding pin and GPIO number.
   *
   * @return    null
   */
-void pwm_init(uint32 period, uint32 *duty, uint32 pwm_channel_num, uint32(*pin_info_list)[3]);
+void pwm_init(uint32_t period, uint32_t *duty, uint32_t pwm_channel_num, uint32_t(*pin_info_list)[3]);
 
 /**
   * @brief     Set the duty cycle of a PWM channel.
@@ -78,21 +80,21 @@ void pwm_init(uint32 period, uint32 *duty, uint32 pwm_channel_num, uint32(*pin_i
   *
   * @attention After set configuration, pwm_start needs to be called to take effect.
   *
-  * @param     uint32 duty : duty cycle
-  * @param     uint8 channel : PWM channel number
+  * @param     uint32_t duty : duty cycle
+  * @param     uint8_t channel : PWM channel number
   *
   * @return    null
   */
-void pwm_set_duty(uint32 duty, uint8 channel);
+void pwm_set_duty(uint32_t duty, uint8_t channel);
 
 /**
   * @brief  Get the duty cycle of a PWM channel.
   *
-  * @param  uint8 channel : PWM channel number
+  * @param  uint8_t channel : PWM channel number
   *
   * @return Duty cycle of PWM output.
   */
-uint32 pwm_get_duty(uint8 channel);
+uint32_t pwm_get_duty(uint8_t channel);
 
 /**
   * @brief     Set PWM period, unit : us.
@@ -105,7 +107,7 @@ uint32 pwm_get_duty(uint8 channel);
   *
   * @return    null
   */
-void pwm_set_period(uint32 period);
+void pwm_set_period(uint32_t period);
 
 /**
   * @brief  Get PWM period, unit : us.
@@ -114,7 +116,7 @@ void pwm_set_period(uint32 period);
   *
   * @return PWM period, unit : us.
   */
-uint32 pwm_get_period(void);
+uint32_t pwm_get_period(void);
 
 /**
   * @brief  Starts PWM. 

@@ -32,6 +32,9 @@
  * Some primitive asn methods for extraction ASN.1 data.
  */
 
+#include <stdint.h>
+#include <string.h>
+
 #include "ssl/ssl_os_port.h"
 #include "ssl/ssl_ssl.h"
 #include "ssl/ssl_crypto.h"
@@ -246,7 +249,7 @@ int asn1_get_private_key(const uint8_t *buf, int len, RSA_CTX **rsa_ctx)
 
 static time_t mktime(struct tm *ptm)
 {
-	uint16 year = 0,mon = 0,day = 0,hour = 0,min = 0,sec = 0;
+	uint16_t year = 0,mon = 0,day = 0,hour = 0,min = 0,sec = 0;
 	if (ptm == NULL)
 		return 0;
 

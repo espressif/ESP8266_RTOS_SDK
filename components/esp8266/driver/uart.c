@@ -19,6 +19,7 @@
 #include "esp8266/pin_mux_register.h"
 #include "esp8266/uart_register.h"
 #include "esp8266/rom_functions.h"
+#include "esp8266/ets_sys.h"
 
 #include "esp_misc.h"
 

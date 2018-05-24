@@ -25,6 +25,8 @@
 #ifndef __ESP_WIFI_H__
 #define __ESP_WIFI_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -109,7 +111,7 @@ WIFI_MODE wifi_get_opmode_default(void);
   *
   * @attention This configuration will be saved in the Flash system parameter area if changed.
   *
-  * @param     uint8 opmode : WiFi operating modes:
+  * @param     uint8_t opmode : WiFi operating modes:
   *    - 0x01: station mode;
   *    - 0x02: soft-AP mode
   *    - 0x03: station+soft-AP mode
@@ -125,7 +127,7 @@ bool wifi_set_opmode(WIFI_MODE opmode);
   *         Set the WiFi operating mode as station, soft-AP or station+soft-AP, and
   *         the mode won't be saved to the Flash.
   *
-  * @param  uint8 opmode : WiFi operating modes:
+  * @param  uint8_t opmode : WiFi operating modes:
   *    - 0x01: station mode;
   *    - 0x02: soft-AP mode
   *    - 0x03: station+soft-AP mode
@@ -185,12 +187,12 @@ bool wifi_set_ip_info(WIFI_INTERFACE if_index, struct ip_info *info);
   *
   * @param  WIFI_INTERFACE if_index : get the IP address of the station or the soft-AP interface,
   *                                   0x00 for STATION_IF, 0x01 for SOFTAP_IF.
-  * @param  uint8 *macaddr : the MAC address.
+  * @param  uint8_t *macaddr : the MAC address.
   *
   * @return true  : succeed
   * @return false : fail
   */
-bool wifi_get_macaddr(WIFI_INTERFACE if_index, uint8 *macaddr);
+bool wifi_get_macaddr(WIFI_INTERFACE if_index, uint8_t *macaddr);
 
 /**
   * @brief     Set MAC address of the ESP8266 WiFi station or the soft-AP interface.
@@ -203,23 +205,23 @@ bool wifi_get_macaddr(WIFI_INTERFACE if_index, uint8 *macaddr);
   *
   * @param     WIFI_INTERFACE if_index : get the IP address of the station or the soft-AP interface,
   *                                   0x00 for STATION_IF, 0x01 for SOFTAP_IF.
-  * @param     uint8 *macaddr : the MAC address.
+  * @param     uint8_t *macaddr : the MAC address.
   *
   * @return    true  : succeed
   * @return    false : fail
   */
-bool wifi_set_macaddr(WIFI_INTERFACE if_index, uint8 *macaddr);
+bool wifi_set_macaddr(WIFI_INTERFACE if_index, uint8_t *macaddr);
 
 /**
   * @brief  Install the WiFi status LED.
   *
-  * @param  uint8 gpio_id : GPIO ID
-  * @param  uint8 gpio_name : GPIO mux name
-  * @param  uint8 gpio_func : GPIO function
+  * @param  uint8_t gpio_id : GPIO ID
+  * @param  uint8_t gpio_name : GPIO mux name
+  * @param  uint8_t gpio_func : GPIO function
   *
   * @return null
   */
-void wifi_status_led_install(uint8 gpio_id, uint32 gpio_name, uint8 gpio_func);
+void wifi_status_led_install(uint8_t gpio_id, uint32_t gpio_name, uint8_t gpio_func);
 
 /**
   * @brief  Uninstall the WiFi status LED.
@@ -303,27 +305,27 @@ enum {
 };
 
 typedef struct {
-    uint32 status;          /**< status of scanning APs*/
+    uint32_t status;          /**< status of scanning APs*/
     struct bss_info *bss;   /**< list of APs found*/
 } Event_StaMode_ScanDone_t;
 
 typedef struct {
-    uint8 ssid[32];         /**< SSID of connected AP */
-    uint8 ssid_len;         /**< SSID length of connected AP */
-    uint8 bssid[6];         /**< BSSID of connected AP*/
-    uint8 channel;          /**< channel of connected AP*/
+    uint8_t ssid[32];         /**< SSID of connected AP */
+    uint8_t ssid_len;         /**< SSID length of connected AP */
+    uint8_t bssid[6];         /**< BSSID of connected AP*/
+    uint8_t channel;          /**< channel of connected AP*/
 } Event_StaMode_Connected_t;
 
 typedef struct {
-    uint8 ssid[32];         /**< SSID of disconnected AP */
-    uint8 ssid_len;         /**< SSID length of disconnected AP */
-    uint8 bssid[6];         /**< BSSID of disconnected AP */
-    uint8 reason;           /**< reason of disconnection */
+    uint8_t ssid[32];         /**< SSID of disconnected AP */
+    uint8_t ssid_len;         /**< SSID length of disconnected AP */
+    uint8_t bssid[6];         /**< BSSID of disconnected AP */
+    uint8_t reason;           /**< reason of disconnection */
 } Event_StaMode_Disconnected_t;
 
 typedef struct {
-    uint8 old_mode;         /**< the old auth mode of AP */
-    uint8 new_mode;         /**< the new auth mode of AP */
+    uint8_t old_mode;         /**< the old auth mode of AP */
+    uint8_t new_mode;         /**< the new auth mode of AP */
 } Event_StaMode_AuthMode_Change_t;
 
 typedef struct {
@@ -333,18 +335,18 @@ typedef struct {
 } Event_StaMode_Got_IP_t;
 
 typedef struct {
-    uint8 mac[6];           /**< MAC address of the station connected to ESP8266 soft-AP */
-    uint8 aid;              /**< the aid that ESP8266 soft-AP gives to the station connected to  */
+    uint8_t mac[6];           /**< MAC address of the station connected to ESP8266 soft-AP */
+    uint8_t aid;              /**< the aid that ESP8266 soft-AP gives to the station connected to  */
 } Event_SoftAPMode_StaConnected_t;
 
 typedef struct {
-    uint8 mac[6];           /**< MAC address of the station disconnects to ESP8266 soft-AP */
-    uint8 aid;              /**< the aid that ESP8266 soft-AP gave to the station disconnects to  */
+    uint8_t mac[6];           /**< MAC address of the station disconnects to ESP8266 soft-AP */
+    uint8_t aid;              /**< the aid that ESP8266 soft-AP gave to the station disconnects to  */
 } Event_SoftAPMode_StaDisconnected_t;
 
 typedef struct {
     int rssi;               /**< Received probe request signal strength */
-    uint8 mac[6];           /**< MAC address of the station which send probe request */
+    uint8_t mac[6];           /**< MAC address of the station which send probe request */
 } Event_SoftAPMode_ProbeReqRecved_t;
 
 typedef union {
@@ -388,11 +390,11 @@ bool wifi_set_event_handler_cb(wifi_event_handler_cb_t cb);
 /**
   * @brief  Callback of sending user-define 802.11 packets.
   *
-  * @param  uint8 status : 0, packet sending succeed; otherwise, fail.
+  * @param  uint8_t status : 0, packet sending succeed; otherwise, fail.
   *
   * @return null
   */
-typedef void (*freedom_outside_cb_t)(uint8 status);
+typedef void (*freedom_outside_cb_t)(uint8_t status);
 
 /**
   * @brief      Register a callback for sending user-define 802.11 packets.
@@ -405,7 +407,7 @@ typedef void (*freedom_outside_cb_t)(uint8 status);
   * @return     0, succeed;
   * @return    -1, fail.
   */
-sint32 wifi_register_send_pkt_freedom_cb(freedom_outside_cb_t cb);
+int32_t wifi_register_send_pkt_freedom_cb(freedom_outside_cb_t cb);
 
 /**
   * @brief  Unregister the callback for sending user-define 802.11 packets.
@@ -429,8 +431,8 @@ void wifi_unregister_send_pkt_freedom_cb(void);
   *               the next packet is allowed to send. Otherwise, wifi_send_pkt_freedom
   *               will return fail.
   *
-  * @param     uint8 *buf : pointer of packet
-  * @param     uint16 len : packet length
+  * @param     uint8_t *buf : pointer of packet
+  * @param     uint16_t len : packet length
   * @param     bool sys_seq : follow the system's 802.11 packets sequence number or not,
   *                           if it is true, the sequence number will be increased 1 every
   *                           time a packet sent.
@@ -438,7 +440,7 @@ void wifi_unregister_send_pkt_freedom_cb(void);
   * @return    0, succeed;
   * @return   -1, fail.
   */
-sint32 wifi_send_pkt_freedom(uint8 *buf, uint16 len, bool sys_seq);
+int32_t wifi_send_pkt_freedom(uint8_t *buf, uint16_t len, bool sys_seq);
 
 /**
   * @brief  Enable RFID LOCP (Location Control Protocol) to receive WDS packets.
@@ -448,7 +450,7 @@ sint32 wifi_send_pkt_freedom(uint8 *buf, uint16 len, bool sys_seq);
   * @return 0, succeed;
   * @return otherwise, fail.
   */
-sint32 wifi_rfid_locp_recv_open(void);
+int32_t wifi_rfid_locp_recv_open(void);
 
 /**
   * @brief  Disable RFID LOCP (Location Control Protocol) .
@@ -462,13 +464,13 @@ void wifi_rfid_locp_recv_close(void);
 /**
   * @brief  RFID LOCP (Location Control Protocol) receive callback .
   *
-  * @param  uint8 *frm : point to the head of 802.11 packet
+  * @param  uint8_t *frm : point to the head of 802.11 packet
   * @param  int len : packet length
   * @param  int rssi : signal strength
   *
   * @return null
   */
-typedef void (*rfid_locp_cb_t)(uint8 *frm, int len, sint8 rssi);
+typedef void (*rfid_locp_cb_t)(uint8_t *frm, int len, int8_t rssi);
 
 /**
   * @brief  Register a callback of receiving WDS packets.
@@ -481,7 +483,7 @@ typedef void (*rfid_locp_cb_t)(uint8 *frm, int len, sint8 rssi);
   * @return 0, succeed;
   * @return otherwise, fail.
   */
-sint32 wifi_register_rfid_locp_recv_cb(rfid_locp_cb_t cb);
+int32_t wifi_register_rfid_locp_recv_cb(rfid_locp_cb_t cb);
 
 /**
   * @brief  Unregister the callback of receiving WDS packets.
@@ -596,7 +598,7 @@ void wifi_fpm_set_wakeup_cb(fpm_wakeup_cb cb);
   *               in the system idle task. Please do not call other WiFi related function right
   *               after calling this API.
   *
-  * @param     uint32 sleep_time_in_us : sleep time, ESP8266 will wake up automatically
+  * @param     uint32_t sleep_time_in_us : sleep time, ESP8266 will wake up automatically
   *                                      when time out. Unit: us. Range: 10000 ~ 268435455(0xFFFFFFF).
   *    - If sleep_time_in_us is 0xFFFFFFF, the ESP8266 will sleep till
   *    - if wifi_fpm_set_sleep_type is set to be LIGHT_SLEEP_T, ESP8266 can wake up by GPIO.
@@ -606,7 +608,7 @@ void wifi_fpm_set_wakeup_cb(fpm_wakeup_cb cb);
   * @return  -1, fail to sleep, sleep status error;
   * @return  -2, fail to sleep, force sleep function is not enabled.
   */
-sint8 wifi_fpm_do_sleep(uint32 sleep_time_in_us);
+int8_t wifi_fpm_do_sleep(uint32_t sleep_time_in_us);
 
 /**
   * @brief     Set sleep type for force sleep function.
@@ -666,16 +668,16 @@ enum FIXED_RATE {
   * @attention 3. ESP8266 station and soft-AP share the same rate, they can not be
   *               set into the different rate.
   *
-  * @param     uint8 enable_mask : 0x00 - disable the fixed rate
+  * @param     uint8_t enable_mask : 0x00 - disable the fixed rate
   *    -  0x01 - use the fixed rate on ESP8266 station
   *    -  0x02 - use the fixed rate on ESP8266 soft-AP
   *    -  0x03 - use the fixed rate on ESP8266 station and soft-AP
-  * @param     uint8 rate  : value of the fixed rate
+  * @param     uint8_t rate  : value of the fixed rate
   *
   * @return    0         : succeed
   * @return    otherwise : fail
   */
-sint32 wifi_set_user_fixed_rate(uint8 enable_mask, uint8 rate);
+int32_t wifi_set_user_fixed_rate(uint8_t enable_mask, uint8_t rate);
 
 /**
   * @brief  Get the fixed rate and mask of ESP8266.
@@ -686,7 +688,7 @@ sint32 wifi_set_user_fixed_rate(uint8 enable_mask, uint8 rate);
   * @return 0  : succeed
   * @return otherwise : fail
   */
-int wifi_get_user_fixed_rate(uint8 *enable_mask, uint8 *rate);
+int wifi_get_user_fixed_rate(uint8_t *enable_mask, uint8_t *rate);
 
 enum support_rate {
     RATE_11B5M  = 0,
@@ -714,13 +716,13 @@ enum support_rate {
   *
   * @attention This API can only support 802.11g now, but it will support 802.11b in next version.
   *
-  * @param     uint8 min : the minimum value of the support rate, according to enum support_rate.
-  * @param     uint8 max : the maximum value of the support rate, according to enum support_rate.
+  * @param     uint8_t min : the minimum value of the support rate, according to enum support_rate.
+  * @param     uint8_t max : the maximum value of the support rate, according to enum support_rate.
   *
   * @return    0         : succeed
   * @return    otherwise : fail
   */
-sint32 wifi_set_user_sup_rate(uint8 min, uint8 max);
+int32_t wifi_set_user_sup_rate(uint8_t min, uint8_t max);
 
 enum RATE_11B_ID {
     RATE_11B_B11M   = 0,
@@ -778,22 +780,22 @@ enum RATE_11N_ID {
   *
   * @attention The rate of retransmission is not limited by this API.
   *
-  * @param     uint8 mode :  WiFi mode
+  * @param     uint8_t mode :  WiFi mode
   *    -  #define RC_LIMIT_11B  0
   *    -  #define RC_LIMIT_11G  1
   *    -  #define RC_LIMIT_11N  2
   * @param     uint8 ifidx : interface of ESP8266
   *    -  0x00 - ESP8266 station
   *    -  0x01 - ESP8266 soft-AP
-  * @param     uint8 max : the maximum value of the rate, according to the enum rate
+  * @param     uint8_t max : the maximum value of the rate, according to the enum rate
   *                        corresponding to the first parameter mode.
-  * @param     uint8 min : the minimum value of the rate, according to the enum rate
+  * @param     uint8_t min : the minimum value of the rate, according to the enum rate
   *                        corresponding to the first parameter mode.
   *
   * @return    0         : succeed
   * @return    otherwise : fail
   */
-bool wifi_set_user_rate_limit(uint8 mode, uint8 ifidx, uint8 max, uint8 min);
+bool wifi_set_user_rate_limit(uint8_t mode, uint8_t ifidx, uint8_t max, uint8_t min);
 
 /**
   * @brief  Get the interfaces of ESP8266 whose rate of sending data is limited by
@@ -806,13 +808,13 @@ bool wifi_set_user_rate_limit(uint8 mode, uint8 ifidx, uint8 max, uint8 min);
   * @return LIMIT_RATE_MASK_AP   - enable the limitation on ESP8266 soft-AP
   * @return LIMIT_RATE_MASK_ALL  - enable the limitation on both ESP8266 station and soft-AP
   */
-uint8 wifi_get_user_limit_rate_mask(void);
+uint8_t wifi_get_user_limit_rate_mask(void);
 
 /**
   * @brief  Set the interfaces of ESP8266 whose rate of sending packets is limited by
   *         wifi_set_user_rate_limit.
   *
-  * @param  uint8 enable_mask :
+  * @param  uint8_t enable_mask :
   *    -  LIMIT_RATE_MASK_NONE - disable the limitation on both ESP8266 station and soft-AP
   *    -  LIMIT_RATE_MASK_STA  - enable the limitation on ESP8266 station
   *    -  LIMIT_RATE_MASK_AP   - enable the limitation on ESP8266 soft-AP
@@ -821,7 +823,7 @@ uint8 wifi_get_user_limit_rate_mask(void);
   * @return true  : succeed
   * @return false : fail
   */
-bool wifi_set_user_limit_rate_mask(uint8 enable_mask);
+bool wifi_set_user_limit_rate_mask(uint8_t enable_mask);
 
 /**
   * @}
@@ -848,13 +850,13 @@ typedef enum {
   * @brief  Vendor IE received callback.
   *
   * @param  vendor_ie_type type :  type of vendor IE.
-  * @param  const uint8 sa[6] : source address of the packet.
-  * @param  uint8 *vendor_ie : pointer of vendor IE.
-  * @param  sint32 rssi : signal strength.
+  * @param  const uint8_t sa[6] : source address of the packet.
+  * @param  uint8_t *vendor_ie : pointer of vendor IE.
+  * @param  int32_t rssi : signal strength.
   *
   * @return null
   */
-typedef void (*vendor_ie_recv_cb_t)(vendor_ie_type type, const uint8 sa[6], const uint8 *vnd_ie, sint32 rssi);
+typedef void (*vendor_ie_recv_cb_t)(vendor_ie_type type, const uint8_t sa[6], const uint8_t *vnd_ie, int32_t rssi);
 
 /**
   * @brief  Set Vendor IE of ESP8266.
@@ -884,7 +886,7 @@ bool wifi_set_vnd_ie(bool enable, vendor_ie_type type, uint8_t idx, uint8_t *vnd
   * @return  0 : succeed
   * @return -1 : fail
   */
-sint32 wifi_register_vnd_ie_recv_cb(vendor_ie_recv_cb_t cb);
+int32_t wifi_register_vnd_ie_recv_cb(vendor_ie_recv_cb_t cb);
 
 /**
   * @brief  Unregister vendor IE received callback.
@@ -920,15 +922,15 @@ typedef enum {
   * @brief  User IE received callback.
   *
   * @param  user_ie_type type :  type of user IE.
-  * @param  const uint8 sa[6] : source address of the packet.
-  * @param  const uint8 m_oui[3] : factory tag.
-  * @param  uint8 *user_ie : pointer of user IE.
-  * @param  uint8 ie_len : length of user IE.
-  * @param  sint32 rssi : signal strength.
+  * @param  const uint8_t sa[6] : source address of the packet.
+  * @param  const uint8_t m_oui[3] : factory tag.
+  * @param  uint8_t *user_ie : pointer of user IE.
+  * @param  uint8_t ie_len : length of user IE.
+  * @param  int32_t rssi : signal strength.
   *
   * @return null
   */
-typedef void (*user_ie_manufacturer_recv_cb_t)(user_ie_type type, const uint8 sa[6], const uint8 m_oui[3], uint8 *ie, uint8 ie_len, sint32 rssi);
+typedef void (*user_ie_manufacturer_recv_cb_t)(user_ie_type type, const uint8_t sa[6], const uint8_t m_oui[3], uint8_t *ie, uint8_t ie_len, int32_t rssi);
 
 /**
   * @brief  Set user IE of ESP8266.
@@ -939,19 +941,19 @@ typedef void (*user_ie_manufacturer_recv_cb_t)(user_ie_type type, const uint8 sa
   *    -  true, enable the corresponding user IE function, all parameters below have to be set.
   *    -  false, disable the corresponding user IE function and release the resource,
   *       only the parameter "type" below has to be set.
-  * @param  uint8 *m_oui : factory tag, apply for it from Espressif System.
+  * @param  uint8_t *m_oui : factory tag, apply for it from Espressif System.
   * @param  user_ie_type type : IE type. If it is USER_IE_BEACON, please disable the
   *                             IE function and enable again to take the configuration
   *                             effect immediately .
-  * @param  uint8 *user_ie : user-defined information elements, need not input the whole
+  * @param  uint8_t *user_ie : user-defined information elements, need not input the whole
   *                          802.11 IE, need only the user-define part.
-  * @param  uint8 len : length of user IE, 247 bytes at most.
+  * @param  uint8_t len : length of user IE, 247 bytes at most.
   *
   * @return true  : succeed
   * @return false : fail
   */
 
-bool wifi_set_user_ie(bool enable, uint8 *m_oui, user_ie_type type, uint8 *user_ie, uint8 len);
+bool wifi_set_user_ie(bool enable, uint8_t *m_oui, user_ie_type type, uint8_t *user_ie, uint8_t len);
 
 /**
   * @brief   Register user IE received callback.
@@ -961,7 +963,7 @@ bool wifi_set_user_ie(bool enable, uint8 *m_oui, user_ie_type type, uint8 *user_
   * @return  0 : succeed
   * @return -1 : fail
   */
-sint32 wifi_register_user_ie_manufacturer_recv_cb(user_ie_manufacturer_recv_cb_t cb);
+int32_t wifi_register_user_ie_manufacturer_recv_cb(user_ie_manufacturer_recv_cb_t cb);
 
 /**
   * @brief  Unregister user IE received callback.
@@ -989,12 +991,12 @@ void wifi_unregister_user_ie_manufacturer_recv_cb(void);
   *
   *        Each time a packet is received, the callback function will be called.
   *
-  * @param uint8 *buf : the data received
-  * @param uint16 len : data length
+  * @param uint8_t *buf : the data received
+  * @param uint16_t len : data length
   *
   * @return null
   */
-typedef void (* wifi_promiscuous_cb_t)(uint8 *buf, uint16 len);
+typedef void (* wifi_promiscuous_cb_t)(uint8_t *buf, uint16_t len);
 
 /**
   * @brief Register the RX callback function in the promiscuous mode.
@@ -1014,17 +1016,17 @@ void wifi_set_promiscuous_rx_cb(wifi_promiscuous_cb_t cb);
   *
   * @return channel number
   */
-uint8 wifi_get_channel(void);
+uint8_t wifi_get_channel(void);
 
 /**
   * @brief  Set the channel number for sniffer functions.
   *
-  * @param  uint8 channel :  channel number
+  * @param  uint8_t channel :  channel number
   *
   * @return true  : succeed
   * @return false : fail
   */
-bool wifi_set_channel(uint8 channel);
+bool wifi_set_channel(uint8_t channel);
 
 /**
   * @brief     Set the MAC address filter for the sniffer mode.
@@ -1049,13 +1051,13 @@ bool wifi_promiscuous_set_mac(const uint8_t *address);
   * @attention 4. Don't call any other APIs when in the promiscuous mode. Call
   *               wifi_promiscuous_enable(0) to quit sniffer before calling other APIs.
   *
-  * @param     uint8 promiscuous :
+  * @param     uint8_t promiscuous :
   *    - 0: to disable the promiscuous mode
   *    - 1: to enable the promiscuous mode
   *
   * @return    null
   */
-void wifi_promiscuous_enable(uint8 promiscuous);
+void wifi_promiscuous_enable(uint8_t promiscuous);
 
 /**
   * @}

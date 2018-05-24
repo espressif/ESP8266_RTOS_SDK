@@ -20,10 +20,10 @@
  * Parameters   : none
  * Returns      : rf cal sector
 *******************************************************************************/
-uint32 user_rf_cal_sector_set(void)
+uint32_t user_rf_cal_sector_set(void)
 {
     flash_size_map size_map = system_get_flash_size_map();
-    uint32 rf_cal_sec = 0;
+    uint32_t rf_cal_sec = 0;
 
     switch (size_map) {
         case FLASH_SIZE_4M_MAP_256_256:
@@ -56,6 +56,7 @@ uint32 user_rf_cal_sector_set(void)
 
     return rf_cal_sec;
 }
+
 /******************************************************************************
  * FunctionName : user_init
  * Description  : entry of user application, init user function here

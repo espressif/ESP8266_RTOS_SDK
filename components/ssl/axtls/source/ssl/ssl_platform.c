@@ -35,6 +35,9 @@
  * Only really tested on mini_httpd, so I'm not too sure how extensive this
  * port is.
  */
+
+#include <stdint.h>
+
 #include "ssl/ssl_platform.h"
 #include "lwip/err.h"
 
@@ -46,7 +49,7 @@
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void esp_EVP_DigestInit(MD5_CTX *ctx, uint8 *out)
+void esp_EVP_DigestInit(MD5_CTX *ctx, uint8_t *out)
 {
 	return ;
 }
@@ -72,7 +75,7 @@ void esp_EVP_DigestUpdate(MD5_CTX *ctx, const uint8_t *input, int ilen)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void esp_EVP_DigestFinal(MD5_CTX *ctx, uint8_t *output, uint16* olen)
+void esp_EVP_DigestFinal(MD5_CTX *ctx, uint8_t *output, uint16_t* olen)
 {
 	return ;
 }
@@ -122,7 +125,7 @@ static const unsigned char base64_enc_map[64] =
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-EXP_FUNC int STDCALL esp_base64_encode(uint8 *dst, size_t dlen, size_t *olen,
+EXP_FUNC int STDCALL esp_base64_encode(uint8_t *dst, size_t dlen, size_t *olen,
         const uint8_t *src, size_t slen)
 {
 	size_t i, n;
@@ -1033,7 +1036,7 @@ int esp_ERR_get_error(void)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void esp_ERR_error_string_n(uint32 error, char* out, uint32 olen)
+void esp_ERR_error_string_n(uint32_t error, char* out, uint32_t olen)
 {
 	return;
 }
@@ -1046,7 +1049,7 @@ void esp_ERR_error_string_n(uint32 error, char* out, uint32 olen)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-void esp_ERR_error_string(uint32 error, char* out)
+void esp_ERR_error_string(uint32_t error, char* out)
 {
 	return;
 }
@@ -1085,12 +1088,12 @@ void esp_CRYPTO_cleanup_all_ex_data(void)
  *                length -- length of data to send
  * Returns      : none
 *******************************************************************************/
-const char* esp_ERR_strerror(uint32 error)
+const char* esp_ERR_strerror(uint32_t error)
 {
 	return lwip_strerr(error);
 }
 
-void esp_ssl_sleep(uint16 mseconds)
+void esp_ssl_sleep(uint16_t mseconds)
 {
 	vTaskDelay(mseconds / portTICK_RATE_MS);
 }

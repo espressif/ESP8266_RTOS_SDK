@@ -70,10 +70,10 @@
 extern "C" {
 #endif
 
-#include "c_types.h"
-#include "esp_libc.h"
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "esp_attr.h"
-#include "esp8266/ets_sys.h"
 
 #include    <xtensa/xtruntime.h>
 #include    "xtensa_rtos.h"
@@ -100,13 +100,13 @@ extern "C" {
  */
 
 /* Type definitions. */
-#define portCHAR		char
-#define portFLOAT		float
-#define portDOUBLE		double
-#define portLONG		long
-#define portSHORT		short
-#define portSTACK_TYPE	unsigned portLONG
-#define portBASE_TYPE	long
+#define portCHAR        char
+#define portFLOAT       float
+#define portDOUBLE      double
+#define portLONG        long
+#define portSHORT       short
+#define portSTACK_TYPE  unsigned portLONG
+#define portBASE_TYPE   long
 
 #define BaseType_t      portBASE_TYPE
 #define TickType_t      unsigned portLONG
@@ -191,19 +191,19 @@ not necessary for to use this port.  They are defined so the common demo files
 
 void        _xt_user_exit           (void);
 void        _xt_tick_timer_init   (void);
-void        _xt_isr_unmask       (uint32 unmask);
-void        _xt_isr_mask       (uint32 mask);
-uint32		_xt_read_ints (void);
-void		_xt_clear_ints(uint32 mask);
+void        _xt_isr_unmask       (uint32_t unmask);
+void        _xt_isr_mask       (uint32_t mask);
+uint32_t    _xt_read_ints (void);
+void        _xt_clear_ints(uint32_t mask);
 
 /* interrupt related */
 typedef void (* _xt_isr)(void *arg);
 
-void        _xt_isr_attach          (uint8 i, _xt_isr func, void *arg);
+void        _xt_isr_attach          (uint8_t i, _xt_isr func, void *arg);
 
 typedef struct _xt_isr_entry_ {
-	_xt_isr	handler;
-    void *	arg;
+    _xt_isr handler;
+    void *  arg;
 } _xt_isr_entry;
 
 #ifdef __cplusplus

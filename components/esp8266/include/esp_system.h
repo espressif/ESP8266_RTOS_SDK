@@ -25,7 +25,8 @@
 #ifndef __ESP_SYSTEM_H__
 #define __ESP_SYSTEM_H__
 
-#include "c_types.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,24 +41,24 @@ extern "C" {
   */
 
 typedef enum {
-    REASON_DEFAULT_RST = 0,         /**< normal startup by power on */
-        REASON_WDT_RST,             /**< hardware watch dog reset */
-        REASON_EXCEPTION_RST,       /**< exception reset, GPIO status won't change */
-        REASON_SOFT_WDT_RST,        /**< software watch dog reset, GPIO status won't change */
-        REASON_SOFT_RESTART,        /**< software restart ,system_restart , GPIO status won't change */
-        REASON_DEEP_SLEEP_AWAKE,    /**< wake up from deep-sleep */
-        REASON_EXT_SYS_RST          /**< external system reset */
+    REASON_DEFAULT_RST = 0,     /**< normal startup by power on */
+    REASON_WDT_RST,             /**< hardware watch dog reset */
+    REASON_EXCEPTION_RST,       /**< exception reset, GPIO status won't change */
+    REASON_SOFT_WDT_RST,        /**< software watch dog reset, GPIO status won't change */
+    REASON_SOFT_RESTART,        /**< software restart ,system_restart , GPIO status won't change */
+    REASON_DEEP_SLEEP_AWAKE,    /**< wake up from deep-sleep */
+    REASON_EXT_SYS_RST          /**< external system reset */
 } rst_reason;
 
 struct rst_info {
     rst_reason reason;  /**< enum rst_reason */
-    uint32 exccause;
-    uint32 epc1;
-    uint32 epc2;
-    uint32 epc3;
-    uint32 excvaddr;
-    uint32 depc;
-    uint32 rtn_addr;
+    uint32_t exccause;
+    uint32_t epc1;
+    uint32_t epc2;
+    uint32_t epc3;
+    uint32_t excvaddr;
+    uint32_t depc;
+    uint32_t rtn_addr;
 };
 
 /**
@@ -112,11 +113,11 @@ void system_restart(void);
   *               up, connect a GPIO to pin RST, the chip will wake up by a falling-edge
   *               on pin RST
   *
-  * @param     uint32 time_in_us : deep-sleep time, unit: microsecond
+  * @param     uint32_t time_in_us : deep-sleep time, unit: microsecond
   *
   * @return    null
   */
-void system_deep_sleep(uint32 time_in_us);
+void system_deep_sleep(uint32_t time_in_us);
 
 /**
   * @brief  Call this API before system_deep_sleep to set the activity after the
@@ -138,7 +139,7 @@ void system_deep_sleep(uint32 time_in_us);
   * @return true  : succeed
   * @return false : fail
   */
-bool system_deep_sleep_set_option(uint8 option);
+bool system_deep_sleep_set_option(uint8_t option);
 
 /**
   * @brief  Get system time, unit: microsecond.
@@ -147,7 +148,7 @@ bool system_deep_sleep_set_option(uint8 option);
   *
   * @return System time, unit: microsecond.
   */
-uint32 system_get_time(void);
+uint32_t system_get_time(void);
 
 /**
   * @brief  Print the system memory distribution, including data/rodata/bss/heap.
@@ -165,7 +166,7 @@ void system_print_meminfo(void);
   *
   * @return Available heap size.
   */
-uint32 system_get_free_heap_size(void);
+uint32_t system_get_free_heap_size(void);
 
 /**
   * @brief  Get the chip ID.
@@ -174,7 +175,7 @@ uint32 system_get_free_heap_size(void);
   *
   * @return The chip ID.
   */
-uint32 system_get_chip_id(void);
+uint32_t system_get_chip_id(void);
 
 /**
   * @brief     Get the RTC clock cycle.
@@ -187,7 +188,7 @@ uint32 system_get_chip_id(void);
   *
   * @return    RTC clock period (unit: microsecond), bit11~ bit0 are decimal.
   */
-uint32 system_rtc_clock_cali_proc(void);
+uint32_t system_rtc_clock_cali_proc(void);
 
 /**
   * @brief     Get RTC time, unit: RTC clock cycle.
@@ -210,7 +211,7 @@ uint32 system_rtc_clock_cali_proc(void);
   *
   * @return    RTC time.
   */
-uint32 system_get_rtc_time(void);
+uint32_t system_get_rtc_time(void);
 
 /**
   * @brief     Read user data from the RTC memory.
@@ -231,7 +232,7 @@ uint32 system_get_rtc_time(void);
   * @return    true  : succeed
   * @return    false : fail
   */
-bool system_rtc_mem_read(uint8 src, void *dst, uint16 n);
+bool system_rtc_mem_read(uint8_t src, void *dst, uint16_t n);
 
 /**
   * @brief     Write user data to  the RTC memory.
@@ -254,7 +255,7 @@ bool system_rtc_mem_read(uint8 src, void *dst, uint16 n);
   * @return    true  : succeed
   * @return    false : fail
   */
-bool system_rtc_mem_write(uint8 dst, const void *src, uint16 n);
+bool system_rtc_mem_write(uint8_t dst, const void *src, uint16_t n);
 
 /**
   * @brief  UART0 swap.
@@ -295,7 +296,7 @@ void system_uart_de_swap(void);
   *
   * @return    Input voltage of TOUT pin 6, unit : 1/1024 V
   */
-uint16 system_adc_read(void);
+uint16_t system_adc_read(void);
 
 /**
   * @brief     Measure the power voltage of VDD3P3 pin 3 and 4, unit : 1/1024 V.
@@ -310,7 +311,7 @@ uint16 system_adc_read(void);
   *
   * @return    Power voltage of VDD33, unit : 1/1024 V
   */
-uint16 system_get_vdd33(void);
+uint16_t system_get_vdd33(void);
 
 /**
   * @brief  Write data into flash with protection.
@@ -333,7 +334,7 @@ uint16 system_get_vdd33(void);
   * @return true  : succeed
   * @return false : fail
   */
-bool system_param_save_with_protect(uint16 start_sec, void *param, uint16 len);
+bool system_param_save_with_protect(uint16_t start_sec, void *param, uint16_t len);
 
 /**
   * @brief  Read the data saved into flash with the read/write protection.
@@ -358,7 +359,7 @@ bool system_param_save_with_protect(uint16 start_sec, void *param, uint16 len);
   * @return true  : succeed
   * @return false : fail
   */
-bool system_param_load(uint16 start_sec, uint16 offset, void *param, uint16 len);
+bool system_param_load(uint16_t start_sec, uint16_t offset, void *param, uint16_t len);
 
 /**
   * @brief  Set the maximum value of RF TX Power, unit : 0.25dBm.
@@ -369,7 +370,7 @@ bool system_param_load(uint16 start_sec, uint16 offset, void *param, uint16 len)
   *
   * @return null
   */
-void system_phy_set_max_tpw(uint8 max_tpw);
+void system_phy_set_max_tpw(uint8_t max_tpw);
 
 /**
   * @brief     Adjust the RF TX Power according to VDD33, unit : 1/1024 V.
@@ -382,7 +383,7 @@ void system_phy_set_max_tpw(uint8 max_tpw);
   *
   * @return    null
   */
-void system_phy_set_tpw_via_vdd33(uint16 vdd33);
+void system_phy_set_tpw_via_vdd33(uint16_t vdd33);
 
 /**
   * @brief     Enable RF or not when wakeup from deep-sleep.
@@ -406,7 +407,7 @@ void system_phy_set_tpw_via_vdd33(uint16 vdd33);
   *
   * @return    null
   */
-void system_phy_set_rfoption(uint8 option);
+void system_phy_set_rfoption(uint8_t option);
 
 /** @addtogroup Upgrade_APIs
   * @{
@@ -420,7 +421,7 @@ void system_phy_set_rfoption(uint8 option);
   * @return 0x00 : UPGRADE_FW_BIN1, i.e. user1.bin
   * @return 0x01 : UPGRADE_FW_BIN2, i.e. user2.bin
   */
-uint8 system_upgrade_userbin_check(void);
+uint8_t system_upgrade_userbin_check(void);
 
 /**
   * @brief  Reboot system to use the new software.
@@ -440,7 +441,7 @@ void system_upgrade_reboot(void);
   * @return #define UPGRADE_FLAG_START     0x01
   * @return #define UPGRADE_FLAG_FINISH    0x02
   */
-uint8 system_upgrade_flag_check();
+uint8_t system_upgrade_flag_check();
 
 /**
   * @brief     Set the upgrade status flag.
@@ -456,7 +457,7 @@ uint8 system_upgrade_flag_check();
   *
   * @return    null
   */
-void system_upgrade_flag_set(uint8 flag);
+void system_upgrade_flag_set(uint8_t flag);
 
 /**
   * @}
@@ -486,7 +487,7 @@ void system_upgrade_flag_set(uint8 flag);
   *
   * @return    Information of the boot version.
   */
-uint8 system_get_boot_version(void);
+uint8_t system_get_boot_version(void);
 
 /**
   * @brief  Get the address of the current running user bin (user1.bin or user2.bin).
@@ -495,7 +496,7 @@ uint8 system_get_boot_version(void);
   *
   * @return The address of the current running user bin.
   */
-uint32 system_get_userbin_addr(void);
+uint32_t system_get_userbin_addr(void);
 
 /**
   * @brief  Get the boot mode.
@@ -505,7 +506,7 @@ uint32 system_get_userbin_addr(void);
   * @return #define SYS_BOOT_ENHANCE_MODE   0
   * @return #define SYS_BOOT_NORMAL_MODE    1
   */
-uint8 system_get_boot_mode(void);
+uint8_t system_get_boot_mode(void);
 
 /**
   * @brief     Restarts the system, and enters the enhanced boot mode.
@@ -516,12 +517,12 @@ uint8 system_get_boot_mode(void);
   * @param     uint8 bin_type : type of bin
   *    - #define SYS_BOOT_NORMAL_BIN      0   // user1.bin or user2.bin
   *    - #define SYS_BOOT_TEST_BIN        1   // can only be Espressif test bin
-  * @param     uint32 bin_addr : starting address of the bin file
+  * @param     uint32_t bin_addr : starting address of the bin file
   *
   * @return    true  : succeed
   * @return    false : fail
   */
-bool system_restart_enhance(uint8 bin_type, uint32 bin_addr);
+bool system_restart_enhance(uint8_t bin_type, uint32_t bin_addr);
 
 typedef enum {
     FLASH_SIZE_4M_MAP_256_256 = 0,  /**<  Flash size : 4Mbits. Map : 256KBytes + 256KBytes */
@@ -565,7 +566,7 @@ flash_size_map system_get_flash_size_map(void);
   * @return true  : succeed
   * @return false : fail
   */
-bool system_update_cpu_freq(uint8 freq);
+bool system_update_cpu_freq(uint8_t freq);
 
 /**
   * @brief  Get CPU frequency.
@@ -574,7 +575,7 @@ bool system_update_cpu_freq(uint8 freq);
   *
   * @return CPU frequency, unit : MHz.
   */
-uint8 system_get_cpu_freq(void);
+uint8_t system_get_cpu_freq(void);
 
 /**
   * @}

@@ -446,10 +446,10 @@ bool wifi_softap_dhcps_stop()
 
 }
 
-bool wifi_station_dhcpc_start()
+bool wifi_station_dhcpc_start(void)
 {
     uint8_t opmode = NULL_MODE;
-    s8 ret;
+    err_t ret;
     taskENTER_CRITICAL();
     opmode = wifi_get_opmode();
 
@@ -553,7 +553,7 @@ bool wifi_station_set_hostname(char* name)
         return false;
     }
 
-    uint32 len = strlen(name);
+    uint32_t len = strlen(name);
 
     if (len > 32) {
         return false;

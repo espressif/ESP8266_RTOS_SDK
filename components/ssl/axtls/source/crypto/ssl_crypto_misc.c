@@ -355,7 +355,7 @@ EXP_FUNC int STDCALL base64_decode(const char *in, int len,
     int g, t, x, y, z;
     uint8_t c;
     int ret = -1;
-    uint8* base64_map = (uint8*)SSL_ZALLOC(128);
+    uint8_t* base64_map = (uint8_t*)SSL_ZALLOC(128);
     memcpy(base64_map, map, 128);
 
     g = 3;

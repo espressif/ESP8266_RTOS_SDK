@@ -41,7 +41,7 @@
 extern "C" {
 #endif
 
-#include "esp_common.h"
+#include <stdint.h>
 
 #if 0
 #define ssl_printf(fmt, args...) printf(fmt,## args)
@@ -57,30 +57,30 @@ extern "C" {
 //  long    tv_usec;        /* and microseconds */
 //};
 
-#define tls_htons(x) ((uint16)((((x) & 0xff) << 8) | (((x) >> 8) & 0xff)))
+#define tls_htons(x) ((uint16_t)((((x) & 0xff) << 8) | (((x) >> 8) & 0xff)))
 #define tls_ntohs(x) tls_htons(x)
-#define tls_htonl(_n) ((uint32)( (((_n) & 0xff) << 24) | (((_n) & 0xff00) << 8) | (((_n) >> 8)  & 0xff00) | (((_n) >> 24) & 0xff) ))
+#define tls_htonl(_n) ((uint32_t)( (((_n) & 0xff) << 24) | (((_n) & 0xff00) << 8) | (((_n) >> 8)  & 0xff00) | (((_n) >> 24) & 0xff) ))
 #define tls_ntohl(x) tls_htonl(x)
 
 #ifndef be16toh
-#define be16toh(x) ((uint16)tls_ntohs((uint16)(x)))
+#define be16toh(x) ((uint16_t)tls_ntohs((uint16_t)(x)))
 #endif
 
 #ifndef htobe16
-#define htobe16(x) ((uint16)tls_htons((uint16)(x)))
+#define htobe16(x) ((uint16_t)tls_htons((uint16_t)(x)))
 #endif
 
 #ifndef be32toh
-#define be32toh(x) ((uint32)tls_ntohl((uint32)(x)))
+#define be32toh(x) ((uint32_t)tls_ntohl((uint32_t)(x)))
 #endif
 
 #ifndef htobe32
-#define htobe32(x) ((uint32)tls_htonl((uint32)(x)))
+#define htobe32(x) ((uint32_t)tls_htonl((uint32_t)(x)))
 #endif
 
 #ifndef be64toh
-static __inline__ uint64 be64toh(uint64 __x);
-static __inline__ uint64 be64toh(uint64 __x) {return (((uint64)be32toh(__x & (uint64)0xFFFFFFFFULL)) << 32) | ((uint64)be32toh((__x & (uint64)0xFFFFFFFF00000000ULL) >> 32));}
+static __inline__ uint64_t be64toh(uint64_t __x);
+static __inline__ uint64_t be64toh(uint64_t __x) {return (((uint64_t)be32toh(__x & (uint64_t)0xFFFFFFFFULL)) << 32) | ((uint64_t)be32toh((__x & (uint64_t)0xFFFFFFFF00000000ULL) >> 32));}
 #define be64toh(x) be64toh(x)
 #endif
 

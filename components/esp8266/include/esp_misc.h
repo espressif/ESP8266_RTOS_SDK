@@ -25,6 +25,8 @@
 #ifndef __ESP_MISC_H__
 #define __ESP_MISC_H__
 
+#include <stdint.h>
+
 #include "lwip/ip_addr.h"
 
 #ifdef __cplusplus
@@ -52,11 +54,11 @@ extern "C" {
 /**
   * @brief  Delay function, maximum value: 65535 us.
   *
-  * @param  uint16 us : delay time, uint: us, maximum value: 65535 us
+  * @param  uint16_t us : delay time, uint: us, maximum value: 65535 us
   *
   * @return null
   */
-void os_delay_us(uint16 us);
+void os_delay_us(uint16_t us);
 
 /**
   * @brief     Register the print output function.

@@ -1022,7 +1022,7 @@ bool wifi_softap_set_dhcps_lease(struct dhcps_lease* please)
     u32_t start_ip = 0;
     u32_t end_ip = 0;
 
-    uint8 opmode = wifi_get_opmode();
+    u8_t opmode = wifi_get_opmode();
 
     if (opmode == STATION_MODE || opmode == NULL_MODE) {
         return false;
@@ -1174,7 +1174,7 @@ bool wifi_softap_set_dhcps_offer_option(u8_t level, void* optarg)
 
     switch (level) {
         case OFFER_ROUTER:
-            offer = (*(uint8*)optarg) & 0x01;
+            offer = (*(u8_t*)optarg) & 0x01;
             offer_flag = true;
             break;
 

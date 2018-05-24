@@ -35,11 +35,11 @@ extern "C" {
 
 #define BIT(nr)     (1UL << (nr))
 
-#define REG_WRITE(_r, _v)       (*(volatile uint32 *)(_r)) = (_v)
-#define REG_READ(_r)            (*(volatile uint32 *)(_r))
+#define REG_WRITE(_r, _v)       (*(volatile uint32_t *)(_r)) = (_v)
+#define REG_READ(_r)            (*(volatile uint32_t *)(_r))
 
-#define REG_SET_BIT(_r, _b)     (*(volatile uint32 *)(_r) |= (_b))
-#define REG_CLR_BIT(_r, _b)     (*(volatile uint32 *)(_r) &= ~(_b))
+#define REG_SET_BIT(_r, _b)     (*(volatile uint32_t *)(_r) |= (_b))
+#define REG_CLR_BIT(_r, _b)     (*(volatile uint32_t *)(_r) &= ~(_b))
 
 #ifdef __cplusplus
 }

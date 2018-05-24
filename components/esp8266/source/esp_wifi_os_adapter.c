@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "esp_wifi_os_adapter.h"
+#include "esp_libc.h"
 #include "esp_system.h"
-
-#include "c_types.h"
+#include "esp_wifi_os_adapter.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

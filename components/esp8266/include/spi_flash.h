@@ -25,6 +25,8 @@
 #ifndef __SPI_FLASH_H__
 #define __SPI_FLASH_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -52,12 +54,12 @@ typedef enum {
 } SpiFlashOpResult;
 
 typedef struct{
-    uint32  deviceId;
-    uint32  chip_size;    // chip size in byte
-    uint32  block_size;
-    uint32  sector_size;
-    uint32  page_size;
-    uint32  status_mask;
+    uint32_t  deviceId;
+    uint32_t  chip_size;    // chip size in byte
+    uint32_t  block_size;
+    uint32_t  sector_size;
+    uint32_t  page_size;
+    uint32_t  status_mask;
 } SpiFlashChip;
 
 #define SPI_FLASH_SEC_SIZE  4096    /**< SPI Flash sector size */
@@ -69,56 +71,56 @@ typedef struct{
   *
   * @return SPI Flash ID
   */
-uint32 spi_flash_get_id(void);
+uint32_t spi_flash_get_id(void);
 
 /**
   * @brief  Read state register of SPI Flash.
   *
-  * @param  uint32 *status : the read value (pointer) of state register.
+  * @param  uint32_t *status : the read value (pointer) of state register.
   *
   * @return SpiFlashOpResult
   */
-SpiFlashOpResult spi_flash_read_status(uint32 *status);
+SpiFlashOpResult spi_flash_read_status(uint32_t *status);
 
 /**
   * @brief  Write state register of SPI Flash.
   *
-  * @param  uint32 status_value : Write state register value.
+  * @param  uint32_t status_value : Write state register value.
   *
   * @return SpiFlashOpResult
   */
-SpiFlashOpResult spi_flash_write_status(uint32 status_value);
+SpiFlashOpResult spi_flash_write_status(uint32_t status_value);
 
 /**
   * @brief  Erase the Flash sector.
   *
-  * @param  uint16 sec : Sector number, the count starts at sector 0, 4KB per sector.
+  * @param  uint16_t sec : Sector number, the count starts at sector 0, 4KB per sector.
   *
   * @return SpiFlashOpResult
   */
-SpiFlashOpResult spi_flash_erase_sector(uint16 sec);
+SpiFlashOpResult spi_flash_erase_sector(uint16_t sec);
 
 /**
   * @brief  Write data to Flash.
   *
-  * @param  uint32 des_addr  : destination address in Flash.
-  * @param  uint32 *src_addr : source address of the data.
-  * @param  uint32 size      : length of data
+  * @param  uint32_t des_addr  : destination address in Flash.
+  * @param  uint32_t *src_addr : source address of the data.
+  * @param  uint32_t size      : length of data
   *
   * @return SpiFlashOpResult
   */
-SpiFlashOpResult spi_flash_write(uint32 des_addr, uint32 *src_addr, uint32 size);
+SpiFlashOpResult spi_flash_write(uint32_t des_addr, uint32_t *src_addr, uint32_t size);
 
 /**
   * @brief  Read data from Flash.
   *
-  * @param  uint32 src_addr  : source address of the data.
-  * @param  uint32 *des_addr : destination address in Flash.
-  * @param  uint32 size      : length of data
+  * @param  uint32_t src_addr  : source address of the data.
+  * @param  uint32_t *des_addr : destination address in Flash.
+  * @param  uint32_t size      : length of data
   *
   * @return SpiFlashOpResult
   */
-SpiFlashOpResult spi_flash_read(uint32 src_addr, uint32 *des_addr, uint32 size);
+SpiFlashOpResult spi_flash_read(uint32_t src_addr, uint32_t *des_addr, uint32_t size);
 
 /**
   * @brief  Registered function for spi_flash_set_read_func.
@@ -126,17 +128,17 @@ SpiFlashOpResult spi_flash_read(uint32 src_addr, uint32 *des_addr, uint32 size);
   * @attention  used for sdk internal, don't need to care about params
   *
   * @param  SpiFlashChip *spi : spi flash struct pointer.
-  * @param  uint32 src_addr  : source address of the data.
-  * @param  uint32 *des_addr : destination address in Flash.
-  * @param  uint32 size      : length of data
+  * @param  uint32_t src_addr  : source address of the data.
+  * @param  uint32_t *des_addr : destination address in Flash.
+  * @param  uint32_t size      : length of data
   *
   * @return SpiFlashOpResult
   */
 typedef SpiFlashOpResult (* user_spi_flash_read)(
         SpiFlashChip *spi,
-        uint32 src_addr,
-        uint32 *des_addr,
-        uint32 size);
+        uint32_t src_addr,
+        uint32_t *des_addr,
+        uint32_t size);
 
 /**
   * @brief  Register user-define SPI flash read API.

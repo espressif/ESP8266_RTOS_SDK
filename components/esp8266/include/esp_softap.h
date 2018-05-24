@@ -25,6 +25,9 @@
 #ifndef __ESP_SOFTAP_H__
 #define __ESP_SOFTAP_H__
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "queue.h"
 
 #ifdef __cplusplus
@@ -49,20 +52,20 @@ extern "C" {
   */
 
 struct softap_config {
-    uint8 ssid[32];         /**< SSID of ESP8266 soft-AP */
-    uint8 password[64];     /**< Password of ESP8266 soft-AP */
-    uint8 ssid_len;         /**< Length of SSID. If softap_config.ssid_len==0, check the SSID until there is a termination character; otherwise, set the SSID length according to softap_config.ssid_len. */
-    uint8 channel;          /**< Channel of ESP8266 soft-AP */
+    uint8_t ssid[32];         /**< SSID of ESP8266 soft-AP */
+    uint8_t password[64];     /**< Password of ESP8266 soft-AP */
+    uint8_t ssid_len;         /**< Length of SSID. If softap_config.ssid_len==0, check the SSID until there is a termination character; otherwise, set the SSID length according to softap_config.ssid_len. */
+    uint8_t channel;          /**< Channel of ESP8266 soft-AP */
     AUTH_MODE authmode;     /**< Auth mode of ESP8266 soft-AP. Do not support AUTH_WEP in soft-AP mode */
-    uint8 ssid_hidden;      /**< Broadcast SSID or not, default 0, broadcast the SSID */
-    uint8 max_connection;   /**< Max number of stations allowed to connect in, default 4, max 4 */
-    uint16 beacon_interval; /**< Beacon interval, 100 ~ 60000 ms, default 100 */
+    uint8_t ssid_hidden;      /**< Broadcast SSID or not, default 0, broadcast the SSID */
+    uint8_t max_connection;   /**< Max number of stations allowed to connect in, default 4, max 4 */
+    uint16_t beacon_interval; /**< Beacon interval, 100 ~ 60000 ms, default 100 */
 };
 
 struct station_info {
     STAILQ_ENTRY(station_info)     next;    /**< Information of next AP */
 
-    uint8 bssid[6];                         /**< BSSID of AP */
+    uint8_t bssid[6];                         /**< BSSID of AP */
     struct ip4_addr ip;                      /**< IP address of AP */
 };
 
@@ -127,7 +130,7 @@ bool wifi_softap_set_config_current(struct softap_config *config);
   *
   * @return    the number of stations connected to the ESP8266 soft-AP
   */
-uint8 wifi_softap_get_station_num(void);
+uint8_t wifi_softap_get_station_num(void);
 
 /**
   * @brief     Get the information of stations connected to the ESP8266 soft-AP,
@@ -230,7 +233,7 @@ bool wifi_softap_set_dhcps_lease(struct dhcps_lease *please);
   *
   * @return    lease time, uint: minute.
   */
-uint32 wifi_softap_get_dhcps_lease_time(void);
+uint32_t wifi_softap_get_dhcps_lease_time(void);
 
 /**
   * @brief     Set ESP8266 soft-AP DHCP server lease time, default is 120 minutes.
@@ -242,7 +245,7 @@ uint32 wifi_softap_get_dhcps_lease_time(void);
   * @return    true  : succeed
   * @return    false : fail
   */
-bool wifi_softap_set_dhcps_lease_time(uint32 minute);
+bool wifi_softap_set_dhcps_lease_time(uint32_t minute);
 
 /**
   * @brief     Reset ESP8266 soft-AP DHCP server lease time which is 120 minutes by default.
@@ -273,7 +276,7 @@ bool wifi_softap_reset_dhcps_lease_time(void);
   * @return true  : succeed
   * @return false : fail
   */
-bool wifi_softap_set_dhcps_offer_option(uint8 level, void *optarg);
+bool wifi_softap_set_dhcps_offer_option(uint8_t level, void *optarg);
 
 /**
   * @}

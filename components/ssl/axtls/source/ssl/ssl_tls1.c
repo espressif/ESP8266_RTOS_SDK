@@ -531,7 +531,7 @@ EXP_FUNC int STDCALL ssl_renegotiate(SSL *ssl)
     else
 #endif
     {
-        uint8 g_hello_request_ram[4];
+        uint8_t g_hello_request_ram[4];
         memcpy(g_hello_request_ram, g_hello_request, sizeof(g_hello_request));
 
         send_packet(ssl, PT_HANDSHAKE_PROTOCOL, 
@@ -1497,7 +1497,7 @@ error:
  */
 int send_change_cipher_spec(SSL *ssl)
 {
-    uint8 g_chg_cipher_spec_pkt_ram[4];
+    uint8_t g_chg_cipher_spec_pkt_ram[4];
     memcpy(g_chg_cipher_spec_pkt_ram, g_chg_cipher_spec_pkt, 4);
 
     int ret = send_packet(ssl, PT_CHANGE_CIPHER_SPEC, 

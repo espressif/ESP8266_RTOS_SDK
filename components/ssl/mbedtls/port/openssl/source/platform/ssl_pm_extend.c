@@ -36,6 +36,8 @@
  * Only really tested on mini_httpd, so I'm not too sure how extensive this
  * port is.
  */
+#include <stdint.h>
+
 #include "ssl_pm.h"
 #include "lwip/err.h"
 #include "openssl/ssl.h"
@@ -48,7 +50,7 @@ Sets up digest context ctx to use a digest type from ENGINE impl.
 Type will typically be supplied by a function such as EVP_sha1().
 If impl is NULL then the default implementation of digest type is used.
 */
-void EVP_DigestInit(MD5_CTX* ctx, uint8* out)
+void EVP_DigestInit(MD5_CTX* ctx, uint8_t* out)
 {
     return;
 }
@@ -69,7 +71,7 @@ will be written to the integer at s, at most EVP_MAX_MD_SIZE bytes will be writt
 After calling EVP_DigestFinal() no additional calls to EVP_DigestUpdate() can be made,
 but EVP_DigestInit() can be called to initialize a new digest operation.
 */
-void EVP_DigestFinal(MD5_CTX* ctx, uint8_t* output, uint16* olen)
+void EVP_DigestFinal(MD5_CTX* ctx, uint8_t* output, uint16_t* olen)
 {
     return;
 }
@@ -111,7 +113,7 @@ static const unsigned char base64_enc_map[64] = {
  * 			   slen -- source buffer len
  * Returns 	 : none
 *******************************************************************************/
-int base64_encode(uint8* dst, size_t dlen, size_t* olen,
+int base64_encode(uint8_t* dst, size_t dlen, size_t* olen,
                   const uint8_t* src, size_t slen)
 {
     size_t i, n;
@@ -331,7 +333,7 @@ Generates a human-readable string representing the error code e,
 and places it at buf. buf must be at least 120 bytes long.
 Buf may not be NULL.
 */
-void ERR_error_string_n(uint32 error, char* out, uint32 olen)
+void ERR_error_string_n(uint32_t error, char* out, uint32_t olen)
 {
     return;
 }
@@ -357,7 +359,7 @@ void ERR_free_strings(void)
 /*
 Convert an internal error to a string representation.
 */
-const char* ERR_strerror(uint32 error)
+const char* ERR_strerror(uint32_t error)
 {
     return lwip_strerr(error);
 }
