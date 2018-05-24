@@ -63,10 +63,6 @@ typedef double   real64;
 
 #define __le16      u16
 
-#ifndef NULL
-#define NULL        (void *)0
-#endif /* NULL */
-
 /* probably should not put STATUS here */
 typedef enum {
     OK = 0,
