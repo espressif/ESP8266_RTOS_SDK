@@ -38,10 +38,6 @@
 #include "ssl/ssl_platform.h"
 #include "lwip/err.h"
 
-#ifdef MEMLEAK_DEBUG
-static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
-#endif
-
 /******************************************************************************
  * FunctionName : esp_EVP_DigestInit
  * Description  : sent data for client or server

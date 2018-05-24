@@ -40,10 +40,6 @@
 
 #include "lwip/sockets.h"
 
-#ifdef MEMLEAK_DEBUG
-static const char mem_debug_file[] ICACHE_RODATA_ATTR STORE_ATTR = __FILE__;
-#endif
-
 #ifdef CONFIG_SSL_CERT_VERIFICATION
 /**
  * Retrieve the signature from a certificate.

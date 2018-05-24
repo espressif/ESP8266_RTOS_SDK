@@ -89,11 +89,11 @@ static __inline__ uint64 be64toh(uint64 __x) {return (((uint64)be32toh(__x & (ui
 #endif
 
 #ifdef MEMLEAK_DEBUG
-#define SSL_MALLOC(size) 		  ax_malloc(size, mem_debug_file, __LINE__)
-#define SSL_REALLOC(mem_ref,size) ax_realloc(mem_ref, size, mem_debug_file, __LINE__)
-#define SSL_CALLOC(element, size) ax_calloc(element, size, mem_debug_file, __LINE__)
-#define SSL_ZALLOC(size) 		  ax_zalloc(size, mem_debug_file, __LINE__)
-#define SSL_FREE(mem_ref)         ax_free(mem_ref, mem_debug_file, __LINE__)
+#define SSL_MALLOC(size) 		  ax_malloc(size, __FILE__, __LINE__)
+#define SSL_REALLOC(mem_ref,size) ax_realloc(mem_ref, size, __FILE__, __LINE__)
+#define SSL_CALLOC(element, size) ax_calloc(element, size, __FILE__, __LINE__)
+#define SSL_ZALLOC(size) 		  ax_zalloc(size, __FILE__, __LINE__)
+#define SSL_FREE(mem_ref)         ax_free(mem_ref, __FILE__, __LINE__)
 #else
 #define SSL_MALLOC(size) 		  malloc(size)
 #define SSL_REALLOC(mem_ref,size) realloc(mem_ref, size)

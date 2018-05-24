@@ -442,7 +442,7 @@ LOCAL int lwip_exit_mt_ioctrl(int s, int arg)
 	return 0;
 }
 
-LOCAL const ICACHE_RODATA_ATTR STORE_ATTR lwip_io_mt_fn lwip_enter_mt_table[] = {
+LOCAL const lwip_io_mt_fn lwip_enter_mt_table[] = {
     lwip_enter_mt_state,
     lwip_enter_mt_recv,
     lwip_enter_mt_ioctrl,
@@ -451,7 +451,7 @@ LOCAL const ICACHE_RODATA_ATTR STORE_ATTR lwip_io_mt_fn lwip_enter_mt_table[] = 
     lwip_enter_mt_close
 };
 
-LOCAL const ICACHE_RODATA_ATTR STORE_ATTR lwip_io_mt_fn lwip_exit_mt_table[] = {
+LOCAL const lwip_io_mt_fn lwip_exit_mt_table[] = {
     lwip_exit_mt_state,
     lwip_exit_mt_recv,
     lwip_exit_mt_ioctrl,

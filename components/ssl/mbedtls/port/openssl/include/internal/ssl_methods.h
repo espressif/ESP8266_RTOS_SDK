@@ -32,7 +32,7 @@
                     set_bufflen, \
                     get_verify_result, \
                     get_state) \
-        static const SSL_METHOD_FUNC func_name LOCAL_ATRR = { \
+        static const SSL_METHOD_FUNC func_name = { \
                 new, \
                 free, \
                 handshake, \
@@ -50,7 +50,7 @@
 
 #define IMPLEMENT_TLS_METHOD(ver, mode, fun, func_name) \
     const SSL_METHOD* func_name(void) { \
-        static const SSL_METHOD func_name##_data LOCAL_ATRR = { \
+        static const SSL_METHOD func_name##_data = { \
                 ver, \
                 mode, \
                 &(fun), \
@@ -60,7 +60,7 @@
 
 #define IMPLEMENT_SSL_METHOD(ver, mode, fun, func_name) \
     const SSL_METHOD* func_name(void) { \
-        static const SSL_METHOD func_name##_data LOCAL_ATRR = { \
+        static const SSL_METHOD func_name##_data = { \
                 ver, \
                 mode, \
                 &(fun), \
@@ -74,7 +74,7 @@
                 load, \
                 show_info) \
     const X509_METHOD* func_name(void) { \
-        static const X509_METHOD func_name##_data LOCAL_ATRR = { \
+        static const X509_METHOD func_name##_data = { \
                 new, \
                 free, \
                 load, \
@@ -88,7 +88,7 @@
                 free, \
                 load) \
     const PKEY_METHOD* func_name(void) { \
-        static const PKEY_METHOD func_name##_data LOCAL_ATRR = { \
+        static const PKEY_METHOD func_name##_data = { \
                 new, \
                 free, \
                 load \
