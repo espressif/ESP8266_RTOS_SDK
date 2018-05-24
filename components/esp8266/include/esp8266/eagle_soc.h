@@ -62,6 +62,14 @@
 #define BIT0    0x00000001
 //}}
 
+#define BIT(nr)     (1UL << (nr))
+
+#define REG_WRITE(_r, _v)       (*(volatile uint32_t *)(_r)) = (_v)
+#define REG_READ(_r)            (*(volatile uint32_t *)(_r))
+
+#define REG_SET_BIT(_r, _b)     (*(volatile uint32_t *)(_r) |= (_b))
+#define REG_CLR_BIT(_r, _b)     (*(volatile uint32_t *)(_r) &= ~(_b))
+
 //Registers Operation {{
 #define ETS_UNCACHED_ADDR(addr) (addr)
 #define ETS_CACHED_ADDR(addr)   (addr)

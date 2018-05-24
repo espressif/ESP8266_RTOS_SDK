@@ -8,7 +8,6 @@
 */
 
 #include <stddef.h>
-#include "c_types.h"
 #include "lwipopts.h"
 #include "lwip/ip_addr.h"
 #include "esp_libc.h"
