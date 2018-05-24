@@ -36,6 +36,18 @@ extern "C" {
 uint32_t os_random(void);
 int32_t os_get_random(unsigned char *buf, size_t len);
 
+/**
+  * @brief  Printf the strings to uart or other devices, similar with printf, simple than printf.
+  *         Can not print float point data format, or longlong data format.
+  *
+  * @param  const char *fmt : See printf.
+  *
+  * @param  ... : See printf.
+  *
+  * @return int : the length printed to the output device.
+  */
+int ets_printf(const char *fmt, ...);
+
 #ifndef os_printf
 #define os_printf   printf
 #endif
