@@ -73,11 +73,7 @@ unsigned long os_random(void);
 int os_get_random(unsigned char *buf, size_t len);
 
 #ifndef os_printf
-/* NOTE: don't use printf_opt in irq handler, for test */
-#define os_printf(fmt, ...) do {    \
-        static const char flash_str[] ICACHE_RODATA_ATTR STORE_ATTR = fmt;  \
-        printf(flash_str, ##__VA_ARGS__);   \
-    } while(0)
+#define os_printf   printf
 #endif
 
 /* Note: check_memleak_debug_enable is a weak function inside SDK.
