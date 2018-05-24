@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string.h>
+
 #include "lwip/pbuf.h"
 #include "lwip/ethip6.h"
 #include "netif/etharp.h"

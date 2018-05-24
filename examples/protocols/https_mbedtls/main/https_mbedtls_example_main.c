@@ -7,6 +7,9 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include <string.h>
+#include <strings.h>
+
 #include "sdkconfig.h"
 
 #include "esp_misc.h"
@@ -19,7 +22,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
-#include <lwip/apps/sntp.h>
+#include "lwip/apps/sntp.h"
 
 #include "mbedtls/platform.h"
 #include "mbedtls/net_sockets.h"

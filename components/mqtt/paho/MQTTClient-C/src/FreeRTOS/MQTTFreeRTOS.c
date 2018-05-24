@@ -15,7 +15,10 @@
  *    Ian Craggs - convert to FreeRTOS
  *******************************************************************************/
 
-#include "lwip/netdb.h"
+#include <string.h>
+
+#include <netdb.h>
+
 #include "MQTTFreeRTOS.h"
 
 int ThreadStart(Thread* thread, void (*fn)(void*), void* arg)

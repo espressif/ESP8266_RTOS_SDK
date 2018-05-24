@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string.h>
+#include <strings.h>
+
 #include "esp_common.h"
 #include "sdkconfig.h"
 #include "lwip/inet.h"

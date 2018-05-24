@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
 #include "lwip/dhcp.h"
