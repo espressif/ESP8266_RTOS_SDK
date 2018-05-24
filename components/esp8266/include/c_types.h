@@ -63,8 +63,6 @@ typedef double   real64;
 
 #define __le16      u16
 
-#define LOCAL       static
-
 #ifndef NULL
 #define NULL        (void *)0
 #endif /* NULL */
