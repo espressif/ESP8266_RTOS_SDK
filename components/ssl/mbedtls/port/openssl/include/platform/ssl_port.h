@@ -63,14 +63,7 @@ extern void vPortFree(void *pv);
 #define ssl_speed_up_enter() system_update_cpu_freq(SYS_CPU_160MHZ)
 #define ssl_speed_up_exit()  system_update_cpu_freq(SYS_CPU_80MHZ)
 
-#ifndef os_printf
-#define os_printf(fmt, ...) do {    \
-        static const char flash_str[] ICACHE_RODATA_ATTR STORE_ATTR = fmt;  \
-        printf(flash_str, ##__VA_ARGS__);   \
-    } while(0)
-#endif
-
-#define SSL_DEBUG_LOG os_printf
+#define SSL_DEBUG_LOG printf
 
 #define LOCAL_ATRR ICACHE_RODATA_ATTR STORE_ATTR
 

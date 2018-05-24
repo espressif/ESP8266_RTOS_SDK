@@ -64,16 +64,9 @@ typedef int sys_prot_t;
 
 #include <stdio.h>
 
-#ifndef os_printf
-#define os_printf(fmt, ...) do {    \
-    static const char flash_str[] ICACHE_RODATA_ATTR STORE_ATTR = fmt;  \
-    printf(flash_str, ##__VA_ARGS__);   \
-    } while(0)
-#endif
-
 #ifdef LWIP_DEBUG
-#define LWIP_PLATFORM_DIAG(x)   do {os_printf x;} while(0)
-#define LWIP_PLATFORM_ASSERT(x) do {os_printf(x); sys_arch_assert(__FILE__, __LINE__);} while(0)
+#define LWIP_PLATFORM_DIAG(x)   do {printf x;} while(0)
+#define LWIP_PLATFORM_ASSERT(x) do {printf(x); sys_arch_assert(__FILE__, __LINE__);} while(0)
 #else
 #define LWIP_PLATFORM_DIAG(x)
 #define LWIP_PLATFORM_ASSERT(x)

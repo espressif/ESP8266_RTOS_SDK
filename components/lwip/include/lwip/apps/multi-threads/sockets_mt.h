@@ -36,23 +36,23 @@ int lwip_trace_tcp(int s, int cmd, void *arg);
 
 #ifdef SOCKETS_MT_DBUG
 
-#define accept(a,b,c)         lwip_accept_mt(a,b,c); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define bind(a,b,c)           lwip_bind_mt(a,b,c); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define shutdown(a,b)         lwip_shutdown_mt(a,b); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define closesocket(s)        lwip_close_mt(s); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define connect(a,b,c)        lwip_connect_mt(a,b,c); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define getsockname(a,b,c)    lwip_getsockname_mt(a,b,c); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define getpeername(a,b,c)    lwip_getpeername_mt(a,b,c); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define setsockopt(a,b,c,d,e) lwip_setsockopt_mt(a,b,c,d,e); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define getsockopt(a,b,c,d,e) lwip_getsockopt_mt(a,b,c,d,e); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define listen(a,b)           lwip_listen_mt(a,b); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define recv(a,b,c,d)         lwip_recv_mt(a,b,c,d); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define recvfrom(a,b,c,d,e,f) lwip_recvfrom_mt(a,b,c,d,e,f); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define send(a,b,c,d)         lwip_send_mt(a,b,c,d); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define sendto(a,b,c,d,e,f)   lwip_sendto_mt(a,b,c,d,e,f); os_printf("%s %d\n", __FUNCTION__, __LINE__);
-#define socket(a,b,c)         lwip_socket_mt(a,b,c); os_printf("%s %d\n", __FUNCTION__, __LINE__);
+#define accept(a,b,c)         lwip_accept_mt(a,b,c); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define bind(a,b,c)           lwip_bind_mt(a,b,c); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define shutdown(a,b)         lwip_shutdown_mt(a,b); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define closesocket(s)        lwip_close_mt(s); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define connect(a,b,c)        lwip_connect_mt(a,b,c); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define getsockname(a,b,c)    lwip_getsockname_mt(a,b,c); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define getpeername(a,b,c)    lwip_getpeername_mt(a,b,c); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define setsockopt(a,b,c,d,e) lwip_setsockopt_mt(a,b,c,d,e); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define getsockopt(a,b,c,d,e) lwip_getsockopt_mt(a,b,c,d,e); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define listen(a,b)           lwip_listen_mt(a,b); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define recv(a,b,c,d)         lwip_recv_mt(a,b,c,d); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define recvfrom(a,b,c,d,e,f) lwip_recvfrom_mt(a,b,c,d,e,f); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define send(a,b,c,d)         lwip_send_mt(a,b,c,d); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define sendto(a,b,c,d,e,f)   lwip_sendto_mt(a,b,c,d,e,f); printf("%s %d\n", __FUNCTION__, __LINE__);
+#define socket(a,b,c)         lwip_socket_mt(a,b,c); printf("%s %d\n", __FUNCTION__, __LINE__);
 #define select(a,b,c,d,e)     lwip_select_mt(a,b,c,d,e)
-#define ioctlsocket(a,b,c)    lwip_ioctl_mt(a,b,c) ; os_printf("%s %d\n", __FUNCTION__, __LINE__);
+#define ioctlsocket(a,b,c)    lwip_ioctl_mt(a,b,c) ; printf("%s %d\n", __FUNCTION__, __LINE__);
 
 #if LWIP_POSIX_SOCKETS_IO_NAMES
 #define read(a,b,c)           lwip_read_mt(a,b,c)

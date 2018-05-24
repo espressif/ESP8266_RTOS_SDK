@@ -44,7 +44,7 @@ extern "C" {
 #include "esp_common.h"
 
 #if 0
-#define ssl_printf(fmt, args...) os_printf(fmt,## args)
+#define ssl_printf(fmt, args...) printf(fmt,## args)
 #else
 #define ssl_printf(fmt, args...)
 #endif

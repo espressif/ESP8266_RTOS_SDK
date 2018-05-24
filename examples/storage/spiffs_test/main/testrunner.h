@@ -122,7 +122,7 @@ typedef struct test_res_s {
   goto __fail_assert; \
 }
 
-#define DBGT(...) os_printf(__VA_ARGS__)
+#define DBGT(...) printf(__VA_ARGS__)
 
 #define str(s) #s
 
