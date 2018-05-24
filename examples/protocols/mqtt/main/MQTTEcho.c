@@ -29,7 +29,7 @@
 #define MQTT_CLIENT_THREAD_STACK_WORDS  2048
 #define MQTT_CLIENT_THREAD_PRIO         8
 
-LOCAL xTaskHandle mqttc_client_handle;
+static xTaskHandle mqttc_client_handle;
 
 static void messageArrived(MessageData* data)
 {

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdbool.h>
 #include <string.h>
 #include <strings.h>
 
@@ -925,26 +926,26 @@ static void wifi_softap_init_dhcps_lease(u32_t ip)
     u32_t start_ip = 0;
     u32_t end_ip = 0;
 
-    if (dhcps_lease.enable == TRUE) {
+    if (dhcps_lease.enable == true) {
         softap_ip = htonl(ip);
         start_ip = htonl(dhcps_lease.start_ip.addr);
         end_ip = htonl(dhcps_lease.end_ip.addr);
 
         /*config ip information can't contain local ip*/
         if ((start_ip <= softap_ip) && (softap_ip <= end_ip)) {
-            dhcps_lease.enable = FALSE;
+            dhcps_lease.enable = false;
         } else {
             /*config ip information must be in the same segment as the local ip*/
             softap_ip >>= 8;
 
             if (((start_ip >> 8 != softap_ip) || (end_ip >> 8 != softap_ip))
                     || (end_ip - start_ip > DHCPS_MAX_LEASE)) {
-                dhcps_lease.enable = FALSE;
+                dhcps_lease.enable = false;
             }
         }
     }
 
-    if (dhcps_lease.enable == FALSE) {
+    if (dhcps_lease.enable == false) {
         local_ip = softap_ip = htonl(ip);
         softap_ip &= 0xFFFFFF00;
         local_ip &= 0xFF;
@@ -1021,7 +1022,7 @@ bool wifi_softap_set_dhcps_lease(struct dhcps_lease* please)
     u32_t start_ip = 0;
     u32_t end_ip = 0;
 
-    uint8 opmode = wifi_get_opmode();
+    u8_t opmode = wifi_get_opmode();
 
     if (opmode == STATION_MODE || opmode == NULL_MODE) {
         return false;
@@ -1086,7 +1087,7 @@ bool wifi_softap_get_dhcps_lease(struct dhcps_lease* please)
         return false;
     }
 
-    if (dhcps_lease.enable == FALSE) {
+    if (dhcps_lease.enable == false) {
         if (wifi_softap_dhcps_status() == DHCP_STOPPED) {
             return false;
         }
@@ -1173,7 +1174,7 @@ bool wifi_softap_set_dhcps_offer_option(u8_t level, void* optarg)
 
     switch (level) {
         case OFFER_ROUTER:
-            offer = (*(uint8*)optarg) & 0x01;
+            offer = (*(u8_t*)optarg) & 0x01;
             offer_flag = true;
             break;
 

@@ -281,7 +281,7 @@ void AES_cbc_encrypt(AES_CTX *ctx, const uint8_t *msg, uint8_t *out, int length)
 
     memcpy(iv, ctx->iv, AES_IV_SIZE);
     for (i = 0; i < 4; i++)
-        tout[i] = ntohl(iv[i]);
+        tout[i] = tls_ntohl(iv[i]);
 
     for (length -= AES_BLOCKSIZE; length >= 0; length -= AES_BLOCKSIZE)
     {
@@ -291,14 +291,14 @@ void AES_cbc_encrypt(AES_CTX *ctx, const uint8_t *msg, uint8_t *out, int length)
         msg += AES_BLOCKSIZE;
 
         for (i = 0; i < 4; i++)
-            tin[i] = ntohl(msg_32[i])^tout[i];
+            tin[i] = tls_ntohl(msg_32[i])^tout[i];
 
         AES_encrypt(ctx, tin);
 
         for (i = 0; i < 4; i++)
         {
             tout[i] = tin[i]; 
-            out_32[i] = htonl(tout[i]);
+            out_32[i] = tls_htonl(tout[i]);
         }
 
         memcpy(out, out_32, AES_BLOCKSIZE);
@@ -306,7 +306,7 @@ void AES_cbc_encrypt(AES_CTX *ctx, const uint8_t *msg, uint8_t *out, int length)
     }
 
     for (i = 0; i < 4; i++)
-        iv[i] = htonl(tout[i]);
+        iv[i] = tls_htonl(tout[i]);
     memcpy(ctx->iv, iv, AES_IV_SIZE);
 }
 
@@ -320,7 +320,7 @@ void AES_cbc_decrypt(AES_CTX *ctx, const uint8_t *msg, uint8_t *out, int length)
 
     memcpy(iv, ctx->iv, AES_IV_SIZE);
     for (i = 0; i < 4; i++)
-        xor[i] = ntohl(iv[i]);
+        xor[i] = tls_ntohl(iv[i]);
 
     for (length -= 16; length >= 0; length -= 16)
     {
@@ -331,7 +331,7 @@ void AES_cbc_decrypt(AES_CTX *ctx, const uint8_t *msg, uint8_t *out, int length)
 
         for (i = 0; i < 4; i++)
         {
-            tin[i] = ntohl(msg_32[i]);
+            tin[i] = tls_ntohl(msg_32[i]);
             data[i] = tin[i];
         }
 
@@ -341,7 +341,7 @@ void AES_cbc_decrypt(AES_CTX *ctx, const uint8_t *msg, uint8_t *out, int length)
         {
             tout[i] = data[i]^xor[i];
             xor[i] = tin[i];
-            out_32[i] = htonl(tout[i]);
+            out_32[i] = tls_htonl(tout[i]);
         }
 
         memcpy(out, out_32, AES_BLOCKSIZE);
@@ -349,7 +349,7 @@ void AES_cbc_decrypt(AES_CTX *ctx, const uint8_t *msg, uint8_t *out, int length)
     }
 
     for (i = 0; i < 4; i++)
-        iv[i] = htonl(xor[i]);
+        iv[i] = tls_htonl(xor[i]);
     memcpy(ctx->iv, iv, AES_IV_SIZE);
 }
 

@@ -24,10 +24,10 @@ static os_timer_t timer;
  * Parameters   : none
  * Returns      : rf cal sector
 *******************************************************************************/
-uint32 user_rf_cal_sector_set(void)
+uint32_t user_rf_cal_sector_set(void)
 {
     flash_size_map size_map = system_get_flash_size_map();
-    uint32 rf_cal_sec = 0;
+    uint32_t rf_cal_sec = 0;
 
     switch (size_map) {
         case FLASH_SIZE_4M_MAP_256_256:
@@ -61,7 +61,7 @@ uint32 user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-LOCAL void wait_for_connection_ready(uint8 flag)
+static void wait_for_connection_ready(uint8_t flag)
 {
     os_timer_disarm(&timer);
     if(wifi_station_connected()){
@@ -73,13 +73,13 @@ LOCAL void wait_for_connection_ready(uint8 flag)
     }
 }
 
-LOCAL void on_wifi_connect(){
+static void on_wifi_connect(){
     os_timer_disarm(&timer);
     os_timer_setfn(&timer, (os_timer_func_t *)wait_for_connection_ready, NULL);
     os_timer_arm(&timer, 100, 0);
 }
 
-LOCAL void on_wifi_disconnect(uint8_t reason){
+static void on_wifi_disconnect(uint8_t reason){
     os_printf("disconnect %d\n", reason);
 }
 

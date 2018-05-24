@@ -248,9 +248,9 @@ typedef struct _sock_mt sock_mt_t;
 }
 
 
-LOCAL sock_mt_t sockets_mt[NUM_SOCKETS];
+static sock_mt_t sockets_mt[NUM_SOCKETS];
 
-LOCAL int lwip_enter_mt_state(int s, int arg)
+static int lwip_enter_mt_state(int s, int arg)
 {
     if(tryget_socket(s) == NULL ||
        SOCK_MT_GET_STATE(s) != SOCK_MT_STATE_NONE ||
@@ -263,7 +263,7 @@ LOCAL int lwip_enter_mt_state(int s, int arg)
     return 0;
 }
 
-LOCAL int lwip_enter_mt_recv(int s, int arg)
+static int lwip_enter_mt_recv(int s, int arg)
 {
     if(tryget_socket(s) == NULL ||
        SOCK_MT_GET_READ_SEL(s))
@@ -274,7 +274,7 @@ LOCAL int lwip_enter_mt_recv(int s, int arg)
 	return 0;
 }
 
-LOCAL int lwip_enter_mt_shutdown(int s, int arg)
+static int lwip_enter_mt_shutdown(int s, int arg)
 {
     if(tryget_socket(s) == NULL
        || SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE)
@@ -285,7 +285,7 @@ LOCAL int lwip_enter_mt_shutdown(int s, int arg)
 	return 0;
 }
 
-LOCAL int lwip_enter_mt_close(int s, int arg)
+static int lwip_enter_mt_close(int s, int arg)
 {
     if(tryget_socket(s) == NULL)
         return -1;
@@ -296,7 +296,7 @@ LOCAL int lwip_enter_mt_close(int s, int arg)
 }
 
 
-LOCAL int lwip_enter_mt_select(int s, int arg)
+static int lwip_enter_mt_select(int s, int arg)
 {
 	int i;
 	int *fdset = (int *)arg;
@@ -358,7 +358,7 @@ failed1:
 	return -1;
 }
 
-LOCAL int lwip_enter_mt_ioctrl(int s, int arg)
+static int lwip_enter_mt_ioctrl(int s, int arg)
 {
     if(tryget_socket(s) == NULL)
         return -1;
@@ -368,7 +368,7 @@ LOCAL int lwip_enter_mt_ioctrl(int s, int arg)
 	return 0;
 }
 
-LOCAL int lwip_exit_mt_state(int s, int arg)
+static int lwip_exit_mt_state(int s, int arg)
 {
 	SOCK_MT_SET_STATE(s, SOCK_MT_STATE_NONE);
 	SOCK_MT_UNLOCK(s, SOCK_MT_STATE_LOCK);
@@ -380,7 +380,7 @@ LOCAL int lwip_exit_mt_state(int s, int arg)
 	return 0;
 }
 
-LOCAL int lwip_exit_mt_recv(int s, int arg)
+static int lwip_exit_mt_recv(int s, int arg)
 {
 	SOCK_MT_UNLOCK(s, SOCK_MT_RECV_LOCK);
 
@@ -391,18 +391,18 @@ LOCAL int lwip_exit_mt_recv(int s, int arg)
 	return 0;
 }
 
-LOCAL int lwip_exit_mt_shutdown(int s, int arg)
+static int lwip_exit_mt_shutdown(int s, int arg)
 {
 	//SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_STATE_NONE);
 	return 0;
 } 
 
-LOCAL int lwip_exit_mt_close(int s, int arg)
+static int lwip_exit_mt_close(int s, int arg)
 {
 	return 0;
 } 
 
-LOCAL int lwip_exit_mt_select(int s, int arg)
+static int lwip_exit_mt_select(int s, int arg)
 {
 	int i;
 	int *fdset = (int *)arg;
@@ -431,7 +431,7 @@ LOCAL int lwip_exit_mt_select(int s, int arg)
 	return 0;
 }
 
-LOCAL int lwip_exit_mt_ioctrl(int s, int arg)
+static int lwip_exit_mt_ioctrl(int s, int arg)
 {
 	SOCK_MT_UNLOCK(s, SOCK_MT_IOCTRL_LOCK);
 
@@ -442,7 +442,7 @@ LOCAL int lwip_exit_mt_ioctrl(int s, int arg)
 	return 0;
 }
 
-LOCAL const lwip_io_mt_fn lwip_enter_mt_table[] = {
+static const lwip_io_mt_fn lwip_enter_mt_table[] = {
     lwip_enter_mt_state,
     lwip_enter_mt_recv,
     lwip_enter_mt_ioctrl,
@@ -451,7 +451,7 @@ LOCAL const lwip_io_mt_fn lwip_enter_mt_table[] = {
     lwip_enter_mt_close
 };
 
-LOCAL const lwip_io_mt_fn lwip_exit_mt_table[] = {
+static const lwip_io_mt_fn lwip_exit_mt_table[] = {
     lwip_exit_mt_state,
     lwip_exit_mt_recv,
     lwip_exit_mt_ioctrl,
@@ -460,7 +460,7 @@ LOCAL const lwip_io_mt_fn lwip_exit_mt_table[] = {
     lwip_exit_mt_close
 };
 
-LOCAL void lwip_do_sync_send(void *arg)
+static void lwip_do_sync_send(void *arg)
 {
     struct netconn *conn = arg;
 
@@ -485,7 +485,7 @@ LOCAL void lwip_do_sync_send(void *arg)
     sys_sem_signal(&(conn->ioctrl_completed));
 }
 
-LOCAL void lwip_do_sync_rst_state(void *arg)
+static void lwip_do_sync_rst_state(void *arg)
 {
     struct netconn *conn = arg;
 
@@ -497,7 +497,7 @@ LOCAL void lwip_do_sync_rst_state(void *arg)
     sys_sem_signal(&(conn->ioctrl_completed)); 
 }
 
-LOCAL void lwip_sync_state_mt(struct lwip_sock *sock , int state)
+static void lwip_sync_state_mt(struct lwip_sock *sock , int state)
 {
 	SOCK_MT_DEBUG(1, "sync state %d\n", state);
 
@@ -521,21 +521,21 @@ LOCAL void lwip_sync_state_mt(struct lwip_sock *sock , int state)
 	}
 }
 
-LOCAL void lwip_sync_recv_mt(struct lwip_sock *sock)
+static void lwip_sync_recv_mt(struct lwip_sock *sock)
 {
 	SOCK_MT_DEBUG(1, "sync recv %d\n", sock->conn->socket);
     if (sys_mbox_valid(&sock->conn->recvmbox))
 	    sys_mbox_trypost(&sock->conn->recvmbox, NULL);
 }
 
-LOCAL void lwip_sync_select_mt(struct lwip_sock *sock)
+static void lwip_sync_select_mt(struct lwip_sock *sock)
 {
 	SOCK_MT_DEBUG(1, "sync select %d\n", sock->conn->socket);
 	event_callback(sock->conn, NETCONN_EVT_ERROR, 0);
 }
 
 
-LOCAL void lwip_sync_mt(int s)
+static void lwip_sync_mt(int s)
 {
 	int module = 0;
     int ret;
@@ -836,7 +836,7 @@ int lwip_fcntl_mt(int s, int cmd, int val)
     return ret;
 }
 
-LOCAL int __lwip_shutdown_mt(int s, int how)
+static int __lwip_shutdown_mt(int s, int how)
 {
     int ret;
 

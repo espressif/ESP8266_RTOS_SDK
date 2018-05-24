@@ -25,6 +25,8 @@
 #ifndef __ESPNOW_H__
 #define __ESPNOW_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -66,13 +68,13 @@ enum esp_now_role {
   * @attention The status will be OK, if ESP-NOW send packet successfully. But users
   *            need to make sure by themselves that key of communication is correct.
   *
-  * @param     uint8 *mac_addr : MAC address of target device
-  * @param     uint8 *data     : data received
-  * @param     uint8 len       : data length
+  * @param     uint8_t *mac_addr : MAC address of target device
+  * @param     uint8_t *data     : data received
+  * @param     uint8_t len       : data length
   *
   * @return null
   */
-typedef void (*esp_now_recv_cb_t)(uint8 *mac_addr, uint8 *data, uint8 len);
+typedef void (*esp_now_recv_cb_t)(uint8_t *mac_addr, uint8_t *data, uint8_t len);
 
 /**
   * @brief     ESP-NOW send callback.
@@ -80,12 +82,12 @@ typedef void (*esp_now_recv_cb_t)(uint8 *mac_addr, uint8 *data, uint8 len);
   * @attention The status will be OK, if ESP-NOW send packet successfully. But users
   *            need to make sure by themselves that key of communication is correct.
   *
-  * @param     uint8 *mac_addr : MAC address of target device
-  * @param     uint8 status    : status of ESP-NOW sending packet, 0, OK; 1, fail.
+  * @param     uint8_t *mac_addr : MAC address of target device
+  * @param     uint8_t status    : status of ESP-NOW sending packet, 0, OK; 1, fail.
   *
   * @return    null
   */
-typedef void (*esp_now_send_cb_t)(uint8 *mac_addr, uint8 status);
+typedef void (*esp_now_send_cb_t)(uint8_t *mac_addr, uint8_t status);
 
 /**
   * @brief  ESP-NOW initialization.
@@ -95,7 +97,7 @@ typedef void (*esp_now_send_cb_t)(uint8 *mac_addr, uint8 status);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_init(void);
+int32_t esp_now_init(void);
 
 /**
   * @brief  Deinitialize ESP-NOW.
@@ -105,7 +107,7 @@ sint32 esp_now_init(void);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_deinit(void);
+int32_t esp_now_deinit(void);
 
 /**
   * @brief  Register ESP-NOW send callback.
@@ -115,7 +117,7 @@ sint32 esp_now_deinit(void);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_register_send_cb(esp_now_send_cb_t cb);
+int32_t esp_now_register_send_cb(esp_now_send_cb_t cb);
 
 /**
   * @brief  Unregister ESP-NOW send callback.
@@ -125,7 +127,7 @@ sint32 esp_now_register_send_cb(esp_now_send_cb_t cb);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_unregister_send_cb(void);
+int32_t esp_now_unregister_send_cb(void);
 
 /**
   * @brief  Register ESP-NOW receive callback.
@@ -135,7 +137,7 @@ sint32 esp_now_unregister_send_cb(void);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_register_recv_cb(esp_now_recv_cb_t cb);
+int32_t esp_now_register_recv_cb(esp_now_recv_cb_t cb);
 
 /**
   * @brief  Unregister ESP-NOW receive callback.
@@ -145,7 +147,7 @@ sint32 esp_now_register_recv_cb(esp_now_recv_cb_t cb);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_unregister_recv_cb(void);
+int32_t esp_now_unregister_recv_cb(void);
 
 /**
   * @brief  Send ESP-NOW packet.
@@ -159,7 +161,7 @@ sint32 esp_now_unregister_recv_cb(void);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_send(uint8 *da, uint8 *data, uint8 len);
+int32_t esp_now_send(uint8_t *da, uint8_t *data, uint8_t len);
 
 /**
   * @brief  Add an ESP-NOW peer, store MAC address of target device into ESP-NOW MAC list.
@@ -173,7 +175,7 @@ sint32 esp_now_send(uint8 *da, uint8 *data, uint8 len);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_add_peer(uint8 *mac_addr, uint8 role, uint8 channel, uint8 *key, uint8 key_len);
+int32_t esp_now_add_peer(uint8_t *mac_addr, uint8_t role, uint8_t channel, uint8_t *key, uint8_t key_len);
 
 /**
   * @brief  Delete an ESP-NOW peer, delete MAC address of the device from ESP-NOW MAC list.
@@ -183,17 +185,17 @@ sint32 esp_now_add_peer(uint8 *mac_addr, uint8 role, uint8 channel, uint8 *key, 
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_del_peer(uint8 *mac_addr);
+int32_t esp_now_del_peer(uint8_t *mac_addr);
 
 /**
   * @brief  Set ESP-NOW role of device itself.
   *
-  * @param  uint8 role : role type of device, enum esp_now_role.
+  * @param  uint8_t role : role type of device, enum esp_now_role.
   *
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_set_self_role(uint8 role);
+int32_t esp_now_set_self_role(uint8_t role);
 
 /**
   * @brief  Get ESP-NOW role of device itself.
@@ -203,7 +205,7 @@ sint32 esp_now_set_self_role(uint8 role);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_get_self_role(void);
+int32_t esp_now_get_self_role(void);
 
 /**
   * @brief  Set ESP-NOW role for a target device. If it is set multiple times,
@@ -215,18 +217,18 @@ sint32 esp_now_get_self_role(void);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_set_peer_role(uint8 *mac_addr, uint8 role);
+int32_t esp_now_set_peer_role(uint8_t *mac_addr, uint8_t role);
 
 /**
   * @brief  Get ESP-NOW role of a target device.
   *
-  * @param  uint8 *mac_addr : MAC address of device.
+  * @param  uint8_t *mac_addr : MAC address of device.
   *
   * @return  ESP_NOW_ROLE_CONTROLLER, role type : controller
   * @return  ESP_NOW_ROLE_SLAVE, role type : slave
   * @return  otherwise : fail
   */
-sint32 esp_now_get_peer_role(uint8 *mac_addr);
+int32_t esp_now_get_peer_role(uint8_t *mac_addr);
 
 /**
   * @brief  Record channel information of a ESP-NOW device.
@@ -235,55 +237,55 @@ sint32 esp_now_get_peer_role(uint8 *mac_addr);
   *    -  call esp_now_get_peer_channel to get its channel first,
   *    -  then call wifi_set_channel to be in the same channel and do communication.
   *
-  * @param  uint8 *mac_addr : MAC address of target device.
-  * @param  uint8 channel   : channel, usually to be 1 ~ 13, some area may use channel 14.
+  * @param  uint8_t *mac_addr : MAC address of target device.
+  * @param  uint8_t channel   : channel, usually to be 1 ~ 13, some area may use channel 14.
   *
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_set_peer_channel(uint8 *mac_addr, uint8 channel);
+int32_t esp_now_set_peer_channel(uint8_t *mac_addr, uint8_t channel);
 
 /**
   * @brief  Get channel information of a ESP-NOW device.
   *
   * @attention ESP-NOW communication needs to be at the same channel.
   *
-  * @param  uint8 *mac_addr : MAC address of target device.
+  * @param  uint8_t *mac_addr : MAC address of target device.
   *
   * @return 1 ~ 13 (some area may get 14) : channel number
   * @return Non-0 : fail
   */
-sint32 esp_now_get_peer_channel(uint8 *mac_addr);
+int32_t esp_now_get_peer_channel(uint8_t *mac_addr);
 
 /**
   * @brief  Set ESP-NOW key for a target device.
   *
   * If it is set multiple times, new key will cover the old one.
   *
-  * @param  uint8 *mac_addr : MAC address of target device.
-  * @param  uint8 *key      : 16 bytes key which is needed for ESP-NOW communication,
+  * @param  uint8_t *mac_addr : MAC address of target device.
+  * @param  uint8_t *key      : 16 bytes key which is needed for ESP-NOW communication,
   *                           if it is NULL, current key will be reset to be none.
-  * @param  uint8 key_len   : key length, has to be 16 bytes now
+  * @param  uint8_t key_len   : key length, has to be 16 bytes now
   *
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_set_peer_key(uint8 *mac_addr, uint8 *key, uint8 key_len);
+int32_t esp_now_set_peer_key(uint8_t *mac_addr, uint8_t *key, uint8_t key_len);
 
 /**
   * @brief  Get ESP-NOW key of a target device.
   *
   * If it is set multiple times, new key will cover the old one.
   *
-  * @param  uint8 *mac_addr : MAC address of target device.
-  * @param  uint8 *key      : pointer of key, buffer size has to be 16 bytes at least
-  * @param  uint8 key_len   : key length
+  * @param  uint8_t *mac_addr : MAC address of target device.
+  * @param  uint8_t *key      : pointer of key, buffer size has to be 16 bytes at least
+  * @param  uint8_t key_len   : key length
   *
   * @return 0   : succeed
   * @return > 0 : find target device but can't get key
   * @return < 0 : fail
   */
-sint32 esp_now_get_peer_key(uint8 *mac_addr, uint8 *key, uint8 *key_len);
+int32_t esp_now_get_peer_key(uint8_t *mac_addr, uint8_t *key, uint8_t *key_len);
 
 /**
   * @brief      Get MAC address of ESP-NOW device.
@@ -301,7 +303,7 @@ sint32 esp_now_get_peer_key(uint8 *mac_addr, uint8 *key, uint8 *key_len);
   * @return NULL, no ESP-NOW devices exist
   * @return Otherwise, MAC address of ESP-NOW device which is pointed now
   */
-uint8 *esp_now_fetch_peer(bool restart);
+uint8_t *esp_now_fetch_peer(bool restart);
 
 /**
   * @brief  Check if target device exists or not.
@@ -312,7 +314,7 @@ uint8 *esp_now_fetch_peer(bool restart);
   * @return < 0 : error occur, check fail
   * @return > 0 : device exists
   */
-sint32 esp_now_is_peer_exist(uint8 *mac_addr);
+int32_t esp_now_is_peer_exist(uint8_t *mac_addr);
 
 /**
   * @brief  Get the total number of ESP-NOW devices which are associated, and the
@@ -324,7 +326,7 @@ sint32 esp_now_is_peer_exist(uint8 *mac_addr);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_get_cnt_info(uint8 *all_cnt, uint8 *encrypt_cnt);
+int32_t esp_now_get_cnt_info(uint8_t *all_cnt, uint8_t *encrypt_cnt);
 
 /**
   * @brief  Set the encrypt key of communication key.
@@ -338,7 +340,7 @@ sint32 esp_now_get_cnt_info(uint8 *all_cnt, uint8 *encrypt_cnt);
   * @return 0     : succeed
   * @return Non-0 : fail
   */
-sint32 esp_now_set_kok(uint8 *key, uint8 len);
+int32_t esp_now_set_kok(uint8_t *key, uint8_t len);
 
 /**
   * @}

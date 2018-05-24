@@ -52,14 +52,14 @@ Fragment size range 2048~8192
 /* receive length */
 #define OPENSSL_SERVER_RECV_BUF_LEN 1024
 
-LOCAL xTaskHandle openssl_handle;
+static xTaskHandle openssl_handle;
 
-LOCAL char send_data[] = OPENSSL_SERVER_REQUEST;
-LOCAL int send_bytes = sizeof(send_data);
+static char send_data[] = OPENSSL_SERVER_REQUEST;
+static int send_bytes = sizeof(send_data);
 
-LOCAL char recv_buf[OPENSSL_SERVER_RECV_BUF_LEN];
+static char recv_buf[OPENSSL_SERVER_RECV_BUF_LEN];
 
-LOCAL void openssl_server_thread(void* p)
+static void openssl_server_thread(void* p)
 {
     int ret;
 
@@ -260,10 +260,10 @@ void user_conn_init(void)
  * Parameters   : none
  * Returns      : rf cal sector
 *******************************************************************************/
-uint32 user_rf_cal_sector_set(void)
+uint32_t user_rf_cal_sector_set(void)
 {
     flash_size_map size_map = system_get_flash_size_map();
-    uint32 rf_cal_sec = 0;
+    uint32_t rf_cal_sec = 0;
 
     switch (size_map) {
         case FLASH_SIZE_4M_MAP_256_256:

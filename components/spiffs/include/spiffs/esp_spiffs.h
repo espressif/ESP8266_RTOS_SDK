@@ -43,15 +43,15 @@ extern "C" {
   */
 
 struct esp_spiffs_config {
-    uint32 phys_size;        /**< physical size of the SPI Flash */
-    uint32 phys_addr;        /**< physical offset in spi flash used for spiffs, must be on block boundary */
-    uint32 phys_erase_block; /**< physical size when erasing a block */
+    u32_t phys_size;        /**< physical size of the SPI Flash */
+    u32_t phys_addr;        /**< physical offset in spi flash used for spiffs, must be on block boundary */
+    u32_t phys_erase_block; /**< physical size when erasing a block */
 
-    uint32 log_block_size;   /**< logical size of a block, must be on physical block size boundary and must never be less than a physical block */
-    uint32 log_page_size;    /**< logical size of a page, at least log_block_size/8  */
+    u32_t log_block_size;   /**< logical size of a block, must be on physical block size boundary and must never be less than a physical block */
+    u32_t log_page_size;    /**< logical size of a page, at least log_block_size/8  */
 
-    uint32 fd_buf_size;      /**< file descriptor memory area size */
-    uint32 cache_buf_size;   /**< cache buffer size */
+    u32_t fd_buf_size;      /**< file descriptor memory area size */
+    u32_t cache_buf_size;   /**< cache buffer size */
 };
 
 /**
@@ -62,7 +62,7 @@ struct esp_spiffs_config {
   * @return 0         : succeed
   * @return otherwise : fail
   */
-sint32 esp_spiffs_init(struct esp_spiffs_config *config);
+s32_t esp_spiffs_init(struct esp_spiffs_config *config);
 
 /**
   * @brief  Deinitialize spiffs
@@ -71,7 +71,7 @@ sint32 esp_spiffs_init(struct esp_spiffs_config *config);
   *
   * @return null
   */
-void esp_spiffs_deinit(uint8 format);
+void esp_spiffs_deinit(u8_t format);
 
 /**
   * @}

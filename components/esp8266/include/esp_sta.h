@@ -25,8 +25,12 @@
 #ifndef __ESP_STA_H__
 #define __ESP_STA_H__
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "queue.h"
 #include "esp_wifi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,10 +54,10 @@ extern "C" {
   */
 
 struct station_config {
-    uint8 ssid[32];         /**< SSID of target AP*/
-    uint8 password[64];     /**< password of target AP*/
-    uint8 bssid_set;        /**< whether set MAC address of target AP or not. Generally, station_config.bssid_set needs to be 0; and it needs to be 1 only when users need to check the MAC address of the AP.*/
-    uint8 bssid[6];         /**< MAC address of target AP*/
+    uint8_t ssid[32];         /**< SSID of target AP*/
+    uint8_t password[64];     /**< password of target AP*/
+    uint8_t bssid_set;        /**< whether set MAC address of target AP or not. Generally, station_config.bssid_set needs to be 0; and it needs to be 1 only when users need to check the MAC address of the AP.*/
+    uint8_t bssid[6];         /**< MAC address of target AP*/
 };
 
 /**
@@ -162,12 +166,12 @@ typedef union {
 } wifi_scan_time_t;
 
 struct scan_config {
-    uint8 *ssid;                 /**< SSID of AP */
-    uint8 *bssid;                /**< MAC address of AP */
-    uint8 channel;               /**< channel, scan the specific channel */
-    uint8 show_hidden;           /**< enable to scan AP whose SSID is hidden */
-    wifi_scan_type_t scan_type;  /**< scan type, active or passive */
-    wifi_scan_time_t scan_time;  /**< scan time per channel */
+    uint8_t *ssid;                  /**< SSID of AP */
+    uint8_t *bssid;                 /**< MAC address of AP */
+    uint8_t channel;                /**< channel, scan the specific channel */
+    uint8_t show_hidden;            /**< enable to scan AP whose SSID is hidden */
+    wifi_scan_type_t scan_type;     /**< scan type, active or passive */
+    wifi_scan_time_t scan_time;     /**< scan time per channel */
 };
 
 typedef enum {
@@ -183,16 +187,16 @@ typedef enum {
 struct bss_info {
     STAILQ_ENTRY(bss_info)     next;    /**< information of next AP */
 
-    uint8 bssid[6];                     /**< MAC address of AP */
-    uint8 ssid[32];                     /**< SSID of AP */
-    uint8 ssid_len;                     /**< SSID length */
-    uint8 channel;                      /**< channel of AP */
-    sint8 rssi;                         /**< single strength of AP */
+    uint8_t bssid[6];                   /**< MAC address of AP */
+    uint8_t ssid[32];                   /**< SSID of AP */
+    uint8_t ssid_len;                   /**< SSID length */
+    uint8_t channel;                    /**< channel of AP */
+    int8_t rssi;                        /**< single strength of AP */
     AUTH_MODE authmode;                 /**< authmode of AP */
-    uint8 is_hidden;                    /**< SSID of current AP is hidden or not. */
-    sint16 freq_offset;                 /**< frequency offset */
-    sint16 freqcal_val;
-    uint8 *esp_mesh_ie;
+    uint8_t is_hidden;                  /**< SSID of current AP is hidden or not. */
+    int16_t freq_offset;                /**< frequency offset */
+    int16_t freqcal_val;
+    uint8_t *esp_mesh_ie;
     CIPHER_TYPE pairwise_cipher;        /**< pairwise cipher of AP */
     CIPHER_TYPE group_cipher;           /**< group cipher of AP */
     uint32_t phy_11b:1;                 /**< bit: 0 flag to identify if 11b mode is enabled or not */
@@ -201,6 +205,14 @@ struct bss_info {
     uint32_t wps:1;                     /**< bit: 3 flag to identify if WPS is supported or not */
     uint32_t reserved:28;               /**< bit: 4..31 reserved */
 };
+
+typedef enum {
+    OK = 0,
+    FAIL,
+    PENDING,
+    BUSY,
+    CANCEL,
+} STATUS;
 
 /**
   * @brief  Callback function for wifi_station_scan.
@@ -305,17 +317,17 @@ STATION_STATUS wifi_station_get_connect_status(void);
   *
   * @return The number of APs recorded.
   */
-uint8 wifi_station_get_current_ap_id(void);
+uint8_t wifi_station_get_current_ap_id(void);
 
 /**
   * @brief  Switch the ESP8266 station connection to a recorded AP.
   *
-  * @param  uint8 new_ap_id : AP's record id, start counting from 0.
+  * @param  uint8_t new_ap_id : AP's record id, start counting from 0.
   *
   * @return true  : succeed
   * @return false : fail
   */
-bool wifi_station_ap_change(uint8 current_ap_id);
+bool wifi_station_ap_change(uint8_t current_ap_id);
 
 /**
   * @brief     Set the number of APs that can be recorded in the ESP8266 station.
@@ -324,12 +336,12 @@ bool wifi_station_ap_change(uint8 current_ap_id);
   *
   * @attention This configuration will be saved in the Flash system parameter area if changed.
   *
-  * @param     uint8 ap_number : the number of APs that can be recorded (MAX: 5)
+  * @param     uint8_t ap_number : the number of APs that can be recorded (MAX: 5)
   *
   * @return    true  : succeed
   * @return    false : fail
   */
-bool wifi_station_ap_number_set(uint8 ap_number);
+bool wifi_station_ap_number_set(uint8_t ap_number);
 
 /**
   * @brief  Get the information of APs (5 at most) recorded by ESP8266 station.
@@ -344,7 +356,7 @@ bool wifi_station_ap_number_set(uint8 ap_number);
   *
   * @return The number of APs recorded.
   */
-uint8 wifi_station_get_ap_info(struct station_config config[]);
+uint8_t wifi_station_get_ap_info(struct station_config config[]);
 
 /**
   * @brief  Get rssi of the AP which ESP8266 station connected to.
@@ -354,7 +366,7 @@ uint8 wifi_station_get_ap_info(struct station_config config[]);
   * @return 31 : fail, invalid value.
   * @return others : succeed, value of rssi. In general, rssi value < 10
   */
-sint8 wifi_station_get_rssi(void);
+int8_t wifi_station_get_rssi(void);
 
 /**
   * @brief     Enable the ESP8266 station DHCP client.

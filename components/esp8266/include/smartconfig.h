@@ -25,6 +25,9 @@
 #ifndef __SMARTCONFIG_H__
 #define __SMARTCONFIG_H__
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -135,7 +138,7 @@ bool smartconfig_stop(void);
   * @return    true  : succeed
   * @return    false : fail
   */
-bool esptouch_set_timeout(uint8 time_s);
+bool esptouch_set_timeout(uint8_t time_s);
 
 /**
   * @brief     Set protocol type of SmartConfig.

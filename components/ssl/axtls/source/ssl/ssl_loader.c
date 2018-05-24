@@ -110,7 +110,7 @@ EXP_FUNC int STDCALL ssl_obj_memory_load(SSL_CTX *ssl_ctx, int mem_type,
 {
     int ret;
     SSLObjLoader *ssl_obj;
-    uint32 sign_len = (len + 3)&(~3);
+    uint32_t sign_len = (len + 3)&(~3);
 
     ssl_obj = (SSLObjLoader *)SSL_ZALLOC(sizeof(SSLObjLoader));
     ssl_obj->buf = (uint8_t *)SSL_MALLOC(sign_len);

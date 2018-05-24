@@ -27,9 +27,9 @@
 
 #define DEFAULT_LAN_PORT 	12476
 
-LOCAL esp_udp ssdp_udp;
-LOCAL struct espconn pssdpudpconn;
-LOCAL os_timer_t ssdp_time_serv;
+static esp_udp ssdp_udp;
+static struct espconn pssdpudpconn;
+static os_timer_t ssdp_time_serv;
 
 uint8  lan_buf[200];
 uint16 lan_buf_len;
@@ -43,7 +43,7 @@ const airkiss_config_t akconf =
 	0,
 };
 
-LOCAL void airkiss_wifilan_time_callback(void)
+static void airkiss_wifilan_time_callback(void)
 {
 	uint16 i;
 	airkiss_lan_ret_t ret;
@@ -74,7 +74,7 @@ LOCAL void airkiss_wifilan_time_callback(void)
 	os_printf("Finish send notify!\n");
 }
 
-LOCAL void airkiss_wifilan_recv_callbk(void *arg, char *pdata, unsigned short len)
+static void airkiss_wifilan_recv_callbk(void *arg, char *pdata, unsigned short len)
 {
 	uint16 i;
 	remot_info* pcon_info = NULL;

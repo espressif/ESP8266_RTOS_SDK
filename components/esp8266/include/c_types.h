@@ -33,64 +33,13 @@
 extern "C" {
 #endif
 
-typedef uint8_t  u8_t;
-typedef int8_t   s8_t;
-typedef uint16_t u16_t;
-typedef int16_t  s16_t;
-typedef uint32_t u32_t;
-typedef int32_t  s32_t;
-
-typedef uint8_t  uint8;
-typedef uint8_t  u8;
-typedef int8_t   sint8;
-typedef int8_t   int8;
-typedef int8_t   s8;
-typedef uint16_t uint16;
-typedef uint16_t u16;
-typedef int16_t  sint16;
-typedef int16_t  s16;
-typedef uint32_t uint32;
-typedef uint32_t u_int;
-typedef uint32_t u32;
-typedef int32_t  sint32;
-typedef int32_t  s32;
-typedef int32_t  int32;
-typedef int64_t  sint64;
-typedef uint64_t uint64;
-typedef uint64_t u64;
-typedef float    real32;
-typedef double   real64;
-
-#define __le16      u16
-
-#define LOCAL       static
-
-#ifndef NULL
-#define NULL        (void *)0
-#endif /* NULL */
-
-/* probably should not put STATUS here */
-typedef enum {
-    OK = 0,
-    FAIL,
-    PENDING,
-    BUSY,
-    CANCEL,
-} STATUS;
-
 #define BIT(nr)     (1UL << (nr))
 
-#define REG_WRITE(_r, _v)       (*(volatile uint32 *)(_r)) = (_v)
-#define REG_READ(_r)            (*(volatile uint32 *)(_r))
+#define REG_WRITE(_r, _v)       (*(volatile uint32_t *)(_r)) = (_v)
+#define REG_READ(_r)            (*(volatile uint32_t *)(_r))
 
-#define REG_SET_BIT(_r, _b)     (*(volatile uint32 *)(_r) |= (_b))
-#define REG_CLR_BIT(_r, _b)     (*(volatile uint32 *)(_r) &= ~(_b))
-
-#ifndef __cplusplus
-#define BOOL            bool
-#define TRUE            true
-#define FALSE           false
-#endif /* !__cplusplus */
+#define REG_SET_BIT(_r, _b)     (*(volatile uint32_t *)(_r) |= (_b))
+#define REG_CLR_BIT(_r, _b)     (*(volatile uint32_t *)(_r) &= ~(_b))
 
 #ifdef __cplusplus
 }

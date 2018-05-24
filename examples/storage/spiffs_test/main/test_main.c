@@ -21,9 +21,9 @@ enum {
 
 #define SSC_CMD_N   (CMD_END + 1)
 
-LOCAL void spiffs_test_init(void);
+static void spiffs_test_init(void);
 
-LOCAL ssc_cmd_t sscCmdSet[SSC_CMD_N] =		{
+static ssc_cmd_t sscCmdSet[SSC_CMD_N] =		{
     {"fs", CMD_T_SYNC,  CMD_SPIFFS, spiffs_test_init, NULL},
     {"",   CMD_T_ASYNC, CMD_END,    NULL,               NULL}
 };

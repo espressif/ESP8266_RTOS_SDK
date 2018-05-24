@@ -19,6 +19,7 @@
 #include "esp8266/pin_mux_register.h"
 #include "esp8266/uart_register.h"
 #include "esp8266/rom_functions.h"
+#include "esp8266/ets_sys.h"
 
 #include "esp_misc.h"
 
@@ -41,7 +42,7 @@ typedef struct _os_event_ {
 xTaskHandle xUartTaskHandle;
 xQueueHandle xQueueUart;
 
-static STATUS uart_tx_one_char(uint8_t uart, uint8_t TxChar)
+static void uart_tx_one_char(uint8_t uart, uint8_t TxChar)
 {
     while (true) {
         uint32_t fifo_cnt = READ_PERI_REG(UART_STATUS(uart)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S);
@@ -52,7 +53,6 @@ static STATUS uart_tx_one_char(uint8_t uart, uint8_t TxChar)
     }
 
     WRITE_PERI_REG(UART_FIFO(uart), TxChar);
-    return OK;
 }
 
 static void uart1_write_char(char c)

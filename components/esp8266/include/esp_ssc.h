@@ -25,6 +25,8 @@
 #ifndef __ESP_SSC_H__
 #define __ESP_SSC_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,8 +36,8 @@ extern "C" {
 
 typedef struct cmd_s {
     char *cmd_str;
-    uint8 flag;
-    uint8 id;
+    uint8_t flag;
+    uint8_t id;
     void (* cmd_func)(void);
     void (* cmd_callback)(void *arg);
 } ssc_cmd_t;
@@ -112,7 +114,7 @@ int ssc_parse_param(char *pLine, char *argv[]);
   *
   * @return  null
   */
-void ssc_register(ssc_cmd_t *cmdset, uint8 cmdnum, void (* help)(void));
+void ssc_register(ssc_cmd_t *cmdset, uint8_t cmdnum, void (* help)(void));
 
 /**
   * @}
