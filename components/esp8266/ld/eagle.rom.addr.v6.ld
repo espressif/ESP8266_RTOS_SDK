@@ -57,4 +57,4 @@ PROVIDE ( gpio_input_get = 0x40004cf0 );
 PROVIDE ( gpio_pin_wakeup_disable = 0x40004ed4 );
 PROVIDE ( gpio_pin_wakeup_enable = 0x40004e90 );
 
-PROVIDE ( ets_printf = 0x400024cc );
+PROVIDE ( ets_vprintf = 0x40001f00 );
