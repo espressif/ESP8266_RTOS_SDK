@@ -70,12 +70,12 @@ void wifi_event_handler_cb(System_Event_t *event)
 
     switch (event->event_id) {
         case EVENT_STAMODE_GOT_IP:
-            os_printf("sta got ip ,create task and free heap size is %d\n", system_get_free_heap_size());
+            printf("sta got ip ,create task and free heap size is %d\n", system_get_free_heap_size());
             user_conn_init();
             break;
 
         case EVENT_STAMODE_CONNECTED:
-            os_printf("sta connected\n");
+            printf("sta connected\n");
             break;
 
         case EVENT_STAMODE_DISCONNECTED:
@@ -95,7 +95,7 @@ void wifi_event_handler_cb(System_Event_t *event)
 *******************************************************************************/
 void user_init(void)
 {
-    os_printf("SDK version:%s %d\n", system_get_sdk_version(), system_get_free_heap_size());
+    printf("SDK version:%s %d\n", system_get_sdk_version(), system_get_free_heap_size());
     wifi_set_opmode(STATION_MODE);
 
     struct station_config config;

@@ -584,7 +584,7 @@ int asn1_compare_dn(char * const dn1[], char * const dn2[])
     for (i = 0; i < X509_NUM_DN_TYPES; i++)
     {
 #if CONFIG_SSL_DISPLAY_MODE
-    	os_printf("distinguished names: [%s], [%s]\n", dn1[i], dn2[i]);
+        printf("distinguished names: [%s], [%s]\n", dn1[i], dn2[i]);
 #endif
         if (asn1_compare_dn_comp(dn1[i], dn2[i]))
             return 1;

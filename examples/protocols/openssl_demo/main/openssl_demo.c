@@ -55,90 +55,90 @@ static void openssl_demo_thread(void *p)
 
     int recv_bytes = 0;
 
-    os_printf("OpenSSL demo thread start...\n");
+    printf("OpenSSL demo thread start...\n");
 
     do {
         ret = netconn_gethostbyname(OPENSSL_DEMO_TARGET_NAME, &target_ip);
     } while(ret);
-    os_printf("get target IP is %d.%d.%d.%d\n", (unsigned char)((target_ip.u_addr.ip4.addr & 0x000000ff) >> 0),
+    printf("get target IP is %d.%d.%d.%d\n", (unsigned char)((target_ip.u_addr.ip4.addr & 0x000000ff) >> 0),
                                                 (unsigned char)((target_ip.u_addr.ip4.addr & 0x0000ff00) >> 8),
                                                 (unsigned char)((target_ip.u_addr.ip4.addr & 0x00ff0000) >> 16),
                                                 (unsigned char)((target_ip.u_addr.ip4.addr & 0xff000000) >> 24));
 
-    os_printf("create SSL context ......");
+    printf("create SSL context ......");
     ctx = SSL_CTX_new(TLSv1_1_client_method());
     if (!ctx) {
-        os_printf("failed\n");
+        printf("failed\n");
         goto failed1;
     }
-    os_printf("OK\n");
+    printf("OK\n");
 
-    os_printf("set SSL context read buffer size ......");
+    printf("set SSL context read buffer size ......");
     SSL_CTX_set_default_read_buffer_len(ctx, OPENSSL_DEMO_FRAGMENT_SIZE);
     ret = 0;
     if (ret) {
-        os_printf("failed, return %d\n", ret);
+        printf("failed, return %d\n", ret);
         goto failed2;
     }
-    os_printf("OK\n");
+    printf("OK\n");
 
-    os_printf("create socket ......");
+    printf("create socket ......");
     socket = socket(AF_INET, SOCK_STREAM, 0);
     if (socket < 0) {
-        os_printf("failed\n");
+        printf("failed\n");
         goto failed3;
     }
-    os_printf("OK\n");
+    printf("OK\n");
 
-    os_printf("bind socket ......");
+    printf("bind socket ......");
     memset(&sock_addr, 0, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_addr.s_addr = 0;
     sock_addr.sin_port = htons(OPENSSL_DEMO_LOCAL_TCP_PORT);
     ret = bind(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
     if (ret) {
-        os_printf("failed\n");
+        printf("failed\n");
         goto failed4;
     }
-    os_printf("OK\n");
+    printf("OK\n");
 
-    os_printf("socket connect to remote ......");
+    printf("socket connect to remote ......");
     memset(&sock_addr, 0, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_addr.s_addr = target_ip.u_addr.ip4.addr;
     sock_addr.sin_port = htons(OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = connect(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
     if (ret) {
-        os_printf("failed\n");
+        printf("failed\n");
         goto failed5;
     }
-    os_printf("OK\n");
+    printf("OK\n");
 
-    os_printf("create SSL ......");
+    printf("create SSL ......");
     ssl = SSL_new(ctx);
     if (!ssl) {
-        os_printf("failed\n");
+        printf("failed\n");
         goto failed6;
     }
-    os_printf("OK\n");
+    printf("OK\n");
 
     SSL_set_fd(ssl, socket);
 
-    os_printf("SSL connected to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
+    printf("SSL connected to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = SSL_connect(ssl);
     if (!ret) {
-        os_printf("failed, return [-0x%x]\n", -ret);
+        printf("failed, return [-0x%x]\n", -ret);
         goto failed7;
     }
-    os_printf("OK\n");
+    printf("OK\n");
 
-    os_printf("send request to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
+    printf("send request to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = SSL_write(ssl, send_data, send_bytes);
     if (ret <= 0) {
-        os_printf("failed, return [-0x%x]\n", -ret);
+        printf("failed, return [-0x%x]\n", -ret);
         goto failed8;
     }
-    os_printf("OK\n\n");
+    printf("OK\n\n");
 
     do {
         ret = SSL_read(ssl, recv_buf, OPENSSL_DEMO_RECV_BUF_LEN - 1);
@@ -146,9 +146,9 @@ static void openssl_demo_thread(void *p)
             break;
         }
         recv_bytes += ret;
-        os_printf("%s", recv_buf);
+        printf("%s", recv_buf);
     } while (1);
-    os_printf("read %d bytes data from %s ......\n", recv_bytes, OPENSSL_DEMO_TARGET_NAME);
+    printf("read %d bytes data from %s ......\n", recv_bytes, OPENSSL_DEMO_TARGET_NAME);
 
 failed8:
     SSL_shutdown(ssl);
@@ -164,7 +164,7 @@ failed2:
 failed1:
     vTaskDelete(NULL);
 
-    os_printf("task exit\n");
+    printf("task exit\n");
 
     return ;
 }
@@ -180,7 +180,7 @@ void user_conn_init(void)
                       OPENSSL_DEMO_THREAD_PRORIOTY,
                       &openssl_handle);
     if (ret != pdPASS)  {
-        os_printf("create thread %s failed\n", OPENSSL_DEMO_THREAD_NAME);
+        printf("create thread %s failed\n", OPENSSL_DEMO_THREAD_NAME);
         return ;
     }
 }

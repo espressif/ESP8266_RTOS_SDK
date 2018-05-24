@@ -78,7 +78,7 @@ EXP_FUNC int STDCALL ssl_obj_load(SSL_CTX *ssl_ctx, int obj_type,
     {
 #ifdef CONFIG_SSL_HAS_PEM
 #if CONFIG_SSL_DISPLAY_MODE
-    	os_printf("the file is a PEM file.\n");
+        printf("the file is a PEM file.\n");
 #endif
         ret = ssl_obj_PEM_load(ssl_ctx, obj_type, ssl_obj, password);
 #else
@@ -88,7 +88,7 @@ EXP_FUNC int STDCALL ssl_obj_load(SSL_CTX *ssl_ctx, int obj_type,
     }
     else {
 #if CONFIG_SSL_DISPLAY_MODE
-    	os_printf("the file is not a PEM file.\n");
+        printf("the file is not a PEM file.\n");
 #endif
         ret = do_obj(ssl_ctx, obj_type, ssl_obj, password);
     }

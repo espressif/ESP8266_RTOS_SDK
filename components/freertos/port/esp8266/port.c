@@ -258,9 +258,9 @@ void IRAM_ATTR vPortExitCritical(void)
 
 void ShowCritical(void)
 {
-    os_printf("ShowCritical:%u\n", uxCriticalNesting);
-    os_printf("HdlMacSig:%u\n", HdlMacSig);
-    os_printf("SWReq:%u\n", SWReq);
+    printf("ShowCritical:%u\n", uxCriticalNesting);
+    printf("HdlMacSig:%u\n", HdlMacSig);
+    printf("SWReq:%u\n", SWReq);
 
     ets_delay_us(50000);
 }
@@ -343,7 +343,7 @@ int xPortInIsrContext(void)
 
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
 {
-    os_printf("task [%s] stask overflow\n", pcTaskName);
+    printf("task [%s] stask overflow\n", pcTaskName);
 }
 
 void IRAM_ATTR __taskEXIT_CRITICAL(void)

@@ -243,7 +243,7 @@ EXP_FUNC void STDCALL ssl_ctx_free(SSL_CTX *ssl_ctx)
 EXP_FUNC void STDCALL ssl_free(SSL *ssl)
 {
     SSL_CTX *ssl_ctx;
-	os_printf("ssl_free:Aviable Memory|%d\n",system_get_free_heap_size());
+    printf("ssl_free:Aviable Memory|%d\n",system_get_free_heap_size());
     if (ssl == NULL)        /* just ignore null pointers */
         return;
 
@@ -1237,7 +1237,7 @@ int basic_read(SSL *ssl, uint8_t **in_data)
 
 begain:
     /* do we violate the spec with the message size?  */
-	//os_printf("basic_read index %u\n", ssl->bm_read_index);
+    //printf("basic_read index %u\n", ssl->bm_read_index);
 
 	if (ssl->bm_read_index > ssl->max_fragme_length + RT_EXTRA) {
 		ret = SSL_ERROR_INVALID_PROT_MSG;

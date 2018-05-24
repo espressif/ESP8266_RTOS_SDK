@@ -65,7 +65,7 @@ typedef struct _sock_mt sock_mt_t;
 #if (SOCK_MT_DEBUG_LEVEL < 16)
     #define SOCK_MT_DEBUG(level, ...)                                       \
         if (level >= SOCK_MT_DEBUG_LEVEL)                                   \
-            os_printf(__VA_ARGS__);
+            printf(__VA_ARGS__);
 #else
     #define SOCK_MT_DEBUG(level, ...)
 #endif
