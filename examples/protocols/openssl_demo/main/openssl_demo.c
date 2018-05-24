@@ -8,6 +8,9 @@
 */
 
 #include <stddef.h>
+#include <string.h>
+#include <strings.h>
+
 #include "openssl_demo.h"
 #include "openssl/ssl.h"
 #include "freertos/FreeRTOS.h"

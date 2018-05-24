@@ -7,6 +7,9 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include <stdio.h>
+#include <strings.h>
+
 #include "esp_common.h"
 #include "user_config.h"
 
