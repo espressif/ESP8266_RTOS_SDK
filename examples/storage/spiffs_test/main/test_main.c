@@ -7,15 +7,18 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include <stdlib.h>
+
 #include "esp_spiffs.h"
 #include "esp_ssc.h"
 #include "esp_system.h"
+
 #include "testrunner.h"
-#include <stdlib.h>
+
 #include "spiffs_test_params.h"
 
 enum {
-	CMD_SPIFFS,
+    CMD_SPIFFS,
     CMD_END,
 };
 
@@ -30,7 +33,7 @@ static ssc_cmd_t sscCmdSet[SSC_CMD_N] =		{
 
 void spiffs_test_init(void)
 {
-    char *argv[10], pLine[128];
+    char* argv[10], pLine[128];
     int argc;
 
     strcpy(pLine, ssc_param_str());
@@ -95,12 +98,15 @@ uint32_t user_rf_cal_sector_set(void)
         case FLASH_SIZE_32M_MAP_1024_1024:
             rf_cal_sec = 1024 - 5;
             break;
+
         case FLASH_SIZE_64M_MAP_1024_1024:
             rf_cal_sec = 2048 - 5;
             break;
+
         case FLASH_SIZE_128M_MAP_1024_1024:
             rf_cal_sec = 4096 - 5;
             break;
+
         default:
             rf_cal_sec = 0;
             break;
@@ -113,7 +119,7 @@ void user_init(void)
 {
     spiffs_fs1_init();
 
-	ssc_attach(SSC_BR_74880);
+    ssc_attach(SSC_BR_74880);
     ssc_register(sscCmdSet, SSC_CMD_N, spiffs_test_help);
 }
 
