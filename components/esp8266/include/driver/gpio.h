@@ -65,6 +65,7 @@ extern "C" {
 #define GPIO_PIN_REG_14         PERIPHS_IO_MUX_MTMS_U
 #define GPIO_PIN_REG_15         PERIPHS_IO_MUX_MTDO_U
 
+// clang-format off
 #define GPIO_PIN_REG(i) \
     (i==0) ? GPIO_PIN_REG_0:  \
     (i==1) ? GPIO_PIN_REG_1:  \
@@ -82,6 +83,7 @@ extern "C" {
     (i==13)? GPIO_PIN_REG_13: \
     (i==14)? GPIO_PIN_REG_14: \
     GPIO_PIN_REG_15
+// clang-format on
 
 #define GPIO_PIN_ADDR(i)        (GPIO_PIN0_ADDRESS + i*4)
 
