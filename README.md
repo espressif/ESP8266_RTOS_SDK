@@ -202,3 +202,20 @@ tool reads `tools/find-files.ini` (see the current version
 explaining what should be done with the file.
 
 The tools are written in bash and Python.
+
+## Installing dependencies for Python
+
+`find-files` requires the following packages:
+
+* pathspec
+* configparser (build-in in python3)
+
+If these are not available through your OSes package manager you can
+use virtualenv to install them locally:
+
+    virtualenv venv
+    venv/bin/pip install -r tools/requirements.txt
+
+After that you can add `venv/bin` to path and run `tools/find-files` like this:
+
+    PATH=$(pwd)/venv/bin:$PATH
