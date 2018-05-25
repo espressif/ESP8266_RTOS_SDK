@@ -11,8 +11,12 @@
 #include "mbedtls/certs.h"
 
 #include "esp_common.h"
+#include "esp_system.h"
 
 #include "nopoll/nopoll.h"
+
+#define ssl_speed_up_enter() system_update_cpu_freq(SYS_CPU_160MHZ)
+#define ssl_speed_up_exit()  system_update_cpu_freq(SYS_CPU_80MHZ)
 
 static const char default_cas_certificate[] ICACHE_RODATA_ATTR STORE_ATTR = {
   0x30, 0x82, 0x05, 0x38, 0x30, 0x82, 0x04, 0x20, 0xa0, 0x03, 0x02, 0x01,
@@ -262,7 +266,9 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
     /* mbedtls_printf( "  . Performing the SSL/TLS handshake..." ); */
     //fflush( stdout );
 
-	static int handshakes = 0;
+    ssl_speed_up_enter();
+	
+    static int handshakes = 0;
     while( ( ret = mbedtls_ssl_handshake( ssl ) ) != 0 )
     {
         if( ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE )
@@ -272,6 +278,8 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
             goto exit;
         }
     }
+
+    ssl_speed_up_exit();
 
     /* mbedtls_printf( " ok\n" ); */
 
