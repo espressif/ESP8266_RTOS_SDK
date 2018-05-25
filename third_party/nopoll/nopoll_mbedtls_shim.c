@@ -279,7 +279,6 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
         }
     }
 
-    ssl_speed_up_exit();
 
     /* mbedtls_printf( " ok\n" ); */
 
@@ -303,6 +302,8 @@ int mbedtls_library_init(mbedtls_ssl_context *ssl, mbedtls_ssl_config *conf, mbe
     /*     mbedtls_printf( " ok\n" ); */
 
 exit:
+
+    ssl_speed_up_exit();
 
 #ifdef MBEDTLS_ERROR_C
     if( ret != 0 )
