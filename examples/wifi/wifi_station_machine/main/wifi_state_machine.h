@@ -10,7 +10,7 @@
 #define _WIFI_STATE_MACHINE_H_
 
 #include <stddef.h>
-#include "c_types.h"
+
 #include "esp_wifi.h"
 
 typedef void (* wifi_state_cb_t)();

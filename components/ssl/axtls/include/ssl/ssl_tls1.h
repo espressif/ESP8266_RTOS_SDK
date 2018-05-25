@@ -40,7 +40,6 @@
 extern "C" {
 #endif
 
-#include "c_types.h"
 #include "ssl/ssl_version.h"
 #include "ssl/ssl_config.h"
 

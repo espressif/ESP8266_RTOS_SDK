@@ -91,7 +91,6 @@
   *                 inside the RTOS SDK, users can not change it.
  */
 
-#include "c_types.h"
 #include "esp_libc.h"
 #include "esp_misc.h"
 #include "esp_wifi.h"

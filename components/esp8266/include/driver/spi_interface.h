@@ -20,7 +20,6 @@
 #define __SPI_INTERFACE_H__
 
 #include "spi_register.h"
-#include "c_types.h"
 
 //*****************************************************************************
 //
