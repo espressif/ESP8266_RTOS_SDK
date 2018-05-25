@@ -16,7 +16,9 @@
 #include <string.h>
 #include <strings.h>
 
+#include "esp_libc.h"
 #include "esp_misc.h"
+#include "esp_softap.h"
 
 #include "sdkconfig.h"
 #include "lwip/inet.h"
@@ -25,6 +27,8 @@
 #include "lwip/udp.h"
 #include "lwip/mem.h"
 #include "dhcpserver/dhcpserver.h"
+
+#include "FreeRTOS.h"
 
 extern struct netif *esp_netif[2];
 
