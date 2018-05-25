@@ -28,13 +28,36 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 uint32_t os_random(void);
 int32_t os_get_random(unsigned char *buf, size_t len);
+
+/**
+  * @brief  put a character to uart or other devices, similar with putc.
+  *
+  * @param  c : a character.
+  *
+  * @return int : the character written as an unsigned char cast to an int or EOF on error.
+  */
+int ets_putc(int c);
+
+/**
+  * @brief  Printf the strings to uart or other devices, similar with vprintf, simple than vprintf.
+  *         Can not print float point data format, or longlong data format.
+  *
+  * @param  const char *fmt : See vprintf.
+  *
+  * @param  ap : parameter list, see vprintf.
+  *
+  * @return int : the length printed to the output device.
+  */
+int ets_vprintf(const char *fmt, va_list ap);
 
 /**
   * @brief  Printf the strings to uart or other devices, similar with printf, simple than printf.
