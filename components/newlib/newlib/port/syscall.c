@@ -40,12 +40,12 @@ int _open_r(struct _reent *r, const char *filename, int flags, int mode)
     return 0;
 }
 
-int _read_r(struct _reent *r, int fd, void *buf, int len)
+_ssize_t _read_r(struct _reent *r, int fd, void *buf, size_t len)
 {
     return 0;
 }
 
-int _write_r(struct _reent *r, int fd, void *buf, int len)
+_ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
 {
     int i;
     const char *cbuf = buf;
@@ -83,9 +83,9 @@ int _fstat_r(struct _reent *r, int fd, struct stat *s)
     return 0;
 }
 
-void _sbrk_r(void *ptr, int incr)
+void *_sbrk_r(struct _reent *r, ptrdiff_t incr)
 {
-    return ;
+    return NULL;
 }
 
 void *_malloc_r(struct _reent *r, size_t n)
