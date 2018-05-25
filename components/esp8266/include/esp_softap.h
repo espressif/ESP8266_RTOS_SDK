@@ -28,6 +28,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "esp_wifi.h"
+
 #include "queue.h"
 
 #ifdef __cplusplus

@@ -7,15 +7,19 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include <stdbool.h>
 #include <stddef.h>
-#include "lwipopts.h"
-#include "lwip/ip_addr.h"
-#include "esp_libc.h"
+#include <string.h>
+
 #include "esp_misc.h"
-#include "esp_wifi.h"
 #include "esp_sta.h"
 #include "esp_softap.h"
+#include "esp_system.h"
+#include "esp_timer.h"
+
 #include "wifi_state_machine.h"
+
+#include "user_config.h"
 
 typedef void (* wifi_state_cb_t)();
 
@@ -149,10 +153,10 @@ bool start_wifi_station(const char * ssid, const char * pass){
         return true;
     }
     struct station_config config;
-    memset(&config, 0, sizeof(struct station_config));
-    strcpy(config.ssid, ssid);
+    memset((void *)&config, 0, sizeof(struct station_config));
+    strcpy((char *)config.ssid, ssid);
     if(pass){
-        strcpy(config.password, pass);
+        strcpy((char *)config.password, pass);
     }
     if(!wifi_station_set_config(&config)){
         printf("Failed to set Station config!\n");
@@ -194,9 +198,9 @@ bool start_wifi_ap(const char * ssid, const char * pass){
     }
     struct softap_config config;
     bzero(&config, sizeof(struct softap_config));
-    sprintf(config.ssid, ssid);
+    sprintf((char *)config.ssid, ssid);
     if(pass){
-        sprintf(config.password, pass);
+        sprintf((char *)config.password, pass);
     }
     return wifi_softap_set_config(&config);
 }
@@ -228,3 +232,92 @@ bool wifi_ap_enabled(){
     return !!(wifi_get_opmode() & SOFTAP_MODE);
 }
 
+static os_timer_t timer;
+
+/******************************************************************************
+ * FunctionName : user_rf_cal_sector_set
+ * Description  : SDK just reversed 4 sectors, used for rf init data and paramters.
+ *                We add this function to force users to set rf cal sector, since
+ *                we don't know which sector is free in user's application.
+ *                sector map for last several sectors : ABCCC
+ *                A : rf cal
+ *                B : rf init data
+ *                C : sdk parameters
+ * Parameters   : none
+ * Returns      : rf cal sector
+*******************************************************************************/
+uint32_t user_rf_cal_sector_set(void)
+{
+    flash_size_map size_map = system_get_flash_size_map();
+    uint32_t rf_cal_sec = 0;
+
+    switch (size_map) {
+        case FLASH_SIZE_4M_MAP_256_256:
+            rf_cal_sec = 128 - 5;
+            break;
+
+        case FLASH_SIZE_8M_MAP_512_512:
+            rf_cal_sec = 256 - 5;
+            break;
+
+        case FLASH_SIZE_16M_MAP_512_512:
+        case FLASH_SIZE_16M_MAP_1024_1024:
+            rf_cal_sec = 512 - 5;
+            break;
+
+        case FLASH_SIZE_32M_MAP_512_512:
+        case FLASH_SIZE_32M_MAP_1024_1024:
+            rf_cal_sec = 1024 - 5;
+            break;
+        case FLASH_SIZE_64M_MAP_1024_1024:
+            rf_cal_sec = 2048 - 5;
+            break;
+        case FLASH_SIZE_128M_MAP_1024_1024:
+            rf_cal_sec = 4096 - 5;
+            break;
+        default:
+            rf_cal_sec = 0;
+            break;
+    }
+
+    return rf_cal_sec;
+}
+
+static void wait_for_connection_ready(uint8_t flag)
+{
+    os_timer_disarm(&timer);
+    if(wifi_station_connected()){
+        printf("connected\n");
+    } else {
+        printf("reconnect after 2s\n");
+        os_timer_setfn(&timer, (os_timer_func_t *)wait_for_connection_ready, NULL);
+        os_timer_arm(&timer, 2000, 0);
+    }
+}
+
+static void on_wifi_connect(){
+    os_timer_disarm(&timer);
+    os_timer_setfn(&timer, (os_timer_func_t *)wait_for_connection_ready, NULL);
+    os_timer_arm(&timer, 100, 0);
+}
+
+static void on_wifi_disconnect(uint8_t reason){
+    printf("disconnect %d\n", reason);
+}
+
+/******************************************************************************
+ * FunctionName : user_init
+ * Description  : entry of user application, init user function here
+ * Parameters   : none
+ * Returns      : none
+*******************************************************************************/
+void user_init(void)
+{
+    printf("SDK version:%s\n", system_get_sdk_version());
+
+    set_on_station_connect(on_wifi_connect);
+    set_on_station_disconnect(on_wifi_disconnect);
+    init_esp_wifi();
+    stop_wifi_ap();
+    start_wifi_station(SSID, PASSWORD);
+}

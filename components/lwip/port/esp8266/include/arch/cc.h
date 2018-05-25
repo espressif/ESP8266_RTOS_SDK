@@ -63,6 +63,8 @@ typedef int sys_prot_t;
 #include <stdio.h>
 
 #ifdef LWIP_DEBUG
+extern void sys_arch_assert(const char *file, int line);
+
 #define LWIP_PLATFORM_DIAG(x)   do {printf x;} while(0)
 #define LWIP_PLATFORM_ASSERT(x) do {printf(x); sys_arch_assert(__FILE__, __LINE__);} while(0)
 #else
