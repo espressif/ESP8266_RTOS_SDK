@@ -1417,6 +1417,96 @@ nmi_rfi:
 #endif
 #endif  /* NMI */
 
+    .section    .text, "ax"
+    .global     ShowCritical
+    .type       ShowCritical, @function
+    .align      4
+ShowCritical:
+    movi    a2, LABEL(_Pri_,_NMICount)
+    l32i    a2, a2, 0
+    bnei    a2, 1, nmi_reentry_panic
+
+    /*
+     * a2 == 1, the function is not NMI exception function and its stack
+     * is stored at LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE
+     *
+     * a2 >= 1, the function is NMI exception function and its stack
+     * is stored at LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE + HESF_TOTALSIZE + PRI_N_STACK_SIZE2
+     */ 
+    movi    a2, LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE
+    j       nmi_common_panic
+nmi_reentry_panic:
+    movi    a2, LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE + HESF_TOTALSIZE + PRI_N_STACK_SIZE2
+nmi_common_panic:
+    movi    a1, 0XFFFFFFFF
+    movi    a3, LABEL(_Pri_,_NMICount)
+    s32i    a1, a3, 0
+
+    movi    a1, _chip_interrupt_tmp
+    addi    a1, a1, -XT_STK_FRMSZ
+
+    l32i    a3, a2, HESF_AR(0)
+    s32i    a3, a1, XT_STK_A0
+
+    l32i    a3, a2, HESF_AR(1)
+    s32i    a3, a1, XT_STK_A1
+
+    l32i    a3, a2, HESF_AR(2)
+    s32i    a3, a1, XT_STK_A2
+
+    l32i    a3, a2, HESF_AR(3)
+    s32i    a3, a1, XT_STK_A3
+
+    l32i    a3, a2, HESF_AR(4)
+    s32i    a3, a1, XT_STK_A4
+
+    l32i    a3, a2, HESF_AR(5)
+    s32i    a3, a1, XT_STK_A5
+
+    l32i    a3, a2, HESF_AR(6)
+    s32i    a3, a1, XT_STK_A6
+
+    l32i    a3, a2, HESF_AR(7)
+    s32i    a3, a1, XT_STK_A7
+
+    l32i    a3, a2, HESF_AR(8)
+    s32i    a3, a1, XT_STK_A8
+
+    l32i    a3, a2, HESF_AR(9)
+    s32i    a3, a1, XT_STK_A9
+
+    l32i    a3, a2, HESF_AR(10)
+    s32i    a3, a1, XT_STK_A10
+
+    l32i    a3, a2, HESF_AR(11)
+    s32i    a3, a1, XT_STK_A11
+
+    l32i    a3, a2, HESF_AR(12)
+    s32i    a3, a1, XT_STK_A12
+
+    l32i    a3, a2, HESF_AR(13)
+    s32i    a3, a1, XT_STK_A13
+
+    l32i    a3, a2, HESF_AR(14)
+    s32i    a3, a1, XT_STK_A14
+
+    l32i    a3, a2, HESF_AR(15)
+    s32i    a3, a1, XT_STK_A15
+
+    l32i    a3, a2, HESF_EXCCAUSE
+    s32i    a3, a1, XT_STK_EXCCAUSE
+
+    l32i    a3, a2, HESF_EPC3
+    s32i    a3, a1, XT_STK_PC
+
+    l32i    a3, a2, HESF_EPS3
+    s32i    a3, a1, XT_STK_PS
+
+    mov     a2, a1
+
+    call0   panicHandler
+
+
     .global     _xt_ext_panic
     .type       _xt_ext_panic, @function
     .align      4
