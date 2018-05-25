@@ -15,7 +15,6 @@
 #include "esp_system.h"
 #include "esp_wifi.h"
 
-#include "openssl_demo.h"
 #include "openssl/ssl.h"
 
 #include "freertos/FreeRTOS.h"
@@ -48,12 +47,12 @@ static int send_bytes = sizeof(send_data);
 
 static char recv_buf[OPENSSL_DEMO_RECV_BUF_LEN];
 
-static void openssl_demo_thread(void *p)
+static void openssl_demo_thread(void* p)
 {
     int ret;
 
-    SSL_CTX *ctx;
-    SSL *ssl;
+    SSL_CTX* ctx;
+    SSL* ssl;
 
     int socket;
     struct sockaddr_in sock_addr;
@@ -66,35 +65,42 @@ static void openssl_demo_thread(void *p)
 
     do {
         ret = netconn_gethostbyname(OPENSSL_DEMO_TARGET_NAME, &target_ip);
-    } while(ret);
+    } while (ret);
+
     printf("get target IP is %d.%d.%d.%d\n", (unsigned char)((target_ip.u_addr.ip4.addr & 0x000000ff) >> 0),
-                                                (unsigned char)((target_ip.u_addr.ip4.addr & 0x0000ff00) >> 8),
-                                                (unsigned char)((target_ip.u_addr.ip4.addr & 0x00ff0000) >> 16),
-                                                (unsigned char)((target_ip.u_addr.ip4.addr & 0xff000000) >> 24));
+           (unsigned char)((target_ip.u_addr.ip4.addr & 0x0000ff00) >> 8),
+           (unsigned char)((target_ip.u_addr.ip4.addr & 0x00ff0000) >> 16),
+           (unsigned char)((target_ip.u_addr.ip4.addr & 0xff000000) >> 24));
 
     printf("create SSL context ......");
     ctx = SSL_CTX_new(TLSv1_1_client_method());
+
     if (!ctx) {
         printf("failed\n");
         goto failed1;
     }
+
     printf("OK\n");
 
     printf("set SSL context read buffer size ......");
     SSL_CTX_set_default_read_buffer_len(ctx, OPENSSL_DEMO_FRAGMENT_SIZE);
     ret = 0;
+
     if (ret) {
         printf("failed, return %d\n", ret);
         goto failed2;
     }
+
     printf("OK\n");
 
     printf("create socket ......");
     socket = socket(AF_INET, SOCK_STREAM, 0);
+
     if (socket < 0) {
         printf("failed\n");
         goto failed3;
     }
+
     printf("OK\n");
 
     printf("bind socket ......");
@@ -103,10 +109,12 @@ static void openssl_demo_thread(void *p)
     sock_addr.sin_addr.s_addr = 0;
     sock_addr.sin_port = htons(OPENSSL_DEMO_LOCAL_TCP_PORT);
     ret = bind(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
+
     if (ret) {
         printf("failed\n");
         goto failed4;
     }
+
     printf("OK\n");
 
     printf("socket connect to remote ......");
@@ -115,46 +123,57 @@ static void openssl_demo_thread(void *p)
     sock_addr.sin_addr.s_addr = target_ip.u_addr.ip4.addr;
     sock_addr.sin_port = htons(OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = connect(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
+
     if (ret) {
         printf("failed\n");
         goto failed5;
     }
+
     printf("OK\n");
 
     printf("create SSL ......");
     ssl = SSL_new(ctx);
+
     if (!ssl) {
         printf("failed\n");
         goto failed6;
     }
+
     printf("OK\n");
 
     SSL_set_fd(ssl, socket);
 
     printf("SSL connected to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = SSL_connect(ssl);
+
     if (!ret) {
         printf("failed, return [-0x%x]\n", -ret);
         goto failed7;
     }
+
     printf("OK\n");
 
     printf("send request to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = SSL_write(ssl, send_data, send_bytes);
+
     if (ret <= 0) {
         printf("failed, return [-0x%x]\n", -ret);
         goto failed8;
     }
+
     printf("OK\n\n");
 
     do {
         ret = SSL_read(ssl, recv_buf, OPENSSL_DEMO_RECV_BUF_LEN - 1);
+
         if (ret <= 0) {
             break;
         }
+
         recv_bytes += ret;
         printf("%s", recv_buf);
     } while (1);
+
     printf("read %d bytes data from %s ......\n", recv_bytes, OPENSSL_DEMO_TARGET_NAME);
 
 failed8:
@@ -186,6 +205,7 @@ void user_conn_init(void)
                       NULL,
                       OPENSSL_DEMO_THREAD_PRORIOTY,
                       &openssl_handle);
+
     if (ret != pdPASS)  {
         printf("create thread %s failed\n", OPENSSL_DEMO_THREAD_NAME);
         return ;
@@ -227,12 +247,15 @@ uint32_t user_rf_cal_sector_set(void)
         case FLASH_SIZE_32M_MAP_1024_1024:
             rf_cal_sec = 1024 - 5;
             break;
+
         case FLASH_SIZE_64M_MAP_1024_1024:
             rf_cal_sec = 2048 - 5;
             break;
+
         case FLASH_SIZE_128M_MAP_1024_1024:
             rf_cal_sec = 4096 - 5;
             break;
+
         default:
             rf_cal_sec = 0;
             break;
@@ -241,7 +264,7 @@ uint32_t user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-void wifi_event_handler_cb(System_Event_t *event)
+void wifi_event_handler_cb(System_Event_t* event)
 {
     if (event == NULL) {
         return;
@@ -269,12 +292,14 @@ void user_init(void)
     printf("SDK version:%s %d\n", system_get_sdk_version(), system_get_free_heap_size());
     wifi_set_opmode(STATION_MODE);
 
-    // set AP parameter
-    struct station_config config;
-    bzero(&config, sizeof(struct station_config));
-    sprintf((char *)config.ssid, SSID);
-    sprintf((char *)config.password, PASSWORD);
-    wifi_station_set_config(&config);
+    {
+        // set AP parameter
+        struct station_config config;
+        bzero(&config, sizeof(struct station_config));
+        sprintf((char*)config.ssid, SSID);
+        sprintf((char*)config.password, PASSWORD);
+        wifi_station_set_config(&config);
+    }
 
     wifi_set_event_handler_cb(wifi_event_handler_cb);
 }

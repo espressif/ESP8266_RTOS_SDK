@@ -37,7 +37,7 @@ static xTaskHandle mqttc_client_handle;
 
 static void messageArrived(MessageData* data)
 {
-    printf("Message arrived: %s\n", (char *)data->message->payload);
+    printf("Message arrived: %s\n", (char*)data->message->payload);
 }
 
 static void mqtt_client_thread(void* pvParameters)
@@ -158,12 +158,15 @@ uint32_t user_rf_cal_sector_set(void)
         case FLASH_SIZE_32M_MAP_1024_1024:
             rf_cal_sec = 1024 - 5;
             break;
+
         case FLASH_SIZE_64M_MAP_1024_1024:
             rf_cal_sec = 2048 - 5;
             break;
+
         case FLASH_SIZE_128M_MAP_1024_1024:
             rf_cal_sec = 4096 - 5;
             break;
+
         default:
             rf_cal_sec = 0;
             break;
@@ -172,7 +175,7 @@ uint32_t user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-void wifi_event_handler_cb(System_Event_t *event)
+void wifi_event_handler_cb(System_Event_t* event)
 {
     if (event == NULL) {
         return;
@@ -208,13 +211,13 @@ void user_init(void)
     printf("SDK version:%s %d\n", system_get_sdk_version(), system_get_free_heap_size());
     wifi_set_opmode(STATION_MODE);
 
-    struct station_config config;
-    bzero(&config, sizeof(struct station_config));
-    sprintf((char *)config.ssid, SSID);
-    sprintf((char *)config.password, PASSWORD);
-    wifi_station_set_config(&config);
+    {
+        struct station_config config;
+        bzero(&config, sizeof(struct station_config));
+        sprintf((char*)config.ssid, SSID);
+        sprintf((char*)config.password, PASSWORD);
+        wifi_station_set_config(&config);
+    }
 
     wifi_set_event_handler_cb(wifi_event_handler_cb);
-
-    wifi_station_connect();
 }

@@ -325,12 +325,14 @@ void user_init()
 {
     wifi_set_opmode(STATION_MODE);
 
-    // set AP parameter
-    struct station_config config;
-    bzero(&config, sizeof(struct station_config));
-    sprintf((char*)config.ssid, CONFIG_WIFI_SSID);
-    sprintf((char*)config.password, CONFIG_WIFI_PASSWORD);
-    wifi_station_set_config(&config);
+    {
+        // set AP parameter
+        struct station_config config;
+        bzero(&config, sizeof(struct station_config));
+        sprintf((char*)config.ssid, CONFIG_WIFI_SSID);
+        sprintf((char*)config.password, CONFIG_WIFI_PASSWORD);
+        wifi_station_set_config(&config);
+    }
 
     wifi_set_event_handler_cb(wifi_event_handler_cb);
 }
