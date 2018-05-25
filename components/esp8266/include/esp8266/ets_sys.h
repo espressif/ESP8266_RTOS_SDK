@@ -38,6 +38,7 @@
 
 extern char NMIIrqIsOn;
 extern uint32_t WDEV_INTEREST_EVENT;
+extern void vPortEnterCritical();
 
 #define INT_ENA_WDEV        0x3ff20c18
 #define WDEV_TSF0_REACH_INT (BIT(27))

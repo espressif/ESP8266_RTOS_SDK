@@ -546,19 +546,19 @@ list-components:
 print_flash_cmd:
 	echo $(ESPTOOL_WRITE_FLASH_OPTIONS) $(ESPTOOL_ALL_FLASH_ARGS) | sed -e 's:'$(PWD)/build/'::g'
 
-# Check toolchain version using the output of xtensa-esp32-elf-gcc --version command.
+# Check toolchain version using the output of xtensa-lx106-elf-gcc --version command.
 # The output normally looks as follows
-#     xtensa-esp32-elf-gcc (crosstool-NG crosstool-ng-1.22.0-59-ga194053) 4.8.5
+#     xtensa-lx106-elf-gcc (crosstool-NG 1.20.0) 4.8.2
 # The part in brackets is extracted into TOOLCHAIN_COMMIT_DESC variable,
 # the part after the brackets is extracted into TOOLCHAIN_GCC_VER.
 ifdef CONFIG_TOOLPREFIX
 ifndef MAKE_RESTARTS
-TOOLCHAIN_COMMIT_DESC := $(shell $(CC) --version | sed -E -n 's|.*crosstool-ng-([0-9]+).([0-9]+).([0-9]+)-([0-9]+)-g([0-9a-f]{7}).*|\1.\2.\3-\4-g\5|gp')
-TOOLCHAIN_GCC_VER := $(shell $(CC) --version | sed -E -n 's|xtensa-esp32-elf-gcc.*\ \(.*\)\ (.*)|\1|gp')
+TOOLCHAIN_COMMIT_DESC := $(shell $(CC) --version | sed -E -n 's|.*crosstool-NG ([0-9]+).([0-9]+).([0-9]+).*|\1.\2.\3|gp')
+TOOLCHAIN_GCC_VER := $(shell $(CC) --version | sed -E -n 's|xtensa-lx106-elf.*\ \(.*\)\ (.*)|\1|gp')
 
 # Officially supported version(s)
-SUPPORTED_TOOLCHAIN_COMMIT_DESC := 1.22.0-80-g6c4433a
-SUPPORTED_TOOLCHAIN_GCC_VERSIONS := 5.2.0
+SUPPORTED_TOOLCHAIN_COMMIT_DESC := 1.20.0
+SUPPORTED_TOOLCHAIN_GCC_VERSIONS := 4.8.2
 
 ifdef TOOLCHAIN_COMMIT_DESC
 ifneq ($(TOOLCHAIN_COMMIT_DESC), $(SUPPORTED_TOOLCHAIN_COMMIT_DESC))
