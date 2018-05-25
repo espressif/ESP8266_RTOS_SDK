@@ -7,14 +7,16 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-#include "esp_common.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "esp_sta.h"
+#include "esp_system.h"
 #include "esp_wps.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/queue.h"
 
 static void user_wps_status_cb(int status)
 {   
