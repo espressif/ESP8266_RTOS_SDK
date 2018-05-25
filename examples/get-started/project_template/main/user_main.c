@@ -6,7 +6,10 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-#include "esp_common.h"
+#include <stdio.h>
+#include <stdint.h>
+
+#include <esp_system.h>
 
 /******************************************************************************
  * FunctionName : user_rf_cal_sector_set

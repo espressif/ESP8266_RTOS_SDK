@@ -27,6 +27,8 @@
 
 #include <stdint.h>
 
+#include "lwip/ip_addr.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
