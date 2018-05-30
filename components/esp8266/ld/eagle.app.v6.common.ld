@@ -123,6 +123,7 @@ SECTIONS
   {
     _rodata_start = ABSOLUTE(.);
     *libpp.a:(.rodata.* .rodata)
+    *liblog.a:(.rodata.* .rodata)
     *(.gnu.linkonce.r.*)
     *(.rodata1)
     __XT_EXCEPTION_TABLE__ = ABSOLUTE(.);
