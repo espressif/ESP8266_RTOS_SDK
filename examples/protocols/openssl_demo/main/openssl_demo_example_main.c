@@ -11,32 +11,30 @@
 #include <string.h>
 #include <strings.h>
 
+#include "sdkconfig.h"
+
+#include "esp_misc.h"
 #include "esp_sta.h"
 #include "esp_system.h"
-#include "esp_wifi.h"
-
-#include "openssl/ssl.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "lwip/sockets.h"
-#include "lwip/api.h"
+#include <sys/socket.h>
+#include <netdb.h>
 
-#include "user_config.h"
+#include "openssl/ssl.h"
 
 #define OPENSSL_DEMO_THREAD_NAME "ssl_demo"
 #define OPENSSL_DEMO_THREAD_STACK_WORDS 2048
 #define OPENSSL_DEMO_THREAD_PRORIOTY 6
 
-#define OPENSSL_DEMO_FRAGMENT_SIZE 8192
-
-#define OPENSSL_DEMO_LOCAL_TCP_PORT 1000
+#define OPENSSL_DEMO_LOCAL_TCP_PORT 9999
 
 #define OPENSSL_DEMO_TARGET_NAME "www.baidu.com"
 #define OPENSSL_DEMO_TARGET_TCP_PORT 443
 
-#define OPENSSL_DEMO_REQUEST "{\"path\": \"/v1/ping/\", \"method\": \"GET\"}\r\n"
+#define OPENSSL_DEMO_REQUEST "GET / HTTP/1.1\r\n\r\n"
 
 #define OPENSSL_DEMO_RECV_BUF_LEN 1024
 
@@ -56,21 +54,22 @@ static void openssl_demo_thread(void* p)
 
     int socket;
     struct sockaddr_in sock_addr;
-
-    ip_addr_t target_ip;
+    struct hostent* entry = NULL;
 
     int recv_bytes = 0;
 
     printf("OpenSSL demo thread start...\n");
 
+    /*get addr info for hostname*/
     do {
-        ret = netconn_gethostbyname(OPENSSL_DEMO_TARGET_NAME, &target_ip);
-    } while (ret);
+        entry = gethostbyname(OPENSSL_DEMO_TARGET_NAME);
+        vTaskDelay(500 / portTICK_RATE_MS);
+    } while (entry == NULL);
 
-    printf("get target IP is %d.%d.%d.%d\n", (unsigned char)((target_ip.u_addr.ip4.addr & 0x000000ff) >> 0),
-           (unsigned char)((target_ip.u_addr.ip4.addr & 0x0000ff00) >> 8),
-           (unsigned char)((target_ip.u_addr.ip4.addr & 0x00ff0000) >> 16),
-           (unsigned char)((target_ip.u_addr.ip4.addr & 0xff000000) >> 24));
+    printf("get target IP is %d.%d.%d.%d\n", (unsigned char)((((struct in_addr*)(entry->h_addr))->s_addr & 0x000000ff) >> 0),
+           (unsigned char)((((struct in_addr*)(entry->h_addr))->s_addr & 0x0000ff00) >> 8),
+           (unsigned char)((((struct in_addr*)(entry->h_addr))->s_addr & 0x00ff0000) >> 16),
+           (unsigned char)((((struct in_addr*)(entry->h_addr))->s_addr & 0xff000000) >> 24));
 
     printf("create SSL context ......");
     ctx = SSL_CTX_new(TLSv1_1_client_method());
@@ -82,23 +81,16 @@ static void openssl_demo_thread(void* p)
 
     printf("OK\n");
 
-    printf("set SSL context read buffer size ......");
-    SSL_CTX_set_default_read_buffer_len(ctx, OPENSSL_DEMO_FRAGMENT_SIZE);
-    ret = 0;
-
-    if (ret) {
-        printf("failed, return %d\n", ret);
-        goto failed2;
-    }
-
-    printf("OK\n");
+    // The client will verify the certificate received from the server during the handshake.
+    // This is turned on by default in wolfSSL.
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
 
     printf("create socket ......");
     socket = socket(AF_INET, SOCK_STREAM, 0);
 
     if (socket < 0) {
         printf("failed\n");
-        goto failed3;
+        goto failed2;
     }
 
     printf("OK\n");
@@ -112,7 +104,7 @@ static void openssl_demo_thread(void* p)
 
     if (ret) {
         printf("failed\n");
-        goto failed4;
+        goto failed3;
     }
 
     printf("OK\n");
@@ -120,13 +112,13 @@ static void openssl_demo_thread(void* p)
     printf("socket connect to remote ......");
     memset(&sock_addr, 0, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
-    sock_addr.sin_addr.s_addr = target_ip.u_addr.ip4.addr;
+    sock_addr.sin_addr.s_addr = ((struct in_addr*)(entry->h_addr))->s_addr;
     sock_addr.sin_port = htons(OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = connect(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
 
     if (ret) {
         printf("failed\n");
-        goto failed5;
+        goto failed4;
     }
 
     printf("OK\n");
@@ -136,7 +128,7 @@ static void openssl_demo_thread(void* p)
 
     if (!ssl) {
         printf("failed\n");
-        goto failed6;
+        goto failed5;
     }
 
     printf("OK\n");
@@ -148,7 +140,7 @@ static void openssl_demo_thread(void* p)
 
     if (!ret) {
         printf("failed, return [-0x%x]\n", -ret);
-        goto failed7;
+        goto failed6;
     }
 
     printf("OK\n");
@@ -158,7 +150,7 @@ static void openssl_demo_thread(void* p)
 
     if (ret <= 0) {
         printf("failed, return [-0x%x]\n", -ret);
-        goto failed8;
+        goto failed7;
     }
 
     printf("OK\n\n");
@@ -176,15 +168,14 @@ static void openssl_demo_thread(void* p)
 
     printf("read %d bytes data from %s ......\n", recv_bytes, OPENSSL_DEMO_TARGET_NAME);
 
-failed8:
-    SSL_shutdown(ssl);
 failed7:
-    SSL_free(ssl);
+    SSL_shutdown(ssl);
 failed6:
+    SSL_free(ssl);
 failed5:
 failed4:
-    close(socket);
 failed3:
+    close(socket);
 failed2:
     SSL_CTX_free(ctx);
 failed1:
@@ -296,8 +287,8 @@ void user_init(void)
         // set AP parameter
         struct station_config config;
         bzero(&config, sizeof(struct station_config));
-        sprintf((char*)config.ssid, SSID);
-        sprintf((char*)config.password, PASSWORD);
+        sprintf((char*)config.ssid, CONFIG_WIFI_SSID);
+        sprintf((char*)config.password, CONFIG_WIFI_PASSWORD);
         wifi_station_set_config(&config);
     }
 
