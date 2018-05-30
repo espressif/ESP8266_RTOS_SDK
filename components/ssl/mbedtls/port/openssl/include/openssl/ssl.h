@@ -636,26 +636,6 @@ void SSL_set_info_callback(SSL *ssl, void (*cb) (const SSL *ssl, int type, int v
 OSSL_HANDSHAKE_STATE SSL_get_state(const SSL *ssl);
 
 /**
- * @brief set the SSL context read buffer length
- *
- * @param ctx - SSL context point
- * @param len - read buffer length
- *
- * @return none
- */
-void SSL_CTX_set_default_read_buffer_len(SSL_CTX *ctx, size_t len);
-
-/**
- * @brief set the SSL read buffer length
- *
- * @param ssl - SSL point
- * @param len - read buffer length
- *
- * @return none
- */
-void SSL_set_default_read_buffer_len(SSL *ssl, size_t len);
-
-/**
  * @brief set the SSL security level
  *
  * @param ssl   - SSL point

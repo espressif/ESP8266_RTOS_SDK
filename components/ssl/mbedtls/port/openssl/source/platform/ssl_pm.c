@@ -24,6 +24,7 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
 #include "mbedtls/certs.h"
+#include "mbedtls/esp_debug.h"
 
 #define X509_INFO_STRING_LENGTH 3072
 #define OPENSSL_READ_BUFFER_LENGTH_MIN 2048
@@ -59,35 +60,8 @@ struct pkey_pm
     mbedtls_pk_context *ex_pkey;
 };
 
-unsigned int max_content_len;
-
 /*********************************************************************************************/
 /************************************ SSL arch interface *************************************/
-
-#ifdef CONFIG_OPENSSL_LOWLEVEL_DEBUG
-
-/* mbedtls debug level */
-#define MBEDTLS_DEBUG_LEVEL 4
-
-/**
- * @brief mbedtls debug function
- */
-static void ssl_platform_debug(void *ctx, int level,
-                     const char *file, int line,
-                     const char *str)
-{
-    /* Shorten 'file' from the whole file path to just the filename
-
-       This is a bit wasteful because the macros are compiled in with
-       the full _FILE_ path in each case.
-    */
-    char *file_sep = rindex(file, '/');
-    if(file_sep)
-        file = file_sep + 1;
-
-    SSL_DEBUG(SSL_DEBUG_ON, "%s:%d %s", file, line, str);
-}
-#endif
 
 /**
  * @brief create SSL low-level object
@@ -105,17 +79,11 @@ int ssl_pm_new(SSL *ssl)
 
     const SSL_METHOD *method = ssl->method;
 
-    if (ssl->ctx->read_buffer_len < OPENSSL_READ_BUFFER_LENGTH_MIN ||
-        ssl->ctx->read_buffer_len > OPENSSL_READ_BUFFER_LENGTH_MAX)
-        return -1;
-
-     ssl_pm = ssl_mem_zalloc(sizeof(struct ssl_pm));
+    ssl_pm = ssl_mem_zalloc(sizeof(struct ssl_pm));
     if (!ssl_pm) {
         SSL_DEBUG(SSL_PLATFORM_ERROR_LEVEL, "no enough memory > (ssl_pm)");
         goto no_mem;
     }
-
-    max_content_len = ssl->ctx->read_buffer_len;
 
     mbedtls_net_init(&ssl_pm->fd);
     mbedtls_net_init(&ssl_pm->cl_fd);
@@ -161,11 +129,8 @@ int ssl_pm_new(SSL *ssl)
 
     mbedtls_ssl_conf_rng(&ssl_pm->conf, mbedtls_ctr_drbg_random, &ssl_pm->ctr_drbg);
 
-#ifdef CONFIG_OPENSSL_LOWLEVEL_DEBUG
-    mbedtls_debug_set_threshold(MBEDTLS_DEBUG_LEVEL);
-    mbedtls_ssl_conf_dbg(&ssl_pm->conf, ssl_platform_debug, NULL);
-#else
-    mbedtls_ssl_conf_dbg(&ssl_pm->conf, NULL, NULL);
+#ifdef CONFIG_MBEDTLS_DEBUG
+    mbedtls_esp_enable_debug_log(&ssl_pm->conf, CONFIG_MBEDTLS_DEBUG_LEVEL);
 #endif
 
     ret = mbedtls_ssl_setup(&ssl_pm->ssl, &ssl_pm->conf);
@@ -641,13 +606,6 @@ failed:
     pkey_pm->pkey = NULL;
 no_mem:
     return -1;
-}
-
-
-
-void ssl_pm_set_bufflen(SSL *ssl, int len)
-{
-    max_content_len = len;
 }
 
 long ssl_pm_get_verify_result(const SSL *ssl)

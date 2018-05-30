@@ -17,6 +17,7 @@
 
 #include "platform/ssl_opt.h"
 #include "platform/ssl_port.h"
+#include "sdkconfig.h"
 
 #ifdef __cplusplus
  extern "C" {

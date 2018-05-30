@@ -87,6 +87,19 @@ int SSL_CTX_add_client_CA(SSL_CTX *ctx, X509 *x);
  */
 int SSL_add_client_CA(SSL *ssl, X509 *x);
 
+
+/**
+ * @brief add CA client certification into the CTX
+ *
+ * @param ctx - SSL context point
+ * @param buffer - a point pointed to the certification context memory point
+ *
+ * @return result
+ *     0 : failed
+ *     1 : OK
+ */
+int SSL_CTX_load_verify_buffer(SSL_CTX *ctx, const unsigned char* buffer, long len);
+
 /**
  * @brief load certification into the SSL
  *

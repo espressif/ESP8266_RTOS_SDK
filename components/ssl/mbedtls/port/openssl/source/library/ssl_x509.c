@@ -154,6 +154,24 @@ int SSL_add_client_CA(SSL *ssl, X509 *x)
 }
 
 /**
+ * @brief add CA client certification into the CTX
+ */
+int SSL_CTX_load_verify_buffer(SSL_CTX *ctx, const unsigned char* buffer, long len)
+{
+    SSL_ASSERT1(ctx);
+    SSL_ASSERT1(buffer);
+
+    X509* cacrt = d2i_X509(NULL, buffer, len);
+
+    if (cacrt) {
+        SSL_CTX_add_client_CA(ctx, cacrt);
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+/**
  * @brief set the SSL context certification
  */
 int SSL_CTX_use_certificate(SSL_CTX *ctx, X509 *x)
