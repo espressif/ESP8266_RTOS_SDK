@@ -378,13 +378,11 @@ int NetworkConnectSSL(Network* n, char* addr, int port, ssl_ca_crt_key_t* ssl_cc
     }
 
     if (ssl_cck->cacrt) {
-        X509* cacrt = d2i_X509(NULL, ssl_cck->cacrt, ssl_cck->cacrt_len);
+        retVal = SSL_CTX_load_verify_buffer(n->ctx, ssl_cck->cacrt, ssl_cck->cacrt_len);
 
-        if (!cacrt) {
+        if (retVal != 1) {
             goto exit1;
         }
-
-        SSL_CTX_add_client_CA(n->ctx, cacrt);
     }
 
     if (ssl_cck->cert && ssl_cck->key) {
@@ -406,8 +404,6 @@ int NetworkConnectSSL(Network* n, char* addr, int port, ssl_ca_crt_key_t* ssl_cc
     } else {
         SSL_CTX_set_verify(n->ctx, SSL_VERIFY_NONE, NULL);
     }
-
-    SSL_CTX_set_default_read_buffer_len(n->ctx, frag_len);
 
     sAddr.sin_family = AF_INET;
     sAddr.sin_addr.s_addr = ((struct in_addr*)(ipAddress->h_addr))->s_addr;
