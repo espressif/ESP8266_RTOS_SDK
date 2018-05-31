@@ -15,6 +15,8 @@
 #ifndef __HW_TIMER_H__
 #define __HW_TIMER_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

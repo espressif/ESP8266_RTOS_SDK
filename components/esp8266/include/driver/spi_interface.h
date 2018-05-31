@@ -19,6 +19,8 @@
 #ifndef __SPI_INTERFACE_H__
 #define __SPI_INTERFACE_H__
 
+#include <stdint.h>
+
 #include "spi_register.h"
 
 //*****************************************************************************
