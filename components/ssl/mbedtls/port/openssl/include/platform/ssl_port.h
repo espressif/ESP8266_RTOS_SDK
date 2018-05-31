@@ -16,15 +16,13 @@
 #define _SSL_PORT_H_
 
 #include <string.h>
+#include <stdio.h>
 
 #include "esp_system.h"
-
 
 #ifdef __cplusplus
  extern "C" {
 #endif
-
-
 
 #ifdef MEMLEAK_DEBUG
 
