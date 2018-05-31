@@ -15,13 +15,17 @@
 #ifndef __GPIO_H__
 #define __GPIO_H__
 
+#include <stdint.h>
+
+#include "esp8266/eagle_soc.h"
+#include "esp8266/gpio_register.h"
+#include "esp8266/pin_mux_register.h"
+
+#include "freertos/portmacro.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
-
-#include "esp8266/gpio_register.h"
 
 #define ETS_GPIO_INTR_ENABLE()  _xt_isr_unmask(1 << ETS_GPIO_INUM)
 #define ETS_GPIO_INTR_DISABLE() _xt_isr_mask(1 << ETS_GPIO_INUM)

@@ -25,6 +25,8 @@
 #ifndef _TIMER_REGISTER_H_
 #define _TIMER_REGISTER_H_
 
+#include "eagle_soc.h"
+
 #define PERIPHS_TIMER_BASEDDR       0x60000600
 
 #define FRC1_LOAD_ADDRESS           (PERIPHS_TIMER_BASEDDR + 0x0)

@@ -15,11 +15,15 @@
 #ifndef __UART_H__
 #define __UART_H__
 
+#include <stdint.h>
+
+#include "esp8266/uart_register.h"
+
+#include "freertos/portmacro.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "esp8266/uart_register.h"
 
 #define ETS_UART_INTR_ENABLE()  _xt_isr_unmask(1 << ETS_UART_INUM)
 #define ETS_UART_INTR_DISABLE() _xt_isr_mask(1 << ETS_UART_INUM)

@@ -15,6 +15,8 @@
 #ifndef SPI_REGISTER_H_INCLUDED
 #define SPI_REGISTER_H_INCLUDED
 
+#include "esp8266/eagle_soc.h"
+
 #define REG_SPI_BASE(i)  (0x60000200-i*0x100)
 #define SPI_CMD(i)                            (REG_SPI_BASE(i)  + 0x0)
 
