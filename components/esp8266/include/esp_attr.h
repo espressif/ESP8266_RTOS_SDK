@@ -26,10 +26,10 @@
 #define ICACHE_RODATA_ATTR
 
 // Forces code into IRAM instead of flash.
-#define IRAM_ATTR __attribute__((section(".text")))
+#define IRAM_ATTR __attribute__((section(".iram1")))
 
 // Forces data into DRAM instead of flash
-#define DRAM_ATTR __attribute__((section(".data")))
+#define DRAM_ATTR __attribute__((section(".dram0")))
 
 // Forces data to be 4 bytes aligned
 #define WORD_ALIGNED_ATTR __attribute__((aligned(4)))
