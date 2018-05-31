@@ -93,6 +93,7 @@ SECTIONS
     *(.entry.text)
     *(.init.literal)
     *(.init)
+    *(.iram1 .iram1.*)
     *libcore.a:spi_flash.o(.literal .text .literal.* .text.*)
     *(.literal .text .stub .gnu.warning .gnu.linkonce.literal.* .gnu.linkonce.t.*.literal .gnu.linkonce.t.*)
     *(.fini.literal)
@@ -107,6 +108,7 @@ SECTIONS
     _data_start = ABSOLUTE(.);
     *(.data)
     *(.data.*)
+    *(.dram0)
     *(.gnu.linkonce.d.*)
     *(.data1)
     *(.sdata)
