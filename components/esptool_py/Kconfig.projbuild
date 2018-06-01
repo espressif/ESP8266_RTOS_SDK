@@ -99,22 +99,14 @@ config ESPTOOLPY_FLASHFREQ
 
 choice ESPTOOLPY_FLASHSIZE
 	prompt "Flash size"
-	default ESPTOOLPY_FLASHSIZE_2MB
+	default ESPTOOLPY_FLASHSIZE_2MB_C1
 	help
 		SPI flash size, in megabytes
 
-config ESPTOOLPY_FLASHSIZE_512KB
-	bool "512 KB"
-config ESPTOOLPY_FLASHSIZE_1MB
-	bool "1 MB"
-config ESPTOOLPY_FLASHSIZE_2MB
-	bool "2 MB"
 config ESPTOOLPY_FLASHSIZE_2MB_C1
-	bool "2 MB - C1"
-config ESPTOOLPY_FLASHSIZE_4MB
-	bool "4 MB"
+	bool "2 MB"
 config ESPTOOLPY_FLASHSIZE_4MB_C1
-	bool "4 MB - C1"
+	bool "4 MB"
 config ESPTOOLPY_FLASHSIZE_8MB
 	bool "8 MB"
 config ESPTOOLPY_FLASHSIZE_16MB
@@ -123,31 +115,10 @@ endchoice
 
 config ESPTOOLPY_FLASHSIZE
 	string
-	default "512KB" if ESPTOOLPY_FLASHSIZE_512KB
-	default "1MB" if ESPTOOLPY_FLASHSIZE_1MB
-	default "2MB" if ESPTOOLPY_FLASHSIZE_2MB
 	default "2MB-c1" if ESPTOOLPY_FLASHSIZE_2MB_C1
-	default "4MB" if ESPTOOLPY_FLASHSIZE_4MB
 	default "4MB-c1" if ESPTOOLPY_FLASHSIZE_4MB_C1
 	default "8MB" if ESPTOOLPY_FLASHSIZE_8MB
 	default "16MB" if ESPTOOLPY_FLASHSIZE_16MB
-
-choice ESPTOOLPY_APP_NUM
-    prompt "APP bin number"
-    default ESPTOOLPY_APP_NUM_APP1
-    help
-        Select APP bin number(app1 or app2)
-
-config ESPTOOLPY_APP_NUM_APP1
-    bool "app1"
-config ESPTOOLPY_APP_NUM_APP2
-    bool "app2"
-endchoice
-
-config ESPTOOLPY_APP_NUM
-    string
-    default "app1" if ESPTOOLPY_APP_NUM_APP1
-    default "app2" if ESPTOOLPY_APP_NUM_APP2
 
 choice ESPTOOLPY_BEFORE
     prompt "Before flashing"
