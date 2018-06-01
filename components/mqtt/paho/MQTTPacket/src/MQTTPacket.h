@@ -125,6 +125,8 @@ typedef struct {
 
 int MQTTPacket_readnb(unsigned char* buf, int buflen, MQTTTransport *trp);
 
+const char* MQTTPacket_msgTypesToString(enum msgTypes);
+
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 }
 #endif
