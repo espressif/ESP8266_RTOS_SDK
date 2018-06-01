@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+
+import os
+from pathspec import PathSpec
+import configparser
+
+script_dir = os.path.dirname(__file__)
+basedir = os.path.dirname(script_dir)
+config = configparser.ConfigParser(allow_no_value=True)
+config.optionxform = str
+
+config.read(os.path.join(script_dir, "find-files.ini"))
+
+all_patterns = list(config['all'])
+all_ps = PathSpec.from_lines('gitwildmatch', all_patterns)
+
+ignore_patterns = list(config['ignore'])
+ignore_ps = PathSpec.from_lines('gitwildmatch', ignore_patterns)
+
+no_expand_tabs_patterns = list(config['no-expand-tabs'])
+no_expand_tabs_ps = PathSpec.from_lines('gitwildmatch', no_expand_tabs_patterns)
+
+clang_format_patterns = list(config['clang-format'])
+clang_format_ps = PathSpec.from_lines('gitwildmatch', clang_format_patterns)
+
+all_files = set(all_ps.match_tree(basedir))
+
+try:
+    for f in sorted(all_files):
+        ignore = ignore_ps.match_file(f)
+        no_expand_tabs = no_expand_tabs_ps.match_file(f)
+        clang_format = clang_format_ps.match_file(f)
+        print("{}\tignore={}\tno_expand_tabs={}\tclang_format={}".format(f, ignore, no_expand_tabs, clang_format))
+except BrokenPipeError:
+    pass

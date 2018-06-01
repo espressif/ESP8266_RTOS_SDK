@@ -1,0 +1,78 @@
+#!/bin/bash
+
+set -e -o pipefail
+cd $(dirname $0)/..
+
+function fix() {
+    local f=$1; shift
+    orig=$(md5sum "$f" | cut -f 1 -d ' ')
+    "$@"
+    new=$(md5sum "$f" | cut -f 1 -d ' ')
+
+    if [[ $orig != $new ]]
+    then
+        echo Fixed "$f"
+    fi
+}
+
+function usage() {
+    echo "$0: usage: [OPTION]" >/dev/stderr
+    echo " -e Enable tab expansion" >/dev/stderr
+    echo " -c Enable clang-format processing" >/dev/stderr
+    exit 1
+}
+
+run_expand_tabs=0
+run_clang_format=0
+
+while getopts "ech?" opt; do
+    case $opt in
+    e)
+        run_expand_tabs=1
+        ;;
+    c)
+        run_clang_format=1
+        ;;
+    h|?)
+        usage
+        ;;
+    esac
+done
+
+if [[ $(($run_expand_tabs + $run_clang_format)) == 0 ]]
+then
+  usage
+fi
+
+if [[ $run_expand_tabs -ne 0 ]]
+then
+    echo "Replacing tabs with spaces..."
+    tools/find-files |\
+        grep -v ignore=True |\
+        grep -v no_expand_tab=True |\
+    while IFS=$'\t' read f params
+    do
+        fix "$f" sed -i 's,\t,    ,g' "$f"
+    done
+
+    echo "To undo run"
+    echo "tools/find-files | grep -v ignore=True | grep no_expand_tab=False | cut -f 1 -d $'\t' | xargs git checkout"
+fi
+
+if [[ $run_clang_format -ne 0 ]]
+then
+    # Running this shows the expanded version of the current rules.
+    # clang-format -dump-config -style=file > .clang-format-dumped
+
+    echo "Running clang-format..."
+    tools/find-files |\
+        grep -v ignore=True |\
+        grep clang_format=True |\
+    while IFS=$'\t' read f params
+    do
+      fix "$f" clang-format -i "$f"
+    done
+
+    echo "To undo run"
+    echo "tools/find-files | grep -v ignore=True | grep clang_format=True | cut -f 1 -d $'\t' | xargs git checkout"
+fi
