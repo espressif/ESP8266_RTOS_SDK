@@ -16,8 +16,8 @@
  *    Ian Craggs - add setMessageHandler function
  *******************************************************************************/
 
-#if !defined(__MQTT_CLIENT_C_)
-#define __MQTT_CLIENT_C_
+#if !defined(MQTT_CLIENT_H)
+#define MQTT_CLIENT_H
 
 #if defined(__cplusplus)
  extern "C" {
@@ -35,8 +35,6 @@
 #endif
 
 #include "MQTTPacket.h"
-#include "stdio.h"
-#include "MQTTFreeRTOS.h"
 
 #if defined(MQTTCLIENT_PLATFORM_HEADER)
 /* The following sequence of macros converts the MQTTCLIENT_PLATFORM_HEADER value

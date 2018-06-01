@@ -21,6 +21,8 @@
 ## nopoll(websocket)
 
 ## paho MQTT
+- Source: https://github.com/eclipse/paho.mqtt.embedded-c
+- Version: 29ab2aa
 
 ## spiffs
 
