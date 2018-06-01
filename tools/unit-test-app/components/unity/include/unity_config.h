@@ -1,13 +1,13 @@
 #ifndef UNITY_CONFIG_H
 #define UNITY_CONFIG_H
 
+#include <stdint.h>
+
 // This file gets included from unity.h via unity_internals.h
 // It is inside #ifdef __cplusplus / extern "C" block, so we can
 // only use C features here
 
 // Adapt Unity to our environment, disable FP support
-
-#include <esp_err.h>
 
 /* Some definitions applicable to Unity running in FreeRTOS */
 #define UNITY_FREERTOS_PRIORITY 5
