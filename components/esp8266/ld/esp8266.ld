@@ -14,6 +14,8 @@
 /* 4. Don't change any other seg.                                                                     */
 /* 5. user1.bin and user2.bin are same in this mode, so upgrade only need one of them.                */
 
+#include "sdkconfig.h"
+
 MEMORY
 {
   dport0_0_seg :                        org = 0x3FF00000, len = 0x10
