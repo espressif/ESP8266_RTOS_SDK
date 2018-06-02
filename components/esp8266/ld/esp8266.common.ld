@@ -62,6 +62,15 @@ SECTIONS
     _dport0_data_end = ABSOLUTE(.);
   } >dport0_0_seg :dport0_0_phdr
 
+  /* RTC memory holds user's data/rodata */
+  .rtc.data :
+  {
+    _rtc_data_start = ABSOLUTE(.);
+    *(.rtc.data)
+    *(.rtc.rodata)
+    _rtc_data_end = ABSOLUTE(.);
+  } > rtc_seg
+
   .text : ALIGN(4)
   {
     _stext = .;

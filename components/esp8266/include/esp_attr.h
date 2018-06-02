@@ -38,4 +38,12 @@
 // Use as ets_printf(DRAM_STR("Hello world!\n"));
 #define DRAM_STR(str) (__extension__({static const DRAM_ATTR char __c[] = (str); (const char *)&__c;}))
 
+// Forces data into RTC memory.
+// Any variable marked with this attribute will keep its value
+// during a deep sleep / wake cycle.
+#define RTC_DATA_ATTR __attribute__((section(".rtc.data")))
+
+// Forces read-only data into RTC memory.
+#define RTC_RODATA_ATTR __attribute__((section(".rtc.rodata")))
+
 #endif /* __ESP_ATTR_H__ */
