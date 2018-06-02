@@ -11,13 +11,6 @@ LIBS += airkiss crypto espnow gcc hal core net80211 \
         phy pp pwm smartconfig ssc wpa wps
 endif
 
-ifeq ($(CONFIG_ESPTOOLPY_APP_NUM),"app1")
-BIN_APP_NUM := app1
-endif
-ifeq ($(CONFIG_ESPTOOLPY_APP_NUM),"app2")
-BIN_APP_NUM := app2
-endif
-
 #Linker scripts used to link the final application.
 #Warning: These linker scripts are only used when the normal app is compiled; the bootloader
 #specifies its own scripts.
