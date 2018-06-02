@@ -25,14 +25,16 @@
 #include "openssl/ssl.h"
 #endif
 
-typedef struct Timer {
-    portTickType xTicksToWait;
-    xTimeOutType xTimeOut;
+typedef struct Timer
+{
+    TickType_t xTicksToWait;
+    TimeOut_t xTimeOut;
 } Timer;
 
 typedef struct Network Network;
 
-struct Network {
+struct Network
+{
     int my_socket;
     int (*mqttread)(Network*, unsigned char*, unsigned int, unsigned int);
     int (*mqttwrite)(Network*, unsigned char*, unsigned int, unsigned int);
@@ -51,16 +53,18 @@ void TimerCountdownMS(Timer*, unsigned int);
 void TimerCountdown(Timer*, unsigned int);
 int TimerLeftMS(Timer*);
 
-typedef struct Mutex {
-    xSemaphoreHandle sem;
+typedef struct Mutex
+{
+    SemaphoreHandle_t sem;
 } Mutex;
 
 void MutexInit(Mutex*);
 int MutexLock(Mutex*);
 int MutexUnlock(Mutex*);
 
-typedef struct Thread {
-    xTaskHandle task;
+typedef struct Thread
+{
+    TaskHandle_t task;
 } Thread;
 
 int ThreadStart(Thread*, void (*fn)(void*), void* arg);
@@ -85,6 +89,7 @@ void NetworkInit(Network*);
  */
 int NetworkConnect(Network* n, char* addr, int port);
 
+#ifdef CONFIG_SSL_USING_MBEDTLS
 typedef struct ssl_ca_crt_key {
     unsigned char* cacrt;
     unsigned int cacrt_len;
@@ -94,7 +99,6 @@ typedef struct ssl_ca_crt_key {
     unsigned int key_len;
 } ssl_ca_crt_key_t;
 
-#ifdef CONFIG_SSL_USING_MBEDTLS
 /**
  * @brief Initialize the network structure for SSL connection
  *

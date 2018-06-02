@@ -15,17 +15,16 @@
  *    Ian Craggs - convert to FreeRTOS
  *******************************************************************************/
 
-#include <string.h>
-
-#include <netdb.h>
-
 #include "MQTTFreeRTOS.h"
+
+#include <string.h>
+#include <netdb.h>
 
 int ThreadStart(Thread* thread, void (*fn)(void*), void* arg)
 {
     int rc = 0;
     uint16_t usTaskStackSize = (configMINIMAL_STACK_SIZE * 5);
-    unsigned portBASE_TYPE uxTaskPriority = uxTaskPriorityGet(NULL); /* set the priority as the same as the calling task*/
+    UBaseType_t uxTaskPriority = uxTaskPriorityGet(NULL); /* set the priority as the same as the calling task*/
 
     rc = xTaskCreate(fn,    /* The function that implements the task. */
                      "MQTTTask",         /* Just a text name for the task to aid debugging. */
@@ -43,21 +42,22 @@ void MutexInit(Mutex* mutex)
     mutex->sem = xSemaphoreCreateMutex();
 }
 
-
 int MutexLock(Mutex* mutex)
 {
     return xSemaphoreTake(mutex->sem, portMAX_DELAY);
 }
 
-
 int MutexUnlock(Mutex* mutex)
 {
-    return xSemaphoreGive(mutex->sem);
+    int x = xSemaphoreGive(mutex->sem);
+    taskYIELD();
+    return x;
 }
+
 
 void TimerCountdownMS(Timer* timer, unsigned int timeout_ms)
 {
-    timer->xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
+    timer->xTicksToWait = timeout_ms / portTICK_PERIOD_MS; /* convert milliseconds to ticks */
     vTaskSetTimeOutState(&timer->xTimeOut); /* Record the time at which this function was entered. */
 }
 
@@ -71,7 +71,7 @@ void TimerCountdown(Timer* timer, unsigned int timeout)
 int TimerLeftMS(Timer* timer)
 {
     xTaskCheckForTimeOut(&timer->xTimeOut, &timer->xTicksToWait); /* updates xTicksToWait to the number left */
-    return timer->xTicksToWait * portTICK_RATE_MS;
+    return timer->xTicksToWait * portTICK_PERIOD_MS;
 }
 
 
