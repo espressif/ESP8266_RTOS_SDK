@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -e -o pipefail
+cd $(dirname $0)/..
+
+function fix() {
+    local f=$1; shift
+    orig=$(md5sum "$f" | cut -f 1 -d ' ')
+    "$@" < "$f" > "$f".tmp
+    new=$(md5sum "$f.tmp" | cut -f 1 -d ' ')
+
+    if [[ $orig != $new ]]
+    then
+        echo Fixed "$f"
+
+        if [[ $dry_run -ne 0 ]]
+        then
+            mv "$f.tmp" "$f"
+        fi
+    fi
+
+    rm -f "$f.tmp"
+}
+
+function usage() {
+    echo "$0: usage: [OPTION]" >/dev/stderr
+    echo " -n: dry run" >/dev/stderr
+    echo " -t: show all files and tags" >/dev/stderr
+    echo " -e: run tab expansion" >/dev/stderr
+    echo " -a: run astyle" >/dev/stderr
+    exit 1
+}
+
+dry_run=0
+run_tag=0
+run_expand_tabs=0
+run_astyle=0
+
+while getopts "ntaeh?" opt; do
+    case $opt in
+    n)
+        dry_run=1
+        ;;
+    t)
+        run_tag=1
+        ;;
+    e)
+        run_expand_tabs=1
+        ;;
+    a)
+        run_astyle=1
+        ;;
+    h|?)
+        usage
+        ;;
+    esac
+done
+
+tf=(tools/tag-files --config tools/code-style.ini)
+
+if [[ $run_tag -ne 0 ]]
+then
+    "${tf[@]}"
+fi
+
+if [[ $run_expand_tabs -ne 0 ]]
+then
+    echo "Replacing tabs with spaces..."
+    "${tf[@]}" |\
+        grep expand-tabs=yes |\
+    while IFS=$'\t' read f params
+    do
+        fix "$f" sed 's,\t,    ,g'
+    done
+
+    echo "To undo run"
+    echo "tools/tag-files | grep -v ignore=True | grep no_expand_tab=False | cut -f 1 -d $'\t' | xargs git checkout"
+fi
+
+if [[ $run_astyle -ne 0 ]]
+then
+    echo "Running astyle..."
+    "${tf[@]}" |\
+        grep astyle=yes |\
+    while IFS=$'\t' read f params
+    do
+        fix "$f" tools/format.sh -n
+    done
+
+    echo "To undo run"
+    echo "tools/tag-files | grep -v ignore=True | grep clang_format=True | cut -f 1 -d $'\t' | xargs git checkout"
+fi

@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+# vim: set fileencoding=utf-8
+# Written by Trygve Laugstøl <trygvis@inamo.no>
+
+from __future__ import print_function
+from pathspec import PathSpec
+import argparse
+import configparser
+import os
+import sys
+
+def err_print(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+parser = argparse.ArgumentParser(description="Tag files")
+parser.add_argument("--basedir", action="store", help="Where to start scanning")
+parser.add_argument("--config", action="store", help="Config file to use. Default: tag-files.ini")
+
+args = parser.parse_args()
+if help in args:
+    sys.exit(0)
+
+basedir = args.basedir if args.basedir else os.getcwd()
+ini_file = args.config if args.config else "tag-files.ini"
+
+err_print("basedir={}".format(basedir))
+err_print("ini_file={}".format(ini_file))
+
+config = configparser.ConfigParser(allow_no_value=True)
+config.optionxform = str
+try:
+    with open(ini_file, "r") as f:
+        config.read_file(f)
+except IOError as e:
+    err_print("Could not open ini file: {}".format(ini_file))
+    sys.exit(1)
+
+keys = set(k[:k.rindex(":")] for k in config if
+        (k.endswith(":include") or k.endswith(":exclude"))
+        and not k.startswith("tree:"))
+
+def load(key):
+    include = list(config[key + ":include"]) if key + ":include" in config else ["*"]
+    exclude = list(config[key + ":exclude"]) if key + ":exclude" in config else []
+
+    # print("{}: includes={}, excludes={}".format(key, len(includes), len(excludes)))
+
+    return [PathSpec.from_lines('gitwildmatch', include),
+            PathSpec.from_lines('gitwildmatch', exclude)]
+
+checks = {k: load(k) for k in keys}
+
+tree = load("tree")
+
+tree = set(tree[0].match_tree(basedir)) -\
+       set(tree[1].match_tree(basedir))
+
+try:
+    for f in sorted(tree):
+        print(f, end="")
+        for k, v in checks.items():
+            include = v[0].match_file(f) and not v[1].match_file(f)
+            i = "yes" if include else "no"
+            print("\t{}={}".format(k, i), end="")
+        print()
+except IOError as e:
+    # This will happen if stdout is closed. Not a problem we care about fixing.
+    pass
