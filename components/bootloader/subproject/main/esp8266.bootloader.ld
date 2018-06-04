@@ -10,17 +10,17 @@ Linker file used to link the bootloader.
 */
 MEMORY
 {
-  /* I/O */
-  dport0_seg (RW) :                 	org = 0x3FF00000, len = 0x10
-  /* IRAM POOL1, used for APP CPU cache. We can abuse it in bootloader because APP CPU is still held in reset, the main app enables APP CPU cache */
-  iram_seg (RWX) :           org = 0x40078000, len = 0x8000
-  /* 64k at the end of DRAM, after ROM bootloader stack */
-  dram_seg (RW) :                  	org = 0x3FFF0000, len = 0x10000
+  dport0_seg :    org = 0x3FF00000, len = 0x10
+
+  /* All .data/.bss/heap are in this segment. */
+  dram_seg  :    org = 0x3FFE8000, len = 0x18000
+
+  /* Functions which are critical should be put in this segment. */
+  iram_seg  :    org = 0x40108000, len = 0x8000
 }
 
 /*  Default entry point:  */
-ENTRY(call_start_cpu0);
-
+ENTRY(call_start_cpu);
 
 SECTIONS
 {
@@ -32,6 +32,18 @@ SECTIONS
     *(.init)
   } > iram_seg
 
+  .iram.text :
+  {
+    _stext = .;
+    _text_start = ABSOLUTE(.);
+    *(.literal .text .literal.* .text.* .stub .gnu.warning .gnu.linkonce.literal.* .gnu.linkonce.t.*.literal .gnu.linkonce.t.*)
+    *(.iram1 .iram1.*) /* catch stray IRAM_ATTR */
+    *(.fini.literal)
+    *(.fini)
+    *(.gnu.version)
+    _text_end = ABSOLUTE(.);
+    _etext = .;
+  } > iram_seg
 
   /* Shared RAM */
   .dram0.bss (NOLOAD) :
@@ -115,18 +127,4 @@ SECTIONS
     . = ALIGN(4);
     _heap_start = ABSOLUTE(.);
   } >dram_seg
-
-  .iram.text :
-  {
-    _stext = .;
-    _text_start = ABSOLUTE(.);
-    *(.literal .text .literal.* .text.* .stub .gnu.warning .gnu.linkonce.literal.* .gnu.linkonce.t.*.literal .gnu.linkonce.t.*)
-    *(.iram1 .iram1.*) /* catch stray IRAM_ATTR */
-    *(.fini.literal)
-    *(.fini)
-    *(.gnu.version)
-    _text_end = ABSOLUTE(.);
-    _etext = .;
-  } > iram_seg
-
 }
