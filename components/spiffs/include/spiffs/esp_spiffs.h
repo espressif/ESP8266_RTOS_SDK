@@ -59,8 +59,8 @@ struct esp_spiffs_config {
   *
   * @param  struct esp_spiffs_config *config : ESP8266 spiffs configuration
   *
-  * @return 0         : succeed
-  * @return otherwise : fail
+  * @return 0         : succeed (Equals SPIFFS_OK)
+  * @return otherwise : fail (-1 or SPIFFS_ERR_*)
   */
 s32_t esp_spiffs_init(struct esp_spiffs_config *config);
 
