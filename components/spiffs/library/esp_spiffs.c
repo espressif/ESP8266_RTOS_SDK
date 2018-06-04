@@ -85,7 +85,7 @@ static s32_t esp_spiffs_erase(u32_t addr, u32_t size)
 s32_t esp_spiffs_init(struct esp_spiffs_config *config)
 {
     if (SPIFFS_mounted(&fs)) {
-        return -1;
+        return SPIFFS_ERR_MOUNTED;
     }
 
     spiffs_config cfg;
@@ -145,6 +145,8 @@ s32_t esp_spiffs_init(struct esp_spiffs_config *config)
         free(spiffs_cache_buf);
     }
 
+    ret = SPIFFS_errno(&fs);
+
     return ret;        
 }
 
@@ -197,7 +199,9 @@ int _spiffs_open_r(struct _reent *r, const char *filename, int flags, int mode)
     if (res >= 0) {
         res += NUM_SYS_FD;
     }
-
+    else { 
+        ret = SPIFFS_errno(&fs);
+    }
     return res;
 }
 
@@ -210,6 +214,9 @@ _ssize_t _spiffs_read_r(struct _reent *r, int fd, void *buf, size_t len)
         res = -1;
     } else {
         res = SPIFFS_read(&fs, fd - NUM_SYS_FD, buf, len);
+        if(res < 0) {
+            res = SPIFFS_errno(&fs);
+        }
     }
 
     return res;
@@ -223,6 +230,9 @@ _ssize_t _spiffs_write_r(struct _reent *r, int fd, void *buf, size_t len)
     }
 
     int res = SPIFFS_write(&fs, fd - NUM_SYS_FD, (char *) buf, len);
+    if(res < 0){
+        return SPIFFS_errno(&fs);
+    }
     return res;
 }
 
@@ -235,6 +245,9 @@ _off_t _spiffs_lseek_r(struct _reent *r, int fd, _off_t where, int whence)
         res = -1;
     } else {
         res = SPIFFS_lseek(&fs, fd - NUM_SYS_FD, where, whence);
+        if(res < 0) {
+            res = SPIFFS_errno(&fs);
+        }
     }
 
     return res;
@@ -255,6 +268,9 @@ int _spiffs_rename_r(struct _reent *r, const char *from, const char *to)
 {
 
     int res = SPIFFS_rename(&fs, (char *) from, (char *) to);
+    if(res < 0) {
+        res = SPIFFS_errno(&fs);
+    }
     return res;
 }
 
@@ -262,6 +278,9 @@ int _spiffs_unlink_r(struct _reent *r, const char *filename)
 {
 
     int res = SPIFFS_remove(&fs, (char *) filename);
+    if(res < 0) {
+        res = SPIFFS_errno(&fs);
+    }
     return res;
 }
 
@@ -282,7 +301,7 @@ int _spiffs_fstat_r(struct _reent *r, int fd, struct stat *s)
     res = SPIFFS_fstat(&fs, fd - NUM_SYS_FD, &ss);
 
     if (res < 0) {
-        return res;
+        return SPIFFS_errno(&fs);
     }
 
     s->st_ino = ss.obj_id;
