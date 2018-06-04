@@ -200,7 +200,7 @@ int _spiffs_open_r(struct _reent *r, const char *filename, int flags, int mode)
         res += NUM_SYS_FD;
     }
     else { 
-        ret = SPIFFS_errno(&fs);
+        res = SPIFFS_errno(&fs);
     }
     return res;
 }
