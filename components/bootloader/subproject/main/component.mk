@@ -6,15 +6,9 @@
 #
 
 LINKER_SCRIPTS := \
-	esp32.bootloader.ld \
-	$(IDF_PATH)/components/esp32/ld/esp32.rom.ld \
-	$(IDF_PATH)/components/esp32/ld/esp32.rom.spiram_incompatible_fns.ld \
-	$(IDF_PATH)/components/esp32/ld/esp32.peripherals.ld \
-	esp32.bootloader.rom.ld
-
-ifndef CONFIG_SPI_FLASH_ROM_DRIVER_PATCH
-LINKER_SCRIPTS += $(IDF_PATH)/components/esp32/ld/esp32.rom.spiflash.ld
-endif
+	esp8266.bootloader.ld \
+	$(IDF_PATH)/components/esp8266/ld/esp8266.rom.ld \
+	esp8266.bootloader.rom.ld
 
 COMPONENT_ADD_LDFLAGS += -L $(COMPONENT_PATH) $(addprefix -T ,$(LINKER_SCRIPTS))
 
