@@ -157,10 +157,9 @@ void esp_spiffs_deinit(u8_t format)
         free(spiffs_work_buf);
         free(spiffs_fd_buf);
         free(spiffs_cache_buf);
-
-        if (format) {
-            SPIFFS_format(&fs);
-        }
+    }
+    if (format) {
+        SPIFFS_format(&fs);
     }
 }
 
