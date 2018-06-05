@@ -123,7 +123,7 @@ task.h is included from an application file. */
 
 #ifdef MEMLEAK_DEBUG
 #include "spi_flash.h"
-extern SpiFlashChip flashchip;
+extern esp_spi_flash_chip_t flashchip;
 #endif
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE

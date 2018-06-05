@@ -1,167 +1,154 @@
-/*
- * ESPRSSIF MIT License
- *
- * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
- *
- * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
- * it is free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
- * to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- */
+// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#ifndef __SPI_FLASH_H__
-#define __SPI_FLASH_H__
+#ifndef _SPI_FLASH_H
+#define _SPI_FLASH_H
 
 #include <stdint.h>
+#include <stddef.h>
+
+#include "esp_err.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** \defgroup Driver_APIs Driver APIs
-  * @brief Driver APIs
-  */
+#define ESP_ERR_FLASH_BASE        0x10010
+#define ESP_ERR_FLASH_OP_FAIL     (ESP_ERR_FLASH_BASE + 1)
+#define ESP_ERR_FLASH_OP_TIMEOUT  (ESP_ERR_FLASH_BASE + 2)
 
-/** @addtogroup Driver_APIs
-  * @{
-  */
+#define SPI_FLASH_SEC_SIZE        4096    /**< SPI Flash sector size */
 
-/** \defgroup SPI_Driver_APIs SPI Driver APIs
-  * @brief SPI Flash APIs
-  */
-
-/** @addtogroup SPI_Driver_APIs
-  * @{
-  */
-
+#ifdef CONFIG_ENABLE_FLASH_MMAP
+/**
+ * @brief Enumeration which specifies memory space requested in an mmap call
+ */
 typedef enum {
-    SPI_FLASH_RESULT_OK,        /**< SPI Flash operating OK */
-    SPI_FLASH_RESULT_ERR,       /**< SPI Flash operating fail */
-    SPI_FLASH_RESULT_TIMEOUT    /**< SPI Flash operating time out */
-} SpiFlashOpResult;
-
-typedef struct{
-    uint32_t  deviceId;
-    uint32_t  chip_size;    // chip size in byte
-    uint32_t  block_size;
-    uint32_t  sector_size;
-    uint32_t  page_size;
-    uint32_t  status_mask;
-} SpiFlashChip;
-
-#define SPI_FLASH_SEC_SIZE  4096    /**< SPI Flash sector size */
+    SPI_FLASH_MMAP_DATA,    /**< map to data memory (Vaddr0), allows byte-aligned access, 4 MB total */
+    SPI_FLASH_MMAP_INST,    /**< map to instruction memory (Vaddr1-3), allows only 4-byte-aligned access, 11 MB total */
+} spi_flash_mmap_memory_t;
 
 /**
-  * @brief  Get ID info of SPI Flash.
-  *
-  * @param  null
-  *
-  * @return SPI Flash ID
-  */
-uint32_t spi_flash_get_id(void);
+ * @brief Opaque handle for memory region obtained from spi_flash_mmap.
+ */
+typedef uint32_t spi_flash_mmap_handle_t;
+#endif
 
 /**
-  * @brief  Read state register of SPI Flash.
-  *
-  * @param  uint32_t *status : the read value (pointer) of state register.
-  *
-  * @return SpiFlashOpResult
-  */
-SpiFlashOpResult spi_flash_read_status(uint32_t *status);
+ * @brief  Erase the Flash sector.
+ *
+ * @param  sector  Sector number, the count starts at sector 0, 4KB per sector.
+ *
+ * @return esp_err_t
+ */
+esp_err_t spi_flash_erase_sector(size_t sector);
 
 /**
-  * @brief  Write state register of SPI Flash.
-  *
-  * @param  uint32_t status_value : Write state register value.
-  *
-  * @return SpiFlashOpResult
-  */
-SpiFlashOpResult spi_flash_write_status(uint32_t status_value);
+ * @brief  Erase a range of flash sectors
+ *
+ * @param  start_address  Address where erase operation has to start.
+ *                                  Must be 4kB-aligned
+ * @param  size  Size of erased range, in bytes. Must be divisible by 4kB.
+ *
+ * @return esp_err_t
+ */
+esp_err_t spi_flash_erase_range(size_t start_address, size_t size);
 
 /**
-  * @brief  Erase the Flash sector.
-  *
-  * @param  uint16_t sec : Sector number, the count starts at sector 0, 4KB per sector.
-  *
-  * @return SpiFlashOpResult
-  */
-SpiFlashOpResult spi_flash_erase_sector(uint16_t sec);
+ * @brief  Write data to Flash.
+ *
+ * @note For fastest write performance, write a 4 byte aligned size at a
+ * 4 byte aligned offset in flash from a source buffer in DRAM. Varying any of
+ * these parameters will still work, but will be slower due to buffering.
+ *
+ * @note Writing more than 8KB at a time will be split into multiple
+ * write operations to avoid disrupting other tasks in the system.
+ *
+ * @param  dest_addr Destination address in Flash.
+ * @param  src       Pointer to the source buffer.
+ * @param  size      Length of data, in bytes.
+ *
+ * @return esp_err_t
+ */
+esp_err_t spi_flash_write(size_t dest_addr, const void *src, size_t size);
 
 /**
-  * @brief  Write data to Flash.
-  *
-  * @param  uint32_t des_addr  : destination address in Flash.
-  * @param  uint32_t *src_addr : source address of the data.
-  * @param  uint32_t size      : length of data
-  *
-  * @return SpiFlashOpResult
-  */
-SpiFlashOpResult spi_flash_write(uint32_t des_addr, uint32_t *src_addr, uint32_t size);
+ * @brief  Read data from Flash.
+ *
+ * @note For fastest read performance, all parameters should be
+ * 4 byte aligned. If source address and read size are not 4 byte
+ * aligned, read may be split into multiple flash operations. If
+ * destination buffer is not 4 byte aligned, a temporary buffer will
+ * be allocated on the stack.
+ *
+ * @note Reading more than 16KB of data at a time will be split
+ * into multiple reads to avoid disruption to other tasks in the
+ * system. Consider using spi_flash_mmap() to read large amounts
+ * of data.
+ *
+ * @param  src_addr source address of the data in Flash.
+ * @param  dest     pointer to the destination buffer
+ * @param  size     length of data
+ *
+ *
+ * @return esp_err_t
+ */
+esp_err_t spi_flash_read(size_t src_addr, void *dest, size_t size);
+
+#ifdef CONFIG_ENABLE_FLASH_MMAP
 
 /**
-  * @brief  Read data from Flash.
-  *
-  * @param  uint32_t src_addr  : source address of the data.
-  * @param  uint32_t *des_addr : destination address in Flash.
-  * @param  uint32_t size      : length of data
-  *
-  * @return SpiFlashOpResult
-  */
-SpiFlashOpResult spi_flash_read(uint32_t src_addr, uint32_t *des_addr, uint32_t size);
+ * @brief Map region of flash memory into data or instruction address space
+ *
+ * This function allocates sufficient number of 64kB MMU pages and configures
+ * them to map the requested region of flash memory into the address space.
+ * It may reuse MMU pages which already provide the required mapping.
+ *
+ * As with any allocator, if mmap/munmap are heavily used then the address space
+ * may become fragmented. To troubleshoot issues with page allocation, use
+ * spi_flash_mmap_dump() function.
+ *
+ * @param src_addr  Physical address in flash where requested region starts.
+ *                  This address *must* be aligned to 64kB boundary
+ *                  (SPI_FLASH_MMU_PAGE_SIZE)
+ * @param size  Size of region to be mapped. This size will be rounded
+ *              up to a 64kB boundary
+ * @param memory  Address space where the region should be mapped (data or instruction)
+ * @param out_ptr  Output, pointer to the mapped memory region
+ * @param out_handle  Output, handle which should be used for spi_flash_munmap call
+ *
+ * @return  ESP_OK on success, ESP_ERR_NO_MEM if pages can not be allocated
+ */
+esp_err_t spi_flash_mmap(size_t src_addr, size_t size, spi_flash_mmap_memory_t memory,
+                         const void** out_ptr, spi_flash_mmap_handle_t* out_handle);
 
 /**
-  * @brief  Registered function for spi_flash_set_read_func.
-  *
-  * @attention  used for sdk internal, don't need to care about params
-  *
-  * @param  SpiFlashChip *spi : spi flash struct pointer.
-  * @param  uint32_t src_addr  : source address of the data.
-  * @param  uint32_t *des_addr : destination address in Flash.
-  * @param  uint32_t size      : length of data
-  *
-  * @return SpiFlashOpResult
-  */
-typedef SpiFlashOpResult (* user_spi_flash_read)(
-        SpiFlashChip *spi,
-        uint32_t src_addr,
-        uint32_t *des_addr,
-        uint32_t size);
+ * @brief Release region previously obtained using spi_flash_mmap
+ *
+ * @note Calling this function will not necessarily unmap memory region.
+ *       Region will only be unmapped when there are no other handles which
+ *       reference this region. In case of partially overlapping regions
+ *       it is possible that memory will be unmapped partially.
+ *
+ * @param handle  Handle obtained from spi_flash_mmap
+ */
+void spi_flash_munmap(spi_flash_mmap_handle_t handle);
 
-/**
-  * @brief  Register user-define SPI flash read API.
-  *
-  * @attention This API can be only used in SPI overlap mode, please refer to ESP8266_RTOS_SDK
-  *            \examples\driver_lib\driver\spi_overlap.c
-  *
-  * @param  user_spi_flash_read read : user-define SPI flash read API .
-  *
-  * @return  none
-  */
-void spi_flash_set_read_func(user_spi_flash_read read);
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
+#endif /* CONFIG_ENABLE_FLASH_MMAP */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* _SPI_FLASH_H */

@@ -1,19 +1,108 @@
-/*
- * Copyright (c) 2013-2016 Espressif System
- */
+// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#include "ets_sys.h"
+#include <string.h>
+
 #include "spi_flash.h"
-#include "spi_register.h"
 
+#include "esp_attr.h"
 #include "esp_wifi_osi.h"
-//#define SPI_DEBUG
+#include "esp_system.h"
+#include "esp_log.h"
+#include "esp8266/eagle_soc.h"
+#include "esp8266/rom_functions.h"
+#include "esp8266/pin_mux_register.h"
+#include "driver/spi_register.h"
 
-#ifdef SPI_DEBUG
-#define spi_debug printf
-#else
-#define spi_debug(...)
-#endif
+#define spi_debug(fmt, ...)                     ESP_LOGD(TAG, fmt, ##__VA_ARGS__)
+
+#define SPI_EXT2(i)                             (REG_SPI_BASE(i) + 0xF8)
+#define SPI_EXT3(i)                             (REG_SPI_BASE(i) + 0xFC)
+
+#define SPI_ENABLE_AHB                          BIT17
+
+#define SPI_FLASH_CLK_EQU_SYSCLK                BIT12
+
+//SPI flash command
+#define SPI_FLASH_READ                          BIT31
+#define SPI_FLASH_WREN                          BIT30
+#define SPI_FLASH_WRDI                          BIT29
+#define SPI_FLASH_RDID                          BIT28
+#define SPI_FLASH_RDSR                          BIT27
+#define SPI_FLASH_WRSR                          BIT26
+#define SPI_FLASH_PP                            BIT25
+#define SPI_FLASH_SE                            BIT24
+#define SPI_FLASH_BE                            BIT23
+#define SPI_FLASH_CE                            BIT22
+#define SPI_FLASH_RES                           BIT20
+#define SPI_FLASH_DPD                           BIT21
+#define SPI_FLASH_HPM                           BIT19
+
+//SPI address register
+#define SPI_FLASH_BYTES_LEN                     24
+#define SPI_BUFF_BYTE_NUM                       32
+#define IODATA_START_ADDR                       BIT0
+
+//SPI status register
+#define  SPI_FLASH_BUSY_FLAG                    BIT0
+#define  SPI_FLASH_WRENABLE_FLAG                BIT1
+#define  SPI_FLASH_BP0                          BIT2
+#define  SPI_FLASH_BP1                          BIT3
+#define  SPI_FLASH_BP2                          BIT4
+#define  SPI_FLASH_TOP_BOT_PRO_FLAG             BIT5
+#define  SPI_FLASH_STATUS_PRO_FLAG              BIT7
+
+#define  FLASH_WR_PROTECT                       (SPI_FLASH_BP0|SPI_FLASH_BP1|SPI_FLASH_BP2)
+
+#define SPI 0
+
+#define PERIPHS_SPI_FLASH_C0                    SPI_W0(SPI)
+#define PERIPHS_SPI_FLASH_CTRL                  SPI_CTRL(SPI)
+#define PERIPHS_SPI_FLASH_CMD                   SPI_CMD(SPI)
+
+//flash cmd
+#define SPI_FLASH_READ_UNIQUE_CMD               0x4B
+#define SPI_FLASH_WRITE_STATUS_REGISTER         0X01
+#define SPI_FLASH_ISSI_ENABLE_QIO_MODE          (BIT(6))
+
+/*gd25q32c*/
+#define SPI_FLASH_GD25Q32C_WRITE_STATUSE1_CMD   (0X01)
+#define SPI_FLASH_GD25Q32C_WRITE_STATUSE2_CMD   (0X31)
+#define SPI_FLASH_GD25Q32C_WRITE_STATUSE3_CMD   (0X11)
+
+#define SPI_FLASH_GD25Q32C_READ_STATUSE1_CMD    (0X05)
+#define SPI_FLASH_GD25Q32C_READ_STATUSE2_CMD    (0X35)
+#define SPI_FLASH_GD25Q32C_READ_STATUSE3_CMD    (0X15)
+
+#define SPI_FLASH_GD25Q32C_QIO_MODE             (BIT(1))
+
+#define SPI_ISSI_FLASH_WRITE_PROTECT_STATUS     (BIT(2)|BIT(3)|BIT(4)|BIT(5))
+#define SPI_EON_25Q16A_WRITE_PROTECT_STATUS     (BIT(2)|BIT(3)|BIT(4)|BIT(5))
+#define SPI_EON_25Q16B_WRITE_PROTECT_STATUS     (BIT(2)|BIT(3)|BIT(4)|BIT(5))
+#define SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS  (BIT(2)|BIT(3)|BIT(4)|BIT(5)|BIT(6))
+#define SPI_FLASH_RDSR2      0x35
+#define SPI_FLASH_PROTECT_STATUS                (BIT(2)|BIT(3)|BIT(4)|BIT(5)|BIT(6)|BIT(14))
+
+#define FLASH_INTR_DECLARE(t)                   uint32_t t
+#define FLASH_INTR_LOCK(t)                      wifi_enter_critical(t)
+#define FLASH_INTR_UNLOCK(t)                    wifi_exit_critical(t)
+
+enum GD25Q32C_status {
+    GD25Q32C_STATUS1=0,
+    GD25Q32C_STATUS2,
+    GD25Q32C_STATUS3,
+};
 
 typedef enum {
     SPI_TX   = 0x1,
@@ -32,7 +121,9 @@ typedef struct {
     uint8_t dummy_bits;
 } spi_cmd_t;
 
-bool IRAM_FUNC_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd);
+extern bool spi_flash_erase_sector_check(uint32_t);
+
+bool IRAM_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd);
 bool special_flash_read_status(uint8_t command, uint32_t* status, int len);
 bool special_flash_write_status(uint8_t command, uint32_t status, int len, bool write_en);
 uint8_t en25q16x_read_sfdp();
@@ -40,7 +131,8 @@ uint8_t en25q16x_read_sfdp();
 extern void pp_soft_wdt_stop(void);
 extern void pp_soft_wdt_restart(void);
 extern bool protect_flag ;
-SpiFlashChip flashchip = {
+
+esp_spi_flash_chip_t flashchip = {
     0x1640ef,
     (32 / 8) * 1024 * 1024,
     64 * 1024,
@@ -49,657 +141,178 @@ SpiFlashChip flashchip = {
     0xffff
 };
 
-uint8 FlashIsOnGoing = 0;
+uint8_t FlashIsOnGoing = 0;
 
-typedef SpiFlashOpResult (*user_spi_flash_read)(
-        SpiFlashChip *spi,
-        uint32 flash_addr,
-        uint32 *addr_dest,
-        uint32 byte_length);
+const char *TAG = "spi_flash";
 
-user_spi_flash_read flash_read;
-
-#ifdef FOR_BAOFENG
-#define FLASH_INTR_LOCK()	\
-	do{		\
-		vTaskSuspendAll();	\
-	}while(0)
-#define FLASH_INTR_UNLOCK()	\
-	do{		\
-		xTaskResumeAll();	\
-	}while(0)
-#else
-#define FLASH_INTR_DECLARE(t)   uint32_t t
-#define FLASH_INTR_LOCK(t)      wifi_enter_critical(t)
-#define FLASH_INTR_UNLOCK(t)    wifi_exit_critical(t)
-#endif
-
-#if 0
-LOCAL SpiFlashOpResult SPI_sector_erase(SpiFlashChip *spi, uint32 addr);
-LOCAL SpiFlashOpResult SPI_page_program(SpiFlashChip *spi, uint32 spi_addr, uint32 *addr_source,
-                                        sint32 byte_length);
-LOCAL SpiFlashOpResult SPI_read_data(SpiFlashChip *spi, uint32 flash_addr, uint32 *addr_dest,
-                                     sint32 byte_length);
-LOCAL SpiFlashOpResult SPI_read_status(SpiFlashChip *spi, uint32 *status);
-LOCAL SpiFlashOpResult SPI_write_status(SpiFlashChip *spi, uint32 status_value);
-LOCAL SpiFlashOpResult SPI_write_enable(SpiFlashChip *spi);
-
-LOCAL SpiFlashOpResult Enable_QMode(SpiFlashChip *spi) ;
-LOCAL SpiFlashOpResult Disable_QMode(SpiFlashChip *spi) ;
-
-LOCAL SpiFlashOpResult Wait_SPI_Idle(SpiFlashChip *spi);
-
-LOCAL SpiFlashOpResult IRAM_FUNC_ATTR
-SPI_sector_erase(SpiFlashChip *spi, uint32 addr)
+static esp_err_t IRAM_ATTR SPIWrite(uint32_t  target, uint32_t *src_addr, size_t len)
 {
-    //check if addr is 4k alignment
-    if (0 != (addr & 0xfff)) {
-        return SPI_FLASH_RESULT_ERR;
-    }
-
-    Wait_SPI_Idle(spi);
-
-    // sector erase  4Kbytes erase is sector erase.
-    WRITE_PERI_REG(PERIPHS_SPI_FLASH_ADDR, addr & 0xffffff);
-    WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_SE);
-
-    while (READ_PERI_REG(PERIPHS_SPI_FLASH_CMD) != 0);
-
-    Wait_SPI_Idle(spi);
-
-    return SPI_FLASH_RESULT_OK;
-}
-
-LOCAL SpiFlashOpResult IRAM_FUNC_ATTR
-SPI_page_program(SpiFlashChip *spi, uint32 spi_addr, uint32 *addr_source, sint32 byte_length)
-{
-    uint32  temp_addr;
-    sint32  temp_bl;
-    uint8   i;
-    uint8   remain_word_num;
-
-    //check 4byte alignment
-    if (0 != (byte_length & 0x3)) {
-        return SPI_FLASH_RESULT_ERR;
-    }
-
-    //check if write in one page
-    if ((spi->page_size) < ((spi_addr % (spi->page_size)) + byte_length)) {
-        return SPI_FLASH_RESULT_ERR;
-    }
-
-    Wait_SPI_Idle(spi);
-
-    temp_addr = spi_addr;
-    temp_bl = byte_length;
-
-    while (temp_bl > 0) {
-        if (temp_bl >= SPI_BUFF_BYTE_NUM) {
-            WRITE_PERI_REG(PERIPHS_SPI_FLASH_ADDR, (temp_addr & 0xffffff) | (SPI_BUFF_BYTE_NUM << SPI_FLASH_BYTES_LEN)); // 32 byte a block
-
-            for (i = 0; i < (SPI_BUFF_BYTE_NUM >> 2); i++) {
-                WRITE_PERI_REG(PERIPHS_SPI_FLASH_C0 + i * 4, *addr_source++);
-            }
-
-            temp_bl = temp_bl - 32;
-            temp_addr = temp_addr + 32;
-        } else {
-            WRITE_PERI_REG(PERIPHS_SPI_FLASH_ADDR, (temp_addr & 0xffffff) | (temp_bl << SPI_FLASH_BYTES_LEN));
-
-            remain_word_num = (0 == (temp_bl & 0x3)) ? (temp_bl >> 2) : (temp_bl >> 2) + 1;
-
-            for (i = 0; i < remain_word_num; i++) {
-                WRITE_PERI_REG(PERIPHS_SPI_FLASH_C0 + i * 4, *addr_source++);
-                temp_bl = temp_bl - 4;
-            }
-
-            temp_bl = 0;
-        }
-
-        if (SPI_FLASH_RESULT_OK != SPI_write_enable(spi)) {
-            return SPI_FLASH_RESULT_ERR;
-        }
-
-        WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_PP);
-
-        while (READ_PERI_REG(PERIPHS_SPI_FLASH_CMD) != 0);
-
-        Wait_SPI_Idle(spi);
-    }
-
-    return SPI_FLASH_RESULT_OK;
-}
-
-LOCAL SpiFlashOpResult IRAM_FUNC_ATTR
-SPI_read_data(SpiFlashChip *spi, uint32 flash_addr, uint32 *addr_dest,
-              sint32 byte_length)
-{
-    uint32  temp_addr;
-    sint32  temp_length;
-    uint8   i;
-    uint8   remain_word_num;
-
-    //address range check
-    if ((flash_addr + byte_length) > (spi->chip_size)) {
-        return SPI_FLASH_RESULT_ERR;
-    }
-
-    temp_addr = flash_addr;
-    temp_length = byte_length;
-
-    Wait_SPI_Idle(spi);
-
-
-    while (temp_length > 0) {
-        if (temp_length >= SPI_BUFF_BYTE_NUM) {
-            WRITE_PERI_REG(PERIPHS_SPI_FLASH_ADDR, temp_addr | (SPI_BUFF_BYTE_NUM << SPI_FLASH_BYTES_LEN));
-            WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_READ);
-
-            while (READ_PERI_REG(PERIPHS_SPI_FLASH_CMD) != 0);
-
-            for (i = 0; i < (SPI_BUFF_BYTE_NUM >> 2); i++) {
-                *addr_dest++ = READ_PERI_REG(PERIPHS_SPI_FLASH_C0 + i * 4);
-            }
-
-            temp_length = temp_length - SPI_BUFF_BYTE_NUM;
-            temp_addr = temp_addr + SPI_BUFF_BYTE_NUM;
-        } else {
-            WRITE_PERI_REG(PERIPHS_SPI_FLASH_ADDR, temp_addr | (temp_length << SPI_FLASH_BYTES_LEN));
-            WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_READ);
-
-            while (READ_PERI_REG(PERIPHS_SPI_FLASH_CMD) != 0);
-
-            remain_word_num = (0 == (temp_length & 0x3)) ? (temp_length >> 2) : (temp_length >> 2) + 1;
-
-            for (i = 0; i < remain_word_num; i++) {
-                *addr_dest++ = READ_PERI_REG(PERIPHS_SPI_FLASH_C0 + i * 4);
-            }
-
-            temp_length = 0;
-        }
-    }
-
-    return SPI_FLASH_RESULT_OK;
-}
-
-LOCAL SpiFlashOpResult IRAM_FUNC_ATTR
-SPI_read_status(SpiFlashChip *spi, uint32 *status)
-{
-    uint32 status_value = SPI_FLASH_BUSY_FLAG;
-
-    while (SPI_FLASH_BUSY_FLAG == (status_value & SPI_FLASH_BUSY_FLAG)) {
-        WRITE_PERI_REG(PERIPHS_SPI_FLASH_STATUS, 0);       // clear regisrter
-        WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_RDSR);
-
-        while (READ_PERI_REG(PERIPHS_SPI_FLASH_CMD) != 0);
-
-        status_value  = READ_PERI_REG(PERIPHS_SPI_FLASH_STATUS) & (spi->status_mask);
-    }
-
-    *status = status_value;
-
-    return SPI_FLASH_RESULT_OK;
-}
-
-LOCAL SpiFlashOpResult IRAM_FUNC_ATTR
-SPI_write_status(SpiFlashChip *spi, uint32 status_value)
-{
-    Wait_SPI_Idle(spi);
-
-    // update status value by status_value
-    WRITE_PERI_REG(PERIPHS_SPI_FLASH_STATUS, status_value);    // write status regisrter
-    WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_WRSR);
-
-    while (READ_PERI_REG(PERIPHS_SPI_FLASH_CMD) != 0);
-
-    return SPI_FLASH_RESULT_OK;
-}
-
-LOCAL SpiFlashOpResult IRAM_FUNC_ATTR
-SPI_write_enable(SpiFlashChip *spi)
-{
-    uint32 flash_status = 0;
-
-    Wait_SPI_Idle(spi);
-
-    //enable write
-    WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_WREN);     // enable write operation
-
-    while (READ_PERI_REG(PERIPHS_SPI_FLASH_CMD) != 0);
-
-    // make sure the flash is ready for writing
-    while (SPI_FLASH_WRENABLE_FLAG != (flash_status & SPI_FLASH_WRENABLE_FLAG)) {
-        SPI_read_status(spi, &flash_status);
-    }
-
-    return SPI_FLASH_RESULT_OK;
-}
-
-//**********************************************************************************
-//Function Name: Wait_SPI_Idle
-//Input Param:void
-//Output Param:void
-//Return: void
-//Description:wait for spi ready
-//
-//**********************************************************************************
-LOCAL SpiFlashOpResult IRAM_FUNC_ATTR
-Wait_SPI_Idle(SpiFlashChip *spi)
-{
-    uint32 status;
-
-    //wait for spi control ready
-    while (GET_PERI_REG_BITS(CACHE_FLASH_CTRL_REG, FLASH_CTRL_BUSY_BIT, FLASH_CTRL_BUSY_BIT)) {
-    }
-
-    //wait for flash status ready
-    if (SPI_FLASH_RESULT_OK != SPI_read_status(spi, &status)) {
-        return SPI_FLASH_RESULT_ERR;
-    }
-
-    return  SPI_FLASH_RESULT_OK;
-}
-
-LOCAL SpiFlashOpResult IRAM_FUNC_ATTR
-Enable_QMode(SpiFlashChip *spi)
-{
-    //enable 2 byte status writing
-    SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL, TWO_BYTE_STATUS_EN);
-
-    if (SPI_FLASH_RESULT_OK != SPI_write_enable(spi)) {
-        return SPI_FLASH_RESULT_ERR;
-    }
-
-    if (SPI_FLASH_RESULT_OK != SPI_write_status(spi, 0x0200)) {
-        return SPI_FLASH_RESULT_ERR;
-    }
-
-    return SPI_FLASH_RESULT_OK;
-}
-
-LOCAL SpiFlashOpResult IRAM_FUNC_ATTR
-Disable_QMode(SpiFlashChip *spi)
-{
-    uint32 flash_status;
-
-    //enable 2 byte status writing
-    SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL, TWO_BYTE_STATUS_EN);
-
-    if (SPI_FLASH_RESULT_OK != SPI_write_enable(spi)) {
-        return SPI_FLASH_RESULT_ERR;
-    }
-
-    SPI_read_status(spi, &flash_status);
-
-    //keep low 8 bit
-    if (SPI_FLASH_RESULT_OK != SPI_write_status(spi, flash_status & 0xff)) {
-        return SPI_FLASH_RESULT_ERR;
-    }
-
-    return SPI_FLASH_RESULT_OK;
-}
-
-SpiFlashOpResult IRAM_FUNC_ATTR
-SPIReadModeCnfig(SpiFlashRdMode mode)
-{
-    uint32  modebit;
-
-    //clear old mode bit
-    CLEAR_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL, SPI_QIO_MODE
-                        | SPI_QOUT_MODE
-                        | SPI_DIO_MODE
-                        | SPI_DOUT_MODE
-                        | SPI_FASTRD_MODE);
-
-    //configure read mode
-    switch (mode) {
-        case SPI_FLASH_QIO_MODE        :
-            modebit = SPI_QIO_MODE | SPI_FASTRD_MODE;
-            break;
-
-        case SPI_FLASH_QOUT_MODE     :
-            modebit = SPI_QOUT_MODE | SPI_FASTRD_MODE;
-            break;
-
-        case SPI_FLASH_DIO_MODE        :
-            modebit = SPI_DIO_MODE | SPI_FASTRD_MODE;
-            break;
-
-        case SPI_FLASH_DOUT_MODE     :
-            modebit = SPI_DOUT_MODE | SPI_FASTRD_MODE;
-            break;
-
-        case SPI_FLASH_FASTRD_MODE  :
-            modebit = SPI_FASTRD_MODE;
-            break;
-
-        case SPI_FLASH_SLOWRD_MODE :
-            modebit = 0;
-            break;
-
-        default :
-            modebit = 0;
-            break;
-    }
-
-    if ((SPI_FLASH_QIO_MODE == mode) || (SPI_FLASH_QOUT_MODE == mode)) {
-        Enable_QMode(&flashchip);
-    } else {
-        Disable_QMode(&flashchip);
-    }
-
-    SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL, modebit);
-
-    return  SPI_FLASH_RESULT_OK;
-}
-#endif
-
-SpiFlashOpResult IRAM_FUNC_ATTR
-SPIWrite(uint32  target, uint32 *src_addr, sint32 len)
-{
-    uint32  page_size;
-    uint32  pgm_len, pgm_num;
-    uint8    i;
+    uint32_t  page_size;
+    uint32_t  pgm_len, pgm_num;
+    uint8_t    i;
 
     //check program size
     if ((target + len) > (flashchip.chip_size)) {
-        return SPI_FLASH_RESULT_ERR;
+        return ESP_ERR_FLASH_OP_FAIL;
     }
-
-#if 0
-    if (SPI_FLASH_RESULT_OK != SPI_write_enable(&flashchip)) {
-		return SPI_FLASH_RESULT_ERR;
-	}
-#endif
 
     page_size = flashchip.page_size;
     pgm_len = page_size - (target % page_size);
 
     if (len < pgm_len) {
-        if (SPI_FLASH_RESULT_OK != SPI_page_program(&flashchip,  target, src_addr, len)) {
-            return SPI_FLASH_RESULT_ERR;
+        if (ESP_OK != SPI_page_program(&flashchip,  target, src_addr, len)) {
+            return ESP_ERR_FLASH_OP_FAIL;
         }
     } else {
-        if (SPI_FLASH_RESULT_OK != SPI_page_program(&flashchip,  target, src_addr, pgm_len)) {
-            return SPI_FLASH_RESULT_ERR;
+        if (ESP_OK != SPI_page_program(&flashchip,  target, src_addr, pgm_len)) {
+            return ESP_ERR_FLASH_OP_FAIL;
         }
 
         //whole page program
         pgm_num = (len - pgm_len) / page_size;
 
         for (i = 0; i < pgm_num; i++) {
-            if (SPI_FLASH_RESULT_OK != SPI_page_program(&flashchip,  target + pgm_len, src_addr + (pgm_len >> 2), page_size)) {
-                return SPI_FLASH_RESULT_ERR;
+            if (ESP_OK != SPI_page_program(&flashchip,  target + pgm_len, src_addr + (pgm_len >> 2), page_size)) {
+                return ESP_ERR_FLASH_OP_FAIL;
             }
 
             pgm_len += page_size;
         }
 
         //remain parts to program
-        if (SPI_FLASH_RESULT_OK != SPI_page_program(&flashchip,  target + pgm_len, src_addr + (pgm_len >> 2), len - pgm_len)) {
-            return SPI_FLASH_RESULT_ERR;
+        if (ESP_OK != SPI_page_program(&flashchip,  target + pgm_len, src_addr + (pgm_len >> 2), len - pgm_len)) {
+            return ESP_ERR_FLASH_OP_FAIL;
         }
     }
 
-    return  SPI_FLASH_RESULT_OK;
+    return  ESP_OK;
 }
 
-SpiFlashOpResult IRAM_FUNC_ATTR
-SPIRead(uint32 target, uint32 *dest_addr, sint32 len)
+esp_err_t IRAM_ATTR SPIRead(uint32_t target, uint32_t *dest_addr, size_t len)
 {
-#if 0
-	if (SPI_FLASH_RESULT_OK != SPI_write_enable(&flashchip)) {
-		return SPI_FLASH_RESULT_ERR;
-	}
-#endif
-
-    if (SPI_FLASH_RESULT_OK != SPI_read_data(&flashchip, target, dest_addr, len)) {
-        return SPI_FLASH_RESULT_ERR;
+    if (ESP_OK != SPI_read_data(&flashchip, target, dest_addr, len)) {
+        return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    return SPI_FLASH_RESULT_OK;
+    return ESP_OK;
 }
 
-SpiFlashOpResult IRAM_FUNC_ATTR
-SPIEraseSector(uint32 sector_num)
+static esp_err_t IRAM_ATTR SPIEraseSector(uint32_t sector_num)
 {
     if (sector_num >= ((flashchip.chip_size) / (flashchip.sector_size))) {
-        return SPI_FLASH_RESULT_ERR;
+        return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    if (SPI_FLASH_RESULT_OK != SPI_write_enable(&flashchip)) {
-        return SPI_FLASH_RESULT_ERR;
+    if (ESP_OK != SPI_write_enable(&flashchip)) {
+        return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    if (SPI_FLASH_RESULT_OK != SPI_sector_erase(&flashchip, sector_num * (flashchip.sector_size))) {
-        return SPI_FLASH_RESULT_ERR;
+    if (ESP_OK != SPI_sector_erase(&flashchip, sector_num * (flashchip.sector_size))) {
+        return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    return SPI_FLASH_RESULT_OK;
+    return ESP_OK;
 }
 
-
-#if 1
-void IRAM_FUNC_ATTR Cache_Read_Disable_2(void)
+static void IRAM_ATTR Cache_Read_Disable_2(void)
 {
-	CLEAR_PERI_REG_MASK(CACHE_FLASH_CTRL_REG,CACHE_READ_EN_BIT);
-//ets_delay_us(10);
-	while(REG_READ(SPI_EXT2(0)) != 0){}
-	CLEAR_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL,SPI_ENABLE_AHB);
+    CLEAR_PERI_REG_MASK(CACHE_FLASH_CTRL_REG,CACHE_READ_EN_BIT);
+    while(REG_READ(SPI_EXT2(0)) != 0) { }
+    CLEAR_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL,SPI_ENABLE_AHB);
 }
-void IRAM_FUNC_ATTR Cache_Read_Enable_2()
+
+static void IRAM_ATTR Cache_Read_Enable_2()
 {
-	SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL,SPI_ENABLE_AHB);
-	SET_PERI_REG_MASK(CACHE_FLASH_CTRL_REG,CACHE_READ_EN_BIT);
+    SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL,SPI_ENABLE_AHB);
+    SET_PERI_REG_MASK(CACHE_FLASH_CTRL_REG,CACHE_READ_EN_BIT);
 }
-#endif
 
-
-#define SPI 0
-
-//debug
-#define USER_SPI_FLASH_DBG ets_printf
-
-//flash cmd
-#define SPI_FLASH_READ_UNIQUE_CMD 0x4B
-#define SPI_FLASH_WRITE_STATUS_REGISTER 0X01
-#define SPI_FLASH_ISSI_ENABLE_QIO_MODE (BIT(6))
-
-//#define SPI_ENABLE_QIO_MODE (0)
-/*gd25q32c*/
-#define SPI_FLASH_GD25Q32C_WRITE_STATUSE1_CMD (0X01)
-#define SPI_FLASH_GD25Q32C_WRITE_STATUSE2_CMD (0X31)
-#define SPI_FLASH_GD25Q32C_WRITE_STATUSE3_CMD (0X11)
-
-#define SPI_FLASH_GD25Q32C_READ_STATUSE1_CMD (0X05)
-#define SPI_FLASH_GD25Q32C_READ_STATUSE2_CMD (0X35)
-#define SPI_FLASH_GD25Q32C_READ_STATUSE3_CMD (0X15)
-
-#define  SPI_FLASH_GD25Q32C_QIO_MODE (BIT(1))
-
-enum GD25Q32C_status{
-    GD25Q32C_STATUS1=0,
-    GD25Q32C_STATUS2,
-    GD25Q32C_STATUS3,
-};
-
-bool spi_flash_get_unique_id(uint8 *id)
+static uint32_t IRAM_ATTR spi_flash_get_id(void)
 {
+    uint32_t rdid = 0;
     FLASH_INTR_DECLARE(c_tmp);
 
-	FLASH_INTR_LOCK(c_tmp);
-    //disable icache
-    Cache_Read_Disable_2();
-    uint32 status;
-    //wait spi idle
+    FLASH_INTR_LOCK(c_tmp);
+
+    FlashIsOnGoing = 1;
+
+    Cache_Read_Disable();
+
     Wait_SPI_Idle(&flashchip);
 
-    //save reg
-    uint32 io_mux_reg = READ_PERI_REG(PERIPHS_IO_MUX_CONF_U);
-    uint32 spi_clk_reg = READ_PERI_REG(SPI_CLOCK(SPI));
-    uint32 spi_ctrl_reg = READ_PERI_REG(SPI_CTRL(SPI));
-    uint32 spi_user_reg = READ_PERI_REG(SPI_USER(SPI));
+    WRITE_PERI_REG(PERIPHS_SPI_FLASH_C0, 0);    // clear regisrter
+    WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_RDID);
+    while(READ_PERI_REG(PERIPHS_SPI_FLASH_CMD)!=0);
 
-    CLEAR_PERI_REG_MASK(PERIPHS_IO_MUX_CONF_U,SPI0_CLK_EQU_SYS_CLK);
+    rdid = READ_PERI_REG(PERIPHS_SPI_FLASH_C0)&0xffffff;
 
-    SET_PERI_REG_MASK(SPI_USER(SPI), SPI_CS_SETUP|SPI_CS_HOLD|SPI_USR_COMMAND|SPI_USR_MOSI);
-    CLEAR_PERI_REG_MASK(SPI_USER(SPI), SPI_FLASH_MODE);
-    //clear Daul or Quad lines transmission mode
-    CLEAR_PERI_REG_MASK(SPI_CTRL(SPI), SPI_QIO_MODE|SPI_DIO_MODE|SPI_DOUT_MODE|SPI_QOUT_MODE);
-    WRITE_PERI_REG(SPI_CLOCK(SPI),
-                    ((3&SPI_CLKCNT_N)<<SPI_CLKCNT_N_S)|
-                    ((1&SPI_CLKCNT_H)<<SPI_CLKCNT_H_S)|
-                    ((3&SPI_CLKCNT_L)<<SPI_CLKCNT_L_S)); //clear bit 31,set SPI clock div
+    Cache_Read_Enable_New();
 
-    WRITE_PERI_REG(SPI_ADDR(SPI), 0x00);
-    WRITE_PERI_REG(SPI_USER2(SPI), 0x70000000|SPI_FLASH_READ_UNIQUE_CMD);
-    CLEAR_PERI_REG_MASK(SPI_USER(SPI), SPI_USR_MOSI);//
-    SET_PERI_REG_MASK(SPI_USER(SPI), SPI_USR_MISO);//read
-    SET_PERI_REG_MASK(SPI_USER(SPI), SPI_USR_DUMMY);
-    CLEAR_PERI_REG_MASK(SPI_USER(SPI), SPI_USR_ADDR);
+    FlashIsOnGoing = 0;
 
-    // 1 byte CMD(MOSI) + 4 BYTE DUMMY  + 8 BYTE DATA(MISO)
-    WRITE_PERI_REG(SPI_USER1(SPI), ((0&SPI_USR_ADDR_BITLEN)<<SPI_USR_ADDR_BITLEN_S)
-                                  |((63&SPI_USR_MISO_BITLEN)<<SPI_USR_MISO_BITLEN_S)
-                                  |((31&SPI_USR_DUMMY_CYCLELEN)<<SPI_USR_DUMMY_CYCLELEN_S));
-    WRITE_PERI_REG(SPI_W0(SPI), 0x00);
-    WRITE_PERI_REG(SPI_W1(SPI), 0x00);
-    SET_PERI_REG_MASK(SPI_CMD(SPI), SPI_USR);
-    while(READ_PERI_REG(SPI_CMD(SPI))&SPI_USR);
-
-    //uint8 id[8] = {0};
-    uint32 data = 0 ;
-    data=READ_PERI_REG(SPI_W0(SPI));
-    *(id+0)=(uint8)(data&0xff);
-    *(id+1)=(uint8)((data>>8)&0xff);
-    *(id+2)=(uint8)((data>>16)&0xff);
-    *(id+3)=(uint8)((data>>24)&0xff);
-
-    data=READ_PERI_REG(SPI_W1(SPI));
-    *(id+4)=(uint8)(data&0xff);
-    *(id+5)=(uint8)((data>>8)&0xff);
-    *(id+6)=(uint8)((data>>16)&0xff);
-    *(id+7)=(uint8)((data>>24)&0xff);
-
-
-    //recover
-    WRITE_PERI_REG(PERIPHS_IO_MUX_CONF_U,io_mux_reg);
-    WRITE_PERI_REG(SPI_CTRL(SPI),spi_ctrl_reg);
-    WRITE_PERI_REG(SPI_CLOCK(SPI),spi_clk_reg);
-    WRITE_PERI_REG(SPI_USER(SPI),spi_user_reg);
-    //wait spi idle
-    Wait_SPI_Idle(&flashchip);
-    //enable icache
-    Cache_Read_Enable_2();
     FLASH_INTR_UNLOCK(c_tmp);
-    return true;
+
+    return rdid;
 }
 
-uint32 IRAM_FUNC_ATTR
-spi_flash_get_id(void)
+static esp_err_t IRAM_ATTR spi_flash_read_status(uint32_t *status)
 {
-	uint32 rdid = 0;
-	FLASH_INTR_DECLARE(c_tmp);
-	//taskENTER_CRITICAL();
-	FLASH_INTR_LOCK(c_tmp);
-//pp_soft_wdt_stop();os_printf("stop2\n");
-FlashIsOnGoing = 1;
-
-	Cache_Read_Disable();
-
-	Wait_SPI_Idle(&flashchip);
-
-	WRITE_PERI_REG(PERIPHS_SPI_FLASH_C0, 0);    // clear regisrter
-	WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_RDID);
-	while(READ_PERI_REG(PERIPHS_SPI_FLASH_CMD)!=0);
-
-	rdid = READ_PERI_REG(PERIPHS_SPI_FLASH_C0)&0xffffff;
-
-	Cache_Read_Enable_New();
-
-FlashIsOnGoing = 0;
-//os_printf("start2\n");
-//pp_soft_wdt_restart();
-//	taskEXIT_CRITICAL();
-	FLASH_INTR_UNLOCK(c_tmp);
-
-	return rdid;
-}
-
-SpiFlashOpResult IRAM_FUNC_ATTR
-spi_flash_read_status(uint32 *status)
-{
-	SpiFlashOpResult ret;
-	FLASH_INTR_DECLARE(c_tmp);
-
-	//taskENTER_CRITICAL();
-	FLASH_INTR_LOCK(c_tmp);
-
-//pp_soft_wdt_stop();os_printf("stop3\n");
-FlashIsOnGoing = 1;
-	//Cache_Read_Disable();
-Cache_Read_Disable_2();
-
-	ret =  SPI_read_status(&flashchip, status);
-
-	//Cache_Read_Enable_New();
-Cache_Read_Enable_2();
-FlashIsOnGoing = 0;
-//pp_soft_wdt_restart();os_printf("start3\n");
-//	taskEXIT_CRITICAL();
-	FLASH_INTR_UNLOCK(c_tmp);
-
-	return ret;
-}
-
-SpiFlashOpResult IRAM_FUNC_ATTR
-spi_flash_write_status(uint32 status_value)
-{
-	//taskENTER_CRITICAL();
+    esp_err_t ret;
     FLASH_INTR_DECLARE(c_tmp);
 
-	FLASH_INTR_LOCK(c_tmp);
+    FLASH_INTR_LOCK(c_tmp);
 
-//pp_soft_wdt_stop();os_printf("stop4\n");
-FlashIsOnGoing = 1;
-	//Cache_Read_Disable();
-Cache_Read_Disable_2();
+    FlashIsOnGoing = 1;
 
-	Wait_SPI_Idle(&flashchip);
-	if(SPI_FLASH_RESULT_OK != SPI_write_enable(&flashchip))
-		return SPI_FLASH_RESULT_ERR;
-	if(SPI_FLASH_RESULT_OK != SPI_write_status(&flashchip,status_value))
-		return SPI_FLASH_RESULT_ERR;
-	Wait_SPI_Idle(&flashchip);
+    Cache_Read_Disable_2();
 
-	//Cache_Read_Enable_New();
-Cache_Read_Enable_2();
-FlashIsOnGoing = 0;
-//pp_soft_wdt_restart();os_printf("start4\n");
-//	taskEXIT_CRITICAL();
-	FLASH_INTR_UNLOCK(c_tmp);
+    ret =  SPI_read_status(&flashchip, status);
 
-	return SPI_FLASH_RESULT_OK;
+    Cache_Read_Enable_2();
+
+    FlashIsOnGoing = 0;
+
+    FLASH_INTR_UNLOCK(c_tmp);
+
+    return ret;
 }
 
-#define SPI_ISSI_FLASH_WRITE_PROTECT_STATUS      (BIT(2)|BIT(3)|BIT(4)|BIT(5))
-#define SPI_EON_25Q16A_WRITE_PROTECT_STATUS       (BIT(2)|BIT(3)|BIT(4)|BIT(5))
-#define SPI_EON_25Q16B_WRITE_PROTECT_STATUS       (BIT(2)|BIT(3)|BIT(4)|BIT(5))
-#define SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS   (BIT(2)|BIT(3)|BIT(4)|BIT(5)|BIT(6))
-#define SPI_FLASH_RDSR2      0x35
-#define SPI_FLASH_PROTECT_STATUS                 (BIT(2)|BIT(3)|BIT(4)|BIT(5)|BIT(6)|BIT(14))
+static esp_err_t IRAM_ATTR spi_flash_write_status(uint32_t status_value)
+{
+    FLASH_INTR_DECLARE(c_tmp);
 
-LOCAL uint8 IRAM_FUNC_ATTR
-flash_gd25q32c_read_status(enum GD25Q32C_status status_index)
+    FLASH_INTR_LOCK(c_tmp);
+
+    FlashIsOnGoing = 1;
+
+    Cache_Read_Disable_2();
+
+    Wait_SPI_Idle(&flashchip);
+    if(ESP_OK != SPI_write_enable(&flashchip))
+        return ESP_ERR_FLASH_OP_FAIL;
+    if(ESP_OK != SPI_write_status(&flashchip,status_value))
+        return ESP_ERR_FLASH_OP_FAIL;
+    Wait_SPI_Idle(&flashchip);
+
+    Cache_Read_Enable_2();
+
+    FlashIsOnGoing = 0;
+
+    FLASH_INTR_UNLOCK(c_tmp);
+
+    return ESP_OK;
+}
+
+static uint8_t IRAM_ATTR flash_gd25q32c_read_status(enum GD25Q32C_status status_index)
 {
     uint8_t rdsr_cmd=0;
-    if(GD25Q32C_STATUS1 == status_index){
+    if(GD25Q32C_STATUS1 == status_index) {
         rdsr_cmd = SPI_FLASH_GD25Q32C_READ_STATUSE1_CMD;
     }
-    else if(GD25Q32C_STATUS2 == status_index){
+    else if(GD25Q32C_STATUS2 == status_index) {
         rdsr_cmd = SPI_FLASH_GD25Q32C_READ_STATUSE2_CMD;
     }
-    else if(GD25Q32C_STATUS3 == status_index){
+    else if(GD25Q32C_STATUS3 == status_index) {
         rdsr_cmd = SPI_FLASH_GD25Q32C_READ_STATUSE3_CMD;
     }
     else {
@@ -710,17 +323,17 @@ flash_gd25q32c_read_status(enum GD25Q32C_status status_index)
     return ((uint8_t)status);
 }
 
-void flash_gd25q32c_write_status(enum GD25Q32C_status status_index,uint8 status)
+static void flash_gd25q32c_write_status(enum GD25Q32C_status status_index,uint8_t status)
 {
-    uint32 wrsr_cmd=0;
-    uint32 new_status = status;
-    if(GD25Q32C_STATUS1 == status_index){
+    uint32_t wrsr_cmd=0;
+    uint32_t new_status = status;
+    if(GD25Q32C_STATUS1 == status_index) {
         wrsr_cmd = SPI_FLASH_GD25Q32C_WRITE_STATUSE1_CMD;
     }
-    else if(GD25Q32C_STATUS2 == status_index){
+    else if(GD25Q32C_STATUS2 == status_index) {
         wrsr_cmd = SPI_FLASH_GD25Q32C_WRITE_STATUSE2_CMD;
     }
-    else if(GD25Q32C_STATUS3 == status_index){
+    else if(GD25Q32C_STATUS3 == status_index) {
         wrsr_cmd = SPI_FLASH_GD25Q32C_WRITE_STATUSE3_CMD;
     }
     else {
@@ -728,26 +341,27 @@ void flash_gd25q32c_write_status(enum GD25Q32C_status status_index,uint8 status)
     }
     special_flash_write_status(wrsr_cmd, new_status, 1, true);
 }
-LOCAL bool spi_flash_check_wr_protect(void)
+
+static bool spi_flash_check_wr_protect(void)
 {
-    uint32 flash_id=spi_flash_get_id();
-    uint32 status=0;
+    uint32_t flash_id=spi_flash_get_id();
+    uint32_t status=0;
     //check for EN25Q16A/B flash chips
     if ((flash_id & 0xffffff) == 0x15701c) {
         uint8_t sfdp = en25q16x_read_sfdp();
         if (sfdp == 0xE5) {
             spi_debug("EN25Q16A\n");
             //This is EN25Q16A, set bit6 in the same way as issi flash chips.
-            if(spi_flash_read_status(&status)==0){//Read status Ok
-                if(status&(SPI_EON_25Q16A_WRITE_PROTECT_STATUS)){//Write_protect
+            if(spi_flash_read_status(&status)==0) { //Read status Ok
+                if(status&(SPI_EON_25Q16A_WRITE_PROTECT_STATUS)) { //Write_protect
                     special_flash_write_status(0x1, status&(~(SPI_EON_25Q16A_WRITE_PROTECT_STATUS)), 1, true);
                 }
             }
         } else if (sfdp == 0xED) {
             spi_debug("EN25Q16B\n");
             //This is EN25Q16B
-            if(spi_flash_read_status(&status)==0){//Read status Ok
-                if(status&(SPI_EON_25Q16B_WRITE_PROTECT_STATUS)){//Write_protect
+            if(spi_flash_read_status(&status)==0) { //Read status Ok
+                if(status&(SPI_EON_25Q16B_WRITE_PROTECT_STATUS)) { //Write_protect
                     special_flash_write_status(0x1, status&(~(SPI_EON_25Q16B_WRITE_PROTECT_STATUS)), 1, true);
                 }
             }
@@ -756,120 +370,81 @@ LOCAL bool spi_flash_check_wr_protect(void)
     //MXIC :0XC2
     //ISSI :0X9D
     // ets_printf("spi_flash_check_wr_protect\r\n");
-    else if(((flash_id&0xFF)==0X9D)||((flash_id&0xFF)==0XC2)||((flash_id & 0xFF) == 0x1C)){
-        if(spi_flash_read_status(&status)==0){//Read status Ok
-            if(status&(SPI_ISSI_FLASH_WRITE_PROTECT_STATUS)){//Write_protect
+    else if(((flash_id&0xFF)==0X9D)||((flash_id&0xFF)==0XC2)||((flash_id & 0xFF) == 0x1C)) {
+        if(spi_flash_read_status(&status)==0) { //Read status Ok
+            if(status&(SPI_ISSI_FLASH_WRITE_PROTECT_STATUS)) { //Write_protect
                 special_flash_write_status(0x1, status&(~(SPI_ISSI_FLASH_WRITE_PROTECT_STATUS)), 1, true);
             }
         }
     }
     //GD25Q32C:0X16409D
     //GD25Q128
-    else if(((flash_id&0xFFFFFFFF)==0X1640C8)||((flash_id&0xFFFFFFFF)==0X1840C8)){
-        if(spi_flash_read_status(&status)==0){//Read status Ok
-            if(status&SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS){
+    else if(((flash_id&0xFFFFFFFF)==0X1640C8)||((flash_id&0xFFFFFFFF)==0X1840C8)) {
+        if(spi_flash_read_status(&status)==0) { //Read status Ok
+            if(status&SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS) {
                 special_flash_write_status(0x01, status&(~(SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS)), 1, true);
             }
         }
     }
     //Others
-    else{
-         if(spi_flash_read_status(&status)==0){//Read status Ok
-            uint32 status1 = 0; //flash_gd25q32c_read_status(GD25Q32C_STATUS2);
+    else {
+        if(spi_flash_read_status(&status)==0) { //Read status Ok
+            uint32_t status1 = 0; //flash_gd25q32c_read_status(GD25Q32C_STATUS2);
             special_flash_read_status(SPI_FLASH_RDSR2, &status1, 1);
             status=(status1 << 8)|(status & 0xff);
-            if(status&SPI_FLASH_PROTECT_STATUS){
+            if(status&SPI_FLASH_PROTECT_STATUS) {
                 status=((status&(~SPI_FLASH_PROTECT_STATUS))&0xffff);
                 spi_flash_write_status(status);
             }
-         }
-    }
-    return true;
-}
-#if 0
-LOCAL bool spi_flash_check_wr_protect(void)
-{
-    uint32 status;
-
-    if (spi_flash_read_status(&status) == SPI_FLASH_RESULT_OK) {
-        if (status != 0) {
-            os_printf("flash status %x\n", status);
-#define SPI_FLASH_STATUS    0x00
-            if (spi_flash_write_status(SPI_FLASH_STATUS) != SPI_FLASH_RESULT_OK) {
-                os_printf("flash write status failed\n");
-                return false;
-            } else {
-                if (spi_flash_read_status(&status) == SPI_FLASH_RESULT_OK) {
-                    if ((status != 0 )&&(status != 0x02 )) {
-                        os_printf("flash status check failed， status %x\n", status);
-                        return false;
-                    } else {
-                        os_printf("flash status check ok\n");
-                    }
-                } else {
-                    return false;
-                }
-            }
         }
-    } else {
-        return false;
     }
-
     return true;
 }
-#endif
+
 /******************************************************************************
  * FunctionName : spi_flash_erase_sector
  * Description  : a
  * Parameters   :
  * Returns      :
 *******************************************************************************/
-SpiFlashOpResult IRAM_FUNC_ATTR
-spi_flash_erase_sector(uint16 sec)
+esp_err_t IRAM_ATTR spi_flash_erase_sector(size_t sec)
 {
-	if (protect_flag == true)
-	{
-		if (false == spi_flash_erase_sector_check(sec))
-		    return SPI_FLASH_RESULT_ERR;
-	}
+    FLASH_INTR_DECLARE(c_tmp);
 
-    SpiFlashOpResult ret;
+    if (protect_flag == true)
+    {
+        if (false == spi_flash_erase_sector_check(sec))
+            return ESP_ERR_FLASH_OP_FAIL;
+    }
+
+    esp_err_t ret;
 
     if (spi_flash_check_wr_protect() == false) {
-        return SPI_FLASH_RESULT_ERR;
+        return ESP_ERR_FLASH_OP_FAIL;
     }
 
     spi_debug("E[%x] %d-", sec, system_get_time());
 
-    FLASH_INTR_DECLARE(c_tmp);
-
-//	vTaskSuspendAll();
-//    taskENTER_CRITICAL();
-	FLASH_INTR_LOCK(c_tmp);
-
-pp_soft_wdt_stop();
-FlashIsOnGoing = 1;
-    //Cache_Read_Disable();
-Cache_Read_Disable_2();
+    FLASH_INTR_LOCK(c_tmp);
+    pp_soft_wdt_stop();
+    FlashIsOnGoing = 1;
+    Cache_Read_Disable_2();
 
     ret = SPIEraseSector(sec);
 
-Cache_Read_Enable_2();
-	//Cache_Read_Enable_New();
-FlashIsOnGoing = 0;
-//    xTaskResumeAll();
-pp_soft_wdt_restart();
-//    taskEXIT_CRITICAL();
-	FLASH_INTR_UNLOCK(c_tmp);
+    Cache_Read_Enable_2();
+    FlashIsOnGoing = 0;
+    pp_soft_wdt_restart();
+    FLASH_INTR_UNLOCK(c_tmp);
 
     spi_debug("%d\n", system_get_time());
 
     return ret;
 }
 
-SpiFlashOpResult spi_flash_enable_qmode(void)
+esp_err_t spi_flash_enable_qmode(void)
 {
-    SpiFlashOpResult ret;
+    esp_err_t ret;
 
     Cache_Read_Disable_2();
     ret = Enable_QMode(&flashchip);
@@ -879,46 +454,53 @@ SpiFlashOpResult spi_flash_enable_qmode(void)
     return ret;
 }
 
-SpiFlashOpResult IRAM_FUNC_ATTR
-spi_flash_write(uint32 des_addr, uint32 *src_addr, uint32 size)
+esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t size)
 {
-    SpiFlashOpResult ret;
+    esp_err_t ret;
+    uint32_t *tmp;
+    FLASH_INTR_DECLARE(c_tmp);
 
-    if (src_addr == NULL) {
-        return SPI_FLASH_RESULT_ERR;
+    if (src == NULL) {
+        return ESP_ERR_FLASH_OP_FAIL;
     }
 
     if (spi_flash_check_wr_protect() == false) {
-        return SPI_FLASH_RESULT_ERR;
+        return ESP_ERR_FLASH_OP_FAIL;
     }
 
     if (size % 4) {
         size = (size / 4 + 1) * 4;
     }
 
-    spi_debug("W[%x] %d-", des_addr / 4096, system_get_time());
+    if (IS_FLASH(src)) {
+        tmp = wifi_malloc(size, OSI_MALLOC_CAP_32BIT);
+        if (!tmp) {
+            return ESP_ERR_NO_MEM;
+        }
+        memcpy(tmp, src, size);
+    } else
+        tmp = (uint32_t *)src;
 
-    FLASH_INTR_DECLARE(c_tmp);
+    spi_debug("W[%x] %d-", dest_addr / 4096, system_get_time());
 
-//    vTaskSuspendAll();
-//    taskENTER_CRITICAL();
-	FLASH_INTR_LOCK(c_tmp);
+    FLASH_INTR_LOCK(c_tmp);
 
-pp_soft_wdt_stop();
-FlashIsOnGoing = 1;
-    //Cache_Read_Disable();
-Cache_Read_Disable_2();
+    pp_soft_wdt_stop();
+    FlashIsOnGoing = 1;
 
-    ret = SPIWrite(des_addr, src_addr, size);
+    Cache_Read_Disable_2();
 
-Cache_Read_Enable_2();
-	//Cache_Read_Enable_New();
-FlashIsOnGoing = 0;
-//    xTaskResumeAll();
-pp_soft_wdt_restart();
-//    taskEXIT_CRITICAL();
-	FLASH_INTR_UNLOCK(c_tmp);
+    ret = SPIWrite(dest_addr, tmp, size);
 
+    Cache_Read_Enable_2();
+
+    FlashIsOnGoing = 0;
+    pp_soft_wdt_restart();
+
+    FLASH_INTR_UNLOCK(c_tmp);
+
+    if (IS_FLASH(src))
+        wifi_free(tmp);
 
     spi_debug("%d\n", system_get_time());
 
@@ -931,55 +513,36 @@ pp_soft_wdt_restart();
  * Parameters   :
  * Returns      :
 *******************************************************************************/
-SpiFlashOpResult IRAM_FUNC_ATTR
-spi_flash_read(uint32 src_addr, uint32 *des_addr, uint32 size)
+esp_err_t IRAM_ATTR spi_flash_read(size_t src_addr, void *dest, size_t size)
 {
-    SpiFlashOpResult ret;
+    esp_err_t ret;
+    FLASH_INTR_DECLARE(c_tmp);
 
-    if (des_addr == NULL) {
-        return SPI_FLASH_RESULT_ERR;
+    if (dest == NULL) {
+        return ESP_ERR_FLASH_OP_FAIL;
     }
 
     spi_debug("R[%x] %d-", src_addr / 4096, system_get_time());
 
-    FLASH_INTR_DECLARE(c_tmp);
+    FLASH_INTR_LOCK(c_tmp);
 
-//    vTaskSuspendAll();
-//    taskENTER_CRITICAL();
-	FLASH_INTR_LOCK(c_tmp);
+    FlashIsOnGoing = 1;
 
-//pp_soft_wdt_stop();os_printf("stop7\n");
-FlashIsOnGoing = 1;
+    Cache_Read_Disable_2();
 
-    if (flash_read == NULL) {
-	//Cache_Read_Disable();
-Cache_Read_Disable_2();
+    ret = SPIRead(src_addr, dest, size);
 
-    ret = SPIRead(src_addr, des_addr, size);
+    Cache_Read_Enable_2();
 
-Cache_Read_Enable_2();
-	//Cache_Read_Enable_New();
-    } else {
-        ret = flash_read(&flashchip, src_addr, des_addr, size);
-    }
-FlashIsOnGoing = 0;
-//    xTaskResumeAll();
-//pp_soft_wdt_restart();os_printf("start7\n");
-    //taskEXIT_CRITICAL();
-	FLASH_INTR_UNLOCK(c_tmp);
+    FlashIsOnGoing = 0;
+    FLASH_INTR_UNLOCK(c_tmp);
 
     spi_debug("%d\n", system_get_time());
 
     return ret;
 }
 
-void ICACHE_FLASH_ATTR
-spi_flash_set_read_func(user_spi_flash_read read)
-{
-    flash_read = read;
-}
-
-LOCAL void spi_flash_enable_qio_bit6(void)
+static void spi_flash_enable_qio_bit6(void)
 {
     uint8_t wrsr_cmd = 0x1;
     uint32_t issi_qio = SPI_FLASH_ISSI_ENABLE_QIO_MODE;
@@ -990,53 +553,44 @@ LOCAL void spi_flash_enable_qio_bit6(void)
 if the QIO_ENABLE bit not in Bit9,in Bit6
 the SPI send 0x01(CMD)+(1<<6)
 */
-bool spi_flash_issi_enable_QIO_mode(void)
+static bool spi_flash_issi_enable_QIO_mode(void)
 {
-    uint32 status = 0;
+    uint32_t status = 0;
     if(spi_flash_read_status(&status) == 0) {
         if((status&SPI_FLASH_ISSI_ENABLE_QIO_MODE)) {
-            USER_SPI_FLASH_DBG("already:QIO!\n");
             return true;
         }
     }
-    else{
-    	//USER_SPI_FLASH_DBG("spi flash read status err %s %u\r\n ",__FUNCTION__,__LINE__);
-    	return false;
+    else {
+        return false;
     }
 
     spi_flash_enable_qio_bit6();
 
-    if(spi_flash_read_status(&status) == 0){
+    if(spi_flash_read_status(&status) == 0) {
         if((status&SPI_FLASH_ISSI_ENABLE_QIO_MODE)) {
-        	USER_SPI_FLASH_DBG("mode:QIO.\n");
-            //USER_SPI_FLASH_DBG("ENABLE QIO(0X1+(BIT6)),QIO ENABLE OK,!\n");
             return true;
         } else {
-            //USER_SPI_FLASH_DBG("ENABLE QIO(0X1+(BIT6ENABLE QIO(0X31+(BIT2)))),QIO ENABLE ERR!!\n");
             return false;
         }
     } else {
-       //USER_SPI_FLASH_DBG("spi flash read status err %s %u\r\n ",__FUNCTION__,__LINE__);
-       return false;
+        return false;
     }
 }
 
-bool flash_gd25q32c_enable_QIO_mode()
+static bool flash_gd25q32c_enable_QIO_mode()
 {
-    uint8 data = 0;
-    if((data=flash_gd25q32c_read_status(GD25Q32C_STATUS2))&SPI_FLASH_GD25Q32C_QIO_MODE){
-    	USER_SPI_FLASH_DBG("already:QIO!\n");
-       return true;
+    uint8_t data = 0;
+    if((data=flash_gd25q32c_read_status(GD25Q32C_STATUS2))&SPI_FLASH_GD25Q32C_QIO_MODE) {
+        return true;
     }
-    else{
+    else {
         flash_gd25q32c_write_status(GD25Q32C_STATUS2,SPI_FLASH_GD25Q32C_QIO_MODE);
-        if(flash_gd25q32c_read_status(GD25Q32C_STATUS2)&SPI_FLASH_GD25Q32C_QIO_MODE){
-        	USER_SPI_FLASH_DBG("mode:QIO.\n");
+        if(flash_gd25q32c_read_status(GD25Q32C_STATUS2)&SPI_FLASH_GD25Q32C_QIO_MODE) {
             return true;
 
         }
-        else{
-        	//USER_SPI_FLASH_DBG("ENABLE QIO(0X31+(BIT2)),QIO ENABLE Fail\n");
+        else {
             return false;
         }
     }
@@ -1135,11 +689,11 @@ uint8_t en25q16x_read_sfdp()
     return ((uint8_t) data);
 }
 
-bool IRAM_FUNC_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd)
+bool IRAM_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd)
 {
     if ((p_cmd->addr_len != 0 && p_cmd->addr == NULL)
-        || (p_cmd->data_len != 0 && p_cmd->data == NULL)
-        || (p_cmd == NULL)) {
+            || (p_cmd->data_len != 0 && p_cmd->data == NULL)
+            || (p_cmd == NULL)) {
         return false;
     }
     int idx = 0;
@@ -1155,10 +709,10 @@ bool IRAM_FUNC_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd)
         Wait_SPI_Idle(&flashchip);
     }
     //save reg
-    uint32 io_mux_reg = READ_PERI_REG(PERIPHS_IO_MUX_CONF_U);
-    uint32 spi_clk_reg = READ_PERI_REG(SPI_CLOCK(SPI));
-    uint32 spi_ctrl_reg = READ_PERI_REG(SPI_CTRL(SPI));
-    uint32 spi_user_reg = READ_PERI_REG(SPI_USER(SPI));
+    uint32_t io_mux_reg = READ_PERI_REG(PERIPHS_IO_MUX_CONF_U);
+    uint32_t spi_clk_reg = READ_PERI_REG(SPI_CLOCK(SPI));
+    uint32_t spi_ctrl_reg = READ_PERI_REG(SPI_CTRL(SPI));
+    uint32_t spi_user_reg = READ_PERI_REG(SPI_USER(SPI));
 
     if (mode & SPI_WRSR) {
         // enable write register
@@ -1179,9 +733,9 @@ bool IRAM_FUNC_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd)
     //CLEAR DAUL OR QUAD LINES TRANSMISSION MODE
     CLEAR_PERI_REG_MASK(SPI_CTRL(SPI), SPI_QIO_MODE|SPI_DIO_MODE|SPI_DOUT_MODE|SPI_QOUT_MODE);
     WRITE_PERI_REG(SPI_CLOCK(SPI),
-                    ((3&SPI_CLKCNT_N)<<SPI_CLKCNT_N_S)|
-                    ((1&SPI_CLKCNT_H)<<SPI_CLKCNT_H_S)|
-                    ((3&SPI_CLKCNT_L)<<SPI_CLKCNT_L_S)); //clear bit 31,set SPI clock div
+                   ((3&SPI_CLKCNT_N)<<SPI_CLKCNT_N_S)|
+                   ((1&SPI_CLKCNT_H)<<SPI_CLKCNT_H_S)|
+                   ((3&SPI_CLKCNT_L)<<SPI_CLKCNT_L_S)); //clear bit 31,set SPI clock div
     //Enable fast read mode
     SET_PERI_REG_MASK(SPI_CTRL(SPI), SPI_FASTRD_MODE);
 
@@ -1278,10 +832,9 @@ bool IRAM_FUNC_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd)
     return true;
 }
 
-void __attribute__((weak))
-user_spi_flash_dio_to_qio_pre_init(void)
+void user_spi_flash_dio_to_qio_pre_init(void)
 {
-    uint32 flash_id = spi_flash_get_id();
+    uint32_t flash_id = spi_flash_get_id();
     bool to_qio = false;
     //check for EN25Q16A/B flash chips
     if ((flash_id & 0xffffff) == 0x15701c) {
@@ -1294,7 +847,6 @@ user_spi_flash_dio_to_qio_pre_init(void)
         } else if (sfdp == 0xED) {
             //This is EN25Q16B
             if (en25q16x_write_volatile_status(0x40) == true) {
-                printf("mode: QIO\n");
                 to_qio = true;
             }
         }
@@ -1308,25 +860,64 @@ user_spi_flash_dio_to_qio_pre_init(void)
         if (spi_flash_issi_enable_QIO_mode() == true) {
             to_qio = true;
         }
-    //ENABLE FLASH QIO 0X31H+BIT2
+        //ENABLE FLASH QIO 0X31H+BIT2
     } else if (((flash_id & 0xFFFFFF) == 0x1640C8) || ((flash_id & 0xFFFFFF) == 0x1840C8)) {
         if (flash_gd25q32c_enable_QIO_mode() == true) {
             to_qio = true;
         }
-    //ENBALE FLASH QIO 0X01H+0X00+0X02
+        //ENBALE FLASH QIO 0X01H+0X00+0X02
     } else {
-        if (spi_flash_enable_qmode() == SPI_FLASH_RESULT_OK) {
-            printf("mode: QIO\n");
+        if (spi_flash_enable_qmode() == ESP_OK) {
             to_qio = true;
         }
     }
 
     if (to_qio == true) {
         CLEAR_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL, SPI_QIO_MODE
-                                                   |SPI_QOUT_MODE
-                                                   |SPI_DIO_MODE
-                                                   |SPI_DOUT_MODE
-                                                   |SPI_FASTRD_MODE);
+                            |SPI_QOUT_MODE
+                            |SPI_DIO_MODE
+                            |SPI_DOUT_MODE
+                            |SPI_FASTRD_MODE);
         SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL, SPI_QIO_MODE | SPI_FASTRD_MODE);
     }
+}
+
+/**
+ * @brief  Erase a range of flash sectors
+ */
+esp_err_t IRAM_ATTR spi_flash_erase_range(size_t start_address, size_t size)
+{
+    esp_err_t ret;
+    size_t sec, num;
+    FLASH_INTR_DECLARE(c_tmp);
+
+    if (start_address % SPI_FLASH_SEC_SIZE
+            || size % SPI_FLASH_SEC_SIZE) {
+        return ESP_ERR_FLASH_OP_FAIL;
+    }
+
+    if ((protect_flag == true
+            && false == spi_flash_erase_sector_check(start_address))
+            || spi_flash_check_wr_protect() == false) {
+        return ESP_ERR_FLASH_OP_FAIL;
+    }
+
+    sec = start_address / SPI_FLASH_SEC_SIZE;
+    num = size / SPI_FLASH_SEC_SIZE;
+
+    FLASH_INTR_LOCK(c_tmp);
+    pp_soft_wdt_stop();
+    FlashIsOnGoing = 1;
+    Cache_Read_Disable_2();
+
+    do {
+        ret = SPIEraseSector(sec++);
+    } while (ret == ESP_OK && --num);
+
+    Cache_Read_Enable_2();
+    FlashIsOnGoing = 0;
+    pp_soft_wdt_restart();
+    FLASH_INTR_UNLOCK(c_tmp);
+
+    return ret;
 }

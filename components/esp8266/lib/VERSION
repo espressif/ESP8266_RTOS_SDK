@@ -1,7 +1,7 @@
 gwen:
     crypto:     0181338
     espnow:     0181338
-    core:       0181338
+    core:       fddcd95
     minic:      5fc5b4f
     net80211:   fd9b17b
     pp:         0181338

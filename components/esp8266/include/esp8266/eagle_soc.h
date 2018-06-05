@@ -133,4 +133,22 @@
 #define PAD_XPD_DCDC_CONF               (REG_RTC_BASE + 0x0A0)
 //}}
 
+//CACHE{{
+#define CACHE_FLASH_CTRL_REG            (0x3ff00000 + 0x0c)
+#define CACHE_READ_EN_BIT               BIT8
+//}}
+
+#define DRAM_BASE                       (0x3FFE8000)
+#define DRAM_SIZE                       (96 * 1024)
+
+#define IRAM_BASE                       (0x40100000)
+#define IRAM_SIZE                       (48 * 1024)
+
+#define FLASH_BASE                      (0x40200000)
+#define FLASH_SIZE                      (16 * 1024 * 1024)
+
+#define IS_DRAM(a)                      ((size_t)(a) >= DRAM_BASE && (size_t)(a) < (DRAM_BASE + DRAM_SIZE))
+#define IS_IRAM(a)                      ((size_t)(a) >= IRAM_BASE && (size_t)(a) < (IRAM_BASE + IRAM_SIZE))
+#define IS_FLASH(a)                     ((size_t)(a) >= FLASH_BASE && (size_t)(a) < (FLASH_BASE + FLASH_SIZE))
+
 #endif //_EAGLE_SOC_H_
