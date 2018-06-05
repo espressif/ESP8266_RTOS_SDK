@@ -22,7 +22,9 @@
 #include "esp_flash_data_types.h"
 #include "esp_spi_flash.h"
 #include "esp_partition.h"
+#ifdef CONFIG_ENABLE_FLASH_ENCRYPT
 #include "esp_flash_encrypt.h"
+#endif
 #include "esp_log.h"
 
 
@@ -30,7 +32,11 @@
 // Enable built-in checks in queue.h in debug builds
 #define INVARIANTS
 #endif
+#if defined(PARTITION_QUEUE_HEADER)
+#include PARTITION_QUEUE_HEADER
+#else
 #include "rom/queue.h"
+#endif
 
 
 typedef struct partition_list_item_ {
@@ -142,7 +148,9 @@ static esp_partition_iterator_opaque_t* iterator_create(esp_partition_type_t typ
 // This function is called only once, with s_partition_list_lock taken.
 static esp_err_t load_partitions()
 {
+#ifdef CONFIG_ENABLE_FLASH_MMAP
     const uint32_t* ptr;
+
     spi_flash_mmap_handle_t handle;
     // map 64kB block where partition table is located
     esp_err_t err = spi_flash_mmap(ESP_PARTITION_TABLE_ADDR & 0xffff0000,
@@ -150,9 +158,26 @@ static esp_err_t load_partitions()
     if (err != ESP_OK) {
         return err;
     }
+
     // calculate partition address within mmap-ed region
     const esp_partition_info_t* it = (const esp_partition_info_t*)
             (ptr + (ESP_PARTITION_TABLE_ADDR & 0xffff) / sizeof(*ptr));
+#else
+    esp_err_t ret;
+    uint32_t *ptr;
+    const size_t read_size = SPI_FLASH_SEC_SIZE;
+
+    ptr = malloc(read_size);
+    if (!ptr)
+        return ESP_ERR_NO_MEM;
+    ret = spi_flash_read(ESP_PARTITION_TABLE_ADDR, ptr, read_size);
+    if (ret != ESP_OK) {
+        free(ptr);
+        return ret;
+    }
+    // calculate partition address within mmap-ed region
+    const esp_partition_info_t* it = (const esp_partition_info_t*)ptr;
+#endif
     const esp_partition_info_t* end = it + SPI_FLASH_SEC_SIZE / sizeof(*it);
     // tail of the linked list of partitions
     partition_list_item_t* last = NULL;
@@ -166,6 +191,7 @@ static esp_err_t load_partitions()
         item->info.size = it->pos.size;
         item->info.type = it->type;
         item->info.subtype = it->subtype;
+#ifdef CONFIG_ENABLE_FLASH_ENCRYPT
         item->info.encrypted = it->flags & PART_FLAG_ENCRYPTED;
         if (esp_flash_encryption_enabled() && (
                 it->type == PART_TYPE_APP
@@ -174,6 +200,9 @@ static esp_err_t load_partitions()
                are always encrypted */
             item->info.encrypted = true;
         }
+else
+        item->info.encrypted = false;
+#endif
 
         // it->label may not be zero-terminated
         strncpy(item->info.label, (const char*) it->label, sizeof(it->label));
@@ -186,7 +215,11 @@ static esp_err_t load_partitions()
         }
         last = item;
     }
+#ifdef CONFIG_ENABLE_FLASH_MMAP
     spi_flash_munmap(handle);
+#else
+    free(ptr);
+#endif
     return ESP_OK;
 }
 
@@ -214,7 +247,10 @@ const esp_partition_t *esp_partition_verify(const esp_partition_t *partition)
         /* Can't memcmp() whole structure here as padding contents may be different */
         if (p->address == partition->address
             && partition->size == p->size
-            && partition->encrypted == p->encrypted) {
+#ifdef CONFIG_ENABLE_FLASH_ENCRYPT
+            && partition->encrypted == p->encrypted
+#endif
+            ) {
             esp_partition_iterator_release(it);
             return p;
         }
@@ -235,6 +271,7 @@ esp_err_t esp_partition_read(const esp_partition_t* partition,
         return ESP_ERR_INVALID_SIZE;
     }
 
+#ifdef CONFIG_ENABLE_FLASH_ENCRYPT
     if (!partition->encrypted) {
         return spi_flash_read(partition->address + src_offset, dst, size);
     } else {
@@ -252,6 +289,9 @@ esp_err_t esp_partition_read(const esp_partition_t* partition,
         spi_flash_munmap(handle);
         return ESP_OK;
     }
+#else
+    return spi_flash_read(partition->address + src_offset, dst, size);
+#endif
 }
 
 esp_err_t esp_partition_write(const esp_partition_t* partition,
@@ -265,11 +305,15 @@ esp_err_t esp_partition_write(const esp_partition_t* partition,
         return ESP_ERR_INVALID_SIZE;
     }
     dst_offset = partition->address + dst_offset;
+#ifdef CONFIG_ENABLE_FLASH_ENCRYPT
     if (partition->encrypted) {
         return spi_flash_write_encrypted(dst_offset, src, size);
     } else {
         return spi_flash_write(dst_offset, src, size);
     }
+#else
+    return spi_flash_write(dst_offset, src, size);
+#endif
 }
 
 esp_err_t esp_partition_erase_range(const esp_partition_t* partition,
@@ -300,6 +344,7 @@ esp_err_t esp_partition_erase_range(const esp_partition_t* partition,
  * we can add esp_partition_mmapv which will accept an array of offsets and sizes, and return array of
  * mmaped pointers, and a single handle for all these regions.
  */
+#ifdef CONFIG_ENABLE_FLASH_MMAP
 esp_err_t esp_partition_mmap(const esp_partition_t* partition, uint32_t offset, uint32_t size,
                              spi_flash_mmap_memory_t memory,
                              const void** out_ptr, spi_flash_mmap_handle_t* out_handle)
@@ -322,3 +367,4 @@ esp_err_t esp_partition_mmap(const esp_partition_t* partition, uint32_t offset, 
     }
     return rc;
 }
+#endif

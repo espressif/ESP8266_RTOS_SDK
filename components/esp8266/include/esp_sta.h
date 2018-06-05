@@ -27,8 +27,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/queue.h>
 
-#include "queue.h"
 #include "esp_wifi.h"
 
 #ifdef __cplusplus

@@ -257,6 +257,7 @@ esp_err_t esp_partition_write(const esp_partition_t* partition,
 esp_err_t esp_partition_erase_range(const esp_partition_t* partition,
                                     uint32_t start_addr, uint32_t size);
 
+#ifdef CONFIG_ENABLE_FLASH_MMAP
 /**
  * @brief Configure MMU to map partition into data memory
  *
@@ -286,6 +287,7 @@ esp_err_t esp_partition_mmap(const esp_partition_t* partition, uint32_t offset, 
                              spi_flash_mmap_memory_t memory,
                              const void** out_ptr, spi_flash_mmap_handle_t* out_handle);
 
+#endif /* CONFIG_ENABLE_FLASH_MMAP */
 
 #ifdef __cplusplus
 }

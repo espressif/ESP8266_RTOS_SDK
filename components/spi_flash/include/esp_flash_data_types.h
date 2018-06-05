@@ -42,11 +42,11 @@ typedef struct {
  * See docs/partition_tables.rst for more information about individual fields.
  */
 typedef struct {
-	uint16_t magic;
-	uint8_t  type;
+    uint16_t magic;
+    uint8_t  type;
     uint8_t  subtype;
     esp_partition_pos_t pos;
-	uint8_t  label[16];
+    uint8_t  label[16];
     uint32_t flags;
 } esp_partition_info_t;
 
