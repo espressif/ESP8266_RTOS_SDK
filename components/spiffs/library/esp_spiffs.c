@@ -212,7 +212,7 @@ _ssize_t _spiffs_read_r(struct _reent *r, int fd, void *buf, size_t len)
         res = SPIFFS_read(&fs, fd - NUM_SYS_FD, buf, len);
     }
 
-    return res;
+    return SPIFFS_errno(&fs) == SPIFFS_ERR_END_OF_OBJECT ? 0 : res;
 }
 
 _ssize_t _spiffs_write_r(struct _reent *r, int fd, void *buf, size_t len)
@@ -234,10 +234,22 @@ _off_t _spiffs_lseek_r(struct _reent *r, int fd, _off_t where, int whence)
     if (fd < NUM_SYS_FD) {
         res = -1;
     } else {
+        if (whence == SEEK_SET) {
+            whence = SPIFFS_SEEK_SET;
+        } else if (whence == SEEK_CUR) {
+            whence = SPIFFS_SEEK_CUR;
+        } else if (whence == SEEK_END) {
+            whence = SPIFFS_SEEK_END;
+        }
+
         res = SPIFFS_lseek(&fs, fd - NUM_SYS_FD, where, whence);
+
+        if (res < 0) {
+            printf("lseek failed: %d\n", res);
+        }
     }
 
-    return res;
+    return res < 0 ? -1 : res;
 }
 
 int _spiffs_close_r(struct _reent *r, int fd)
