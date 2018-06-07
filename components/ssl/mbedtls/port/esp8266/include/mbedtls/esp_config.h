@@ -2122,7 +2122,9 @@
  *
  * This module enables mbedtls_strerror().
  */
-//#define MBEDTLS_ERROR_C
+#ifdef CONFIG_MBEDTLS_STRERROR
+#define MBEDTLS_ERROR_C
+#endif
 
 /**
  * \def MBEDTLS_GCM_C

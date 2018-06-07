@@ -56,6 +56,10 @@ config MBEDTLS_DEBUG_LEVEL
    help
        Mbedtls debugging level.
 
+config MBEDTLS_STRERROR
+    bool "Enable mbedtls_strerror function"
+    default n
+
 config MBEDTLS_HAVE_TIME
    bool "Enable mbedtls time"
    default y
