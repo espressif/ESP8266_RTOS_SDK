@@ -1456,6 +1456,9 @@ void          nopoll_conn_shutdown (noPollConn * conn)
 	}
 	conn->session = NOPOLL_INVALID_SOCKET;
 
+	/* release any resources from the mbedtls library */
+	mbedtls_library_free(&mbedtlsSSLContext, &mbedtlsSSLConfig, &mbedtlsNETContext);
+
 	return;
 }
 
@@ -1678,8 +1681,6 @@ void nopoll_conn_unref (noPollConn * conn)
 
 	nopoll_free (conn);	
 
-	/* release any resources from the mbedtls library */
-	mbedtls_library_free(&mbedtlsSSLContext, &mbedtlsSSLConfig, &mbedtlsNETContext);
 
 	return;
 }

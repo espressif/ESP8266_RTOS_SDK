@@ -325,6 +325,10 @@ exit:
     free(pkey);
     free(entropy);
     
+    if (ret != 0) {
+      printf("mbedtls_library_init() failed; freeing...\r\n");
+      mbedtls_library_free(ssl, conf, server_fd);
+    }
 
 
     return( ret );
