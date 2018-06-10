@@ -27,6 +27,12 @@
 
 #include <stdint.h>
 
+/* IO definitions (access restrictions to peripheral registers) */
+
+#define __RO__        volatile const     /*!< Defines 'read only' permissions                 */
+#define __WO__        volatile           /*!< Defines 'write only' permissions                */
+#define __RW__        volatile           /*!< Defines 'read / write' permissions              */
+
 //Register Bits{{
 #define BIT31   0x80000000
 #define BIT30   0x40000000

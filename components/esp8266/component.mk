@@ -18,7 +18,7 @@ endif
 #Linker scripts used to link the final application.
 #Warning: These linker scripts are only used when the normal app is compiled; the bootloader
 #specifies its own scripts.
-LINKER_SCRIPTS += esp8266.common.ld esp8266.rom.ld
+LINKER_SCRIPTS += esp8266.common.ld esp8266.rom.ld esp8266.peripherals.ld
 
 COMPONENT_ADD_LDFLAGS += -L$(COMPONENT_PATH)/lib \
                          $(addprefix -l,$(LIBS)) \
