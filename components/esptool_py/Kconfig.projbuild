@@ -103,6 +103,8 @@ choice ESPTOOLPY_FLASHSIZE
 	help
 		SPI flash size, in megabytes
 
+config ESPTOOLPY_FLASHSIZE_1MB
+	bool "1 MB"
 config ESPTOOLPY_FLASHSIZE_2MB_C1
 	bool "2 MB"
 config ESPTOOLPY_FLASHSIZE_4MB_C1
@@ -115,6 +117,7 @@ endchoice
 
 config ESPTOOLPY_FLASHSIZE
 	string
+	default "1MB" if ESPTOOLPY_FLASHSIZE_1MB
 	default "2MB-c1" if ESPTOOLPY_FLASHSIZE_2MB_C1
 	default "4MB-c1" if ESPTOOLPY_FLASHSIZE_4MB_C1
 	default "8MB" if ESPTOOLPY_FLASHSIZE_8MB
@@ -152,7 +155,9 @@ choice ESPTOOLPY_AFTER
         boards do this internally.
 
 config ESPTOOLPY_AFTER_RESET
-    bool "Reset after flashing"
+    bool "Hard Reset after flashing"
+config ESPTOOLPY_AFTER_SOFT_RESET
+    bool "Soft Reset after flashing"
 config ESPTOOLPY_AFTER_NORESET
     bool "Stay in bootloader"
 endchoice
@@ -161,6 +166,7 @@ config ESPTOOLPY_AFTER
     string
     default "hard_reset" if ESPTOOLPY_AFTER_RESET
     default "no_reset" if ESPTOOLPY_AFTER_NORESET
+    default "soft_reset" if ESPTOOLPY_AFTER_SOFT_RESET
 
 choice MONITOR_BAUD
     prompt "'make monitor' baud rate"
