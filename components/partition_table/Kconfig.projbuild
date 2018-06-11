@@ -34,6 +34,12 @@ config PARTITION_TABLE_CUSTOM_APP_BIN_OFFSET
         If using a custom partition table, specify the offset in the flash
         where 'make flash' should write the built app.
 
+config PARTITION_TABLE_OFFSET
+    hex "Partition table offset address at flash"
+    default 0x8000
+    help
+        The partition table cannot be placed at application address.
+
 config PARTITION_TABLE_CUSTOM_PHY_DATA_OFFSET
     hex "PHY data partition offset" if PARTITION_TABLE_CUSTOM
     depends on ESP32_PHY_INIT_DATA_IN_PARTITION
