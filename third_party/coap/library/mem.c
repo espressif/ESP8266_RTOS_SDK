@@ -6,7 +6,6 @@
  * README for terms of use. 
  */
 
-
 #include "coap_config.h"
 #include "mem.h"
 #include "debug.h"

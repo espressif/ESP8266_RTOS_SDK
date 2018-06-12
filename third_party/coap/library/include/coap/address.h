@@ -80,9 +80,9 @@ _coap_address_isany_impl(const coap_address_t *a) {
   case AF_INET:
     return a->addr.sin.sin_addr.s_addr == INADDR_ANY;
   case AF_INET6:
-    return memcmp(&in6addr_any,
+    return memcmp(&ip6_addr_any,
                   &a->addr.sin6.sin6_addr,
-                  sizeof(in6addr_any)) == 0;
+                  sizeof(ip6_addr_any)) == 0;
   default:
     ;
   }

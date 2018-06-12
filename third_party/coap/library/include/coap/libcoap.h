@@ -19,7 +19,6 @@
  * The CONTIKI variable is within the Contiki build environment! */
 
 #if !defined (CONTIKI) 
-#include <netinet/in.h>
 #include <sys/socket.h>
 #endif /* CONTIKI */
 

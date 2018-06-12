@@ -13,7 +13,7 @@
 #
 ifndef PDIR
 
-GEN_LIBS = libcoap.a
+GEN_LIBS = liblibrary.a
 
 endif
 

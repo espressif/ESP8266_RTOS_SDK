@@ -15,7 +15,7 @@ ifndef PDIR
 
 UP_EXTRACT_DIR = ..
 GEN_LIBS = libcoap.a
-COMPONENTS_libmqtt = libcoap/libcoap.a platform/libplatform.a
+COMPONENTS_libcoap = library/liblibrary.a platform/libplatform.a
 endif
 
 
@@ -33,14 +33,14 @@ DEFINES += -DWITH_POSIX
 #
 # Each subtree potentially has an include directory
 #   corresponding to the common APIs applicable to modules
-#   rooted at that subtree. Accordingly, the INCLUDE PATH
+#   rooted at that subtree. Accordingly, the INCLUDE PRATH
 #   of a module can only contain the include directories up
 #   its parent path, and not its siblings
 #
 # Required for each makefile to inherit from the parent
 #
 
-INCLUDES := $(INCLUDES) -I $(PDIR)include -I $(PDIR)/platform/include -I $(PDIR)/platform/include/coap -I $(PDIR)/libcoap/include/coap
+INCLUDES := $(INCLUDES) -I $(PDIR)include -I $(PDIR)/platform/include -I $(PDIR)/platform/include/coap -I $(PDIR)/library/include/coap
 INCLUDES += -I ./
 PDIR := ../$(PDIR)
 sinclude $(PDIR)Makefile

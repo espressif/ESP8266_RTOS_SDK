@@ -8,8 +8,6 @@
 
 #ifdef WITH_POSIX
 #include <assert.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include <sys/socket.h>
 
 #include "address.h"

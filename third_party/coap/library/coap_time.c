@@ -8,7 +8,6 @@
 
 #ifdef WITH_POSIX
 #include <time.h>
-#include <sys/time.h>
 #include <unistd.h>  /* _POSIX_TIMERS */
 
 #include "coap_config.h"

@@ -36,4 +36,8 @@
 
 #define COAP_RESOURCES_NOHASH
 
+#define HAVE_SYS_UNISTD_H 1
+
+#define _POSIX_TIMERS 1
+
 #endif /* _CONFIG_H_ */
