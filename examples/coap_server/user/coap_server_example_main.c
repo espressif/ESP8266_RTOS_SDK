@@ -12,36 +12,28 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/event_groups.h"
 
-#include "esp_log.h"
 #include "esp_wifi.h"
-#include "esp_event_loop.h"
-
-#include "nvs_flash.h"
-
 #include "coap.h"
 
-/* The examples use simple WiFi configuration that you can set via
-   'make menuconfig'.
+// for libcirom.a
+int _getpid_r(struct _reent *r)
+{
+	return -1;
+ }
+int _kill_r(struct _reent *r, int pid, int sig)
+{
+ 	return -1;
+ }
 
-   If you'd rather not, just change the below entries to strings with
-   the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
-*/
-#define EXAMPLE_WIFI_SSID            CONFIG_WIFI_SSID
-#define EXAMPLE_WIFI_PASS            CONFIG_WIFI_PASSWORD
+#define COAP_SERVER_THREAD_NAME         "coap_server_thread"
+#define COAP_SERVER_THREAD_STACK_WORDS  2048
+#define COAP_SERVER_THREAD_PRIO         8
+
+LOCAL xTaskHandle coap_server_handle;
 
 #define COAP_DEFAULT_TIME_SEC 5
 #define COAP_DEFAULT_TIME_USEC 0
-
-static EventGroupHandle_t wifi_event_group;
-
-/* The event group allows multiple bits for each event,
-   but we only care about one event - are we connected
-   to the AP with an IP? */
-const static int CONNECTED_BIT = BIT0;
-
-const static char *TAG = "CoAP_server";
 
 static coap_async_state_t *async = NULL;
 
@@ -50,7 +42,7 @@ send_async_response(coap_context_t *ctx, const coap_endpoint_t *local_if)
 {
     coap_pdu_t *response;
     unsigned char buf[3];
-    const char* response_data     = "Hello World WTF!";
+    const char* response_data     = "Hello esp8266!";
     size_t size = sizeof(coap_hdr_t) + 20;
     response = coap_pdu_init(async->flags & COAP_MESSAGE_CON, COAP_RESPONSE_CODE(205), 0, size);
     response->hdr->id = coap_new_message_id(ctx);
@@ -90,13 +82,6 @@ static void coap_example_thread(void *p)
     int flags = 0;
 
     while (1) {
-        /* Wait for the callback to set the CONNECTED_BIT in the
-           event group.
-        */
-        xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
-                            false, true, portMAX_DELAY);
-        ESP_LOGI(TAG, "Connected to AP");
-
         /* Prepare the CoAP server socket */
         coap_address_init(&serv_addr);
         serv_addr.addr.sin.sin_family      = AF_INET;
@@ -127,7 +112,7 @@ static void coap_example_thread(void *p)
                     } else if (result < 0){
                         break;
                     } else {
-                        ESP_LOGE(TAG, "select timeout");
+                        printf("select timeout\n");
                     }
 
                     if (async) {
@@ -143,50 +128,17 @@ static void coap_example_thread(void *p)
     vTaskDelete(NULL);
 }
 
-static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
+void user_conn_init(void)
 {
-    switch(event->event_id) {
-    case SYSTEM_EVENT_STA_START:
-        esp_wifi_connect();
-        break;
-    case SYSTEM_EVENT_STA_GOT_IP:
-        xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-        break;
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-        /* This is a workaround as ESP32 WiFi libs don't currently
-           auto-reassociate. */
-        esp_wifi_connect();
-        xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
-        break;
-    default:
-        break;
+    int ret;
+    ret = xTaskCreate(coap_example_thread,
+                      COAP_SERVER_THREAD_NAME,
+                      COAP_SERVER_THREAD_STACK_WORDS,
+                      NULL,
+                      COAP_SERVER_THREAD_PRIO,
+                      &coap_server_handle);
+
+    if (ret != pdPASS)  {
+        printf("create coap server thread %s failed\n", COAP_SERVER_THREAD_NAME);
     }
-    return ESP_OK;
-}
-
-static void wifi_conn_init(void)
-{
-    tcpip_adapter_init();
-    wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK( esp_event_loop_init(wifi_event_handler, NULL) );
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = EXAMPLE_WIFI_SSID,
-            .password = EXAMPLE_WIFI_PASS,
-        },
-    };
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
-    ESP_ERROR_CHECK( esp_wifi_start() );
-}
-
-void app_main(void)
-{
-    ESP_ERROR_CHECK( nvs_flash_init() );
-    wifi_conn_init();
-
-    xTaskCreate(coap_example_thread, "coap", 2048, NULL, 5, NULL);
 }

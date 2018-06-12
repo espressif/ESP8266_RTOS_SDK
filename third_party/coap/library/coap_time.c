@@ -19,7 +19,7 @@ static coap_time_t coap_clock_offset = 0;
   /* _POSIX_TIMERS is > 0 when clock_gettime() is available */
 
   /* Use real-time clock for correct timestamps in coap_log(). */  
-#define COAP_CLOCK CLOCK_REALTIME
+//#define COAP_CLOCK CLOCK_REALTIME
 #endif
 
 void

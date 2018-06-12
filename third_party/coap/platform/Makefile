@@ -26,6 +26,7 @@ endif
 #   for a subtree within the makefile rooted therein
 #
 #DEFINES += 
+DEFINES += -DWITH_POSIX
 
 #############################################################
 # Recursion Magic - Don't touch this!!

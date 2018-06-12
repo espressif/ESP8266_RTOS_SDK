@@ -154,6 +154,10 @@ print_readable( const unsigned char *data, unsigned int len,
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
+#ifndef inet_ntop
+#define inet_ntop(af,src,dst,size)     (((af) == AF_INET) ? ipaddr_ntoa_r((const ip_addr_t *)(src),(dst),(size)) : NULL)
+#endif
+
 size_t
 coap_print_addr(const struct coap_address_t *addr, unsigned char *buf, size_t len) {
 #ifdef HAVE_ARPA_INET_H
@@ -163,7 +167,7 @@ coap_print_addr(const struct coap_address_t *addr, unsigned char *buf, size_t le
 
   switch (addr->addr.sa.sa_family) {
   case AF_INET: 
-    addrptr = &addr->addr.sin.sin_addr;
+    addrptr = &addr->addr.sin.sin_addr.s_addr;
     port = ntohs(addr->addr.sin.sin_port);
     break;
   case AF_INET6:

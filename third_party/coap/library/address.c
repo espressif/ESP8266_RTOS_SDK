@@ -12,6 +12,9 @@
 
 #include "address.h"
 
+#ifndef IN6_IS_ADDR_MULTICAST
+#define IN6_IS_ADDR_MULTICAST(a)    IN_MULTICAST(a)
+#endif
 int 
 coap_address_equals(const coap_address_t *a, const coap_address_t *b) {
   assert(a); assert(b);

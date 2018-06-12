@@ -12,9 +12,7 @@
 #     a generated lib/image xxx.a ()
 #
 ifndef PDIR
-
-GEN_LIBS = liblibrary.a
-
+GEN_LIBS = libuser.a
 endif
 
 
@@ -27,7 +25,6 @@ endif
 #
 #DEFINES += 
 DEFINES += -DWITH_POSIX
-
 #############################################################
 # Recursion Magic - Don't touch this!!
 #
@@ -41,6 +38,9 @@ DEFINES += -DWITH_POSIX
 #
 
 INCLUDES := $(INCLUDES) -I $(PDIR)include
+INCLUDES += -I $(SDK_PATH)/third_party/coap/platform/include
+INCLUDES += -I $(SDK_PATH)/third_party/coap/platform/include/coap
+INCLUDES += -I $(SDK_PATH)/third_party/coap/library/include/coap
 INCLUDES += -I ./
 PDIR := ../$(PDIR)
 sinclude $(PDIR)Makefile
