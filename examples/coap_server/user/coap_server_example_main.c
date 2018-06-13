@@ -16,26 +16,27 @@
 #include "esp_wifi.h"
 #include "coap.h"
 
-// for libcirom.a
-int _getpid_r(struct _reent *r)
-{
-	return -1;
- }
-int _kill_r(struct _reent *r, int pid, int sig)
-{
- 	return -1;
- }
-
 #define COAP_SERVER_THREAD_NAME         "coap_server_thread"
 #define COAP_SERVER_THREAD_STACK_WORDS  2048
 #define COAP_SERVER_THREAD_PRIO         8
 
-LOCAL xTaskHandle coap_server_handle;
+static xTaskHandle coap_server_handle;
 
 #define COAP_DEFAULT_TIME_SEC 5
 #define COAP_DEFAULT_TIME_USEC 0
 
 static coap_async_state_t *async = NULL;
+
+// for libcirom.a
+int _getpid_r(struct _reent *r)
+{
+    return -1;
+ }
+
+int _kill_r(struct _reent *r, int pid, int sig)
+{
+    return -1;
+ }
 
 static void
 send_async_response(coap_context_t *ctx, const coap_endpoint_t *local_if)
@@ -43,8 +44,7 @@ send_async_response(coap_context_t *ctx, const coap_endpoint_t *local_if)
     coap_pdu_t *response;
     unsigned char buf[3];
     const char* response_data     = "Hello esp8266!";
-    size_t size = sizeof(coap_hdr_t) + 20;
-    response = coap_pdu_init(async->flags & COAP_MESSAGE_CON, COAP_RESPONSE_CODE(205), 0, size);
+    response = coap_pdu_init(async->flags & COAP_MESSAGE_CON, COAP_RESPONSE_CODE(205), 0, COAP_MAX_PDU_SIZE);
     response->hdr->id = coap_new_message_id(ctx);
     if (async->tokenlen)
         coap_add_token(response, async->tokenlen, async->token);
@@ -72,7 +72,7 @@ async_handler(coap_context_t *ctx, struct coap_resource_t *resource,
     async = coap_register_async(ctx, peer, request, COAP_ASYNC_SEPARATE | COAP_ASYNC_CONFIRM, (void*)"no data");
 }
 
-static void coap_example_thread(void *p)
+static void coap_server_example_thread(void *p)
 {
     coap_context_t*  ctx = NULL;
     coap_address_t   serv_addr;
@@ -131,7 +131,7 @@ static void coap_example_thread(void *p)
 void user_conn_init(void)
 {
     int ret;
-    ret = xTaskCreate(coap_example_thread,
+    ret = xTaskCreate(coap_server_example_thread,
                       COAP_SERVER_THREAD_NAME,
                       COAP_SERVER_THREAD_STACK_WORDS,
                       NULL,
