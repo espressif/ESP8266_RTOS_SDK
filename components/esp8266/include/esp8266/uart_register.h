@@ -1,31 +1,25 @@
-/*
- * ESPRSSIF MIT License
- *
- * Copyright (c) 2015 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
- *
- * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
- * it is free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
- * to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- */
+// Copyright 2018-2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #ifndef UART_REGISTER_H_
 #define UART_REGISTER_H_
 
-#include "eagle_soc.h"
+#include "esp8266/eagle_soc.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define REG_UART_BASE(i)                (0x60000000 + (i)*0xf00)
 //version value:32'h062000
@@ -78,6 +72,36 @@
 #define UART_TXFIFO_EMPTY_INT_CLR           (BIT(1))
 #define UART_RXFIFO_FULL_INT_CLR            (BIT(0))
 
+#define UART_RXFIFO_FULL_INT_ENA            (BIT(0))
+#define UART_RXFIFO_FULL_INT_ENA_M          (BIT(0))
+#define UART_RXFIFO_FULL_INT_ST_M           (BIT(0))
+#define UART_RXFIFO_FULL_INT_CLR_M          (BIT(0))
+
+#define UART_TXFIFO_EMPTY_INT_ENA           (BIT(1))
+#define UART_TXFIFO_EMPTY_INT_ENA_M         (BIT(1))
+#define UART_TXFIFO_EMPTY_INT_ST_M          (BIT(1))
+#define UART_TXFIFO_EMPTY_INT_CLR_M         (BIT(1))
+
+#define UART_PARITY_ERR_INT_ENA             (BIT(2))
+#define UART_PARITY_ERR_INT_ENA_M           (BIT(2))
+#define UART_PARITY_ERR_INT_ST_M            (BIT(2))
+#define UART_PARITY_ERR_INT_CLR_M           (BIT(2))
+
+#define UART_FRM_ERR_INT_ENA                (BIT(3))
+#define UART_FRM_ERR_INT_ENA_M              (BIT(3))
+#define UART_FRM_ERR_INT_ST_M               (BIT(3))
+#define UART_FRM_ERR_INT_CLR_M              (BIT(3))
+
+#define UART_RXFIFO_OVF_INT_ENA             (BIT(4))
+#define UART_RXFIFO_OVF_INT_ENA_M           (BIT(4))
+#define UART_RXFIFO_OVF_INT_ST_M            (BIT(4))
+#define UART_RXFIFO_OVF_INT_CLR_M           (BIT(4))
+
+#define UART_RXFIFO_TOUT_INT_ENA            (BIT(8))
+#define UART_RXFIFO_TOUT_INT_ENA_M          (BIT(8))
+#define UART_RXFIFO_TOUT_INT_ST_M           (BIT(8))
+#define UART_RXFIFO_TOUT_INT_CLR_M          (BIT(8))
+
 #define UART_CLKDIV(i)                  (REG_UART_BASE(i) + 0x14)
 #define UART_CLKDIV_CNT                     0x000FFFFF
 #define UART_CLKDIV_S                       0
@@ -124,7 +148,11 @@
 #define UART_BIT_NUM                        0x00000003
 #define UART_BIT_NUM_S                      2
 #define UART_PARITY_EN                      (BIT(1))
+#define UART_PARITY_EN_M                0x00000001
+#define UART_PARITY_EN_S                 1
 #define UART_PARITY                         (BIT(0))
+#define UART_PARITY_M                       0x00000001
+#define UART_PARITY_S                        0
 
 #define UART_CONF1(i)                   (REG_UART_BASE(i) + 0x24)
 #define UART_RX_TOUT_EN                     (BIT(31))
@@ -153,4 +181,11 @@
 #define UART_DATE(i)                    (REG_UART_BASE(i) + 0x78)
 #define UART_ID(i)                      (REG_UART_BASE(i) + 0x7C)
 
-#endif // UART_REGISTER_H_INCLUDED
+#define UART_SWAP_REG                       0x3FF00028
+
+#ifdef __cplusplus
+}
+#endif  /* end of __cplusplus */
+
+#endif  /* _UART_REGISTER_H_ */
+

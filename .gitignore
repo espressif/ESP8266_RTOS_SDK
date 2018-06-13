@@ -5,6 +5,9 @@
 .cproject
 .project
 
+# vscode setting
+.vscode
+
 # Example project files
 examples/**/sdkconfig
 examples/**/sdkconfig.old
