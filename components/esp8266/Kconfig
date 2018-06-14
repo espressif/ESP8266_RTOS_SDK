@@ -1,0 +1,7 @@
+menu "ESP8266-specific"
+
+config APP_OFFSET
+       hex
+       default 0x1000
+
+endmenu

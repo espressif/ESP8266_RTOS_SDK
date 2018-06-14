@@ -1,176 +1,26 @@
-
 BOOTLOADER_FIRMWARE_DIR := $(abspath $(COMPONENT_PATH))/firmware
 
-#configurate downloading parameters
 ESPTOOLPY_FLASHSIZE ?= $(CONFIG_ESPTOOLPY_FLASHSIZE)
-ESPTOOLPY_FLASHMODE ?= $(CONFIG_ESPTOOLPY_FLASHMODE)
-ESPTOOLPY_FLASHFREQ ?= $(CONFIG_ESPTOOLPY_FLASHFREQ)
 
-ifeq ($(ESPTOOLPY_FLASHSIZE), "512KB")
-BLANK_BIN_OFFSET1 := 0x7B000
-BLANK_BIN_OFFSET2 := 0x7E000
-ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x7C000
-ESP8266_SIZEMAP := 0
-endif
-ifeq ($(ESPTOOLPY_FLASHSIZE), "1MB")
-BLANK_BIN_OFFSET1 := 0xFB000
-BLANK_BIN_OFFSET2 := 0xFE000
-ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0xFC000
-ESP8266_SIZEMAP := 2
-endif
-ifeq ($(ESPTOOLPY_FLASHSIZE), "2MB")
-BLANK_BIN_OFFSET1 := 0x1FB000
-BLANK_BIN_OFFSET2 := 0x1FE000
-ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x1FC000
-ESP8266_SIZEMAP := 3
-endif
 ifeq ($(ESPTOOLPY_FLASHSIZE), "2MB-c1")
-BLANK_BIN_OFFSET1 := 0x1FB000
-BLANK_BIN_OFFSET2 := 0x1FE000
 ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x1FC000
-ESP8266_SIZEMAP := 5
 endif
-ifeq ($(ESPTOOLPY_FLASHSIZE), "4MB")
-BLANK_BIN_OFFSET1 := 0x3FB000
-BLANK_BIN_OFFSET2 := 0x3FE000
-ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x3FC000
-ESP8266_SIZEMAP := 4
-endif
+
 ifeq ($(ESPTOOLPY_FLASHSIZE), "4MB-c1")
-BLANK_BIN_OFFSET1 := 0x3FB000
-BLANK_BIN_OFFSET2 := 0x3FE000
 ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x3FC000
-ESP8266_SIZEMAP := 6
 endif
+
 ifeq ($(ESPTOOLPY_FLASHSIZE), "8MB")
-BLANK_BIN_OFFSET1 := 0x7FB000
-BLANK_BIN_OFFSET2 := 0x7FE000
 ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x7FC000
-ESP8266_SIZEMAP := 8
 endif
+
 ifeq ($(ESPTOOLPY_FLASHSIZE), "16MB")
-BLANK_BIN_OFFSET1 := 0xFFB000
-BLANK_BIN_OFFSET2 := 0xFFE000
 ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0xFFC000
-ESP8266_SIZEMAP := 9
 endif
 
-BOOTLOADER_BIN_OFFSET := 0
-APP_OFFSET := 0x1000
-
-ESP8266_BOOTMODE ?= 2 # always be 2
-
-ifeq ($(ESPTOOLPY_FLASHMODE),"qio")
-ESP8266_FLASHMODE ?= 0
-endif
-ifeq ($(ESPTOOLPY_FLASHMODE),"qout")
-ESP8266_FLASHMODE ?= 1
-endif
-ifeq ($(ESPTOOLPY_FLASHMODE),"dio")
-ESP8266_FLASHMODE ?= 2
-endif
-ifeq ($(ESPTOOLPY_FLASHMODE),"dout")
-ESP8266_FLASHMODE ?= 3
-endif
-
-ifeq ($(ESPTOOLPY_FLASHFREQ),"20m")
-ESP8266_FREQDIV ?= 2
-endif
-ifeq ($(ESPTOOLPY_FLASHFREQ),"26m")
-ESP8266_FREQDIV ?= 1
-endif
-ifeq ($(ESPTOOLPY_FLASHFREQ),"40m")
-ESP8266_FREQDIV ?= 0
-endif
-ifeq ($(ESPTOOLPY_FLASHFREQ),"80m")
-ESP8266_FREQDIV ?= 15
-endif
-
-PYTHON ?= $(call dequote,$(CONFIG_PYTHON))
-
-ESP8266_BINSCRIPT ?= $(PYTHON) $(IDF_PATH)/tools/gen_appbin.py
-
-ifdef DEBUG_BIN_PARAM
-$(info mode:$(ESP8266_BOOTMODE) flash:$(ESP8266_FLASHMODE) freqdiv:$(ESP8266_FREQDIV), size_map:$(ESP8266_SIZEMAP))
-$(info BLANK:$(BLANK_BIN_OFFSET1)/$(BLANK_BIN_OFFSET2) data:$(ESP_INIT_DATA_DEFAULT_BIN_OFFSET) script:$(ESP8266_LINKER_SCRIPTS))
-endif
-
-$(APP_BIN): $(APP_ELF)
-	@$(OBJCOPY) --only-section .text -O binary $< eagle.app.v6.text.bin
-	@$(OBJCOPY) --only-section .data -O binary $< eagle.app.v6.data.bin
-	@$(OBJCOPY) --only-section .rodata -O binary $< eagle.app.v6.rodata.bin
-	@$(OBJCOPY) --only-section .irom0.text -O binary $< eagle.app.v6.irom0text.bin
-	@$(ESP8266_BINSCRIPT) $< $(ESP8266_BOOTMODE) $(ESP8266_FLASHMODE) $(ESP8266_FREQDIV) $(ESP8266_SIZEMAP)
-	@mv eagle.app.flash.bin $@
-	@rm eagle.app.v6.*
-
-BLANK_BIN := $(BOOTLOADER_FIRMWARE_DIR)/blank.bin
 ESP_INIT_DATA_DEFAULT_BIN := $(BOOTLOADER_FIRMWARE_DIR)/esp_init_data_default.bin
-BOOTLOADER_BIN := $(BOOTLOADER_FIRMWARE_DIR)/boot_v1.7.bin
 
-CONFIG_ESPTOOLPY_COMPRESSED ?= y
-CONFIG_ESPTOOLPY_BEFORE_RESET ?=y
-CONFIG_ESPTOOLPY_AFTER_RESET ?=y
-
-ESPTOOLPY_SRC := $(IDF_PATH)/components/esptool_py/esptool/esptool.py
-
-CHIP ?= esp8266
-ESPPORT ?= $(CONFIG_ESPTOOLPY_PORT)
-ESPBAUD ?= $(CONFIG_ESPTOOLPY_BAUD)
-ESPFLASHMODE ?= $(CONFIG_ESPTOOLPY_FLASHMODE)
-ESPFLASHFREQ ?= $(CONFIG_ESPTOOLPY_FLASHFREQ)
-ESPFLASHSIZE ?= $(CONFIG_ESPTOOLPY_FLASHSIZE)
-ESPTOOLPY := $(PYTHON) $(ESPTOOLPY_SRC) --chip $(CHIP)
-
-ESPTOOL_WRITE_FLASH_OPTIONS := --flash_mode $(ESPFLASHMODE) --flash_freq $(ESPFLASHFREQ) --flash_size $(ESPFLASHSIZE)
-
-ESPTOOLPY_SERIAL := $(ESPTOOLPY) --port $(ESPPORT) --baud $(ESPBAUD) --before $(CONFIG_ESPTOOLPY_BEFORE) --after $(CONFIG_ESPTOOLPY_AFTER)
-
-ESPTOOLPY_WRITE_FLASH=$(ESPTOOLPY_SERIAL) write_flash $(if $(CONFIG_ESPTOOLPY_COMPRESSED),-z,-u) $(ESPTOOL_WRITE_FLASH_OPTIONS)
-
-ESPTOOL_ALL_FLASH_ARGS += $(BOOTLOADER_BIN_OFFSET) $(BOOTLOADER_BIN) \
-                          $(APP_OFFSET) $(APP_BIN) \
-                          $(ESP_INIT_DATA_DEFAULT_BIN_OFFSET) $(ESP_INIT_DATA_DEFAULT_BIN) \
-                          $(BLANK_BIN_OFFSET1) $(BLANK_BIN) \
-                          $(BLANK_BIN_OFFSET2) $(BLANK_BIN)
-
-flash: all_binaries $(ESPTOOLPY_SRC) $(call prereq_if_explicit,erase_flash)
-	@echo "Flashing binaries to serial port $(ESPPORT) (app at offset $(APP_OFFSET))..."
-	$(ESPTOOLPY_WRITE_FLASH) $(ESPTOOL_ALL_FLASH_ARGS)
-
-app-flash: $(APP_BIN) $(ESPTOOLPY_SRC) $(call prereq_if_explicit,erase_flash)
-	@echo "Flashing app to serial port $(ESPPORT), offset $(APP_OFFSET)..."
-	$(ESPTOOLPY_WRITE_FLASH) $(APP_OFFSET) $(APP_BIN)
-
-erase_flash:
-	@echo "Erasing entire flash..."
-	$(ESPTOOLPY_SERIAL) erase_flash
-
-MONITORBAUD ?= $(CONFIG_MONITOR_BAUD)
-
-MONITOR_PYTHON := $(PYTHON)
-
-ifeq ("$(OS)","Windows_NT")
-# miniterm and idf_monitor both need a Windows Console PTY in order
-# to correctly handle user input
-MONITOR_PYTHON := winpty $(PYTHON)
-endif
-
-# note: if you want to run miniterm from command line, can simply run
-# miniterm.py on the console. The '$(PYTHON) -m serial.tools.miniterm'
-# is to allow for the $(PYTHON) variable overriding the python path.
-simple_monitor: $(call prereq_if_explicit,%flash)
-	$(MONITOR_PYTHON) -m serial.tools.miniterm --rts 0 --dtr 0 --raw $(ESPPORT) $(MONITORBAUD)
-
-MONITOR_OPTS := --baud $(MONITORBAUD) --port $(ESPPORT) --toolchain-prefix $(CONFIG_TOOLPREFIX) --make "$(MAKE)"
-
-monitor: $(call prereq_if_explicit,%flash)
-	$(summary) MONITOR
-	[ -f $(APP_ELF) ] || echo "*** 'make monitor' target requires an app to be compiled and flashed first."
-	[ -f $(APP_ELF) ] || echo "*** Run 'make flash monitor' to build, flash and monitor"
-	[ -f $(APP_ELF) ] || echo "*** Or alternatively 'make simple_monitor' to view the serial port as-is."
-	[ -f $(APP_ELF) ] || exit 1
-	$(MONITOR_PYTHON) $(IDF_PATH)/tools/idf_monitor.py $(MONITOR_OPTS) $(APP_ELF)
+ESPTOOL_ALL_FLASH_ARGS += $(ESP_INIT_DATA_DEFAULT_BIN_OFFSET) $(ESP_INIT_DATA_DEFAULT_BIN)
 
 # global CFLAGS for ESP8266
 CFLAGS += -DMEMLEAK_DEBUG -DICACHE_FLASH
@@ -180,5 +30,3 @@ CFLAGS += -Wno-error=char-subscripts -Wno-error=unknown-pragmas -Wno-error=impli
           -Wno-error=pointer-sign -Wno-error=switch -Wno-error=maybe-uninitialized -Wno-error=format= \
           -Wno-error=unused-value -Wno-error=address -Wno-error=return-type -Wno-error=format-extra-args \
           -Wno-error=format-zero-length -Wno-error=unused-label -Wno-error=sizeof-pointer-memaccess
-
-.PHONY: erase_flash
