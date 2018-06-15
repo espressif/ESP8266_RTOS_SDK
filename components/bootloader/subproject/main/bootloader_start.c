@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -308,5 +310,5 @@ void call_start_cpu(void)
 
     ets_printf("jump to run");
 
-    jump_to_run_addr(0x1000);
+    jump_to_run_addr(CONFIG_PARTITION_TABLE_CUSTOM_APP_BIN_OFFSET);
 }
