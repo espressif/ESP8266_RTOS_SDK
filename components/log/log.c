@@ -49,6 +49,7 @@ static const char s_log_prefix[ESP_LOG_MAX] = {
     'V', //  ESP_LOG_VERBOSE
 };
 
+#ifndef BOOTLOADER_BUILD
 static _lock_t s_lock;
 static putchar_like_t s_putchar_func = &putchar;
 
@@ -63,11 +64,6 @@ static int esp_log_write_str(const char *s)
     return ret;
 }
 
-static uint32_t IRAM_ATTR esp_log_early_timestamp()
-{
-    return xthal_get_ccount();
-}
-
 static uint32_t esp_log_timestamp()
 {
     time_t t;
@@ -75,6 +71,12 @@ static uint32_t esp_log_timestamp()
     t = time(NULL);
 
     return t;
+}
+#endif
+
+static uint32_t IRAM_ATTR esp_log_early_timestamp()
+{
+    return xthal_get_ccount() / (80 * 1000);
 }
 
 /**
@@ -107,6 +109,7 @@ out:
     ets_printf("\n");
 }
 
+#ifndef BOOTLOADER_BUILD
 /**
  * @brief Write message into the log
  */
@@ -177,3 +180,4 @@ putchar_like_t esp_log_set_putchar(putchar_like_t func)
 
     return tmp;
 }
+#endif

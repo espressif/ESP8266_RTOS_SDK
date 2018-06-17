@@ -8,7 +8,7 @@ endif
 
 PROJECT_NAME := bootloader
 
-COMPONENTS := esptool_py main
+COMPONENTS := esptool_py main log esp8266
 
 # Clear C and CXX from top level project
 CFLAGS =
