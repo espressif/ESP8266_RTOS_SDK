@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include <strings.h>
 
 #include "bootloader_flash.h"
@@ -337,3 +341,5 @@ esp_err_t esp_flash_encrypt_region(uint32_t src_addr, size_t data_length)
     ESP_LOGE(TAG, "flash operation failed: 0x%x", err);
     return err;
 }
+
+#endif

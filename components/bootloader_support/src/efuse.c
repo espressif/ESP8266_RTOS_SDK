@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include "esp_efuse.h"
 #include "esp_log.h"
 
@@ -58,3 +63,5 @@ void esp_efuse_disable_basic_rom_console(void)
         esp_efuse_burn_new_values();
     }
 }
+
+#endif

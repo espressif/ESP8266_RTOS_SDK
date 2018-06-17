@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include <stddef.h>
 
 #include <bootloader_flash.h>
@@ -245,6 +250,83 @@ esp_err_t bootloader_flash_write(size_t dest_addr, void *src, size_t size, bool 
 esp_err_t bootloader_flash_erase_sector(size_t sector)
 {
     return spi_to_esp_err(esp_rom_spiflash_erase_sector(sector));
+}
+
+#endif
+
+#endif
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "esp_err.h"
+#include "esp_log.h"
+
+static const char *TAG = "bootloader_flash";
+
+typedef enum { SPI_FLASH_RESULT_OK = 0,
+               SPI_FLASH_RESULT_ERR = 1,
+               SPI_FLASH_RESULT_TIMEOUT = 2 } SpiFlashOpResult;
+
+SpiFlashOpResult SPIRead(uint32_t addr, void *dst, uint32_t size);
+SpiFlashOpResult SPIWrite(uint32_t addr, const uint8_t *src, uint32_t size);
+SpiFlashOpResult SPIEraseSector(uint32_t sector_num);
+
+static esp_err_t bootloader_flash_read_no_decrypt(size_t src_addr, void *dest, size_t size)
+{
+    SPIRead(src_addr, dest, size);
+
+    return ESP_OK;
+}
+
+esp_err_t bootloader_flash_read(size_t src_addr, void *dest, size_t size, bool allow_decrypt)
+{
+    if (src_addr & 3) {
+        ESP_LOGE(TAG, "bootloader_flash_read src_addr 0x%x not 4-byte aligned", src_addr);
+        return ESP_FAIL;
+    }
+    if (size & 3) {
+        ESP_LOGE(TAG, "bootloader_flash_read size 0x%x not 4-byte aligned", size);
+        return ESP_FAIL;
+    }
+    if ((intptr_t)dest & 3) {
+        ESP_LOGE(TAG, "bootloader_flash_read dest 0x%x not 4-byte aligned", (intptr_t)dest);
+        return ESP_FAIL;
+    }
+
+        return bootloader_flash_read_no_decrypt(src_addr, dest, size);
+}
+
+esp_err_t bootloader_flash_write(size_t dest_addr, void *src, size_t size, bool write_encrypted)
+{
+    esp_err_t err;
+    size_t alignment = write_encrypted ? 32 : 4;
+    if ((dest_addr % alignment) != 0) {
+        ESP_LOGE(TAG, "bootloader_flash_write dest_addr 0x%x not %d-byte aligned", dest_addr, alignment);
+        return ESP_FAIL;
+    }
+    if ((size % alignment) != 0) {
+        ESP_LOGE(TAG, "bootloader_flash_write size 0x%x not %d-byte aligned", size, alignment);
+        return ESP_FAIL;
+    }
+    if (((intptr_t)src % 4) != 0) {
+        ESP_LOGE(TAG, "bootloader_flash_write src 0x%x not 4 byte aligned", (intptr_t)src);
+        return ESP_FAIL;
+    }
+
+
+    SPIWrite(dest_addr, src, size);
+
+    return ESP_OK;
+}
+
+esp_err_t bootloader_flash_erase_sector(size_t sector)
+{
+    SPIEraseSector(sector);
+
+    return ESP_OK;
 }
 
 #endif

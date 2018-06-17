@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include <string.h>
 #include <stdint.h>
 #include <limits.h>
@@ -470,3 +475,5 @@ static void set_cache_and_start_app(
     // use "movsp" instruction to reset stack back to where ROM stack starts.
     (*entry)();
 }
+
+#endif

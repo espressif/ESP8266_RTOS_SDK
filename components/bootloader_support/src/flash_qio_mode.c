@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include <stddef.h>
 #include <stdint.h>
 #include "flash_qio_mode.h"
@@ -280,3 +285,5 @@ static uint32_t execute_flash_command(uint8_t command, uint32_t mosi_data, uint8
     SPIFLASH.ctrl.val = old_ctrl_reg;
     return SPIFLASH.data_buf[0];
 }
+
+#endif

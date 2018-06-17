@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include "bootloader_sha.h"
 #include <stdbool.h>
 #include <string.h>
@@ -162,5 +167,7 @@ void bootloader_sha256_finish(bootloader_sha256_handle_t handle, uint8_t *digest
     }
     asm volatile ("memw");
 }
+
+#endif
 
 #endif

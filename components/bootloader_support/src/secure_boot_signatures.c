@@ -13,6 +13,8 @@
 // limitations under the License.
 #include "sdkconfig.h"
 
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include "bootloader_flash.h"
 #include "bootloader_sha.h"
 #include "esp_log.h"
@@ -91,3 +93,5 @@ esp_err_t esp_secure_boot_verify_signature_block(const esp_secure_boot_sig_block
                                 uECC_secp256r1());
     return is_valid ? ESP_OK : ESP_ERR_IMAGE_INVALID;
 }
+
+#endif

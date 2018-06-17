@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <esp_err.h>
 #include "esp_flash_partitions.h"
+#include "sdkconfig.h"
 
 #define ESP_ERR_IMAGE_BASE       0x2000
 #define ESP_ERR_IMAGE_FLASH_FAIL (ESP_ERR_IMAGE_BASE + 1)
@@ -43,6 +44,7 @@ enum {
     ESP_IMAGE_SPI_SPEED_80M = 0xF
 } esp_image_spi_freq_t;
 
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
 /* Supported SPI flash sizes */
 typedef enum {
     ESP_IMAGE_FLASH_SIZE_1MB = 0,
@@ -52,6 +54,24 @@ typedef enum {
     ESP_IMAGE_FLASH_SIZE_16MB,
     ESP_IMAGE_FLASH_SIZE_MAX
 } esp_image_flash_size_t;
+#endif
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+/* Supported SPI flash sizes */
+typedef enum {
+    ESP_IMAGE_FLASH_SIZE_512KB = 0,
+    ESP_IMAGE_FLASH_SIZE_256KB,
+    ESP_IMAGE_FLASH_SIZE_1MB,
+    ESP_IMAGE_FLASH_SIZE_2MB,
+    ESP_IMAGE_FLASH_SIZE_4MB,
+    ESP_IMAGE_FLASH_SIZE_2MB_C1,
+    ESP_IMAGE_FLASH_SIZE_4MB_C1,
+    ESP_IMAGE_FLASH_SIZE_8MB = 8,
+    ESP_IMAGE_FLASH_SIZE_16MB,
+    ESP_IMAGE_FLASH_SIZE_MAX
+} esp_image_flash_size_t;
+
+#endif
 
 #define ESP_IMAGE_HEADER_MAGIC 0xE9
 
@@ -66,6 +86,8 @@ typedef struct {
     /* flash chip size (esp_image_flash_size_t as uint8_t) */
     uint8_t spi_size: 4;
     uint32_t entry_addr;
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
     /* WP pin when SPI pins set via efuse (read by ROM bootloader, the IDF bootloader uses software to configure the WP
      * pin and sets this field to 0xEE=disabled) */
     uint8_t wp_pin;
@@ -77,9 +99,16 @@ typedef struct {
      * is separate to secure boot and only used for detecting corruption. For secure boot signed images, the signature
      * is appended after this (and the simple hash is included in the signed data). */
     uint8_t hash_appended;
+#endif
 } __attribute__((packed))  esp_image_header_t;
 
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
 _Static_assert(sizeof(esp_image_header_t) == 24, "binary image header should be 24 bytes");
+#endif
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+_Static_assert(sizeof(esp_image_header_t) == 8, "binary image header should be 8 bytes");
+#endif
 
 /* Header of binary image segment */
 typedef struct {

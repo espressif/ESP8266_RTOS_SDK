@@ -15,6 +15,7 @@
 #define __BOOT_CONFIG_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -22,7 +23,6 @@ extern "C"
 #endif
 
 #include "esp_flash_data_types.h"
-#include "soc/soc.h"
 
 #define SPI_SEC_SIZE 0x1000
 

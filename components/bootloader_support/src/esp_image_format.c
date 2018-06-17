@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include <string.h>
 #include <sys/param.h>
 
@@ -571,3 +576,5 @@ static void debug_log_hash(const uint8_t *image_hash, const char *label)
         ESP_LOGD(TAG, "%s: %s", label, hash_print);
 #endif
 }
+
+#endif

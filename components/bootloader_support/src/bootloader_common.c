@@ -11,10 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include <stdbool.h>
 #include <assert.h>
 #include "string.h"
-#include "sdkconfig.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "rom/spi_flash.h"
@@ -153,3 +157,5 @@ bool bootloader_common_erase_part_type_data(const char *list_erase, bool ota_dat
 
     return ret;
 }
+
+#endif

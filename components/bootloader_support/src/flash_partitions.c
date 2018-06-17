@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include <string.h>
 #include "esp_flash_partitions.h"
 #include "esp_log.h"
@@ -83,4 +88,6 @@ esp_err_t esp_partition_table_basic_verify(const esp_partition_info_t *partition
     }
     return ESP_ERR_INVALID_STATE;
 }
+
+#endif
 

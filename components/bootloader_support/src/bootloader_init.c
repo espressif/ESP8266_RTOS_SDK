@@ -11,10 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include <string.h>
 #include <stdint.h>
-//#include <limits.h>
-//#include <sys/param.h>
+#include <limits.h>
+#include <sys/param.h>
 
 #include "esp_attr.h"
 #include "esp_log.h"
@@ -528,3 +533,164 @@ void __assert_func(const char *file, int line, const char *func, const char *exp
     ESP_LOGE(TAG, "Assert failed in %s, %s:%d (%s)", func, file, line, expr);
     while(1) {}
 }
+
+#endif
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+
+#include <string.h>
+
+#include "esp_err.h"
+#include "esp_log.h"
+
+#include "esp_image_format.h"
+#include "esp_flash_partitions.h"
+
+extern int _bss_start;
+extern int _bss_end;
+extern int _data_start;
+extern int _data_end;
+
+static const char* TAG = "boot";
+
+static esp_err_t bootloader_main();
+static void print_flash_info(const esp_image_header_t* pfhdr);
+static void update_flash_config(const esp_image_header_t* pfhdr);
+
+esp_err_t bootloader_init()
+{
+    //Clear bss
+    memset(&_bss_start, 0, (&_bss_end - &_bss_start) * sizeof(_bss_start));
+
+    if(bootloader_main() != ESP_OK){
+        return ESP_FAIL;
+    }
+    return ESP_OK;
+}
+
+static esp_err_t bootloader_main()
+{
+    esp_image_header_t fhdr;
+    if (bootloader_flash_read(ESP_BOOTLOADER_OFFSET, &fhdr, sizeof(esp_image_header_t), true) != ESP_OK) {
+        ESP_LOGE(TAG, "failed to load bootloader header!");
+        return ESP_FAIL;
+    }
+
+    ESP_LOGI(TAG, "ESP-IDF %s 2nd stage bootloader", IDF_VER);
+
+    ESP_LOGI(TAG, "compile time " __TIME__ );
+
+    print_flash_info(&fhdr);
+
+    update_flash_config(&fhdr);
+
+    return ESP_OK;
+}
+
+static void update_flash_config(const esp_image_header_t* pfhdr)
+{
+    uint32_t size;
+    switch(pfhdr->spi_size) {
+        case ESP_IMAGE_FLASH_SIZE_1MB:
+            size = 1;
+            break;
+        case ESP_IMAGE_FLASH_SIZE_2MB:
+        case ESP_IMAGE_FLASH_SIZE_2MB_C1:
+            size = 2;
+            break;
+        case ESP_IMAGE_FLASH_SIZE_4MB:
+        case ESP_IMAGE_FLASH_SIZE_4MB_C1:
+            size = 4;
+            break;
+        case ESP_IMAGE_FLASH_SIZE_8MB:
+            size = 8;
+            break;
+        case ESP_IMAGE_FLASH_SIZE_16MB:
+            size = 16;
+            break;
+        default:
+            size = 2;
+    }
+
+    // Set flash chip size
+//    esp_rom_spiflash_config_param(g_rom_flashchip.device_id, size * 0x100000, 0x10000, 0x1000, 0x100, 0xffff);
+    // TODO: set mode
+    // TODO: set frequency
+}
+
+static void print_flash_info(const esp_image_header_t* phdr)
+{
+#if (BOOT_LOG_LEVEL >= BOOT_LOG_LEVEL_NOTICE)
+
+    ESP_LOGD(TAG, "magic %02x", phdr->magic );
+    ESP_LOGD(TAG, "segments %02x", phdr->segment_count );
+    ESP_LOGD(TAG, "spi_mode %02x", phdr->spi_mode );
+    ESP_LOGD(TAG, "spi_speed %02x", phdr->spi_speed );
+    ESP_LOGD(TAG, "spi_size %02x", phdr->spi_size );
+
+    const char* str;
+    switch ( phdr->spi_speed ) {
+    case ESP_IMAGE_SPI_SPEED_40M:
+        str = "40MHz";
+        break;
+    case ESP_IMAGE_SPI_SPEED_26M:
+        str = "26.7MHz";
+        break;
+    case ESP_IMAGE_SPI_SPEED_20M:
+        str = "20MHz";
+        break;
+    case ESP_IMAGE_SPI_SPEED_80M:
+        str = "80MHz";
+        break;
+    default:
+        str = "20MHz";
+        break;
+    }
+    ESP_LOGI(TAG, "SPI Speed      : %s", str );
+
+    switch ( phdr->spi_mode ) {
+    case ESP_IMAGE_SPI_MODE_QIO:
+        str = "QIO";
+        break;
+    case ESP_IMAGE_SPI_MODE_QOUT:
+        str = "QOUT";
+        break;
+    case ESP_IMAGE_SPI_MODE_DIO:
+        str = "DIO";
+        break;
+    case ESP_IMAGE_SPI_MODE_DOUT:
+        str = "DOUT";
+        break;
+    default:
+        str = "QIO";
+        break;
+    }
+    ESP_LOGI(TAG, "SPI Mode       : %s", str );
+
+    switch ( phdr->spi_size ) {
+    case ESP_IMAGE_FLASH_SIZE_1MB:
+        str = "1MB";
+        break;
+    case ESP_IMAGE_FLASH_SIZE_2MB:
+    case ESP_IMAGE_FLASH_SIZE_2MB_C1:
+        str = "2MB";
+        break;
+    case ESP_IMAGE_FLASH_SIZE_4MB:
+    case ESP_IMAGE_FLASH_SIZE_4MB_C1:
+        str = "4MB";
+        break;
+    case ESP_IMAGE_FLASH_SIZE_8MB:
+        str = "8MB";
+        break;
+    case ESP_IMAGE_FLASH_SIZE_16MB:
+        str = "16MB";
+        break;
+    default:
+        str = "2MB";
+        break;
+    }
+    ESP_LOGI(TAG, "SPI Flash Size : %s", str );
+#endif
+}
+
+#endif

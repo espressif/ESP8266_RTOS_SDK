@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+
 #include <string.h>
 
 #include "esp_attr.h"
@@ -202,3 +206,5 @@ esp_err_t esp_secure_boot_permanently_enable(void) {
         return ESP_ERR_INVALID_STATE;
     }
 }
+
+#endif
