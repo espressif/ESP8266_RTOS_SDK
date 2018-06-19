@@ -341,7 +341,7 @@ static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, ui
         return ESP_FAIL;
     }
 
-#ifdef BOOTLOADER_BUILD
+#if defined(BOOTLOADER_BUILD) && defined(BOOTLOADER_UNPACK_APP)
     // Set up the obfuscation value to use for loading
     while (ram_obfs_value[0] == 0 || ram_obfs_value[1] == 0) {
         bootloader_fill_random(ram_obfs_value, sizeof(ram_obfs_value));
@@ -355,11 +355,12 @@ static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, ui
         int w_i = i/4; // Word index
         uint32_t w = src[w_i];
         *checksum ^= w;
-#ifdef BOOTLOADER_BUILD
+#if defined(BOOTLOADER_BUILD) && defined(BOOTLOADER_UNPACK_APP)
         if (do_load) {
             dest[w_i] = w ^ ((w_i & 1) ? ram_obfs_value[0] : ram_obfs_value[1]);
         }
 #endif
+#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
         // SHA_CHUNK determined experimentally as the optimum size
         // to call bootloader_sha256_data() with. This is a bit
         // counter-intuitive, but it's ~3ms better than using the
@@ -369,6 +370,7 @@ static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, ui
             bootloader_sha256_data(sha_handle, &src[w_i],
                                    MIN(SHA_CHUNK, data_len - i));
         }
+#endif
     }
 
     bootloader_munmap(data);
@@ -493,6 +495,7 @@ static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t
 
 static void debug_log_hash(const uint8_t *image_hash, const char *caption);
 
+#ifdef CONFIG_SECURE_BOOT_ENABLED
 static esp_err_t verify_secure_boot_signature(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data)
 {
     uint8_t image_hash[HASH_LEN] = { 0 };
@@ -535,6 +538,7 @@ static esp_err_t verify_secure_boot_signature(bootloader_sha256_handle_t sha_han
 
     return ESP_OK;
 }
+#endif /* CONFIG_SECURE_BOOT_ENABLED */
 
 static esp_err_t verify_simple_hash(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data)
 {
@@ -605,7 +609,7 @@ static const char *TAG = "esp_image";
 /* Mmap source address mask */
 #define MMAP_ALIGNED_MASK 0x0000FFFF
 
-#ifdef BOOTLOADER_BUILD
+#if defined(BOOTLOADER_BUILD) && defined(BOOTLOADER_UNPACK_APP)
 /* 64 bits of random data to obfuscate loaded RAM with, until verification is complete
    (Means loaded code isn't executable until after the secure boot check.)
 */
@@ -640,8 +644,10 @@ static esp_err_t verify_segment_header(int index, const esp_image_segment_header
 
 static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t checksum_word, esp_image_metadata_t *data);
 
+#if defined(CONFIG_SECURE_BOOT_ENABLED) && defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
 static esp_err_t __attribute__((unused)) verify_secure_boot_signature(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data);
 static esp_err_t __attribute__((unused)) verify_simple_hash(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data);
+#endif
 
 esp_err_t esp_image_load(esp_image_load_mode_t mode, const esp_partition_pos_t *part, esp_image_metadata_t *data)
 {
@@ -678,14 +684,16 @@ esp_err_t esp_image_load(esp_image_load_mode_t mode, const esp_partition_pos_t *
 #ifdef CONFIG_SECURE_BOOT_ENABLED
     if (1) {
 #else
-//    if (data->image.hash_appended) {
+#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
+    if (data->image.hash_appended) {
+        sha_handle = bootloader_sha256_start();
+        if (sha_handle == NULL) {
+            return ESP_ERR_NO_MEM;
+        }
+        bootloader_sha256_data(sha_handle, &data->image, sizeof(esp_image_header_t));
+    }
 #endif
-//        sha_handle = bootloader_sha256_start();
-//        if (sha_handle == NULL) {
-//            return ESP_ERR_NO_MEM;
-//        }
-//        bootloader_sha256_data(sha_handle, &data->image, sizeof(esp_image_header_t));
-//    }
+#endif
 
     ESP_LOGD(TAG, "image header: 0x%02x 0x%02x 0x%02x 0x%02x %08x",
              data->image.magic,
@@ -726,12 +734,16 @@ goto err;
 
     data->image_len = end_addr - data->start_addr;
     ESP_LOGV(TAG, "image start 0x%08x end of last section 0x%08x", data->start_addr, end_addr);
-//    if (!esp_cpu_in_ocd_debug_mode()) {
+#ifdef CONFIG_ENABLE_BOOT_CHECK_OCD
+    if (!esp_cpu_in_ocd_debug_mode()) {
+#endif
         err = verify_checksum(sha_handle, checksum_word, data);
         if (err != ESP_OK) {
             goto err;
         }
-//    }
+#ifdef CONFIG_ENABLE_BOOT_CHECK_OCD
+    }
+#endif
     if (data->image_len > part->size) {
         FAIL_LOAD("Image length %d doesn't fit in partition length %d", data->image_len, part->size);
     }
@@ -747,10 +759,16 @@ goto err;
         // secure boot images have a signature appended
         err = verify_secure_boot_signature(sha_handle, data);
 #else
+#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
         // No secure boot, but SHA-256 can be appended for basic corruption detection
-        if (sha_handle != NULL && !esp_cpu_in_ocd_debug_mode()) {
+        if (sha_handle != NULL
+#ifdef CONFIG_ENABLE_BOOT_CHECK_OCD
+            && !esp_cpu_in_ocd_debug_mode()
+#endif
+        ){
             err = verify_simple_hash(sha_handle, data);
         }
+#endif
 #endif // CONFIG_SECURE_BOOT_ENABLED
     } else { // is_bootloader
         // bootloader may still have a sha256 digest handle open
@@ -763,14 +781,14 @@ goto err;
         goto err;
     }
 
-#ifdef BOOTLOADER_BUILD
+#if defined(BOOTLOADER_BUILD) && defined(BOOTLOADER_UNPACK_APP)
     if (do_load) { // Need to deobfuscate RAM
         for (int i = 0; i < data->image.segment_count; i++) {
             uint32_t load_addr = data->segments[i].load_addr;
             if (should_load(load_addr)) {
                 uint32_t *loaded = (uint32_t *)load_addr;
                 for (int j = 0; j < data->segments[i].data_len/sizeof(uint32_t); j++) {
-//                    loaded[j] ^= (j & 1) ? ram_obfs_value[0] : ram_obfs_value[1];
+                    loaded[j] ^= (j & 1) ? ram_obfs_value[0] : ram_obfs_value[1];
                 }
             }
         }
@@ -784,10 +802,12 @@ goto err;
     if (err == ESP_OK) {
       err = ESP_ERR_IMAGE_INVALID;
     }
+#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
     if (sha_handle != NULL) {
         // Need to finish the hash process to free the handle
         bootloader_sha256_finish(sha_handle, NULL);
     }
+#endif
     // Prevent invalid/incomplete data leaking out
     bzero(data, sizeof(esp_image_metadata_t));
     return err;
@@ -828,9 +848,11 @@ static esp_err_t process_segment(int index, uint32_t flash_addr, esp_image_segme
         ESP_LOGE(TAG, "bootloader_flash_read failed at 0x%08x", flash_addr);
         return err;
     }
+#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
     if (sha_handle != NULL) {
-//        bootloader_sha256_data(sha_handle, header, sizeof(esp_image_segment_header_t));
+        bootloader_sha256_data(sha_handle, header, sizeof(esp_image_segment_header_t));
     }
+#endif
 
     intptr_t load_addr = header->load_addr;
     uint32_t data_len = header->data_len;
@@ -857,19 +879,21 @@ static esp_err_t process_segment(int index, uint32_t flash_addr, esp_image_segme
                  (do_load)?"load":(is_mapping)?"map":"");
     }
 
+#ifdef BOOTLOADER_UNPACK_APP
     if (do_load) {
         /* Before loading segment, check it doesn't clobber bootloader RAM... */
         uint32_t end_addr = load_addr + data_len;
         if (end_addr < 0x40000000) {
-//            intptr_t sp = (intptr_t)get_sp();
-//            if (end_addr > sp - STACK_LOAD_HEADROOM) {
-//                ESP_LOGE(TAG, "Segment %d end address 0x%08x too high (bootloader stack 0x%08x liimit 0x%08x)",
-//                         index, end_addr, sp, sp - STACK_LOAD_HEADROOM);
-//                return ESP_ERR_IMAGE_INVALID;
-//            }
+           intptr_t sp = (intptr_t)get_sp();
+           if (end_addr > sp - STACK_LOAD_HEADROOM) {
+               ESP_LOGE(TAG, "Segment %d end address 0x%08x too high (bootloader stack 0x%08x liimit 0x%08x)",
+                        index, end_addr, sp, sp - STACK_LOAD_HEADROOM);
+               return ESP_ERR_IMAGE_INVALID;
+           }
         }
     }
-#ifndef BOOTLOADER_BUILD
+#endif
+#if !defined(BOOTLOADER_BUILD) && defined(CONFIG_ENABLE_FLASH_MMAP)
     uint32_t free_page_count = spi_flash_mmap_get_free_pages(SPI_FLASH_MMAP_DATA);
     ESP_LOGD(TAG, "free data page_count 0x%08x",free_page_count);
     uint32_t offset_page = 0;
@@ -906,11 +930,11 @@ static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, ui
         return ESP_FAIL;
     }
 
-#ifdef BOOTLOADER_BUILD
+#if defined(BOOTLOADER_BUILD) && defined(BOOTLOADER_UNPACK_APP)
     // Set up the obfuscation value to use for loading
-//    while (ram_obfs_value[0] == 0 || ram_obfs_value[1] == 0) {
-//        bootloader_fill_random(ram_obfs_value, sizeof(ram_obfs_value));
-//    }
+    while (ram_obfs_value[0] == 0 || ram_obfs_value[1] == 0) {
+        bootloader_fill_random(ram_obfs_value, sizeof(ram_obfs_value));
+    }
     ram_obfs_value[0] = 0x55;
     ram_obfs_value[1] = 0xaa;
     uint32_t *dest = (uint32_t *)load_addr;
@@ -1021,18 +1045,23 @@ static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t
         ESP_LOGE(TAG, "Checksum failed. Calculated 0x%x read 0x%x", checksum, calc);
         return ESP_ERR_IMAGE_INVALID;
     }
+#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
     if (sha_handle != NULL) {
-//        bootloader_sha256_data(sha_handle, buf, length - unpadded_length);
+        bootloader_sha256_data(sha_handle, buf, length - unpadded_length);
     }
 
-//    if (data->image.hash_appended) {
-//        // Account for the hash in the total image length
-//        length += HASH_LEN;
-//    }
+    if (data->image.hash_appended) {
+        // Account for the hash in the total image length
+        length += HASH_LEN;
+    }
+#endif
+
     data->image_len = length;
 
     return ESP_OK;
 }
+
+#if defined(CONFIG_SECURE_BOOT_ENABLED) && defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
 
 static void debug_log_hash(const uint8_t *image_hash, const char *caption);
 
@@ -1040,13 +1069,13 @@ static esp_err_t verify_secure_boot_signature(bootloader_sha256_handle_t sha_han
 {
     uint8_t image_hash[HASH_LEN] = { 0 };
 
-//    // For secure boot, we calculate the signature hash over the whole file, which includes any "simple" hash
-//    // appended to the image for corruption detection
-//    if (data->image.hash_appended) {
-//        const void *simple_hash = bootloader_mmap(data->start_addr + data->image_len - HASH_LEN, HASH_LEN);
-//        bootloader_sha256_data(sha_handle, simple_hash, HASH_LEN);
-//        bootloader_munmap(simple_hash);
-//    }
+    // For secure boot, we calculate the signature hash over the whole file, which includes any "simple" hash
+    // appended to the image for corruption detection
+    if (data->image.hash_appended) {
+        const void *simple_hash = bootloader_mmap(data->start_addr + data->image_len - HASH_LEN, HASH_LEN);
+        bootloader_sha256_data(sha_handle, simple_hash, HASH_LEN);
+        bootloader_munmap(simple_hash);
+    }
 
     bootloader_sha256_finish(sha_handle, image_hash);
 
@@ -1119,5 +1148,6 @@ static void debug_log_hash(const uint8_t *image_hash, const char *label)
         ESP_LOGD(TAG, "%s: %s", label, hash_print);
 #endif
 }
+#endif
 
 #endif

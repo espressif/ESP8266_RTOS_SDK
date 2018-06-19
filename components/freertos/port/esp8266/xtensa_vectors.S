@@ -541,18 +541,6 @@ LoadStoreErrorHandler_common:
         rsr     a1, excsave1
         rfe
 
-	.section    .UserEnter.text, "ax"
-    .global     call_user_start
-    .type       call_user_start,@function
-    .align      4
-    .literal_position
-vector_entr:
-    .word   0x40100000
-call_user_start:
-    l32r    a2, 0x40100000
-    wsr    a2, vecbase
-    call0   user_start                   /* user exception handler */
-
 #if 0
 /*
 Panic handler.

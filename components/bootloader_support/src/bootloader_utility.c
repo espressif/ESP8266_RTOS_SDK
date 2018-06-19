@@ -807,15 +807,20 @@ void bootloader_utility_load_image(const esp_image_metadata_t* image_data)
     }
 #endif
 
-//    ESP_LOGI(TAG, "Disabling RNG early entropy source...");
-//    bootloader_random_disable();
+#ifdef BOOTLOADER_UNPACK_APP
+    ESP_LOGI(TAG, "Disabling RNG early entropy source...");
+    bootloader_random_disable();
 
-    // copy loaded segments to RAM, set up caches for mapped segments, and start application
-//    unpack_load_app(image_data);
-
+    copy loaded segments to RAM, set up caches for mapped segments, and start application
+    unpack_load_app(image_data);
+#else
     Cache_Read_Enable(0, 0, 0);
 
-    // ToDo: jump to application code.
+    void (*user_start)(void);
+
+    user_start = (void *)image_data->image.entry_addr;
+    user_start();
+#endif /* BOOTLOADER_UNPACK_APP */
 }
 
 #endif
