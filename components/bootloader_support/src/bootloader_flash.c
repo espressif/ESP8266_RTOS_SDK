@@ -274,6 +274,39 @@ SpiFlashOpResult SPIRead(uint32_t addr, void *dst, uint32_t size);
 SpiFlashOpResult SPIWrite(uint32_t addr, const uint8_t *src, uint32_t size);
 SpiFlashOpResult SPIEraseSector(uint32_t sector_num);
 
+static bool mapped;
+
+const void *bootloader_mmap(uint32_t src_addr, uint32_t size)
+{
+    if (mapped) {
+        ESP_LOGE(TAG, "tried to bootloader_mmap twice");
+        return NULL; /* can't map twice */
+    }
+
+    /* ToDo: Improve the map policy! */
+
+    Cache_Read_Disable();
+
+    /* */
+    if (src_addr < 0x100000) {
+        Cache_Read_Enable(0, 0, 0);
+    } else {
+        Cache_Read_Enable(1, 0, 0);
+    }
+
+    mapped = true;
+
+    return (void *)(0x40200000 + src_addr);
+}
+
+void bootloader_munmap(const void *mapping)
+{
+    if (mapped)  {
+        Cache_Read_Disable();
+        mapped = false;
+    }
+}
+
 static esp_err_t bootloader_flash_read_no_decrypt(size_t src_addr, void *dest, size_t size)
 {
     SPIRead(src_addr, dest, size);

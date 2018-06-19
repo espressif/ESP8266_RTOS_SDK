@@ -8,7 +8,7 @@ endif
 
 PROJECT_NAME := bootloader
 
-COMPONENTS := esptool_py main bootloader_support spi_flash log esp8266
+COMPONENTS := esptool_py main bootloader_support spi_flash log esp8266 util
 
 # Clear C and CXX from top level project
 CFLAGS =

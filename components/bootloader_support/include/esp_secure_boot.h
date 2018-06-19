@@ -15,7 +15,7 @@
 
 #include <stdbool.h>
 #include <esp_err.h>
-#include "soc/efuse_reg.h"
+//#include "soc/efuse_reg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,9 +34,9 @@ extern "C" {
  *
  * @return true if secure boot is enabled.
  */
-static inline bool esp_secure_boot_enabled(void) {
-    return REG_READ(EFUSE_BLK0_RDATA6_REG) & EFUSE_RD_ABS_DONE_0;
-}
+//static inline bool esp_secure_boot_enabled(void) {
+//    return REG_READ(EFUSE_BLK0_RDATA6_REG) & EFUSE_RD_ABS_DONE_0;
+//}
 
 
 /** @brief Enable secure boot if it is not already enabled.

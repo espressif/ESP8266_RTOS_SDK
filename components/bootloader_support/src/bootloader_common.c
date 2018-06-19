@@ -159,3 +159,27 @@ bool bootloader_common_erase_part_type_data(const char *list_erase, bool ota_dat
 }
 
 #endif
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "esp_err.h"
+#include "esp_log.h"
+
+#include "bootloader_config.h"
+
+static const char* TAG = "boot_comm";
+
+uint32_t bootloader_common_ota_select_crc(const esp_ota_select_entry_t *s)
+{
+    return crc32_le(UINT32_MAX, (uint8_t*)&s->ota_seq, 4);
+}
+
+bool bootloader_common_ota_select_valid(const esp_ota_select_entry_t *s)
+{
+    return s->ota_seq != UINT32_MAX && s->crc == bootloader_common_ota_select_crc(s);
+}
+
+#endif
