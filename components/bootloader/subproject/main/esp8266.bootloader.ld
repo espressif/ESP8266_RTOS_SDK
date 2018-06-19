@@ -24,18 +24,14 @@ ENTRY(call_start_cpu);
 
 SECTIONS
 {
-  .iram1.text :
+  .text :
   {
+    _stext = .;
+    _text_start = ABSOLUTE(.);
     . = ALIGN (16);
     *(.entry.text)
     *(.init.literal)
     *(.init)
-  } > iram_seg
-
-  .iram.text :
-  {
-    _stext = .;
-    _text_start = ABSOLUTE(.);
     *(.literal .text .literal.* .text.* .stub .gnu.warning .gnu.linkonce.literal.* .gnu.linkonce.t.*.literal .gnu.linkonce.t.*)
     *(.iram1 .iram1.*) /* catch stray IRAM_ATTR */
     *(.fini.literal)
@@ -46,7 +42,7 @@ SECTIONS
   } > iram_seg
 
   /* Shared RAM */
-  .dram0.bss (NOLOAD) :
+  .bss (NOLOAD) :
   {
     . = ALIGN (8);
     _bss_start = ABSOLUTE(.);
@@ -67,7 +63,7 @@ SECTIONS
     _bss_end = ABSOLUTE(.);
   } >dram_seg
 
-  .dram0.data :
+  .data :
   {
     _data_start = ABSOLUTE(.);
     *(.data)
@@ -84,7 +80,7 @@ SECTIONS
     _data_end = ABSOLUTE(.);
   } >dram_seg
 
-  .dram0.rodata :
+  .rodata :
   {
     _rodata_start = ABSOLUTE(.);
     *(.rodata)
@@ -118,7 +114,7 @@ SECTIONS
     *(.dynamic)
     *(.gnu.version_d)
     _rodata_end = ABSOLUTE(.);
-	/* Literals are also RO data. */
+    /* Literals are also RO data. */
     _lit4_start = ABSOLUTE(.);
     *(*.lit4)
     *(.lit4.*)
