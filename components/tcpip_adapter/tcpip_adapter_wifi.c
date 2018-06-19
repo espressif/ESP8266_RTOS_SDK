@@ -218,6 +218,11 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
             }
         } else {
             if (dhcpc_flag) {
+                if(netif_is_up(esp_netif[netif_index]) == false){
+                    netif_set_up(esp_netif[netif_index]);
+                    netif_set_default(esp_netif[netif_index]);
+                }
+
                 printf("dhcp client start...\n");
                 tcpip_adapter_station_dhcp_start();
             } else {
