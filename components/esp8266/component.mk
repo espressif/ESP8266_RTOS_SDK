@@ -1,6 +1,10 @@
 #
 # Component Makefile
 #
+ifdef IS_BOOTLOADER_BUILD
+COMPONENT_OBJS := source/ets_printf.o
+COMPONENT_SRCDIRS := source
+else
 COMPONENT_ADD_INCLUDEDIRS += include
 COMPONENT_PRIV_INCLUDEDIRS := include/driver
 COMPONENT_SRCDIRS := driver source
@@ -40,3 +44,5 @@ esp8266_out.ld: $(COMPONENT_PATH)/ld/esp8266.ld ../include/sdkconfig.h
 	$(CC) -I ../include -C -P -x c -E $< -o $@
 
 COMPONENT_EXTRA_CLEAN := esp8266_out.ld
+
+endif

@@ -16,7 +16,7 @@ MEMORY
   dram_seg  :    org = 0x3FFE8000, len = 0x18000
 
   /* Functions which are critical should be put in this segment. */
-  iram_seg  :    org = 0x40108000, len = 0x8000
+  iram_seg  :    org = 0x40100000, len = 0xC000
 }
 
 /*  Default entry point:  */

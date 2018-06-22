@@ -75,7 +75,7 @@ SECTIONS
   {
     _stext = .;
     _text_start = ABSOLUTE(.);
-    *(.UserEnter.text)
+    LONG(_text_start)
     . = ALIGN(16);
     *(.DebugExceptionVector.text)
     . = ALIGN(16);

@@ -23,6 +23,7 @@ extern "C"
 
 #define ESP_PARTITION_TABLE_ADDR CONFIG_PARTITION_TABLE_OFFSET
 #define ESP_PARTITION_MAGIC 0x50AA
+#define ESP_PARTITION_MAGIC_MD5 0xEBEB
 
 /* OTA selection structure (two copies in the OTA data partition.)
    Size of 32 bytes is friendly to flash encryption */
