@@ -47,7 +47,12 @@ static os_timer_t* get_ip_timer;
 static uint8_t dhcp_fail_time;
 static bool dhcps_flag = true;
 static bool dhcpc_flag = true;
-static struct ip_info esp_ip[TCPIP_ADAPTER_IF_MAX];
+static tcpip_adapter_ip_info_t esp_ip[TCPIP_ADAPTER_IF_MAX];
+
+void tcpip_adapter_init(void)
+{
+    //TODO:add tcpip init function.
+}
 
 void esp_wifi_station_dhcpc_event(uint8_t netif_index)
 {
@@ -78,8 +83,6 @@ static void tcpip_adapter_dhcpc_done()
         os_timer_setfn(get_ip_timer, tcpip_adapter_dhcpc_done, NULL);
         os_timer_arm(get_ip_timer, 200, 1);
     } else {
-        extern void wifi_station_dhcpc_event();
-        wifi_station_dhcpc_event();
         TCPIP_ATAPTER_LOG("ERROR dhcp get ip error\n");
         free(get_ip_timer);
     }
@@ -268,9 +271,10 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
         netif_set_default(esp_netif[netif_index]);
     }
 
-    uint8_t opmode = wifi_get_opmode();
+    wifi_mode_t opmode;
+    esp_wifi_get_mode(&opmode);
 
-    if (opmode == STATION_MODE) {
+    if (opmode == WIFI_MODE_STA) {
         netif_set_default(esp_netif[netif_index]);
     }
 }
@@ -303,7 +307,7 @@ void tcpip_adapter_stop(uint8_t netif_index)
     esp_netif[netif_index] = NULL;
 }
 
-bool wifi_set_ip_info(WIFI_INTERFACE netif_index, struct ip_info* if_ip)
+bool wifi_set_ip_info(wifi_interface_t netif_index, tcpip_adapter_ip_info_t* if_ip)
 {
     if (!TCPIP_ADAPTER_IF_VALID((uint8_t)netif_index)) {
         TCPIP_ATAPTER_LOG("ERROR bad netif index:%d\n", netif_index);
@@ -315,7 +319,7 @@ bool wifi_set_ip_info(WIFI_INTERFACE netif_index, struct ip_info* if_ip)
     return true;
 }
 
-bool wifi_get_ip_info(WIFI_INTERFACE netif_index, struct ip_info* if_ip)
+bool wifi_get_ip_info(wifi_interface_t netif_index, tcpip_adapter_ip_info_t* if_ip)
 {
     if (!TCPIP_ADAPTER_IF_VALID((uint8_t)netif_index)) {
         TCPIP_ATAPTER_LOG("ERROR bad netif index:%d\n", netif_index);
@@ -374,20 +378,20 @@ bool wifi_get_ipinfo_v6(uint8_t netif_index, uint8_t ip_index, ip6_addr_t* ipv6)
 
 bool wifi_softap_dhcps_start(void)
 {
-    uint8_t opmode = NULL_MODE;
+    wifi_mode_t opmode = WIFI_MODE_NULL;
     TCPIP_ATAPTER_LOG("start softap dhcps\n");
     taskENTER_CRITICAL();
-    opmode = wifi_get_opmode();
+    esp_wifi_get_mode(&opmode);
 
-    if ((opmode == STATION_MODE) || (opmode == NULL_MODE)) {
+    if ((opmode == WIFI_MODE_STA) || (opmode == WIFI_MODE_NULL)) {
         taskEXIT_CRITICAL();
         TCPIP_ATAPTER_LOG("ERROR you shoud enable wifi softap before start dhcp server\n");
         return false;
     }
 
     if (dhcps_flag == false) {
-        struct ip_info ipinfo;
-        wifi_get_ip_info(SOFTAP_IF, &ipinfo);
+        tcpip_adapter_ip_info_t ipinfo;
+        wifi_get_ip_info(ESP_IF_WIFI_AP, &ipinfo);
         TCPIP_ATAPTER_LOG("start softap dhcpserver\n");
         dhcps_start(&ipinfo);
     }
@@ -425,11 +429,11 @@ void tcpip_adapter_sta_leave()
 
 bool wifi_softap_dhcps_stop()
 {
-    uint8_t opmode = NULL_MODE;
+    wifi_mode_t opmode = WIFI_MODE_NULL;
     taskENTER_CRITICAL();
-    opmode = wifi_get_opmode();
+    esp_wifi_get_mode(&opmode);
 
-    if ((opmode == STATION_MODE) || (opmode == NULL_MODE)) {
+    if ((opmode == WIFI_MODE_STA) || (opmode == WIFI_MODE_NULL)) {
         taskEXIT_CRITICAL();
         TCPIP_ATAPTER_LOG("ERROR you shoud enable wifi softap before start dhcp server\n");
         return false;
@@ -448,12 +452,12 @@ bool wifi_softap_dhcps_stop()
 
 bool wifi_station_dhcpc_start(void)
 {
-    uint8_t opmode = NULL_MODE;
+    wifi_mode_t opmode = WIFI_MODE_NULL;
     err_t ret;
     taskENTER_CRITICAL();
-    opmode = wifi_get_opmode();
+    esp_wifi_get_mode(&opmode);
 
-    if ((opmode == SOFTAP_MODE) || (opmode == NULL_MODE)) {
+    if ((opmode == WIFI_MODE_AP) || (opmode == WIFI_MODE_NULL)) {
         taskEXIT_CRITICAL();
         TCPIP_ATAPTER_LOG("ERROR you shoud enable wifi station mode before start dhcp client\n");
         return false;
@@ -487,11 +491,11 @@ bool wifi_station_dhcpc_start(void)
 
 bool wifi_station_dhcpc_stop()
 {
-    uint8_t opmode = NULL_MODE;
+    wifi_mode_t opmode = WIFI_MODE_NULL;
     taskENTER_CRITICAL();
-    opmode = wifi_get_opmode();
+    esp_wifi_get_mode(&opmode);
 
-    if ((opmode == SOFTAP_MODE) || (opmode == NULL_MODE)) {
+    if ((opmode == WIFI_MODE_AP) || (opmode == WIFI_MODE_NULL)) {
         taskEXIT_CRITICAL();
         TCPIP_ATAPTER_LOG("ERROR you shoud enable wifi station mode before stop dhcp client\n");
         return false;
@@ -559,9 +563,10 @@ bool wifi_station_set_hostname(char* name)
         return false;
     }
 
-    uint8_t opmode = wifi_get_opmode();
+    wifi_mode_t opmode;
+    esp_wifi_get_mode(&opmode);
 
-    if (opmode == STATION_MODE || opmode == STATIONAP_MODE) {
+    if (opmode == WIFI_MODE_STA || opmode == WIFI_MODE_AP) {
         default_hostname = 0;
 
         if (hostname != NULL) {
