@@ -218,7 +218,11 @@ void tcpip_adapter_start(uint8_t netif_index, bool authed)
             }
         } else {
             if (dhcpc_flag) {
-                printf("dhcp client start...\n");
+                if (!netif_is_up(esp_netif[TCPIP_ADAPTER_IF_STA])) {
+                    TCPIP_ATAPTER_LOG("starting interface TCPIP_ADAPTER_IF_STA\n");
+                    netif_set_up(esp_netif[TCPIP_ADAPTER_IF_STA]);
+                }
+                TCPIP_ATAPTER_LOG("dhcp client start...\n");
                 tcpip_adapter_station_dhcp_start();
             } else {
                 if (esp_ip[TCPIP_ADAPTER_IF_STA].ip.addr != 0) {
