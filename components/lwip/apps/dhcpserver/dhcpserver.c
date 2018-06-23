@@ -18,7 +18,7 @@
 
 #include "esp_libc.h"
 #include "esp_misc.h"
-#include "esp_softap.h"
+#include "esp_wifi.h"
 
 #include "sdkconfig.h"
 #include "lwip/inet.h"
@@ -186,9 +186,9 @@ static u8_t* add_offer_options(u8_t* optptr)
     *optptr++ = ip4_addr4(&ipadd);
 
     if (dhcps_router_enabled(offer)) {
-        struct ip_info if_ip;
-        bzero(&if_ip, sizeof(struct ip_info));
-        wifi_get_ip_info(SOFTAP_IF, &if_ip);
+        tcpip_adapter_ip_info_t if_ip;
+        bzero(&if_ip, sizeof(tcpip_adapter_ip_info_t));
+        wifi_get_ip_info(ESP_IF_WIFI_AP, &if_ip);
 
         *optptr++ = DHCP_OPTION_ROUTER;
         *optptr++ = 4;
@@ -971,7 +971,7 @@ static void wifi_softap_init_dhcps_lease(u32_t ip)
 //	printf("start_ip = 0x%x, end_ip = 0x%x\n",dhcps_lease.start_ip, dhcps_lease.end_ip);
 }
 ///////////////////////////////////////////////////////////////////////////////////
-void dhcps_start(struct ip_info* info)
+void dhcps_start(tcpip_adapter_ip_info_t* info)
 {
     if (pcb_dhcps != NULL) {
         udp_remove(pcb_dhcps);
@@ -1022,14 +1022,15 @@ void dhcps_stop(void)
 
 bool wifi_softap_set_dhcps_lease(struct dhcps_lease* please)
 {
-    struct ip_info info;
+    tcpip_adapter_ip_info_t info;
     u32_t softap_ip = 0;
     u32_t start_ip = 0;
     u32_t end_ip = 0;
 
-    u8_t opmode = wifi_get_opmode();
+    wifi_mode_t opmode;
+    esp_wifi_get_mode(&opmode);
 
-    if (opmode == STATION_MODE || opmode == NULL_MODE) {
+    if (opmode == WIFI_MODE_STA || opmode == WIFI_MODE_NULL) {
         return false;
     }
 
@@ -1038,8 +1039,8 @@ bool wifi_softap_set_dhcps_lease(struct dhcps_lease* please)
     }
 
     if (please->enable) {
-        bzero(&info, sizeof(struct ip_info));
-        wifi_get_ip_info(SOFTAP_IF, &info);
+        bzero(&info, sizeof(tcpip_adapter_ip_info_t));
+        wifi_get_ip_info(ESP_IF_WIFI_AP, &info);
         softap_ip = htonl(info.ip.addr);
         start_ip = htonl(please->start_ip.addr);
         end_ip = htonl(please->end_ip.addr);
@@ -1082,9 +1083,10 @@ bool wifi_softap_set_dhcps_lease(struct dhcps_lease* please)
 *******************************************************************************/
 bool wifi_softap_get_dhcps_lease(struct dhcps_lease* please)
 {
-    u8_t opmode = wifi_get_opmode();
+    wifi_mode_t opmode;
+    esp_wifi_get_mode(&opmode);
 
-    if (opmode == STATION_MODE || opmode == NULL_MODE) {
+    if (opmode == WIFI_MODE_STA || opmode == WIFI_MODE_NULL) {
         return false;
     }
 
@@ -1193,9 +1195,10 @@ bool wifi_softap_set_dhcps_offer_option(u8_t level, void* optarg)
 
 bool wifi_softap_set_dhcps_lease_time(u32_t minute)
 {
-    u8_t opmode = wifi_get_opmode();
+    wifi_mode_t opmode;
+    esp_wifi_get_mode(&opmode);
 
-    if (opmode == STATION_MODE || opmode == NULL_MODE) {
+    if (opmode == WIFI_MODE_STA || opmode == WIFI_MODE_NULL) {
         return false;
     }
 
@@ -1213,9 +1216,10 @@ bool wifi_softap_set_dhcps_lease_time(u32_t minute)
 
 bool wifi_softap_reset_dhcps_lease_time(void)
 {
-    u8_t opmode = wifi_get_opmode();
+    wifi_mode_t opmode;
+    esp_wifi_get_mode(&opmode);
 
-    if (opmode == STATION_MODE || opmode == NULL_MODE) {
+    if (opmode == WIFI_MODE_STA || opmode == WIFI_MODE_NULL) {
         return false;
     }
 

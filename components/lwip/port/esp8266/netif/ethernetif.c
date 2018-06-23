@@ -264,25 +264,16 @@ int8_t ethernetif_init(struct netif* netif)
 
     /* set MAC hardware address */
     if (wifi_get_netif(TCPIP_ADAPTER_IF_STA) == TCPIP_ADAPTER_IF_STA) {
-        wifi_get_macaddr(TCPIP_ADAPTER_IF_STA, mac);
+        esp_wifi_get_mac(TCPIP_ADAPTER_IF_STA, mac);
     } else {
-        wifi_get_macaddr(TCPIP_ADAPTER_IF_AP, mac);
+        esp_wifi_set_mac(TCPIP_ADAPTER_IF_AP, mac);
     }
 
     memcpy(netif->hwaddr, mac, NETIF_MAX_HWADDR_LEN);
 
 #if LWIP_NETIF_HOSTNAME
 
-    if (wifi_get_netif(TCPIP_ADAPTER_IF_STA) == TCPIP_ADAPTER_IF_STA) {
-        if (default_hostname == 1) {
-            wifi_station_set_default_hostname(netif->hwaddr);
-        }
-
-        /* Initialize interface hostname */
-        netif->hostname = hostname;
-    } else {
-        netif->hostname = NULL;
-    }
+    netif->hostname = "lwip";
 
 #endif /* LWIP_NETIF_HOSTNAME */
 
