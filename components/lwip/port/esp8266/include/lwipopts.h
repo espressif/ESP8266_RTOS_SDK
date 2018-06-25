@@ -48,6 +48,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "esp_libc.h"
+#include "esp_system.h"
 
 //#define SOCKETS_MT
 
@@ -117,7 +118,7 @@
  */
 #define SMEMCPY(dst,src,len)            memcpy(dst,src,len)
 
-#define LWIP_RAND	os_random
+#define LWIP_RAND	esp_random
 
 /**
  * @}

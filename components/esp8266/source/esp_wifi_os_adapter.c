@@ -245,7 +245,7 @@ static uint32_t queue_msg_waiting_wrapper(void *queue)
 
 static uint32_t get_free_heap_size_wrapper(void)
 {
-    return (uint32_t)system_get_free_heap_size();
+    return (uint32_t)esp_get_free_heap_size();
 }
 
 static void *timer_create_wrapper(const char *name, uint32_t period_ticks, bool auto_load, void *arg, void (*cb)(void *timer))
@@ -308,7 +308,7 @@ static void srand_wrapper(uint32_t seed)
 
 static int32_t rand_wrapper(void)
 {
-    return (int32_t)os_random();
+    return (int32_t)esp_random();
 }
 
 wifi_osi_funcs_t s_wifi_osi_funcs = {
