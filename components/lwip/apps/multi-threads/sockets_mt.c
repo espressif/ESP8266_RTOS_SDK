@@ -4,6 +4,7 @@
 #ifdef SOCKETS_MT
 
 #include "../../lwip/src/api/sockets.c"
+#include "lwip/priv/api_msg.h"
 
 #ifndef LWIP_SYNC_MT_SLEEP_MS
 #define LWIP_SYNC_MT_SLEEP_MS 10
@@ -12,6 +13,11 @@
 #ifndef SOCK_MT_DEBUG_LEVEL
 #define SOCK_MT_DEBUG_LEVEL 255
 #endif
+
+typedef struct socket_conn_sync {
+    sys_sem_t       *sem;
+    struct netconn  *conn;
+} socket_conn_sync_t;
 
 typedef int (*lwip_io_mt_fn)(int, int );
 
@@ -462,7 +468,8 @@ static const lwip_io_mt_fn lwip_exit_mt_table[] = {
 
 static void lwip_do_sync_send(void *arg)
 {
-    struct netconn *conn = arg;
+    socket_conn_sync_t *sync = (socket_conn_sync_t *)arg;
+    struct netconn *conn = sync->conn;
 
     SYS_ARCH_DECL_PROTECT(lev);
     SYS_ARCH_PROTECT(lev);
@@ -472,29 +479,21 @@ static void lwip_do_sync_send(void *arg)
     }
     conn->state = NETCONN_NONE;
     SYS_ARCH_UNPROTECT(lev);
-    if (sys_sem_valid(&(conn->snd_op_completed)))
-        sys_sem_signal(&(conn->snd_op_completed));
 
-    /*
-     * if we use "op_completed" for its sync semaphore, then socket functions
-     * which are blocked by op_completed will be waked up.
-     *
-     * So we had better use a specific semaphore for the function, ioctrl_completed
-     * may be a good choise.
-     */
-    sys_sem_signal(&(conn->ioctrl_completed));
+    sys_sem_signal(sync->sem);
 }
 
 static void lwip_do_sync_rst_state(void *arg)
 {
-    struct netconn *conn = arg;
+    socket_conn_sync_t *sync = (socket_conn_sync_t *)arg;
+    struct netconn *conn = sync->conn;
 
     SYS_ARCH_DECL_PROTECT(lev);
     SYS_ARCH_PROTECT(lev);
     conn->state = NETCONN_NONE;
     SYS_ARCH_UNPROTECT(lev);
 
-    sys_sem_signal(&(conn->ioctrl_completed));
+    sys_sem_signal(sync->sem);
 }
 
 static void lwip_sync_state_mt(struct lwip_sock *sock, int state)
@@ -508,13 +507,18 @@ static void lwip_sync_state_mt(struct lwip_sock *sock, int state)
         break;
     case SOCK_MT_STATE_SEND :
     {
-        tcpip_callback(lwip_do_sync_send, sock->conn);
-        sys_arch_sem_wait(&sock->conn->ioctrl_completed, 0);
+        socket_conn_sync_t sync;
+
+        sync.conn = sock->conn;
+        sync.sem = sys_thread_sem_get();
+
+        tcpip_callback(lwip_do_sync_send, &sync);
+        sys_arch_sem_wait(sync.sem, 0);
         break;
     }
     case SOCK_MT_STATE_CONNECT :
-        if (sys_sem_valid(&(sock->conn->op_completed)))
-            sys_sem_signal(&(sock->conn->op_completed));
+        if (sock->conn->current_msg && sys_sem_valid(sock->conn->current_msg->op_completed_sem))
+            sys_sem_signal(sock->conn->current_msg->op_completed_sem);
         break;
     default :
         break;
@@ -543,7 +547,6 @@ static void lwip_sync_mt(int s)
 
     while (module < SOCK_MT_SELECT) {
         extern void sys_arch_msleep(int ms);
-        int ret;
 
         SOCK_MT_TRYLOCK(s, module, ret);
         if (ret == ERR_OK) {
@@ -582,8 +585,13 @@ static void lwip_sync_mt(int s)
 
     sock = tryget_socket(s);
     if (sock) {
-        tcpip_callback(lwip_do_sync_rst_state, sock->conn);
-        sys_arch_sem_wait(&sock->conn->ioctrl_completed, 0);
+        socket_conn_sync_t sync;
+
+        sync.conn = sock->conn;
+        sync.sem = sys_thread_sem_get();
+
+        tcpip_callback(lwip_do_sync_rst_state, &sync);
+        sys_arch_sem_wait(sync.sem, 0);
     }
 }
 
@@ -909,26 +917,5 @@ int lwip_select_mt(int maxfdp1, fd_set *readset, fd_set *writeset,
 
     return ret;
 }
-
-#ifdef SOCKETS_TCP_TRACE
-
-int lwip_trace_tcp(int s, int cmd, void *arg)
-{
-    struct lwip_sock *sock;
-    u32_t *pbuf = (u32_t *)arg;
-
-    if (!(sock = tryget_socket(s)))
-        return -1;
-
-    ADD_TCP_SEND_BYTES_GET(sock->conn, &pbuf[0]);
-    ADD_TCP_SEND_BYTES_OK_GET(sock->conn, &pbuf[2]);
-    ADD_TCP_SEND_BYTES_NOMEM_GET(sock->conn, &pbuf[4]);
-
-    ADD_TCP_RECV_BYTES_GET(sock->conn, &pbuf[6]);
-    ADD_TCP_RECV_BYTES_ERR_GET(sock->conn, &pbuf[8]);
-
-    return 0;
-}
-#endif
 
 #endif
