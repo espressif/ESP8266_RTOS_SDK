@@ -61,8 +61,8 @@ extern void vPortFree(void *pv);
 #define ssl_memcpy memcpy
 #define ssl_strlen strlen
 
-#define ssl_speed_up_enter() system_update_cpu_freq(SYS_CPU_160MHZ)
-#define ssl_speed_up_exit()  system_update_cpu_freq(SYS_CPU_80MHZ)
+#define ssl_speed_up_enter() rtc_clk_cpu_freq_set(RTC_CPU_FREQ_160M)
+#define ssl_speed_up_exit()  rtc_clk_cpu_freq_set(RTC_CPU_FREQ_80M)
 
 #define SSL_DEBUG_LOG printf
 

@@ -213,7 +213,7 @@ EXP_FUNC void * ax_malloc(size_t s, const char* file, int line)
     if ((x = malloc(s)) == NULL)
     	exit_now("out of memory %s %d\n", file, line);
     else {
-    	debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, x, s, system_get_free_heap_size());
+    	debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, x, s, esp_get_free_heap_size());
 		//add_mem_info(x, s, file, line);
     }
 
@@ -226,7 +226,7 @@ EXP_FUNC void * ax_realloc(void *y, size_t s, const char* file, int line)
     if ((x = realloc(y, s)) == NULL)
         exit_now("out of memory %s %d\n", file, line);
     else {
-    	debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, x, s, system_get_free_heap_size());	
+    	debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, x, s, esp_get_free_heap_size());	
 		//add_mem_info(x, s, file, line);
     	}
 
@@ -239,7 +239,7 @@ EXP_FUNC void * ax_calloc(size_t n, size_t s, const char* file, int line)
     if ((x = calloc(n, s)) == NULL)
     	exit_now("out of memory %s %d\n", file, line);
     else {
-    	debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, x, s, system_get_free_heap_size());
+    	debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, x, s, esp_get_free_heap_size());
 		//total_size = n * s;		 
 		//add_mem_info (x, total_size, file, line);
     	}
@@ -253,7 +253,7 @@ EXP_FUNC void * ax_zalloc(size_t s, const char* file, int line)
     if ((x = (void*)zalloc(s)) == NULL)
     	exit_now("out of memory %s %d\n", file, line);
     else {
-    	debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, x, s, system_get_free_heap_size());
+    	debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, x, s, esp_get_free_heap_size());
 		//add_mem_info(x, s, file, line);
     	}
 
@@ -262,7 +262,7 @@ EXP_FUNC void * ax_zalloc(size_t s, const char* file, int line)
 EXP_FUNC void ax_free(void *p, const char* file, int line)
 {
 	if(p) {
-   		debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, p,0, system_get_free_heap_size());
+   		debug_now("%s %d point[%p] size[%d] heap[%d]\n", file, line, p,0, esp_get_free_heap_size());
 	   free(p);
 	   p = NULL;
    }
@@ -314,6 +314,7 @@ void exit_now(const char *format, ...)
 /**
  * gettimeofday() not in Win32 
  */
+#if 0
 EXP_FUNC void STDCALL gettimeofday(struct timeval* t, void* timezone)
 {       
 #if defined(_WIN32_WCE)
@@ -328,6 +329,7 @@ EXP_FUNC void STDCALL gettimeofday(struct timeval* t, void* timezone)
     t->tv_usec = 0; /* 1ms precision */
 #endif
 }
+#endif
 #endif
 
 unsigned int def_private_key_len = 0;

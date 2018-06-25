@@ -122,6 +122,7 @@ typedef struct {
 } spi_cmd_t;
 
 extern bool spi_flash_erase_sector_check(uint32_t);
+extern uint32_t esp_get_time();
 
 bool IRAM_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd);
 bool special_flash_read_status(uint8_t command, uint32_t* status, int len);
@@ -423,7 +424,7 @@ esp_err_t IRAM_ATTR spi_flash_erase_sector(size_t sec)
         return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    spi_debug("E[%x] %d-", sec, system_get_time());
+    spi_debug("E[%x] %d-", sec, esp_get_time());
 
     FLASH_INTR_LOCK(c_tmp);
     pp_soft_wdt_stop();
@@ -437,7 +438,7 @@ esp_err_t IRAM_ATTR spi_flash_erase_sector(size_t sec)
     pp_soft_wdt_restart();
     FLASH_INTR_UNLOCK(c_tmp);
 
-    spi_debug("%d\n", system_get_time());
+    spi_debug("%d\n", esp_get_time());
 
     return ret;
 }
@@ -481,7 +482,7 @@ esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t si
     } else
         tmp = (uint32_t *)src;
 
-    spi_debug("W[%x] %d-", dest_addr / 4096, system_get_time());
+    spi_debug("W[%x] %d-", dest_addr / 4096, esp_get_time());
 
     FLASH_INTR_LOCK(c_tmp);
 
@@ -502,7 +503,7 @@ esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t si
     if (IS_FLASH(src) || ((size_t)src) & 0x3)
         wifi_free(tmp);
 
-    spi_debug("%d\n", system_get_time());
+    spi_debug("%d\n", esp_get_time());
 
     return ret;
 }
@@ -522,7 +523,7 @@ esp_err_t IRAM_ATTR spi_flash_read(size_t src_addr, void *dest, size_t size)
         return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    spi_debug("R[%x] %d-", src_addr / 4096, system_get_time());
+    spi_debug("R[%x] %d-", src_addr / 4096, esp_get_time());
 
     FLASH_INTR_LOCK(c_tmp);
 
@@ -537,7 +538,7 @@ esp_err_t IRAM_ATTR spi_flash_read(size_t src_addr, void *dest, size_t size)
     FlashIsOnGoing = 0;
     FLASH_INTR_UNLOCK(c_tmp);
 
-    spi_debug("%d\n", system_get_time());
+    spi_debug("%d\n", esp_get_time());
 
     return ret;
 }

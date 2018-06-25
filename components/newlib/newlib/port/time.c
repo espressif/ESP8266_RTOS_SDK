@@ -21,6 +21,8 @@
 
 #include "FreeRTOS.h"
 
+extern uint32_t esp_get_time();
+
 static uint64_t s_boot_time;
 
 static os_timer_t microsecond_overflow_timer;
@@ -31,7 +33,7 @@ static bool microsecond_overflow_timer_start_flag = false;
 
 static void microsecond_overflow_tick(void* arg)
 {
-    uint32_t m = system_get_time();
+    uint32_t m = esp_get_time();
 
     vPortEnterCritical();
 
@@ -84,7 +86,7 @@ static uint64_t get_time_since_boot()
     uint32_t c;
     uint64_t microseconds;
 
-    m = system_get_time();
+    m = esp_get_time();
 
     vPortEnterCritical();
 

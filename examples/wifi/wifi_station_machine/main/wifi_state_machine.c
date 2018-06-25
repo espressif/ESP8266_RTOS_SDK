@@ -378,7 +378,7 @@ static void on_wifi_disconnect(uint8_t reason)
 *******************************************************************************/
 void user_init(void)
 {
-    printf("SDK version:%s\n", system_get_sdk_version());
+    printf("SDK version:%s\n", esp_get_idf_version());
 
     set_on_station_connect(on_wifi_connect);
     set_on_station_disconnect(on_wifi_disconnect);

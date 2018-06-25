@@ -243,7 +243,7 @@ EXP_FUNC void STDCALL ssl_ctx_free(SSL_CTX *ssl_ctx)
 EXP_FUNC void STDCALL ssl_free(SSL *ssl)
 {
     SSL_CTX *ssl_ctx;
-    printf("ssl_free:Aviable Memory|%d\n",system_get_free_heap_size());
+    printf("ssl_free:Aviable Memory|%d\n",esp_get_free_heap_size());
     if (ssl == NULL)        /* just ignore null pointers */
         return;
 
