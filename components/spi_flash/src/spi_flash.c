@@ -472,7 +472,7 @@ esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t si
         size = (size / 4 + 1) * 4;
     }
 
-    if (IS_FLASH(src)) {
+    if (IS_FLASH(src) || ((size_t)src) & 0x3) {
         tmp = wifi_malloc(size, OSI_MALLOC_CAP_32BIT);
         if (!tmp) {
             return ESP_ERR_NO_MEM;
@@ -499,7 +499,7 @@ esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t si
 
     FLASH_INTR_UNLOCK(c_tmp);
 
-    if (IS_FLASH(src))
+    if (IS_FLASH(src) || ((size_t)src) & 0x3)
         wifi_free(tmp);
 
     spi_debug("%d\n", system_get_time());

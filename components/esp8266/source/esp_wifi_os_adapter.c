@@ -22,6 +22,8 @@
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
 
+#include "nvs.h"
+
 #if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
 #include "esp_newlib.h"
 #endif
@@ -42,7 +44,6 @@ static void *task_create_wrapper(void *task_func, const char *name, uint32_t sta
 {
     portBASE_TYPE ret;
     xTaskHandle handle;
-
     ret = xTaskCreate(task_func, name, stack_depth, param, prio, &handle);
 
     return ret == pdPASS ? handle : NULL;
@@ -311,6 +312,8 @@ static int32_t rand_wrapper(void)
 }
 
 wifi_osi_funcs_t s_wifi_osi_funcs = {
+    .version = ESP_WIFI_OS_ADAPTER_VERSION,
+
     .enter_critical = enter_critical_wrapper,
     .exit_critical = exit_critical_wrapper,
     
@@ -365,4 +368,19 @@ wifi_osi_funcs_t s_wifi_osi_funcs = {
 
     .srand = srand_wrapper,
     .rand = rand_wrapper,
+
+    .nvs_set_i8 = nvs_set_i8,
+    .nvs_get_i8 = nvs_get_i8,
+    .nvs_set_u8 = nvs_set_u8,
+    .nvs_get_u8 = nvs_get_u8,
+    .nvs_set_u16 = nvs_set_u16,
+    .nvs_get_u16 = nvs_get_u16,
+    .nvs_open = nvs_open,
+    .nvs_close = nvs_close,
+    .nvs_commit = nvs_commit,
+    .nvs_set_blob = nvs_set_blob,
+    .nvs_get_blob = nvs_get_blob,
+    .nvs_erase_key = nvs_erase_key,
+
+    .magic = ESP_WIFI_OS_ADAPTER_MAGIC,
 };

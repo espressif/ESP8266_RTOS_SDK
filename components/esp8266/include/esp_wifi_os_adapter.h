@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+#define ESP_WIFI_OS_ADAPTER_VERSION  0x00000001
+#define ESP_WIFI_OS_ADAPTER_MAGIC    0xDEADBEAF
+
 #define OSI_FUNCS_TIME_BLOCKING      0xffffffff
 
 #define OSI_QUEUE_SEND_FRONT         0
@@ -33,6 +36,7 @@ extern "C" {
 #define OSI_MALLOC_CAP_DMA           (1 << 3)
 
 typedef struct {
+    int32_t version;
     uint32_t (*enter_critical)(void);
     void (*exit_critical)(uint32_t tmp);
 
@@ -87,6 +91,21 @@ typedef struct {
 
     void (*srand)(uint32_t seed);
     int32_t (*rand)(void);
+
+    int32_t (* nvs_set_i8)(uint32_t handle, const char* key, int8_t value);
+    int32_t (* nvs_get_i8)(uint32_t handle, const char* key, int8_t* out_value);
+    int32_t (* nvs_set_u8)(uint32_t handle, const char* key, uint8_t value);
+    int32_t (* nvs_get_u8)(uint32_t handle, const char* key, uint8_t* out_value);
+    int32_t (* nvs_set_u16)(uint32_t handle, const char* key, uint16_t value);
+    int32_t (* nvs_get_u16)(uint32_t handle, const char* key, uint16_t* out_value);
+    int32_t (* nvs_open)(const char* name, uint32_t open_mode, uint32_t *out_handle);
+    void (* nvs_close)(uint32_t handle); 
+    int32_t (* nvs_commit)(uint32_t handle);
+    int32_t (* nvs_set_blob)(uint32_t handle, const char* key, const void* value, size_t length);
+    int32_t (* nvs_get_blob)(uint32_t handle, const char* key, void* out_value, size_t* length);
+    int32_t (* nvs_erase_key)(uint32_t handle, const char* key);
+
+    int32_t magic;
 } wifi_osi_funcs_t;
 
 #ifdef __cplusplus

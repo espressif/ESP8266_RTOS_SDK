@@ -83,7 +83,7 @@ extern u32_t dhcps_lease_time;
 
 #define   dhcps_router_enabled(offer)	((offer & OFFER_ROUTER) != 0)
 
-void dhcps_start(struct ip_info* info);
+void dhcps_start(tcpip_adapter_ip_info_t* info);
 void dhcps_stop(void);
 
 #endif

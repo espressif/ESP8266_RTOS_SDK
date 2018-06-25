@@ -17,6 +17,7 @@
 
 #include "esp8266/eagle_soc.h"
 #include "esp8266/ets_sys.h"
+#include "esp_err.h"
 
 /*
  * @brief output xtensa register value map when crash
@@ -54,4 +55,11 @@ void IRAM_ATTR panicHandler(void *frame)
      *     3. GBD break
      */
     while (1);
+}
+
+void _esp_error_check_failed(esp_err_t rc, const char *file, int line, const char *function, const char *expression)
+{
+    printf("ESP_ERROR_CHECK failed: esp_err_t 0x%x at %p\n", rc, __builtin_return_address(0));
+    printf("file: \"%s\" line %d\nfunc: %s\nexpression: %s\n", file, line, function, expression);
+    abort();
 }

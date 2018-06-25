@@ -35,6 +35,16 @@
  *
  */
 
+typedef struct {
+    ip4_addr_t ip;
+    ip4_addr_t netmask;
+    ip4_addr_t gw;
+} tcpip_adapter_ip_info_t;
+
+typedef struct {
+    ip6_addr_t ip;
+} tcpip_adapter_ip6_info_t;
+
 typedef enum {
     TCPIP_ADAPTER_IF_STA = 0,     /**< ESP8266 station interface */
     TCPIP_ADAPTER_IF_AP,          /**< ESP8266 soft-AP interface */
@@ -58,5 +68,11 @@ bool default_hostname;
 #define TCPIP_ATAPTER_LOG(str, ...)
 #endif
 
+/**
+ * @brief  Initialize tcpip adapter
+ *
+ * This will initialize TCPIP stack inside.
+ */
+void tcpip_adapter_init(void);
 
 #endif /*  _TCPIP_ADAPTER_H_ */
