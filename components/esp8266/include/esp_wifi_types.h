@@ -20,7 +20,6 @@
 #include <stdbool.h>
 #include "esp_err.h"
 #include "esp_interface.h"
-#include "queue.h"
 
 #ifdef __cplusplus
 extern "C" {
