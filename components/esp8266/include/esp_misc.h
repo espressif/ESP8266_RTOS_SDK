@@ -82,23 +82,6 @@ void os_install_putc1(void (*p)(char c));
   */
 void os_putc(char c);
 
-enum dhcp_status {
-    DHCP_STOPPED,   /**< disable DHCP */
-    DHCP_STARTED    /**< enable DHCP */
-};
-
-struct dhcps_lease {
-    bool enable;                /**< enable DHCP lease or not */
-    struct ip4_addr start_ip;    /**< start IP of IP range */
-    struct ip4_addr end_ip;      /**< end IP of IP range */
-};
-
-enum dhcps_offer_option {
-    OFFER_START = 0x00,         /**< DHCP offer option start */
-    OFFER_ROUTER = 0x01,        /**< DHCP offer router, only support this option now */
-    OFFER_END                   /**< DHCP offer option start */
-};
-
 /**
   * @}
   */

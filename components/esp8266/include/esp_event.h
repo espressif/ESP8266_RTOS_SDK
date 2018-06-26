@@ -45,6 +45,7 @@ typedef enum {
     SYSTEM_EVENT_AP_STOP,                  /**< ESP8266 soft-AP stop */
     SYSTEM_EVENT_AP_STACONNECTED,          /**< a station connected to ESP8266 soft-AP */
     SYSTEM_EVENT_AP_STADISCONNECTED,       /**< a station disconnected from ESP8266 soft-AP */
+    SYSTEM_EVENT_AP_STAIPASSIGNED,         /**< ESP8266 soft-AP assign an IP to a connected station */
     SYSTEM_EVENT_AP_PROBEREQRECVED,        /**< Receive probe request packet in soft-AP interface */
     SYSTEM_EVENT_GOT_IP6,                  /**< ESP8266 station or ap or ethernet interface v6IP addr is preferred */
     SYSTEM_EVENT_ETH_START,                /**< ESP8266 ethernet start */

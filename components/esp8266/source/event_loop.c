@@ -27,42 +27,14 @@
 
 static const char* TAG = "event";
 static bool s_event_init_flag = false;
+static void *s_event_queue = NULL;
 static system_event_cb_t s_event_handler_cb = NULL;
 static void *s_event_ctx = NULL;
-static void *s_event_queue = NULL;
-
 
 static esp_err_t esp_event_post_to_user(system_event_t *event)
 {
     if (s_event_handler_cb) {
         return (*s_event_handler_cb)(s_event_ctx, event);
-    }
-    return ESP_OK;
-}
-
-system_event_cb_t esp_event_loop_set_cb(system_event_cb_t cb, void *ctx)
-{
-    system_event_cb_t old_cb = s_event_handler_cb;
-    s_event_handler_cb = cb;
-    s_event_ctx = ctx;
-    return old_cb;
-}
-
-esp_err_t esp_event_send(system_event_t *event)
-{
-    if (s_event_queue == NULL) {
-        ESP_LOGE(TAG, "Event loop not initialized via esp_event_loop_init, but esp_event_send called");
-        return ESP_ERR_INVALID_STATE;
-    }
-
-    portBASE_TYPE ret = wifi_queue_send(s_event_queue, event, 0, 1);
-    if (ret != pdPASS) {
-        if (event) {
-            ESP_LOGE(TAG, "e=%d f", event->event_id);
-        } else {
-            ESP_LOGE(TAG, "e null");
-        }
-        return ESP_FAIL;
     }
     return ESP_OK;
 }
@@ -80,10 +52,35 @@ static void esp_event_loop_task(void *pvParameters)
             if (ret != ESP_OK) {
                 ESP_LOGE(TAG, "post event to user fail!");
             }
-        } else {
-            ESP_LOGE(TAG, "esp_event_loop_task end");            
         }
     }
+}
+
+system_event_cb_t esp_event_loop_set_cb(system_event_cb_t cb, void *ctx)
+{
+    system_event_cb_t old_cb = s_event_handler_cb;
+    s_event_handler_cb = cb;
+    s_event_ctx = ctx;
+    return old_cb;
+}
+
+esp_err_t esp_event_send(system_event_t *event)
+{
+    if (s_event_queue == NULL) {
+        ESP_LOGE(TAG, "Event loop not initialized via esp_event_loop_init, but esp_event_send called");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    int ret = wifi_queue_send(s_event_queue, event, 0, 1);
+    if (ret != true) {
+        if (event) {
+            ESP_LOGE(TAG, "e=%d f", event->event_id);
+        } else {
+            ESP_LOGE(TAG, "e null");
+        }
+        return ESP_FAIL;
+    }
+    return ESP_OK;
 }
 
 QueueHandle_t esp_event_loop_get_queue(void)

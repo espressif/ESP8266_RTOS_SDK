@@ -1,90 +1,95 @@
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 #ifndef __DHCPS_H__
 #define __DHCPS_H__
 
-#define USE_DNS
-
 #include "sdkconfig.h"
-#include "esp_wifi.h"
+#include "lwip/ip_addr.h"
 
-typedef struct dhcps_state {
-    s16_t state;
+typedef struct dhcps_state{
+        s16_t state;
 } dhcps_state;
 
-// ����dhcpclient�Զ����һ��DHCP msg�ṹ��
 typedef struct dhcps_msg {
-    u8_t op, htype, hlen, hops;
-    u8_t xid[4];
-    u16_t secs, flags;
-    u8_t ciaddr[4];
-    u8_t yiaddr[4];
-    u8_t siaddr[4];
-    u8_t giaddr[4];
-    u8_t chaddr[16];
-    u8_t sname[64];
-    u8_t file[128];
-    u8_t options[312];
-} dhcps_msg;
+        u8_t op, htype, hlen, hops;
+        u8_t xid[4];
+        u16_t secs, flags;
+        u8_t ciaddr[4];
+        u8_t yiaddr[4];
+        u8_t siaddr[4];
+        u8_t giaddr[4];
+        u8_t chaddr[16];
+        u8_t sname[64];
+        u8_t file[128];
+        u8_t options[312];
+}dhcps_msg;
 
-struct dhcps_pool {
-    struct ip4_addr ip;
-    u8_t mac[6];
-    u32_t lease_timer;
+/*   Defined in esp_misc.h */
+typedef struct {
+	bool enable;
+	ip4_addr_t start_ip;
+	ip4_addr_t end_ip;
+} dhcps_lease_t;
+
+enum dhcps_offer_option{
+	OFFER_START = 0x00,
+	OFFER_ROUTER = 0x01,
+	OFFER_DNS = 0x02,
+	OFFER_END
 };
 
-typedef struct _list_node {
-    void* pnode;
-    struct _list_node* pnext;
-} list_node;
-
-extern u32_t dhcps_lease_time;
 #define DHCPS_COARSE_TIMER_SECS  1
-#define DHCPS_LEASE_TIMER  dhcps_lease_time  //0x05A0
 #define DHCPS_MAX_LEASE 0x64
-#define BOOTP_BROADCAST 0x8000
+#define DHCPS_LEASE_TIME_DEF (120)
+#define DHCPS_LEASE_UNIT CONFIG_LWIP_DHCPS_LEASE_UNIT
 
-#define DHCP_REPLY          2
-#define DHCP_HTYPE_ETHERNET 1
-#define DHCP_HLEN_ETHERNET  6
+struct dhcps_pool{
+	ip4_addr_t ip;
+	u8_t mac[6];
+	u32_t lease_timer;
+};
 
-#define DHCPS_SERVER_PORT  67
-#define DHCPS_CLIENT_PORT  68
+typedef u32_t dhcps_time_t;
+typedef u8_t dhcps_offer_t;
 
-#define DHCPDISCOVER  1
-#define DHCPOFFER     2
-#define DHCPREQUEST   3
-#define DHCPDECLINE   4
-#define DHCPACK       5
-#define DHCPNAK       6
-#define DHCPRELEASE   7
+typedef struct {
+        dhcps_offer_t dhcps_offer;
+        dhcps_offer_t dhcps_dns;
+        dhcps_time_t  dhcps_time;
+        dhcps_lease_t dhcps_poll;
+} dhcps_options_t;
 
-#define DHCP_OPTION_SUBNET_MASK   1
-#define DHCP_OPTION_ROUTER        3
-#define DHCP_OPTION_DNS_SERVER    6
-#define DHCP_OPTION_REQ_IPADDR   50
-#define DHCP_OPTION_LEASE_TIME   51
-#define DHCP_OPTION_MSG_TYPE     53
-#define DHCP_OPTION_SERVER_ID    54
-#define DHCP_OPTION_INTERFACE_MTU 26
-#define DHCP_OPTION_PERFORM_ROUTER_DISCOVERY 31
-#define DHCP_OPTION_BROADCAST_ADDRESS 28
-#define DHCP_OPTION_REQ_LIST     55
-#define DHCP_OPTION_END         255
+typedef void (*dhcps_cb_t)(u8_t client_ip[4]);
 
-//#define USE_CLASS_B_NET 1
-#define DHCPS_DEBUG          CONFIG_LWIP_DHCP_SERVER_DEBUG
-#define MAX_STATION_NUM      CONFIG_LWIP_DHCPS_MAX_STATION_NUM
+static inline bool dhcps_router_enabled (dhcps_offer_t offer) 
+{
+    return (offer & OFFER_ROUTER) != 0;
+}
 
-#define DHCPS_STATE_OFFER 1
-#define DHCPS_STATE_DECLINE 2
-#define DHCPS_STATE_ACK 3
-#define DHCPS_STATE_NAK 4
-#define DHCPS_STATE_IDLE 5
-#define DHCPS_STATE_RELEASE 6
+static inline bool dhcps_dns_enabled (dhcps_offer_t offer) 
+{
+    return (offer & OFFER_DNS) != 0;
+}
 
-#define   dhcps_router_enabled(offer)	((offer & OFFER_ROUTER) != 0)
-
-void dhcps_start(tcpip_adapter_ip_info_t* info);
-void dhcps_stop(void);
+void dhcps_start(struct netif *netif, ip4_addr_t ip);
+void dhcps_stop(struct netif *netif);
+void *dhcps_option_info(u8_t op_id, u32_t opt_len);
+void dhcps_set_option_info(u8_t op_id, void *opt_info, u32_t opt_len);
+bool dhcp_search_ip_on_mac(u8_t *mac, ip4_addr_t *ip);
+void dhcps_dns_setserver(const ip_addr_t *dnsserver);
+ip4_addr_t dhcps_dns_getserver();
+void dhcps_set_new_lease_cb(dhcps_cb_t cb);
 
 #endif
 

@@ -18,6 +18,8 @@
 #include "esp_socket.h"
 #include "net/sockio.h"
 
+esp_err_t esp_wifi_init_internal(const wifi_init_config_t *config);
+
 /**
   * @brief  Init WiFi
   *         Alloc resource for WiFi driver, such as WiFi control structure, RX/TX buffer,
