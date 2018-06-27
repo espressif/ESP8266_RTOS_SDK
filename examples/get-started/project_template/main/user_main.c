@@ -71,5 +71,5 @@ uint32_t user_rf_cal_sector_set(void)
 *******************************************************************************/
 void user_init(void)
 {
-    printf("SDK version:%s\n", system_get_sdk_version());
+    printf("SDK version:%s\n", esp_get_idf_version());
 }

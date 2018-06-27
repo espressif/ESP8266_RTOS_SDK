@@ -75,17 +75,17 @@ typedef struct test_res_s {
 } test_res;
 
 #define MALLOC_CHECK(x, y) if (!(x)) { \
-  printf("  MALLOC %i FAIL %s:%i, FREE %i\n", y, __FILE__, __LINE__, system_get_free_heap_size()); \
+  printf("  MALLOC %i FAIL %s:%i, FREE %i\n", y, __FILE__, __LINE__, esp_get_free_heap_size()); \
   goto __fail_stop; \
 }
 
 #define MALLOC_CHECK_RETURN(x, y) if (!(x)) { \
-  printf("  MALLOC %i FAIL %s:%i, FREE %i\n", y, __FILE__, __LINE__, system_get_free_heap_size()); \
+  printf("  MALLOC %i FAIL %s:%i, FREE %i\n", y, __FILE__, __LINE__, esp_get_free_heap_size()); \
   return; \
 }
 
 #define MALLOC_CHECK_RETURN_1(x, y) if (!(x)) { \
-  printf("  MALLOC %i FAIL %s:%i, FREE %i\n", y, __FILE__, __LINE__, system_get_free_heap_size()); \
+  printf("  MALLOC %i FAIL %s:%i, FREE %i\n", y, __FILE__, __LINE__, esp_get_free_heap_size()); \
   return -1;  \
 }
 

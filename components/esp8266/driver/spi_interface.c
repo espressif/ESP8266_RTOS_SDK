@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 
-#include "esp8266/ets_sys.h"
+#include "rom/ets_sys.h"
 #include "esp8266/pin_mux_register.h"
 
 #include "spi_interface.h"

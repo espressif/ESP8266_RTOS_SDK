@@ -26,6 +26,9 @@ int8_t ieee80211_output_pbuf(uint8_t fd, uint8_t* dataptr, uint16_t datalen);
 int8_t wifi_get_netif(uint8_t fd);
 void wifi_station_set_default_hostname(uint8_t* hwaddr);
 
+#define IFNAME0 'e'
+#define IFNAME1 'n'
+
 /**
  * In this function, the hardware should be initialized.
  * Called from ethernetif_init().
@@ -36,7 +39,7 @@ void wifi_station_set_default_hostname(uint8_t* hwaddr);
 static void low_level_init(struct netif* netif)
 {
     if (netif == NULL) {
-        TCPIP_ATAPTER_LOG("ERROR netif is NULL\n");
+        LWIP_DEBUGF(NETIF_DEBUG, ("low_level_init: netif is NULL\n"));
         return;
     }
 
@@ -48,7 +51,7 @@ static void low_level_init(struct netif* netif)
 
     /* device capabilities */
     /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
-    netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP | NETIF_FLAG_UP;
+    netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
 
 #if LWIP_IGMP
     netif->flags |= NETIF_FLAG_IGMP;
@@ -131,7 +134,7 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
     int8_t err = ERR_OK;
 
     if (netif == NULL) {
-        TCPIP_ATAPTER_LOG("ERROR netif is NULL\n");
+        LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: netif is NULL\n"));
         return ERR_ARG;
     }
 
@@ -186,23 +189,23 @@ void ethernetif_input(struct netif* netif, struct pbuf* p)
     struct eth_hdr* ethhdr;
 
     if (p == NULL) {
-        TCPIP_ATAPTER_LOG("ERROR pbuf is NULL\n");
+        LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: pbuf is NULL\n"));
         goto _exit;
     }
 
     if (p->payload == NULL) {
-        TCPIP_ATAPTER_LOG("ERROR payload is NULL\n");
+        LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: payload is NULL\n"));
         pbuf_free(p);
         goto _exit;
     }
 
     if (netif == NULL) {
-        TCPIP_ATAPTER_LOG("ERROR netif is NULL\n");
+        LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: netif is NULL\n"));
         goto _exit;
     }
 
     if (!(netif->flags & NETIF_FLAG_LINK_UP)) {
-        TCPIP_ATAPTER_LOG("ERROR netif is not up\n");
+        LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: netif is not up\n"));
         pbuf_free(p);
         p = NULL;
         goto _exit;
@@ -225,7 +228,7 @@ void ethernetif_input(struct netif* netif, struct pbuf* p)
 
             /* full packet send to tcpip_thread to process */
             if (netif->input(p, netif) != ERR_OK) {
-                TCPIP_ATAPTER_LOG("ERROR IP input error\n");
+                LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
                 pbuf_free(p);
                 p = NULL;
             }
@@ -259,30 +262,21 @@ int8_t ethernetif_init(struct netif* netif)
     uint8_t mac[NETIF_MAX_HWADDR_LEN];
 
     if (netif == NULL) {
-        TCPIP_ATAPTER_LOG("ERROR netif is NULL\n");
+        LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_init: netif is NULL\n"));
     }
 
     /* set MAC hardware address */
     if (wifi_get_netif(TCPIP_ADAPTER_IF_STA) == TCPIP_ADAPTER_IF_STA) {
-        wifi_get_macaddr(TCPIP_ADAPTER_IF_STA, mac);
+        esp_wifi_get_mac(TCPIP_ADAPTER_IF_STA, mac);
     } else {
-        wifi_get_macaddr(TCPIP_ADAPTER_IF_AP, mac);
+        esp_wifi_set_mac(TCPIP_ADAPTER_IF_AP, mac);
     }
 
     memcpy(netif->hwaddr, mac, NETIF_MAX_HWADDR_LEN);
 
 #if LWIP_NETIF_HOSTNAME
 
-    if (wifi_get_netif(TCPIP_ADAPTER_IF_STA) == TCPIP_ADAPTER_IF_STA) {
-        if (default_hostname == 1) {
-            wifi_station_set_default_hostname(netif->hwaddr);
-        }
-
-        /* Initialize interface hostname */
-        netif->hostname = hostname;
-    } else {
-        netif->hostname = NULL;
-    }
+    netif->hostname = "lwip";
 
 #endif /* LWIP_NETIF_HOSTNAME */
 

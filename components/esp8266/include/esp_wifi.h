@@ -1,24 +1,56 @@
-/*
- * ESPRESSIF MIT License
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+
+/*               Notes about WiFi Programming
  *
- * Copyright (c) 2015-2017 <ESPRESSIF SYSTEMS (SHANGHAI) PTE LTD>
+ *  The ESP8266 WiFi programming model can be depicted as following picture:
  *
- * Permission is hereby granted for use on ESPRESSIF SYSTEMS ESP8266 only, in which case,
- * it is free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished
- * to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
+ *                            default handler              user handler
+ *  -------------             ---------------             ---------------
+ *  |           |   event     |             | callback or |             |
+ *  |   tcpip   | --------->  |    event    | ----------> | application |
+ *  |   stack   |             |     task    |  event      |    task     |
+ *  |-----------|             |-------------|             |-------------|
+ *                                  /|\                          |
+ *                                   |                           |
+ *                            event  |                           |
+ *                                   |                           |
+ *                                   |                           |
+ *                             ---------------                   |
+ *                             |             |                   |
+ *                             | WiFi Driver |/__________________|
+ *                             |             |\     API call
+ *                             |             |
+ *                             |-------------|
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * The WiFi driver can be consider as black box, it knows nothing about the high layer code, such as
+ * TCPIP stack, application task, event task etc, all it can do is to receive API call from high layer
+ * or post event queue to a specified Queue, which is initialized by API esp_wifi_init().
+ *
+ * The event task is a daemon task, which receives events from WiFi driver or from other subsystem, such
+ * as TCPIP stack, event task will call the default callback function on receiving the event. For example,
+ * on receiving event SYSTEM_EVENT_STA_CONNECTED, it will call tcpip_adapter_start() to start the DHCP
+ * client in it's default handler.
+ *
+ * Application can register it's own event callback function by API esp_event_init, then the application callback
+ * function will be called after the default callback. Also, if application doesn't want to execute the callback
+ * in the event task, what it needs to do is to post the related event to application task in the application callback function.
+ *
+ * The application task (code) generally mixes all these thing together, it calls APIs to init the system/WiFi and
+ * handle the events when necessary.
  *
  */
 
@@ -26,1051 +58,809 @@
 #define __ESP_WIFI_H__
 
 #include <stdint.h>
-
-#include "lwip/ip_addr.h"
+#include <stdbool.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+#include "sdkconfig.h"
+#include "esp_err.h"
+#include "esp_wifi_types.h"
+#include "esp_event.h"
+#include "esp_wifi_os_adapter.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** \defgroup WiFi_APIs WiFi Related APIs
-  * @brief WiFi APIs
-  */
+#define ESP_ERR_WIFI_NOT_INIT    (ESP_ERR_WIFI_BASE + 1)   /*!< WiFi driver was not installed by esp_wifi_init */
+#define ESP_ERR_WIFI_NOT_STARTED (ESP_ERR_WIFI_BASE + 2)   /*!< WiFi driver was not started by esp_wifi_start */
+#define ESP_ERR_WIFI_NOT_STOPPED (ESP_ERR_WIFI_BASE + 3)   /*!< WiFi driver was not stopped by esp_wifi_stop */
+#define ESP_ERR_WIFI_IF          (ESP_ERR_WIFI_BASE + 4)   /*!< WiFi interface error */
+#define ESP_ERR_WIFI_MODE        (ESP_ERR_WIFI_BASE + 5)   /*!< WiFi mode error */
+#define ESP_ERR_WIFI_STATE       (ESP_ERR_WIFI_BASE + 6)   /*!< WiFi internal state error */
+#define ESP_ERR_WIFI_CONN        (ESP_ERR_WIFI_BASE + 7)   /*!< WiFi internal control block of station or soft-AP error */
+#define ESP_ERR_WIFI_NVS         (ESP_ERR_WIFI_BASE + 8)   /*!< WiFi internal NVS module error */
+#define ESP_ERR_WIFI_MAC         (ESP_ERR_WIFI_BASE + 9)   /*!< MAC address is invalid */
+#define ESP_ERR_WIFI_SSID        (ESP_ERR_WIFI_BASE + 10)   /*!< SSID is invalid */
+#define ESP_ERR_WIFI_PASSWORD    (ESP_ERR_WIFI_BASE + 11)  /*!< Password is invalid */
+#define ESP_ERR_WIFI_TIMEOUT     (ESP_ERR_WIFI_BASE + 12)  /*!< Timeout error */
+#define ESP_ERR_WIFI_WAKE_FAIL   (ESP_ERR_WIFI_BASE + 13)  /*!< WiFi is in sleep state(RF closed) and wakeup fail */
+#define ESP_ERR_WIFI_WOULD_BLOCK (ESP_ERR_WIFI_BASE + 14)  /*!< The caller would block */
+#define ESP_ERR_WIFI_NOT_CONNECT (ESP_ERR_WIFI_BASE + 15)  /*!< Station still in disconnect status */
 
-/** @addtogroup WiFi_APIs
-  * @{
-  */
+#define ESP_WIFI_PARAM_USE_NVS  0
 
-/** \defgroup WiFi_Common_APIs Common APIs
-  * @brief WiFi common APIs
-  *
-  *        The Flash system parameter area is the last 16KB of the Flash.
-  *
-  */
-
-/** @addtogroup WiFi_Common_APIs
-  * @{
-  */
-
-typedef enum {
-    NULL_MODE = 0,      /**< null mode */
-    STATION_MODE,       /**< WiFi station mode */
-    SOFTAP_MODE,        /**< WiFi soft-AP mode */
-    STATIONAP_MODE,     /**< WiFi station + soft-AP mode */
-    MAX_MODE
-} WIFI_MODE;
-
-typedef enum {
-    AUTH_OPEN = 0,      /**< authenticate mode : open */
-    AUTH_WEP,           /**< authenticate mode : WEP */
-    AUTH_WPA_PSK,       /**< authenticate mode : WPA_PSK */
-    AUTH_WPA2_PSK,      /**< authenticate mode : WPA2_PSK */
-    AUTH_WPA_WPA2_PSK,  /**< authenticate mode : WPA_WPA2_PSK */
-    AUTH_MAX
-} AUTH_MODE;
-
-typedef enum {
-    WIFI_COUNTRY_POLICY_AUTO,   /**< Country policy is auto, use the country info of AP to which the station is connected */
-    WIFI_COUNTRY_POLICY_MANUAL, /**< Country policy is manual, always use the configured country info */
-} WIFI_COUNTRY_POLICY;
-
+/**
+ * @brief WiFi stack configuration parameters passed to esp_wifi_init call.
+ */
 typedef struct {
-    char cc[3];               /**< country code string */
-    uint8_t schan;            /**< start channel */
-    uint8_t nchan;            /**< total channel number */
-    uint8_t policy;           /**< country policy */
-} wifi_country_t;
+    system_event_handler_t event_handler;          /**< WiFi event handler */
+    wifi_osi_funcs_t*      osi_funcs;              /**< WiFi OS functions */
+    int                    static_rx_buf_num;      /**< WiFi static RX buffer number */
+    int                    dynamic_rx_buf_num;     /**< WiFi dynamic RX buffer number */
+    int                    tx_buf_type;            /**< WiFi TX buffer type */
+    int                    static_tx_buf_num;      /**< WiFi static TX buffer number */
+    int                    dynamic_tx_buf_num;     /**< WiFi dynamic TX buffer number */
+    int                    csi_enable;             /**< WiFi channel state information enable flag */
+    int                    ampdu_rx_enable;        /**< WiFi AMPDU RX feature enable flag */
+    int                    ampdu_tx_enable;        /**< WiFi AMPDU TX feature enable flag */
+    int                    nvs_enable;             /**< WiFi NVS flash enable flag */
+    int                    nano_enable;            /**< Nano option for printf/scan family enable flag */
+    int                    tx_ba_win;              /**< WiFi Block Ack TX window size */
+    int                    rx_ba_win;              /**< WiFi Block Ack RX window size */
+    int                    magic;                  /**< WiFi init magic number, it should be the last field */
+} wifi_init_config_t;
 
-/**
-  * @brief  Get the current operating mode of the WiFi.
-  *
-  * @param  null
-  *
-  * @return WiFi operating modes:
-  *    - 0x01: station mode;
-  *    - 0x02: soft-AP mode
-  *    - 0x03: station+soft-AP mode
-  */
-WIFI_MODE wifi_get_opmode(void);
+#define WIFI_INIT_CONFIG_MAGIC    0x1F2F3F4F
 
-/**
-  * @brief  Get the operating mode of the WiFi saved in the Flash.
-  *
-  * @param  null
-  *
-  * @return WiFi operating modes:
-  *    - 0x01: station mode;
-  *    - 0x02: soft-AP mode
-  *    - 0x03: station+soft-AP mode
-  */
-WIFI_MODE wifi_get_opmode_default(void);
-
-/**
-  * @brief     Set the WiFi operating mode, and save it to Flash.
-  *
-  *            Set the WiFi operating mode as station, soft-AP or station+soft-AP,
-  *            and save it to Flash. The default mode is soft-AP mode.
-  *
-  * @attention This configuration will be saved in the Flash system parameter area if changed.
-  *
-  * @param     uint8_t opmode : WiFi operating modes:
-  *    - 0x01: station mode;
-  *    - 0x02: soft-AP mode
-  *    - 0x03: station+soft-AP mode
-  *
-  * @return    true  : succeed
-  * @return    false : fail
-  */
-bool wifi_set_opmode(WIFI_MODE opmode);
-
-/**
-  * @brief  Set the WiFi operating mode, and will not save it to Flash.
-  *
-  *         Set the WiFi operating mode as station, soft-AP or station+soft-AP, and
-  *         the mode won't be saved to the Flash.
-  *
-  * @param  uint8_t opmode : WiFi operating modes:
-  *    - 0x01: station mode;
-  *    - 0x02: soft-AP mode
-  *    - 0x03: station+soft-AP mode
-  *
-  * @return true  : succeed
-  * @return false : fail
-  */
-bool wifi_set_opmode_current(WIFI_MODE opmode);
-
-typedef enum {
-    STATION_IF = 0, /**< ESP8266 station interface */
-    SOFTAP_IF,      /**< ESP8266 soft-AP interface */
-    MAX_IF
-} WIFI_INTERFACE;
-
-struct ip_info {
-    struct ip4_addr ip;      /**< IP address */
-    struct ip4_addr netmask; /**< netmask */
-    struct ip4_addr gw;      /**< gateway */
+extern wifi_osi_funcs_t s_wifi_osi_funcs;
+#define WIFI_INIT_CONFIG_DEFAULT() { \
+    .event_handler = &esp_event_send, \
+    .osi_funcs = &s_wifi_osi_funcs, \
+    .static_rx_buf_num = 5,\
+    .dynamic_rx_buf_num = 0,\
+    .tx_buf_type = 0,\
+    .static_tx_buf_num = 6,\
+    .dynamic_tx_buf_num = 0,\
+    .csi_enable = 0,\
+    .ampdu_rx_enable = 0,\
+    .ampdu_tx_enable = 0,\
+    .nvs_enable = 1,\
+    .nano_enable = 0,\
+    .tx_ba_win = 0,\
+    .rx_ba_win = 0,\
+    .magic = WIFI_INIT_CONFIG_MAGIC\
 };
 
 /**
-  * @brief     Get the IP address of the ESP8266 WiFi station or the soft-AP interface.
+  * @brief  Init WiFi
+  *         Alloc resource for WiFi driver, such as WiFi control structure, RX/TX buffer,
+  *         WiFi NVS structure etc, this WiFi also start WiFi task
   *
-  * @attention Users need to enable the target interface (station or soft-AP) by wifi_set_opmode first.
+  * @attention 1. This API must be called before all other WiFi API can be called
+  * @attention 2. Always use WIFI_INIT_CONFIG_DEFAULT macro to init the config to default values, this can
+  *               guarantee all the fields got correct value when more fields are added into wifi_init_config_t
+  *               in future release. If you want to set your owner initial values, overwrite the default values
+  *               which are set by WIFI_INIT_CONFIG_DEFAULT, please be notified that the field 'magic' of 
+  *               wifi_init_config_t should always be WIFI_INIT_CONFIG_MAGIC!
   *
-  * @param     WIFI_INTERFACE if_index : get the IP address of the station or the soft-AP interface,
-  *                                      0x00 for STATION_IF, 0x01 for SOFTAP_IF.
-  * @param     struct ip_info *info : the IP information obtained.
+  * @param  config pointer to WiFi init configuration structure; can point to a temporary variable.
   *
-  * @return    true  : succeed
-  * @return    false : fail
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_NO_MEM: out of memory
+  *    - others: refer to error code esp_err.h
   */
-bool wifi_get_ip_info(WIFI_INTERFACE if_index, struct ip_info *info);
+esp_err_t esp_wifi_init(const wifi_init_config_t *config);
 
 /**
-  * @brief     Set the IP address of the ESP8266 WiFi station or the soft-AP interface.
+  * @brief  Deinit WiFi
+  *         Free all resource allocated in esp_wifi_init and stop WiFi task
   *
-  * @attention 1. Users need to enable the target interface (station or soft-AP) by
-  *               wifi_set_opmode first.
-  * @attention 2. To set static IP, users need to disable DHCP first (wifi_station_dhcpc_stop
-  *               or wifi_softap_dhcps_stop):
-  *    - If the DHCP is enabled, the static IP will be disabled; if the static IP is enabled,
-  *      the DHCP will be disabled. It depends on the latest configuration.
+  * @attention 1. This API should be called if you want to remove WiFi driver from the system
   *
-  * @param  WIFI_INTERFACE if_index : get the IP address of the station or the soft-AP interface,
-  *                                   0x00 for STATION_IF, 0x01 for SOFTAP_IF.
-  * @param  struct ip_info *info : the IP information obtained.
-  *
-  * @return true  : succeed
-  * @return false : fail
+  * @return ESP_OK: succeed
   */
-bool wifi_set_ip_info(WIFI_INTERFACE if_index, struct ip_info *info);
+esp_err_t esp_wifi_deinit(void);
 
 /**
-  * @brief  Get MAC address of the ESP8266 WiFi station or the soft-AP interface.
+  * @brief     Set the WiFi operating mode
   *
-  * @param  WIFI_INTERFACE if_index : get the IP address of the station or the soft-AP interface,
-  *                                   0x00 for STATION_IF, 0x01 for SOFTAP_IF.
-  * @param  uint8_t *macaddr : the MAC address.
+  *            Set the WiFi operating mode as station, soft-AP or station+soft-AP,
+  *            The default mode is soft-AP mode.
   *
-  * @return true  : succeed
-  * @return false : fail
+  * @param     mode  WiFi operating mode
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - others: refer to error code in esp_err.h
   */
-bool wifi_get_macaddr(WIFI_INTERFACE if_index, uint8_t *macaddr);
+esp_err_t esp_wifi_set_mode(wifi_mode_t mode);
+
+/**
+  * @brief  Get current operating mode of WiFi
+  *
+  * @param[out]  mode  store current WiFi mode
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_get_mode(wifi_mode_t *mode);
+
+/**
+  * @brief  Start WiFi according to current configuration
+  *         If mode is WIFI_MODE_STA, it create station control block and start station
+  *         If mode is WIFI_MODE_AP, it create soft-AP control block and start soft-AP
+  *         If mode is WIFI_MODE_APSTA, it create soft-AP and station control block and start soft-AP and station
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_NO_MEM: out of memory
+  *    - ESP_ERR_WIFI_CONN: WiFi internal error, station or soft-AP control block wrong
+  *    - ESP_FAIL: other WiFi internal errors
+  */
+esp_err_t esp_wifi_start(void);
+
+/**
+  * @brief  Stop WiFi
+  *         If mode is WIFI_MODE_STA, it stop station and free station control block
+  *         If mode is WIFI_MODE_AP, it stop soft-AP and free soft-AP control block
+  *         If mode is WIFI_MODE_APSTA, it stop station/soft-AP and free station/soft-AP control block
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  */
+esp_err_t esp_wifi_stop(void);
+
+/**
+ * @brief  Restore WiFi stack persistent settings to default values
+ *
+ * This function will reset settings made using the following APIs:
+ * - esp_wifi_get_auto_connect,
+ * - esp_wifi_set_protocol,
+ * - esp_wifi_set_config related
+ * - esp_wifi_set_mode
+ *
+ * @return
+ *    - ESP_OK: succeed
+ *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+ */
+esp_err_t esp_wifi_restore(void);
+
+/**
+  * @brief     Connect the ESP8266 WiFi station to the AP.
+  *
+  * @attention 1. This API only impact WIFI_MODE_STA or WIFI_MODE_APSTA mode
+  * @attention 2. If the ESP8266 is connected to an AP, call esp_wifi_disconnect to disconnect.
+  *
+  * @return 
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_START: WiFi is not started by esp_wifi_start
+  *    - ESP_ERR_WIFI_CONN: WiFi internal error, station or soft-AP control block wrong
+  *    - ESP_ERR_WIFI_SSID: SSID of AP which station connects is invalid
+  */
+esp_err_t esp_wifi_connect(void);
+
+/**
+  * @brief     Disconnect the ESP8266 WiFi station from the AP.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi was not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi was not started by esp_wifi_start
+  *    - ESP_FAIL: other WiFi internal errors
+  */
+esp_err_t esp_wifi_disconnect(void);
+
+/**
+  * @brief     Currently this API is just an stub API
+  *
+
+  * @return
+  *    - ESP_OK: succeed
+  *    - others: fail
+  */
+esp_err_t esp_wifi_clear_fast_connect(void);
+
+/**
+  * @brief     deauthenticate all stations or associated id equals to aid
+  *
+  * @param     aid  when aid is 0, deauthenticate all stations, otherwise deauthenticate station whose associated id is aid
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi was not started by esp_wifi_start
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_WIFI_MODE: WiFi mode is wrong
+  */
+esp_err_t esp_wifi_deauth_sta(uint16_t aid);
+
+/**
+  * @brief     Scan all available APs.
+  *
+  * @attention If this API is called, the found APs are stored in WiFi driver dynamic allocated memory and the
+  *            will be freed in esp_wifi_scan_get_ap_records, so generally, call esp_wifi_scan_get_ap_records to cause
+  *            the memory to be freed once the scan is done
+  * @attention The values of maximum active scan time and passive scan time per channel are limited to 1500 milliseconds.
+  *            Values above 1500ms may cause station to disconnect from AP and are not recommended.
+  *
+  * @param     config  configuration of scanning
+  * @param     block if block is true, this API will block the caller until the scan is done, otherwise
+  *                         it will return immediately
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi was not started by esp_wifi_start
+  *    - ESP_ERR_WIFI_TIMEOUT: blocking scan is timeout
+  *    - others: refer to error code in esp_err.h
+  */
+esp_err_t esp_wifi_scan_start(const wifi_scan_config_t *config, bool block);
+
+/**
+  * @brief     Stop the scan in process
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi is not started by esp_wifi_start
+  */
+esp_err_t esp_wifi_scan_stop(void);
+
+/**
+  * @brief     Get number of APs found in last scan
+  *
+  * @param[out] number  store number of APIs found in last scan
+  *
+  * @attention This API can only be called when the scan is completed, otherwise it may get wrong value.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi is not started by esp_wifi_start
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_scan_get_ap_num(uint16_t *number);
+
+/**
+  * @brief     Get AP list found in last scan
+  *
+  * @param[inout]  number As input param, it stores max AP number ap_records can hold. 
+  *                As output param, it receives the actual AP number this API returns.
+  * @param         ap_records  wifi_ap_record_t array to hold the found APs
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_STARTED: WiFi is not started by esp_wifi_start
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_NO_MEM: out of memory
+  */
+esp_err_t esp_wifi_scan_get_ap_records(uint16_t *number, wifi_ap_record_t *ap_records);
+
+
+/**
+  * @brief     Get information of AP which the ESP8266 station is associated with
+  *
+  * @param     ap_info  the wifi_ap_record_t to hold AP information
+  *            sta can get the connected ap's phy mode info through the struct member
+  *            phy_11b，phy_11g，phy_11n，phy_lr in the wifi_ap_record_t struct.
+  *            For example, phy_11b = 1 imply that ap support 802.11b mode
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_CONN: The station interface don't initialized
+  *    - ESP_ERR_WIFI_NOT_CONNECT: The station is in disconnect status 
+  */
+esp_err_t esp_wifi_sta_get_ap_info(wifi_ap_record_t *ap_info);
+
+/**
+  * @brief     Set current power save type
+  *
+  * @attention Default power save type is WIFI_PS_NONE.
+  *
+  * @param     type  power save type
+  *
+  * @return    ESP_ERR_NOT_SUPPORTED: not supported yet
+  */
+esp_err_t esp_wifi_set_ps(wifi_ps_type_t type);
+
+/**
+  * @brief     Get current power save type
+  *
+  * @attention Default power save type is WIFI_PS_NONE.
+  *
+  * @param[out]  type: store current power save type
+  *
+  * @return    ESP_ERR_NOT_SUPPORTED: not supported yet
+  */
+esp_err_t esp_wifi_get_ps(wifi_ps_type_t *type);
+
+/**
+  * @brief     Set protocol type of specified interface
+  *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N)
+  *
+  * @attention Currently we only support 802.11b or 802.11bg or 802.11bgn mode
+  *
+  * @param     ifx  interfaces
+  * @param     protocol_bitmap  WiFi protocol bitmap
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_IF: invalid interface
+  *    - others: refer to error codes in esp_err.h
+  */
+esp_err_t esp_wifi_set_protocol(wifi_interface_t ifx, uint8_t protocol_bitmap);
+
+/**
+  * @brief     Get the current protocol bitmap of the specified interface
+  *
+  * @param     ifx  interface
+  * @param[out] protocol_bitmap  store current WiFi protocol bitmap of interface ifx
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_IF: invalid interface
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - others: refer to error codes in esp_err.h
+  */
+esp_err_t esp_wifi_get_protocol(wifi_interface_t ifx, uint8_t *protocol_bitmap);
+
+/**
+  * @brief     Set the bandwidth of ESP8266 specified interface
+  *
+  * @attention 1. API return false if try to configure an interface that is not enabled
+  * @attention 2. WIFI_BW_HT40 is supported only when the interface support 11N
+  *
+  * @param     ifx  interface to be configured
+  * @param     bw  bandwidth
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_IF: invalid interface
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - others: refer to error codes in esp_err.h
+  */
+esp_err_t esp_wifi_set_bandwidth(wifi_interface_t ifx, wifi_bandwidth_t bw);
+
+/**
+  * @brief     Get the bandwidth of ESP8266 specified interface
+  *
+  * @attention 1. API return false if try to get a interface that is not enable
+  *
+  * @param     ifx interface to be configured
+  * @param[out] bw  store bandwidth of interface ifx
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_IF: invalid interface
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_get_bandwidth(wifi_interface_t ifx, wifi_bandwidth_t *bw);
+
+/**
+  * @brief     Set primary/secondary channel of ESP8266
+  *
+  * @attention 1. This is a special API for sniffer
+  * @attention 2. This API should be called after esp_wifi_start() or esp_wifi_set_promiscuous()
+  *
+  * @param     primary  for HT20, primary is the channel number, for HT40, primary is the primary channel
+  * @param     second   for HT20, second is ignored, for HT40, second is the second channel
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_IF: invalid interface
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_set_channel(uint8_t primary, wifi_second_chan_t second);
+
+/**
+  * @brief     Get the primary/secondary channel of ESP8266
+  *
+  * @attention 1. API return false if try to get a interface that is not enable
+  *
+  * @param     primary   store current primary channel
+  * @param[out]  second  store current second channel
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_get_channel(uint8_t *primary, wifi_second_chan_t *second);
+
+/**
+  * @brief     configure country info
+  *
+  * @attention 1. The default country is {.cc="CN", .schan=1, .nchan=13, policy=WIFI_COUNTRY_POLICY_AUTO}
+  * @attention 2. When the country policy is WIFI_COUNTRY_POLICY_AUTO, the country info of the AP to which
+  *               the station is connected is used. E.g. if the configured country info is {.cc="USA", .schan=1, .nchan=11}
+  *               and the country info of the AP to which the station is connected is {.cc="JP", .schan=1, .nchan=14}
+  *               then the country info that will be used is {.cc="JP", .schan=1, .nchan=14}. If the station disconnected
+  *               from the AP the country info is set back back to the country info of the station automatically,
+  *               {.cc="USA", .schan=1, .nchan=11} in the example.
+  * @attention 3. When the country policy is WIFI_COUNTRY_POLICY_MANUAL, always use the configured country info.
+  * @attention 4. When the country info is changed because of configuration or because the station connects to a different
+  *               external AP, the country IE in probe response/beacon of the soft-AP is changed also.
+  * @attention 5. The country configuration is not stored into flash
+  * @attention 6. This API doesn't validate the per-country rules, it's up to the user to fill in all fields according to 
+  *               local regulations.
+  *
+  * @param     country   the configured country info
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_set_country(const wifi_country_t *country);
+
+/**
+  * @brief     get the current country info
+  *
+  * @param     country  country info
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_get_country(wifi_country_t *country);
+
 
 /**
   * @brief     Set MAC address of the ESP8266 WiFi station or the soft-AP interface.
   *
-  * @attention 1. This API can only be called in user_init.
-  * @attention 2. Users need to enable the target interface (station or soft-AP) by wifi_set_opmode first.
-  * @attention 3. ESP8266 soft-AP and station have different MAC addresses, do not set them to be the same.
-  *    - The bit0 of the first byte of ESP8266 MAC address can not be 1. For example, the MAC address
+  * @attention 1. This API can only be called when the interface is disabled
+  * @attention 2. ESP8266 soft-AP and station have different MAC addresses, do not set them to be the same.
+  * @attention 3. The bit 0 of the first byte of ESP8266 MAC address can not be 1. For example, the MAC address
   *      can set to be "1a:XX:XX:XX:XX:XX", but can not be "15:XX:XX:XX:XX:XX".
   *
-  * @param     WIFI_INTERFACE if_index : get the IP address of the station or the soft-AP interface,
-  *                                   0x00 for STATION_IF, 0x01 for SOFTAP_IF.
-  * @param     uint8_t *macaddr : the MAC address.
+  * @param     ifx  interface
+  * @param     mac  the MAC address
   *
-  * @return    true  : succeed
-  * @return    false : fail
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_WIFI_IF: invalid interface
+  *    - ESP_ERR_WIFI_MAC: invalid mac address
+  *    - ESP_ERR_WIFI_MODE: WiFi mode is wrong
+  *    - others: refer to error codes in esp_err.h
   */
-bool wifi_set_macaddr(WIFI_INTERFACE if_index, uint8_t *macaddr);
+esp_err_t esp_wifi_set_mac(wifi_interface_t ifx, const uint8_t mac[6]);
 
 /**
-  * @brief  Install the WiFi status LED.
+  * @brief     Get mac of specified interface
   *
-  * @param  uint8_t gpio_id : GPIO ID
-  * @param  uint8_t gpio_name : GPIO mux name
-  * @param  uint8_t gpio_func : GPIO function
+  * @param      ifx  interface
+  * @param[out] mac  store mac of the interface ifx
   *
-  * @return null
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_WIFI_IF: invalid interface
   */
-void wifi_status_led_install(uint8_t gpio_id, uint32_t gpio_name, uint8_t gpio_func);
+esp_err_t esp_wifi_get_mac(wifi_interface_t ifx, uint8_t mac[6]);
 
 /**
-  * @brief  Uninstall the WiFi status LED.
-  *
-  * @param null
-  *
-  * @return null
-  */
-void wifi_status_led_uninstall(void);
-
-typedef enum {
-    PHY_MODE_11B    = 1,    /**<  802.11b */
-    PHY_MODE_11G    = 2,    /**<  802.11g */
-    PHY_MODE_11N    = 3     /**<  802.11n */
-} WIFI_PHY_MODE;
-
-/**
-  * @brief  Get the ESP8266 physical mode (802.11b/g/n).
-  *
-  * @param  null
-  *
-  * @return enum WIFI_PHY_MODE
-  */
-WIFI_PHY_MODE wifi_get_phy_mode(void);
-
-/**
-  * @brief     Set the ESP8266 physical mode (802.11b/g/n).
-  *
-  * @attention The ESP8266 soft-AP only supports bg.
-  *
-  * @param     WIFI_PHY_MODE mode : physical mode
-  *
-  * @return    true  : succeed
-  * @return    false : fail
-  */
-bool wifi_set_phy_mode(WIFI_PHY_MODE mode);
-
-typedef enum {
-    EVENT_STAMODE_SCAN_DONE = 0,        /**< ESP8266 station finish scanning AP */
-    EVENT_STAMODE_CONNECTED,            /**< ESP8266 station connected to AP */
-    EVENT_STAMODE_DISCONNECTED,         /**< ESP8266 station disconnected to AP */
-    EVENT_STAMODE_AUTHMODE_CHANGE,      /**< the auth mode of AP connected by ESP8266 station changed */
-    EVENT_STAMODE_GOT_IP,               /**< ESP8266 station got IP from connected AP */
-    EVENT_STAMODE_DHCP_TIMEOUT,         /**< ESP8266 station dhcp client got IP timeout */
-    EVENT_SOFTAPMODE_STACONNECTED,      /**< a station connected to ESP8266 soft-AP */
-    EVENT_SOFTAPMODE_STADISCONNECTED,   /**< a station disconnected to ESP8266 soft-AP */
-    EVENT_SOFTAPMODE_PROBEREQRECVED,    /**< Receive probe request packet in soft-AP interface */
-    EVENT_MAX
-} SYSTEM_EVENT;
-
-enum {
-    REASON_UNSPECIFIED              = 1,
-    REASON_AUTH_EXPIRE              = 2,
-    REASON_AUTH_LEAVE               = 3,
-    REASON_ASSOC_EXPIRE             = 4,
-    REASON_ASSOC_TOOMANY            = 5,
-    REASON_NOT_AUTHED               = 6,
-    REASON_NOT_ASSOCED              = 7,
-    REASON_ASSOC_LEAVE              = 8,
-    REASON_ASSOC_NOT_AUTHED         = 9,
-    REASON_DISASSOC_PWRCAP_BAD      = 10,
-    REASON_DISASSOC_SUPCHAN_BAD     = 11,
-    REASON_IE_INVALID               = 13,
-    REASON_MIC_FAILURE              = 14,
-    REASON_4WAY_HANDSHAKE_TIMEOUT   = 15,
-    REASON_GROUP_KEY_UPDATE_TIMEOUT = 16,
-    REASON_IE_IN_4WAY_DIFFERS       = 17,
-    REASON_GROUP_CIPHER_INVALID     = 18,
-    REASON_PAIRWISE_CIPHER_INVALID  = 19,
-    REASON_AKMP_INVALID             = 20,
-    REASON_UNSUPP_RSN_IE_VERSION    = 21,
-    REASON_INVALID_RSN_IE_CAP       = 22,
-    REASON_802_1X_AUTH_FAILED       = 23,
-    REASON_CIPHER_SUITE_REJECTED    = 24,
-
-    REASON_BEACON_TIMEOUT           = 200,
-    REASON_NO_AP_FOUND              = 201,
-    REASON_AUTH_FAIL                = 202,
-    REASON_ASSOC_FAIL               = 203,
-    REASON_HANDSHAKE_TIMEOUT        = 204,
-};
-
-typedef struct {
-    uint32_t status;          /**< status of scanning APs*/
-    struct bss_info *bss;   /**< list of APs found*/
-} Event_StaMode_ScanDone_t;
-
-typedef struct {
-    uint8_t ssid[32];         /**< SSID of connected AP */
-    uint8_t ssid_len;         /**< SSID length of connected AP */
-    uint8_t bssid[6];         /**< BSSID of connected AP*/
-    uint8_t channel;          /**< channel of connected AP*/
-} Event_StaMode_Connected_t;
-
-typedef struct {
-    uint8_t ssid[32];         /**< SSID of disconnected AP */
-    uint8_t ssid_len;         /**< SSID length of disconnected AP */
-    uint8_t bssid[6];         /**< BSSID of disconnected AP */
-    uint8_t reason;           /**< reason of disconnection */
-} Event_StaMode_Disconnected_t;
-
-typedef struct {
-    uint8_t old_mode;         /**< the old auth mode of AP */
-    uint8_t new_mode;         /**< the new auth mode of AP */
-} Event_StaMode_AuthMode_Change_t;
-
-typedef struct {
-    struct ip4_addr ip;      /**< IP address that ESP8266 station got from connected AP */
-    struct ip4_addr mask;    /**< netmask that ESP8266 station got from connected AP */
-    struct ip4_addr gw;      /**< gateway that ESP8266 station got from connected AP */
-} Event_StaMode_Got_IP_t;
-
-typedef struct {
-    uint8_t mac[6];           /**< MAC address of the station connected to ESP8266 soft-AP */
-    uint8_t aid;              /**< the aid that ESP8266 soft-AP gives to the station connected to  */
-} Event_SoftAPMode_StaConnected_t;
-
-typedef struct {
-    uint8_t mac[6];           /**< MAC address of the station disconnects to ESP8266 soft-AP */
-    uint8_t aid;              /**< the aid that ESP8266 soft-AP gave to the station disconnects to  */
-} Event_SoftAPMode_StaDisconnected_t;
-
-typedef struct {
-    int rssi;               /**< Received probe request signal strength */
-    uint8_t mac[6];           /**< MAC address of the station which send probe request */
-} Event_SoftAPMode_ProbeReqRecved_t;
-
-typedef union {
-    Event_StaMode_ScanDone_t            scan_done;          /**< ESP8266 station scan (APs) done */
-    Event_StaMode_Connected_t           connected;          /**< ESP8266 station connected to AP */
-    Event_StaMode_Disconnected_t        disconnected;       /**< ESP8266 station disconnected to AP */
-    Event_StaMode_AuthMode_Change_t     auth_change;        /**< the auth mode of AP ESP8266 station connected to changed */
-    Event_StaMode_Got_IP_t              got_ip;             /**< ESP8266 station got IP */
-    Event_SoftAPMode_StaConnected_t     sta_connected;      /**< a station connected to ESP8266 soft-AP */
-    Event_SoftAPMode_StaDisconnected_t  sta_disconnected;   /**< a station disconnected to ESP8266 soft-AP */
-    Event_SoftAPMode_ProbeReqRecved_t   ap_probereqrecved;  /**< ESP8266 softAP receive probe request packet */
-} Event_Info_u;
-
-typedef struct _esp_event {
-    SYSTEM_EVENT event_id;      /**< even ID */
-    Event_Info_u event_info;    /**< event information */
-} System_Event_t;
-
-/**
-  * @brief      The Wi-Fi event handler.
-  *
-  * @attention  No complex operations are allowed in callback. 
-  *             If users want to execute any complex operations, please post message to another task instead.  
-  *
-  * @param      System_Event_t *event : WiFi event
-  *
-  * @return     null
-  */
-typedef void (* wifi_event_handler_cb_t)(System_Event_t *event);
-
-/**
-  * @brief  Register the Wi-Fi event handler.
-  *
-  * @param  wifi_event_handler_cb_t cb : callback function
-  *
-  * @return true  : succeed
-  * @return false : fail
-  */
-bool wifi_set_event_handler_cb(wifi_event_handler_cb_t cb);
-
-/**
-  * @brief  Callback of sending user-define 802.11 packets.
-  *
-  * @param  uint8_t status : 0, packet sending succeed; otherwise, fail.
-  *
-  * @return null
-  */
-typedef void (*freedom_outside_cb_t)(uint8_t status);
-
-/**
-  * @brief      Register a callback for sending user-define 802.11 packets.
-  *
-  * @attention  Only after the previous packet was sent, entered the freedom_outside_cb_t,
-  *             the next packet is allowed to send.
-  *
-  * @param      freedom_outside_cb_t cb : sent callback
-  *
-  * @return     0, succeed;
-  * @return    -1, fail.
-  */
-int32_t wifi_register_send_pkt_freedom_cb(freedom_outside_cb_t cb);
-
-/**
-  * @brief  Unregister the callback for sending user-define 802.11 packets.
-  *
-  * @param  null
-  *
-  * @return null
-  */
-void wifi_unregister_send_pkt_freedom_cb(void);
-
-/**
-  * @brief     Send user-define 802.11 packets.
-  *
-  * @attention 1. Packet has to be the whole 802.11 packet, does not include the FCS.
-  *               The length of the packet has to be longer than the minimum length
-  *               of the header of 802.11 packet which is 24 bytes, and less than 1400 bytes.
-  * @attention 2. Duration area is invalid for user, it will be filled in SDK.
-  * @attention 3. The rate of sending packet is same as the management packet which
-  *               is the same as the system rate of sending packets.
-  * @attention 4. Only after the previous packet was sent, entered the sent callback,
-  *               the next packet is allowed to send. Otherwise, wifi_send_pkt_freedom
-  *               will return fail.
-  *
-  * @param     uint8_t *buf : pointer of packet
-  * @param     uint16_t len : packet length
-  * @param     bool sys_seq : follow the system's 802.11 packets sequence number or not,
-  *                           if it is true, the sequence number will be increased 1 every
-  *                           time a packet sent.
-  *
-  * @return    0, succeed;
-  * @return   -1, fail.
-  */
-int32_t wifi_send_pkt_freedom(uint8_t *buf, uint16_t len, bool sys_seq);
-
-/**
-  * @brief  Enable RFID LOCP (Location Control Protocol) to receive WDS packets.
-  *
-  * @param  null
-  *
-  * @return 0, succeed;
-  * @return otherwise, fail.
-  */
-int32_t wifi_rfid_locp_recv_open(void);
-
-/**
-  * @brief  Disable RFID LOCP (Location Control Protocol) .
-  *
-  * @param  null
-  *
-  * @return null
-  */
-void wifi_rfid_locp_recv_close(void);
-
-/**
-  * @brief  RFID LOCP (Location Control Protocol) receive callback .
-  *
-  * @param  uint8_t *frm : point to the head of 802.11 packet
-  * @param  int len : packet length
-  * @param  int rssi : signal strength
-  *
-  * @return null
-  */
-typedef void (*rfid_locp_cb_t)(uint8_t *frm, int len, int8_t rssi);
-
-/**
-  * @brief  Register a callback of receiving WDS packets.
-  *
-  *         Register a callback of receiving WDS packets. Only if the first MAC
-  *         address of the WDS packet is a multicast address.
-  *
-  * @param  rfid_locp_cb_t cb : callback
-  *
-  * @return 0, succeed;
-  * @return otherwise, fail.
-  */
-int32_t wifi_register_rfid_locp_recv_cb(rfid_locp_cb_t cb);
-
-/**
-  * @brief  Unregister the callback of receiving WDS packets.
-  *
-  * @param  null
-  *
-  * @return null
-  */
-void wifi_unregister_rfid_locp_recv_cb(void);
-
-typedef enum {
-    NONE_SLEEP_T    = 0,
-    LIGHT_SLEEP_T,
-    MODEM_SLEEP_T
-} sleep_type;
-
-/**
-  * @brief     Sets sleep type.
-  *
-  *            Set NONE_SLEEP_T to disable sleep. Default to be Modem sleep.
-  *
-  * @attention Sleep function only takes effect in station-only mode.
-  *
-  * @param     sleep_type type : sleep type
-  *
-  * @return    true  : succeed
-  * @return    false : fail
-  */
-bool wifi_set_sleep_type(sleep_type type);
-
-/**
-  * @brief  Gets sleep type.
-  *
-  * @param  null
-  *
-  * @return sleep type
-  */
-sleep_type wifi_get_sleep_type(void);
-
-/**
-  * @}
-  */
-
-
-/** \defgroup WiFi_Force_Sleep_APIs Force Sleep APIs
-  * @brief WiFi Force Sleep APIs
-  */
-
-/** @addtogroup WiFi_Force_Sleep_APIs
-  * @{
-  */
-
-/**
-  * @brief     Enable force sleep function.
-  *
-  * @attention Force sleep function is disabled by default.
-  *
-  * @param     null
-  *
-  * @return    null
-  */
-void wifi_fpm_open(void);
-
-/**
-  * @brief  Disable force sleep function.
-  *
-  * @param  null
-  *
-  * @return null
-  */
-void wifi_fpm_close(void);
-
-/**
-  * @brief     Wake ESP8266 up from MODEM_SLEEP_T force sleep.
-  *
-  * @attention This API can only be called when MODEM_SLEEP_T force sleep function
-  *            is enabled, after calling wifi_fpm_open.
-  *            This API can not be called after calling wifi_fpm_close.
-  *
-  * @param     null
-  *
-  * @return    null
-  */
-void wifi_fpm_do_wakeup(void);
-
-typedef void (*fpm_wakeup_cb)(void);
-
-/**
-  * @brief     Set a callback of waken up from force sleep because of time out.
-  *
-  * @attention 1. This API can only be called when force sleep function is enabled,
-  *               after calling wifi_fpm_open. This API can not be called after calling
-  *               wifi_fpm_close.
-  * @attention 2. fpm_wakeup_cb_func will be called after system woke up only if the
-  *               force sleep time out (wifi_fpm_do_sleep and the parameter is not 0xFFFFFFF).
-  * @attention 3. fpm_wakeup_cb_func will not be called if woke up by wifi_fpm_do_wakeup
-  *               from MODEM_SLEEP_T type force sleep.
-  *
-  * @param     void (*fpm_wakeup_cb_func)(void) : callback of waken up
-  *
-  * @return    null
-  */
-void wifi_fpm_set_wakeup_cb(fpm_wakeup_cb cb);
-
-/**
-  * @brief     Force ESP8266 enter sleep mode, and it will wake up automatically when time out.
-  *
-  * @attention 1. This API can only be called when force sleep function is enabled, after
-  *               calling wifi_fpm_open. This API can not be called after calling wifi_fpm_close.
-  * @attention 2. If this API returned 0 means that the configuration is set successfully,
-  *               but the ESP8266 will not enter sleep mode immediately, it is going to sleep
-  *               in the system idle task. Please do not call other WiFi related function right
-  *               after calling this API.
-  *
-  * @param     uint32_t sleep_time_in_us : sleep time, ESP8266 will wake up automatically
-  *                                      when time out. Unit: us. Range: 10000 ~ 268435455(0xFFFFFFF).
-  *    - If sleep_time_in_us is 0xFFFFFFF, the ESP8266 will sleep till
-  *    - if wifi_fpm_set_sleep_type is set to be LIGHT_SLEEP_T, ESP8266 can wake up by GPIO.
-  *    - if wifi_fpm_set_sleep_type is set to be MODEM_SLEEP_T, ESP8266 can wake up by wifi_fpm_do_wakeup.
-  *
-  * @return   0, setting succeed;
-  * @return  -1, fail to sleep, sleep status error;
-  * @return  -2, fail to sleep, force sleep function is not enabled.
-  */
-int8_t wifi_fpm_do_sleep(uint32_t sleep_time_in_us);
-
-/**
-  * @brief     Set sleep type for force sleep function.
-  *
-  * @attention This API can only be called before wifi_fpm_open.
-  *
-  * @param     sleep_type type : sleep type
-  *
-  * @return    null
-  */
-void wifi_fpm_set_sleep_type(sleep_type type);
-
-/**
-  * @brief  Get sleep type of force sleep function.
-  *
-  * @param  null
-  *
-  * @return sleep type
-  */
-sleep_type wifi_fpm_get_sleep_type(void);
-
-/**
-  * @}
-  */
-
-/** \defgroup WiFi_Rate_Control_APIs Rate Control APIs
-  * @brief WiFi Rate Control APIs
-  */
-
-/** @addtogroup WiFi_Rate_Control_APIs
-  * @{
-  */
-
-enum FIXED_RATE {
-    PHY_RATE_48       = 0x8,
-    PHY_RATE_24       = 0x9,
-    PHY_RATE_12       = 0xA,
-    PHY_RATE_6        = 0xB,
-    PHY_RATE_54       = 0xC,
-    PHY_RATE_36       = 0xD,
-    PHY_RATE_18       = 0xE,
-    PHY_RATE_9        = 0xF
-};
-
-#define FIXED_RATE_MASK_NONE    0x00
-#define FIXED_RATE_MASK_STA     0x01
-#define FIXED_RATE_MASK_AP      0x02
-#define FIXED_RATE_MASK_ALL     0x03
-
-/**
-  * @brief     Set the fixed rate and mask of sending data from ESP8266.
-  *
-  * @attention 1. Only if the corresponding bit in enable_mask is 1, ESP8266 station
-  *               or soft-AP will send data in the fixed rate.
-  * @attention 2. If the enable_mask is 0, both ESP8266 station and soft-AP will not
-  *               send data in the fixed rate.
-  * @attention 3. ESP8266 station and soft-AP share the same rate, they can not be
-  *               set into the different rate.
-  *
-  * @param     uint8_t enable_mask : 0x00 - disable the fixed rate
-  *    -  0x01 - use the fixed rate on ESP8266 station
-  *    -  0x02 - use the fixed rate on ESP8266 soft-AP
-  *    -  0x03 - use the fixed rate on ESP8266 station and soft-AP
-  * @param     uint8_t rate  : value of the fixed rate
-  *
-  * @return    0         : succeed
-  * @return    otherwise : fail
-  */
-int32_t wifi_set_user_fixed_rate(uint8_t enable_mask, uint8_t rate);
-
-/**
-  * @brief  Get the fixed rate and mask of ESP8266.
-  *
-  * @param  uint8 *enable_mask : pointer of the enable_mask
-  * @param  uint8 *rate : pointer of the fixed rate
-  *
-  * @return 0  : succeed
-  * @return otherwise : fail
-  */
-int wifi_get_user_fixed_rate(uint8_t *enable_mask, uint8_t *rate);
-
-enum support_rate {
-    RATE_11B5M  = 0,
-    RATE_11B11M = 1,
-    RATE_11B1M  = 2,
-    RATE_11B2M  = 3,
-    RATE_11G6M  = 4,
-    RATE_11G12M = 5,
-    RATE_11G24M = 6,
-    RATE_11G48M = 7,
-    RATE_11G54M = 8,
-    RATE_11G9M  = 9,
-    RATE_11G18M = 10,
-    RATE_11G36M = 11
-};
-
-/**
-  * @brief     Set the support rate of ESP8266.
-  *
-  *            Set the rate range in the IE of support rate in ESP8266's beacon,
-  *            probe req/resp and other packets.
-  *            Tell other devices about the rate range supported by ESP8266 to limit
-  *            the rate of sending packets from other devices.
-  *            Example : wifi_set_user_sup_rate(RATE_11G6M, RATE_11G24M);
-  *
-  * @attention This API can only support 802.11g now, but it will support 802.11b in next version.
-  *
-  * @param     uint8_t min : the minimum value of the support rate, according to enum support_rate.
-  * @param     uint8_t max : the maximum value of the support rate, according to enum support_rate.
-  *
-  * @return    0         : succeed
-  * @return    otherwise : fail
-  */
-int32_t wifi_set_user_sup_rate(uint8_t min, uint8_t max);
-
-enum RATE_11B_ID {
-    RATE_11B_B11M   = 0,
-    RATE_11B_B5M    = 1,
-    RATE_11B_B2M    = 2,
-    RATE_11B_B1M    = 3
-};
-
-enum RATE_11G_ID {
-    RATE_11G_G54M   = 0,
-    RATE_11G_G48M   = 1,
-    RATE_11G_G36M   = 2,
-    RATE_11G_G24M   = 3,
-    RATE_11G_G18M   = 4,
-    RATE_11G_G12M   = 5,
-    RATE_11G_G9M    = 6,
-    RATE_11G_G6M    = 7,
-    RATE_11G_B5M    = 8,
-    RATE_11G_B2M    = 9,
-    RATE_11G_B1M    = 10
-};
-
-enum RATE_11N_ID {
-    RATE_11N_MCS7S  = 0,
-    RATE_11N_MCS7   = 1,
-    RATE_11N_MCS6   = 2,
-    RATE_11N_MCS5   = 3,
-    RATE_11N_MCS4   = 4,
-    RATE_11N_MCS3   = 5,
-    RATE_11N_MCS2   = 6,
-    RATE_11N_MCS1   = 7,
-    RATE_11N_MCS0   = 8,
-    RATE_11N_B5M    = 9,
-    RATE_11N_B2M    = 10,
-    RATE_11N_B1M    = 11
-};
-
-#define RC_LIMIT_11B        0
-#define RC_LIMIT_11G        1
-#define RC_LIMIT_11N        2
-#define RC_LIMIT_P2P_11G    3
-#define RC_LIMIT_P2P_11N    4
-#define RC_LIMIT_NUM        5
-
-#define LIMIT_RATE_MASK_NONE    0x00
-#define LIMIT_RATE_MASK_STA     0x01
-#define LIMIT_RATE_MASK_AP      0x02
-#define LIMIT_RATE_MASK_ALL     0x03
-
-/**
-  * @brief     Limit the initial rate of sending data from ESP8266.
-  *
-  *            Example:
-  *                wifi_set_user_rate_limit(RC_LIMIT_11G, 0, RATE_11G_G18M, RATE_11G_G6M);
-  *
-  * @attention The rate of retransmission is not limited by this API.
-  *
-  * @param     uint8_t mode :  WiFi mode
-  *    -  #define RC_LIMIT_11B  0
-  *    -  #define RC_LIMIT_11G  1
-  *    -  #define RC_LIMIT_11N  2
-  * @param     uint8 ifidx : interface of ESP8266
-  *    -  0x00 - ESP8266 station
-  *    -  0x01 - ESP8266 soft-AP
-  * @param     uint8_t max : the maximum value of the rate, according to the enum rate
-  *                        corresponding to the first parameter mode.
-  * @param     uint8_t min : the minimum value of the rate, according to the enum rate
-  *                        corresponding to the first parameter mode.
-  *
-  * @return    0         : succeed
-  * @return    otherwise : fail
-  */
-bool wifi_set_user_rate_limit(uint8_t mode, uint8_t ifidx, uint8_t max, uint8_t min);
-
-/**
-  * @brief  Get the interfaces of ESP8266 whose rate of sending data is limited by
-  *         wifi_set_user_rate_limit.
-  *
-  * @param  null
-  *
-  * @return LIMIT_RATE_MASK_NONE - disable the limitation on both ESP8266 station and soft-AP
-  * @return LIMIT_RATE_MASK_STA  - enable the limitation on ESP8266 station
-  * @return LIMIT_RATE_MASK_AP   - enable the limitation on ESP8266 soft-AP
-  * @return LIMIT_RATE_MASK_ALL  - enable the limitation on both ESP8266 station and soft-AP
-  */
-uint8_t wifi_get_user_limit_rate_mask(void);
-
-/**
-  * @brief  Set the interfaces of ESP8266 whose rate of sending packets is limited by
-  *         wifi_set_user_rate_limit.
-  *
-  * @param  uint8_t enable_mask :
-  *    -  LIMIT_RATE_MASK_NONE - disable the limitation on both ESP8266 station and soft-AP
-  *    -  LIMIT_RATE_MASK_STA  - enable the limitation on ESP8266 station
-  *    -  LIMIT_RATE_MASK_AP   - enable the limitation on ESP8266 soft-AP
-  *    -  LIMIT_RATE_MASK_ALL  - enable the limitation on both ESP8266 station and soft-AP
-  *
-  * @return true  : succeed
-  * @return false : fail
-  */
-bool wifi_set_user_limit_rate_mask(uint8_t enable_mask);
-
-/**
-  * @}
-  */
-
-/** \defgroup WiFi_Vendor_IE_APIs Vendor IE APIs
-  * @brief WiFi Vendor IE APIs
-  */
-
-/** @addtogroup WiFi_Vendor_IE_APIs
-  * @{
-  */
-
-typedef enum {
-    VND_IE_TYPE_BEACON = 0,  /**< beacon */
-    VND_IE_TYPE_PROBE_REQ,   /**< probe request */
-    VND_IE_TYPE_PROBE_RESP,  /**< probe response */
-    VND_IE_TYPE_ASSOC_REQ,   /**< associate request */
-    VND_IE_TYPE_ASSOC_RESP,  /**< associate response */
-    VND_IE_TYPE_NUM,
-} vendor_ie_type;
-
-/**
-  * @brief  Vendor IE received callback.
-  *
-  * @param  vendor_ie_type type :  type of vendor IE.
-  * @param  const uint8_t sa[6] : source address of the packet.
-  * @param  uint8_t *vendor_ie : pointer of vendor IE.
-  * @param  int32_t rssi : signal strength.
-  *
-  * @return null
-  */
-typedef void (*vendor_ie_recv_cb_t)(vendor_ie_type type, const uint8_t sa[6], const uint8_t *vnd_ie, int32_t rssi);
-
-/**
-  * @brief  Set Vendor IE of ESP8266.
-  *
-  *         The Vendor IE will be added to the target packets of vendor_ie_type.
-  *
-  * @param  bool enable  :
-  *    -  true, enable the corresponding vendor-specific IE function, all parameters below have to be set.
-  *    -  false, disable the corresponding vendor-specific IE function and release the resource,
-  *       only the parameter "type" below has to be set.
-  * @param  uint8_t type : IE type. If it is VND_IE_TYPE_BEACON, please disable the IE function and enable
-  *                        again to take the configuration effect immediately .
-  * @param  uint8_t idx : vendor-specific IE index, 0 or 1. Only support two vendor-specific IEs in one frame.
-  * @param  uint8_t *vnd_ie : vendor-specific information elements, need to input the whole 802.11 IE
-  *                           including Element ID, Length, Organization Identifier and Vendor-specific Content.
-  *
-  * @return true  : succeed
-  * @return false : fail
-  */
-bool wifi_set_vnd_ie(bool enable, vendor_ie_type type, uint8_t idx, uint8_t *vnd_ie);
-
-/**
-  * @brief   Register vendor IE received callback.
-  *
-  * @param   vendor_ie_recv_cb_t cb : callback
-  *
-  * @return  0 : succeed
-  * @return -1 : fail
-  */
-int32_t wifi_register_vnd_ie_recv_cb(vendor_ie_recv_cb_t cb);
-
-/**
-  * @brief  Unregister vendor IE received callback.
-  *
-  * @param  null
-  *
-  * @return null
-  */
-void wifi_unregister_vnd_ie_recv_cb(void);
-
-/**
-  * @}
-  */
-
-/** \defgroup WiFi_User_IE_APIs User IE APIs
-  * @brief WiFi User IE APIs
-  */
-
-/** @addtogroup WiFi_User_IE_APIs
-  * @{
-  */
-
-typedef enum {
-    USER_IE_BEACON = 0,
-    USER_IE_PROBE_REQ,
-    USER_IE_PROBE_RESP,
-    USER_IE_ASSOC_REQ,
-    USER_IE_ASSOC_RESP,
-    USER_IE_MAX
-} user_ie_type;
-
-/**
-  * @brief  User IE received callback.
-  *
-  * @param  user_ie_type type :  type of user IE.
-  * @param  const uint8_t sa[6] : source address of the packet.
-  * @param  const uint8_t m_oui[3] : factory tag.
-  * @param  uint8_t *user_ie : pointer of user IE.
-  * @param  uint8_t ie_len : length of user IE.
-  * @param  int32_t rssi : signal strength.
-  *
-  * @return null
-  */
-typedef void (*user_ie_manufacturer_recv_cb_t)(user_ie_type type, const uint8_t sa[6], const uint8_t m_oui[3], uint8_t *ie, uint8_t ie_len, int32_t rssi);
-
-/**
-  * @brief  Set user IE of ESP8266.
-  *
-  *         The user IE will be added to the target packets of user_ie_type.
-  *
-  * @param  bool enable  :
-  *    -  true, enable the corresponding user IE function, all parameters below have to be set.
-  *    -  false, disable the corresponding user IE function and release the resource,
-  *       only the parameter "type" below has to be set.
-  * @param  uint8_t *m_oui : factory tag, apply for it from Espressif System.
-  * @param  user_ie_type type : IE type. If it is USER_IE_BEACON, please disable the
-  *                             IE function and enable again to take the configuration
-  *                             effect immediately .
-  * @param  uint8_t *user_ie : user-defined information elements, need not input the whole
-  *                          802.11 IE, need only the user-define part.
-  * @param  uint8_t len : length of user IE, 247 bytes at most.
-  *
-  * @return true  : succeed
-  * @return false : fail
-  */
-
-bool wifi_set_user_ie(bool enable, uint8_t *m_oui, user_ie_type type, uint8_t *user_ie, uint8_t len);
-
-/**
-  * @brief   Register user IE received callback.
-  *
-  * @param   user_ie_manufacturer_recv_cb_t cb : callback
-  *
-  * @return  0 : succeed
-  * @return -1 : fail
-  */
-int32_t wifi_register_user_ie_manufacturer_recv_cb(user_ie_manufacturer_recv_cb_t cb);
-
-/**
-  * @brief  Unregister user IE received callback.
-  *
-  * @param  null
-  *
-  * @return null
-  */
-void wifi_unregister_user_ie_manufacturer_recv_cb(void);
-
-/**
-  * @}
-  */
-
-/** \defgroup WiFi_Sniffer_APIs Sniffer APIs
-  * @brief WiFi sniffer APIs
-  */
-
-/** @addtogroup WiFi_Sniffer_APIs
-  * @{
-  */
-
-/**
-  * @brief The RX callback function in the promiscuous mode.
-  *
+  * @brief The RX callback function in the promiscuous mode. 
   *        Each time a packet is received, the callback function will be called.
   *
-  * @param uint8_t *buf : the data received
-  * @param uint16_t len : data length
+  * @param buf  Data received. Type of data in buffer (wifi_promiscuous_pkt_t or wifi_pkt_rx_ctrl_t) indicated by 'type' parameter.
+  * @param type  promiscuous packet type.
   *
-  * @return null
   */
+//typedef void (* wifi_promiscuous_cb_t)(void *buf, wifi_promiscuous_pkt_type_t type);
 typedef void (* wifi_promiscuous_cb_t)(uint8_t *buf, uint16_t len);
-
 /**
   * @brief Register the RX callback function in the promiscuous mode.
   *
-  *        Each time a packet is received, the registered callback function will be called.
+  * Each time a packet is received, the registered callback function will be called.
   *
-  * @param wifi_promiscuous_cb_t cb : callback
+  * @param cb  callback
   *
-  * @return null
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
   */
-void wifi_set_promiscuous_rx_cb(wifi_promiscuous_cb_t cb);
-
-/**
-  * @brief  Get the channel number for sniffer functions.
-  *
-  * @param  null
-  *
-  * @return channel number
-  */
-uint8_t wifi_get_channel(void);
-
-/**
-  * @brief  Set the channel number for sniffer functions.
-  *
-  * @param  uint8_t channel :  channel number
-  *
-  * @return true  : succeed
-  * @return false : fail
-  */
-bool wifi_set_channel(uint8_t channel);
-
-/**
-  * @brief     Set the MAC address filter for the sniffer mode.
-  *
-  * @attention This filter works only for the current sniffer mode.
-  *            If users disable and then enable the sniffer mode, and then enable
-  *            sniffer, they need to set the MAC address filter again.
-  *
-  * @param     const uint8_t *address : MAC address
-  *
-  * @return    true  : succeed
-  * @return    false : fail
-  */
-bool wifi_promiscuous_set_mac(const uint8_t *address);
+esp_err_t esp_wifi_set_promiscuous_rx_cb(wifi_promiscuous_cb_t cb);
 
 /**
   * @brief     Enable the promiscuous mode.
   *
-  * @attention 1. The promiscuous mode can only be enabled in the ESP8266 station mode. Do not call this API in user_init.
-  * @attention 2. When in the promiscuous mode, the ESP8266 station and soft-AP are disabled.
-  * @attention 3. Call wifi_station_disconnect to disconnect before enabling the promiscuous mode.
-  * @attention 4. Don't call any other APIs when in the promiscuous mode. Call
-  *               wifi_promiscuous_enable(0) to quit sniffer before calling other APIs.
+  * @param     en  false - disable, true - enable
   *
-  * @param     uint8_t promiscuous :
-  *    - 0: to disable the promiscuous mode
-  *    - 1: to enable the promiscuous mode
-  *
-  * @return    null
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
   */
-void wifi_promiscuous_enable(uint8_t promiscuous);
+esp_err_t esp_wifi_set_promiscuous(bool en);
 
 /**
-  * @}
+  * @brief     Get the promiscuous mode.
+  *
+  * @param[out] en  store the current status of promiscuous mode
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
   */
+esp_err_t esp_wifi_get_promiscuous(bool *en);
 
 /**
-  * @}
+  * @brief Enable the promiscuous mode packet type filter.
+  *
+  * @note The default filter is to filter all packets except WIFI_PKT_MISC
+  *
+  * @param filter the packet type filtered in promiscuous mode.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
   */
+esp_err_t esp_wifi_set_promiscuous_filter(const wifi_promiscuous_filter_t *filter);
+
+/**
+  * @brief     Get the promiscuous filter.
+  *
+  * @param[out] filter  store the current status of promiscuous filter
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_get_promiscuous_filter(wifi_promiscuous_filter_t *filter);
+
+/**
+  * @brief     Set the configuration of the ESP8266 STA or AP
+  *
+  * @attention 1. This API can be called only when specified interface is enabled, otherwise, API fail
+  * @attention 2. For station configuration, bssid_set needs to be 0; and it needs to be 1 only when users need to check the MAC address of the AP.
+  * @attention 3. ESP8266 is limited to only one channel, so when in the soft-AP+station mode, the soft-AP will adjust its channel automatically to be the same as
+  *               the channel of the ESP8266 station.
+  *
+  * @param     interface  interface
+  * @param     conf  station or soft-AP configuration
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_WIFI_IF: invalid interface
+  *    - ESP_ERR_WIFI_MODE: invalid mode
+  *    - ESP_ERR_WIFI_PASSWORD: invalid password
+  *    - ESP_ERR_WIFI_NVS: WiFi internal NVS error
+  *    - others: refer to the erro code in esp_err.h
+  */
+esp_err_t esp_wifi_set_config(wifi_interface_t interface, wifi_config_t *conf);
+
+/**
+  * @brief     Get configuration of specified interface
+  *
+  * @param     interface  interface
+  * @param[out]  conf  station or soft-AP configuration
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_WIFI_IF: invalid interface
+  */
+esp_err_t esp_wifi_get_config(wifi_interface_t interface, wifi_config_t *conf);
+
+/**
+  * @brief     Get STAs associated with soft-AP
+  *
+  * @attention SSC only API
+  *
+  * @param[out] sta  station list
+  *             ap can get the connected sta's phy mode info through the struct member
+  *             phy_11b，phy_11g，phy_11n，phy_lr in the wifi_sta_info_t struct.
+  *             For example, phy_11b = 1 imply that sta support 802.11b mode
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  *    - ESP_ERR_WIFI_MODE: WiFi mode is wrong
+  *    - ESP_ERR_WIFI_CONN: WiFi internal error, the station/soft-AP control block is invalid
+  */
+esp_err_t esp_wifi_ap_get_sta_list(wifi_sta_list_t *sta);
+
+
+/**
+  * @brief     Set the WiFi API configuration storage type
+  *
+  * @attention 1. The default value is WIFI_STORAGE_FLASH
+  *
+  * @param     storage : storage type
+  *
+  * @return
+  *   - ESP_OK: succeed
+  *   - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *   - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_set_storage(wifi_storage_t storage);
+
+/**
+  * @brief     Set auto connect
+  *            The default value is true
+  *
+  * @param     en : true - enable auto connect / false - disable auto connect
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_MODE: WiFi internal error, the station/soft-AP control block is invalid
+  *    - others: refer to error code in esp_err.h
+  */
+esp_err_t esp_wifi_set_auto_connect(bool en) __attribute__ ((deprecated));
+
+/**
+  * @brief     Get the auto connect flag
+  *
+  * @param[out] en  store current auto connect configuration
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_get_auto_connect(bool *en) __attribute__ ((deprecated));
+
+/**
+  * @brief     Set 802.11 Vendor-Specific Information Element
+  *
+  * @param     enable If true, specified IE is enabled. If false, specified IE is removed.
+  * @param     type Information Element type. Determines the frame type to associate with the IE.
+  * @param     idx  Index to set or clear. Each IE type can be associated with up to two elements (indices 0 & 1).
+  * @param     vnd_ie Pointer to vendor specific element data. First 6 bytes should be a header with fields matching vendor_ie_data_t.
+  *            If enable is false, this argument is ignored and can be NULL. Data does not need to remain valid after the function returns.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init()
+  *    - ESP_ERR_INVALID_ARG: Invalid argument, including if first byte of vnd_ie is not WIFI_VENDOR_IE_ELEMENT_ID (0xDD)
+  *      or second byte is an invalid length.
+  *    - ESP_ERR_NO_MEM: Out of memory
+  */
+esp_err_t esp_wifi_set_vendor_ie(bool enable, wifi_vendor_ie_type_t type, wifi_vendor_ie_id_t idx, const void *vnd_ie);
+
+/**
+  * @brief     Function signature for received Vendor-Specific Information Element callback.
+  * @param     ctx Context argument, as passed to esp_wifi_set_vendor_ie_cb() when registering callback.
+  * @param     type Information element type, based on frame type received.
+  * @param     sa Source 802.11 address.
+  * @param     vnd_ie Pointer to the vendor specific element data received.
+  * @param     rssi Received signal strength indication.
+  */
+typedef void (*esp_vendor_ie_cb_t) (void *ctx, wifi_vendor_ie_type_t type, const uint8_t sa[6], const vendor_ie_data_t *vnd_ie, int rssi);
+
+/**
+  * @brief     Register Vendor-Specific Information Element monitoring callback.
+  *
+  * @param     cb   Callback function
+  * @param     ctx  Context argument, passed to callback function.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  */
+esp_err_t esp_wifi_set_vendor_ie_cb(esp_vendor_ie_cb_t cb, void *ctx);
+
+/**
+  * @brief     Set maximum WiFi transmiting power
+  *
+  * @attention WiFi transmiting power is divided to six levels in phy init data.
+  *            Level0 represents highest transmiting power and level5 represents lowest
+  *            transmiting power. Packets of different rates are transmitted in
+  *            different powers according to the configuration in phy init data.
+  *            This API only sets maximum WiFi transmiting power. If this API is called,
+  *            the transmiting power of every packet will be less than or equal to the
+  *            value set by this API. If this API is not called, the value of maximum
+  *            transmitting power set in phy_init_data.bin or menuconfig (depend on
+  *            whether to use phy init data in partition or not) will be used. Default
+  *            value is level0. Values passed in power are mapped to transmit power
+  *            levels as follows:
+  *            - [78, 127]: level0
+  *            - [76, 77]: level1
+  *            - [74, 75]: level2
+  *            - [68, 73]: level3
+  *            - [60, 67]: level4
+  *            - [52, 59]: level5
+  *            - [44, 51]: level5 - 2dBm
+  *            - [34, 43]: level5 - 4.5dBm
+  *            - [28, 33]: level5 - 6dBm
+  *            - [20, 27]: level5 - 8dBm
+  *            - [8, 19]: level5 - 11dBm
+  *            - [-128, 7]: level5 - 14dBm
+  *
+  * @param     power  Maximum WiFi transmiting power.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_START: WiFi is not started by esp_wifi_start
+  */
+esp_err_t esp_wifi_set_max_tx_power(int8_t power);
+
+/**
+  * @brief     Get maximum WiFi transmiting power
+  *
+  * @attention This API gets maximum WiFi transmiting power. Values got
+  *            from power are mapped to transmit power levels as follows:
+  *            - 78: 19.5dBm
+  *            - 76: 19dBm
+  *            - 74: 18.5dBm
+  *            - 68: 17dBm
+  *            - 60: 15dBm
+  *            - 52: 13dBm
+  *            - 44: 11dBm
+  *            - 34: 8.5dBm
+  *            - 28: 7dBm
+  *            - 20: 5dBm
+  *            - 8:  2dBm
+  *            - -4: -1dBm
+  *
+  * @param     power  Maximum WiFi transmiting power.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_NOT_START: WiFi is not started by esp_wifi_start
+  *    - ESP_ERR_INVALID_ARG: invalid argument
+  */
+esp_err_t esp_wifi_get_max_tx_power(int8_t *power);
+
+/**
+  * @brief     Set mask to enable or disable some WiFi events
+  *
+  * @attention 1. Mask can be created by logical OR of various WIFI_EVENT_MASK_ constants.
+  *               Events which have corresponding bit set in the mask will not be delivered to the system event handler.
+  * @attention 2. Default WiFi event mask is WIFI_EVENT_MASK_AP_PROBEREQRECVED.
+  * @attention 3. There may be lots of stations sending probe request data around.
+  *               Don't unmask this event unless you need to receive probe request data.
+  *
+  * @param     mask  WiFi event mask.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  */
+esp_err_t esp_wifi_set_event_mask(uint32_t mask);
+
+/**
+  * @brief     Get mask of WiFi events
+  *
+  * @param     mask  WiFi event mask.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_ARG: invalid argument
+  */
+esp_err_t esp_wifi_get_event_mask(uint32_t *mask);
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif
+#endif /* __ESP_WIFI_H__ */

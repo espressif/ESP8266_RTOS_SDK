@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "esp8266/ets_sys.h"
+#include "rom/ets_sys.h"
 #include "esp8266/eagle_soc.h"
 #include "esp8266/timer_register.h"
 

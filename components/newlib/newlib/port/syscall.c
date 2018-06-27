@@ -16,10 +16,11 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "esp8266/ets_sys.h"
+#include "rom/ets_sys.h"
 #include "esp8266/eagle_soc.h"
 #include "esp8266/uart_register.h"
 #include "FreeRTOS.h"
+#include "esp_log.h"
 
 #define PANIC_UART 0
 
@@ -125,4 +126,10 @@ void _free_r(struct _reent *r, void *ptr)
 void _exit(int status)
 {
     while (1);
+}
+
+void abort(void)
+{
+    ESP_LOGE("ABORT","Error found and abort!");
+    while(1);
 }

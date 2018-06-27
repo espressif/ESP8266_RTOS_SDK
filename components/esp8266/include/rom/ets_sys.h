@@ -82,4 +82,38 @@ extern uint32_t WDEV_INTEREST_EVENT;
     }   \
     } while(0)
 
+#define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
+#define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
+
+/**
+  * @brief  Delay function, maximum value: 65535 us.
+  *
+  * @param  uint16_t us : delay time, uint: us, maximum value: 65535 us
+  *
+  * @return null
+  */
+void os_delay_us(uint16_t us);
+
+/**
+  * @brief     Register the print output function.
+  *
+  * @attention os_install_putc1((void *)uart1_write_char) in uart_init will set
+  *            printf to print from UART 1, otherwise, printf will start from
+  *            UART 0 by default.
+  *
+  * @param     void(*p)(char c) - pointer of print function
+  *
+  * @return    null
+  */
+void os_install_putc1(void (*p)(char c));
+
+/**
+  * @brief  Print a character. Start from from UART0 by default.
+  *
+  * @param  char c - character to be printed
+  *
+  * @return null
+  */
+void os_putc(char c);
+
 #endif /* _ETS_SYS_H */

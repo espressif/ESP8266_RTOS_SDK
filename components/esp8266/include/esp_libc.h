@@ -34,8 +34,6 @@
 extern "C" {
 #endif
 
-
-uint32_t os_random(void);
 int32_t os_get_random(unsigned char *buf, size_t len);
 
 /**
