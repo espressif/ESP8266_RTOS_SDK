@@ -236,7 +236,7 @@ uint32_t user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-void user_init()
+void app_main()
 {
     ESP_ERROR_CHECK( nvs_flash_init() );
     initialise_wifi();
