@@ -22,34 +22,68 @@
  *
  */
 
-#ifndef __ESP_MISC_H__
-#define __ESP_MISC_H__
+#ifndef __ETS_SYS_H__
+#define __ETS_SYS_H__
 
 #include <stdint.h>
 
-#include "lwip/ip_addr.h"
+#include "esp8266/eagle_soc.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "freertos/portmacro.h"
 
-/** \defgroup Misc_APIs Misc APIs
-  * @brief misc APIs
-  */
+/* interrupt related */
+#define ETS_SPI_INUM        2
+#define ETS_GPIO_INUM       4
+#define ETS_UART_INUM       5
+#define ETS_MAX_INUM        6
+#define ETS_SOFT_INUM       7
+#define ETS_WDT_INUM        8
+#define ETS_FRC_TIMER1_INUM 9
 
-/** @addtogroup Misc_APIs
-  * @{
-  */
+extern char NMIIrqIsOn;
+extern uint32_t WDEV_INTEREST_EVENT;
+
+#define INT_ENA_WDEV        0x3ff20c18
+#define WDEV_TSF0_REACH_INT (BIT(27))
+
+#define ETS_NMI_LOCK()  \
+    do {    \
+        char m = 10;    \
+        do {    \
+            REG_WRITE(INT_ENA_WDEV, 0); \
+            m = 10; \
+            for (; m > 0; m--) {}   \
+            REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
+        } while(0); \
+    } while (0)
+
+#define ETS_NMI_UNLOCK()    \
+    do {    \
+        REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);   \
+    } while (0)
+
+#define ETS_INTR_LOCK() do {    \
+    if (NMIIrqIsOn == 0) { \
+        vPortEnterCritical();   \
+        char m = 10;    \
+        do {    \
+            REG_WRITE(INT_ENA_WDEV, 0); \
+            m = 10; \
+            for (; m > 0; m--) {}   \
+            REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
+        } while(0);  \
+    }   \
+    } while(0)
+
+#define ETS_INTR_UNLOCK()   do {    \
+    if (NMIIrqIsOn == 0) { \
+        REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);   \
+        vPortExitCritical(); \
+    }   \
+    } while(0)
 
 #define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
-
-#define IP2STR(ipaddr) ip4_addr1_16(ipaddr), \
-    ip4_addr2_16(ipaddr), \
-    ip4_addr3_16(ipaddr), \
-    ip4_addr4_16(ipaddr)
-
-#define IPSTR "%d.%d.%d.%d"
 
 /**
   * @brief  Delay function, maximum value: 65535 us.
@@ -82,12 +116,4 @@ void os_install_putc1(void (*p)(char c));
   */
 void os_putc(char c);
 
-/**
-  * @}
-  */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+#endif /* _ETS_SYS_H */

@@ -35,7 +35,6 @@ typedef struct dhcps_msg {
         u8_t options[312];
 }dhcps_msg;
 
-/*   Defined in esp_misc.h */
 typedef struct {
 	bool enable;
 	ip4_addr_t start_ip;

@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 
-#include "esp_misc.h"
+#include "rom/ets_sys.h"
 
 #include "esp8266/pin_mux_register.h"
 #include "gpio.h"

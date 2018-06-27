@@ -15,8 +15,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "esp8266/ets_sys.h"
-#include "esp_misc.h"
+#include "rom/ets_sys.h"
 
 #include "gpio.h"
 #include "i2c_master.h"

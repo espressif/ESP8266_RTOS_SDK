@@ -28,7 +28,7 @@
 #include "netif/etharp.h"
 #include "esp_wifi.h"
 #include "esp_timer.h"
-#include "esp_misc.h"
+#include "rom/ets_sys.h"
 #include "dhcpserver/dhcpserver.h"
 #include "dhcpserver/dhcpserver_options.h"
 #include "net/sockio.h"

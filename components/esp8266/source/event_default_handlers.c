@@ -16,9 +16,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rom/ets_sys.h"
+
 #include "esp_err.h"
 #include "esp_wifi.h"
-#include "esp_misc.h"
 #include "esp_event.h"
 #include "esp_event_loop.h"
 #include "esp_system.h"

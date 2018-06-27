@@ -16,7 +16,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "esp8266/ets_sys.h"
+#include "rom/ets_sys.h"
 #include "esp8266/eagle_soc.h"
 #include "esp8266/uart_register.h"
 #include "FreeRTOS.h"

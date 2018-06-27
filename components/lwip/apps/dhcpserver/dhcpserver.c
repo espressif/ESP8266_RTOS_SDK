@@ -17,8 +17,9 @@
 #include <strings.h>
 
 #include "esp_libc.h"
-#include "esp_misc.h"
 #include "esp_wifi.h"
+
+#include "rom/ets_sys.h"
 
 #include "sdkconfig.h"
 #include "lwip/inet.h"
