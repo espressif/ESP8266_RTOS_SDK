@@ -1,8 +1,8 @@
 gwen:
     crypto:     137694e
     espnow:     137694e
-    core:       68ec0eb
-    net80211:   68ec0eb
+    core:       34c6b8d
+    net80211:   34c6b8d
     pp:         137694e
     pwm:        0181338
     smartconfig:9ec59b5
