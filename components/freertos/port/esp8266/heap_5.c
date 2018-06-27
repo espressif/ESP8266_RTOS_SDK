@@ -118,7 +118,7 @@ task.h is included from an application file. */
 #include "freertos/task.h"
 
 #include "esp8266/eagle_soc.h"
-#include "esp8266/ets_sys.h"
+#include "rom/ets_sys.h"
 #include "esp8266/rom_functions.h"
 
 #ifdef MEMLEAK_DEBUG

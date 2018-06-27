@@ -83,7 +83,7 @@
 #include "esp_libc.h"
 
 #include "esp8266/eagle_soc.h"
-#include "esp8266/ets_sys.h"
+#include "rom/ets_sys.h"
 #include "esp8266/rom_functions.h"
 
 #define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)

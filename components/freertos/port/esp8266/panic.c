@@ -16,7 +16,7 @@
 #include "esp_libc.h"
 
 #include "esp8266/eagle_soc.h"
-#include "esp8266/ets_sys.h"
+#include "rom/ets_sys.h"
 #include "esp_err.h"
 
 /*
