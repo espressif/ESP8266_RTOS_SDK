@@ -23,6 +23,74 @@
 extern "C" {
 #endif
 
+typedef enum {
+    ESP_MAC_WIFI_STA,
+    ESP_MAC_WIFI_SOFTAP,
+} esp_mac_type_t;
+
+/**
+  * @brief  Set base MAC address with the MAC address which is stored in EFUSE or
+  *         external storage e.g. flash and EEPROM.
+  *
+  * Base MAC address is used to generate the MAC addresses used by the networking interfaces.
+  * If using base MAC address stored in EFUSE or external storage, call this API to set base MAC
+  * address with the MAC address which is stored in EFUSE or external storage before initializing
+  * WiFi.
+  *
+  * @param  mac  base MAC address, length: 6 bytes.
+  *
+  * @return ESP_OK on success
+  */
+esp_err_t esp_base_mac_addr_set(uint8_t *mac);
+
+/**
+  * @brief  Return base MAC address which is set using esp_base_mac_addr_set.
+  *
+  * @param  mac  base MAC address, length: 6 bytes.
+  *
+  * @return ESP_OK on success
+  *         ESP_ERR_INVALID_MAC base MAC address has not been set
+  */
+esp_err_t esp_base_mac_addr_get(uint8_t *mac);
+
+/**
+  * @brief  Return base MAC address which is factory-programmed by Espressif in EFUSE.
+  *
+  * @param  mac  base MAC address, length: 6 bytes.
+  *
+  * @return ESP_OK on success
+  */
+esp_err_t esp_efuse_mac_get_default(uint8_t *mac);
+
+/**
+  * @brief  Read base MAC address and set MAC address of the interface.
+  *
+  * This function first get base MAC address using esp_base_mac_addr_get or reads base MAC address
+  * from EFUSE. Then set the MAC address of the interface including wifi station and wifi softap.
+  *
+  * @param  mac  MAC address of the interface, length: 6 bytes.
+  * @param  type  type of MAC address, 0:wifi station, 1:wifi softap.
+  *
+  * @return ESP_OK on success
+  */
+esp_err_t esp_read_mac(uint8_t* mac, esp_mac_type_t type);
+
+/**
+  * @brief  Derive local MAC address from universal MAC address.
+  *
+  * This function derives a local MAC address from an universal MAC address.
+  * A `definition of local vs universal MAC address can be found on Wikipedia
+  * <https://en.wikipedia.org/wiki/MAC_address#Universal_vs._local>`.
+  * In ESP8266, universal MAC address is generated from base MAC address in EFUSE or other external storage.
+  * Local MAC address is derived from the universal MAC address.
+  *
+  * @param  local_mac  Derived local MAC address, length: 6 bytes.
+  * @param  universal_mac  Source universal MAC address, length: 6 bytes.
+  *
+  * @return ESP_OK on success
+  */
+esp_err_t esp_derive_local_mac(uint8_t* local_mac, const uint8_t* universal_mac);
+
 /**
  * @brief CPU frequency values
  */

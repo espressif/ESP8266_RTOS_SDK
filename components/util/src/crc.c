@@ -1,5 +1,20 @@
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <stdint.h>
-#include <stdbool.h>
+
+#include "crc.h"
 
 static const uint32_t crc32_le_table[256] = {
     0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L, 0x706af48fL, 0xe963a535L, 0x9e6495a3L,
@@ -18,7 +33,7 @@ static const uint32_t crc32_le_table[256] = {
     0x4369e96aL, 0x346ed9fcL, 0xad678846L, 0xda60b8d0L, 0x44042d73L, 0x33031de5L, 0xaa0a4c5fL, 0xdd0d7cc9L,
     0x5005713cL, 0x270241aaL, 0xbe0b1010L, 0xc90c2086L, 0x5768b525L, 0x206f85b3L, 0xb966d409L, 0xce61e49fL,
     0x5edef90eL, 0x29d9c998L, 0xb0d09822L, 0xc7d7a8b4L, 0x59b33d17L, 0x2eb40d81L, 0xb7bd5c3bL, 0xc0ba6cadL,
-    
+
     0xedb88320L, 0x9abfb3b6L, 0x03b6e20cL, 0x74b1d29aL, 0xead54739L, 0x9dd277afL, 0x04db2615L, 0x73dc1683L,
     0xe3630b12L, 0x94643b84L, 0x0d6d6a3eL, 0x7a6a5aa8L, 0xe40ecf0bL, 0x9309ff9dL, 0x0a00ae27L, 0x7d079eb1L,
     0xf00f9344L, 0x8708a3d2L, 0x1e01f268L, 0x6906c2feL, 0xf762575dL, 0x806567cbL, 0x196c3671L, 0x6e6b06e7L,
@@ -43,9 +58,29 @@ uint32_t crc32_le(uint32_t crc, const uint8_t *buf, uint32_t len)
 
     crc = ~crc;
 
-    for (i = 0; i < len; i++){
+    for (i = 0; i < len; i++) {
         crc = crc32_le_table[(crc ^ buf[i]) & 0xff] ^ (crc >> 8);
     }
 
     return ~crc;
+}
+
+uint8_t esp_crc8(uint8_t const *p, uint32_t len)
+{
+    uint8_t i;
+    uint8_t crc = 0;
+
+    while (len--) {
+        crc = crc ^ (*p++);
+
+        for (i = 0; i < 8; i++) {
+            if (crc & 0x01) {
+                crc = (crc >> 1) ^ 0x8c;
+            } else {
+                crc = crc >> 1;
+            }
+        }
+    }
+
+    return crc;
 }

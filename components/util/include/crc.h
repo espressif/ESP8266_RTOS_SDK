@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROM_CRC_H
-#define ROM_CRC_H
+#ifndef __CRC_H_
+#define __CRC_H_
 
 #include <stdint.h>
 
@@ -114,6 +114,17 @@ uint8_t crc8_le(uint8_t crc, uint8_t const *buf, uint32_t len);
   * @return None
   */
 uint8_t crc8_be(uint8_t crc, uint8_t const *buf, uint32_t len);
+
+/**
+  * @brief  A crc8 algorithm used in efuse check.
+  *
+  * @param  uint8_t const *p : Pointer to original data.
+  *
+  * @param  uint32_t len : Data length in byte.
+  *
+  * @return uint8_t: Crc value.
+  */
+uint8_t esp_crc8(uint8_t const *p, uint32_t len);
 
 /**
   * @}
