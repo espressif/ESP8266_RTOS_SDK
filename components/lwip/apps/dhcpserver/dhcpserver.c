@@ -678,9 +678,9 @@ static void send_ack(struct dhcps_msg *m, u16_t len)
     }
 
     SendAck_err_t = udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
-    DHCPS_LOG("dhcps: send_ack>>udp_sendto result %x\n", SendAck_err_t);
+
 #if DHCPS_DEBUG
-    udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    DHCPS_LOG("dhcps: send_ack>>udp_sendto result %x\n", SendAck_err_t);
 #endif
 
     if (SendAck_err_t == ERR_OK) {
