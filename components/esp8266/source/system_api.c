@@ -13,10 +13,163 @@
 // limitations under the License.
 
 #include <string.h>
-#include "esp_libc.h"
-#include "esp_attr.h"
+#include <stdlib.h>
+
+#include "esp_log.h"
 #include "esp_system.h"
+
+#include "crc.h"
+
+#include "esp8266/eagle_soc.h"
+#include "esp8266/efuse_register.h"
+
 #include "FreeRTOS.h"
+
+static const char* TAG = "system_api";
+
+static uint8_t base_mac_addr[6] = { 0 };
+
+esp_err_t esp_base_mac_addr_set(uint8_t *mac)
+{
+    if (mac == NULL) {
+        ESP_LOGE(TAG, "Base MAC address is NULL");
+        abort();
+    }
+
+    memcpy(base_mac_addr, mac, 6);
+
+    return ESP_OK;
+}
+
+esp_err_t esp_base_mac_addr_get(uint8_t *mac)
+{
+    uint8_t null_mac[6] = {0};
+
+    if (memcmp(base_mac_addr, null_mac, 6) == 0) {
+        ESP_LOGI(TAG, "Base MAC address is not set, read default base MAC address from BLK0 of EFUSE");
+        return ESP_ERR_INVALID_MAC;
+    }
+
+    memcpy(mac, base_mac_addr, 6);
+
+    return ESP_OK;
+}
+
+esp_err_t esp_efuse_mac_get_default(uint8_t* mac)
+{
+    uint32_t efuse[4];
+
+    uint8_t efuse_crc = 0;
+    uint8_t calc_crc = 0;
+    uint8_t version;
+
+    efuse[0] = REG_READ(EFUSE_DATA0_REG);
+    efuse[1] = REG_READ(EFUSE_DATA1_REG);
+    efuse[2] = REG_READ(EFUSE_DATA2_REG);
+    efuse[3] = REG_READ(EFUSE_DATA3_REG);
+
+    mac[3] = efuse[1] >> 8;
+    mac[4] = efuse[1];
+    mac[5] = efuse[0] >> 24;
+
+    if (efuse[2] & EFUSE_IS_48BITS_MAC) {
+        uint8_t tmp_mac[4];
+
+        mac[0] = efuse[3] >> 16;
+        mac[1] = efuse[3] >> 8;
+        mac[2] = efuse[3];
+
+        tmp_mac[0] = mac[2];
+        tmp_mac[1] = mac[1];
+        tmp_mac[2] = mac[0];
+
+        efuse_crc = efuse[2] >> 24;
+        calc_crc = esp_crc8(tmp_mac, 3);
+
+        if (efuse_crc != calc_crc) {
+            ESP_LOGE(TAG, "High MAC CRC error, efuse_crc = 0x%02x; calc_crc = 0x%02x", efuse_crc, calc_crc);
+            abort();
+        }
+
+        version = (efuse[1] >> EFUSE_VERSION_S) & EFUSE_VERSION_V;
+
+        if (version == EFUSE_VERSION_1 || version == EFUSE_VERSION_2) {
+            tmp_mac[0] = mac[5];
+            tmp_mac[1] = mac[4];
+            tmp_mac[2] = mac[3];
+            tmp_mac[3] = efuse[1] >> 16;
+
+            efuse_crc = efuse[0] >> 16;
+            calc_crc = esp_crc8(tmp_mac, 4);
+
+            if (efuse_crc != calc_crc) {
+                ESP_LOGE(TAG, "CRC8 error, efuse_crc = 0x%02x; calc_crc = 0x%02x", efuse_crc, calc_crc);
+                abort();
+            }
+        }
+    } else {
+        mac[0] = 0x18;
+        mac[1] = 0xFE;
+        mac[2] = 0x34;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t esp_derive_mac(uint8_t* local_mac, const uint8_t* universal_mac)
+{
+    uint8_t idx;
+
+    if (local_mac == NULL || universal_mac == NULL) {
+        ESP_LOGE(TAG, "mac address param is NULL");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    memcpy(local_mac, universal_mac, 6);
+    for (idx = 0; idx < 64; idx++) {
+        local_mac[0] = universal_mac[0] | 0x02;
+        local_mac[0] ^= idx << 2;
+
+        if (memcmp(local_mac, universal_mac, 6)) {
+            break;
+        }
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t esp_read_mac(uint8_t* mac, esp_mac_type_t type)
+{
+    uint8_t efuse_mac[6];
+
+    if (mac == NULL) {
+        ESP_LOGE(TAG, "mac address param is NULL");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (type < ESP_MAC_WIFI_STA || type > ESP_MAC_WIFI_SOFTAP) {
+        ESP_LOGE(TAG, "mac type is incorrect");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (esp_base_mac_addr_get(efuse_mac) != ESP_OK) {
+        esp_efuse_mac_get_default(efuse_mac);
+    }
+
+    switch (type) {
+    case ESP_MAC_WIFI_STA:
+        memcpy(mac, efuse_mac, 6);
+        break;
+    case ESP_MAC_WIFI_SOFTAP:
+        esp_derive_mac(mac, efuse_mac);
+        break;
+    default:
+        ESP_LOGW(TAG, "incorrect mac type");
+        break;
+    }
+
+    return ESP_OK;
+}
 
 /**
  * Get IDF version
