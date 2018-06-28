@@ -269,7 +269,7 @@ int8_t ethernetif_init(struct netif* netif)
     if (wifi_get_netif(TCPIP_ADAPTER_IF_STA) == TCPIP_ADAPTER_IF_STA) {
         esp_wifi_get_mac(TCPIP_ADAPTER_IF_STA, mac);
     } else {
-        esp_wifi_set_mac(TCPIP_ADAPTER_IF_AP, mac);
+        esp_wifi_get_mac(TCPIP_ADAPTER_IF_AP, mac);
     }
 
     memcpy(netif->hwaddr, mac, NETIF_MAX_HWADDR_LEN);
