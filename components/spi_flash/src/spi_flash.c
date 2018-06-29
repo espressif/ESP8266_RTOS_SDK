@@ -121,7 +121,6 @@ typedef struct {
     uint8_t dummy_bits;
 } spi_cmd_t;
 
-extern bool spi_flash_erase_sector_check(uint32_t);
 extern uint32_t esp_get_time();
 
 bool IRAM_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd);
@@ -131,7 +130,6 @@ uint8_t en25q16x_read_sfdp();
 
 extern void pp_soft_wdt_stop(void);
 extern void pp_soft_wdt_restart(void);
-extern bool protect_flag ;
 
 esp_spi_flash_chip_t flashchip = {
     0x1640ef,
@@ -411,12 +409,6 @@ static bool spi_flash_check_wr_protect(void)
 esp_err_t IRAM_ATTR spi_flash_erase_sector(size_t sec)
 {
     FLASH_INTR_DECLARE(c_tmp);
-
-    if (protect_flag == true)
-    {
-        if (false == spi_flash_erase_sector_check(sec))
-            return ESP_ERR_FLASH_OP_FAIL;
-    }
 
     esp_err_t ret;
 
@@ -897,9 +889,7 @@ esp_err_t IRAM_ATTR spi_flash_erase_range(size_t start_address, size_t size)
         return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    if ((protect_flag == true
-            && false == spi_flash_erase_sector_check(start_address))
-            || spi_flash_check_wr_protect() == false) {
+    if (spi_flash_check_wr_protect() == false) {
         return ESP_ERR_FLASH_OP_FAIL;
     }
 

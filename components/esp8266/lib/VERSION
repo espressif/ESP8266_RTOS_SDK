@@ -1,10 +1,10 @@
 gwen:
-    crypto:     137694e
+    crypto:     a6e02f7
     espnow:     137694e
-    core:       ef2df9d
-    net80211:   52dd0c7
-    pp:         137694e
+    core:       a6e02f7
+    net80211:   a6e02f7
+    pp:         a6e02f7
     pwm:        0181338
     smartconfig:9ec59b5
-    wpa:        68ec0eb
+    wpa:        a6e02f7
     wps:        137694e
