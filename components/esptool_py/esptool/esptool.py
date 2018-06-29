@@ -2711,25 +2711,24 @@ def main():
             initial_baud = args.baud
 
         ser_list = sorted(ports.device for ports in list_ports.comports())
-        for each_port in reversed(ser_list):
-            if args.port is None:
-                print("Trying %s ... " % each_port)
-            try:
-                if args.chip == 'auto':
-                    esp = ESPLoader.detect_chip(each_port, initial_baud, args.before, args.trace)
-                else:
-                    chip_class = {
-                        'esp8266': ESP8266ROM,
-                        'esp32': ESP32ROM,
-                    }[args.chip]
-                    esp = chip_class(each_port, initial_baud, args.trace)
-                    esp.connect(args.before)
-                break
-            except FatalError as err:
-                if args.port is not None:
-                    raise
-                print("%s failed to connect: %s" % (each_port, err))
-                esp = None
+        if args.port is None or args.port not in ser_list:
+            raise FatalError('Cannot find target port named \'%s\'.' % args.port)
+
+        try:
+            if args.chip == 'auto':
+                esp = ESPLoader.detect_chip(args.port, initial_baud, args.before, args.trace)
+            else:
+                chip_class = {
+                    'esp8266': ESP8266ROM,
+                    'esp32': ESP32ROM,
+                }[args.chip]
+                esp = chip_class(args.port, initial_baud, args.trace)
+                esp.connect(args.before)
+        except FatalError as err:
+            if args.port is not None:
+                raise
+            print("%s failed to connect: %s" % (args.port, err))
+            esp = None
         if esp is None:
             raise FatalError("All of the %d available serial ports could not connect to a Espressif device." % len(ser_list))
 
