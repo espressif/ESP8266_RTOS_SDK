@@ -50,7 +50,7 @@
 #include "esp_libc.h"
 #include "esp_system.h"
 
-//#define SOCKETS_MT
+#define SOCKETS_MT
 
 //#define SOCKETS_TCP_TRACE
 
@@ -1351,7 +1351,7 @@
  * While this helps code completion, it might conflict with existing libraries.
  * (only used if you use sockets.c)
  */
-#define LWIP_COMPAT_SOCKETS             1
+#define LWIP_COMPAT_SOCKETS             3
 
 /**
  * LWIP_POSIX_SOCKETS_IO_NAMES==1: Enable POSIX-style sockets functions names.

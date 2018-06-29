@@ -4,18 +4,24 @@
 #ifdef SOCKETS_MT
 
 #include "../../lwip/src/api/sockets.c"
+#include "lwip/priv/api_msg.h"
 
 #ifndef LWIP_SYNC_MT_SLEEP_MS
-	#define LWIP_SYNC_MT_SLEEP_MS 10
+#define LWIP_SYNC_MT_SLEEP_MS 10
 #endif
 
 #ifndef SOCK_MT_DEBUG_LEVEL
 #define SOCK_MT_DEBUG_LEVEL 255
 #endif
 
-typedef int (*lwip_io_mt_fn)(int , int );
+typedef struct socket_conn_sync {
+    sys_sem_t       *sem;
+    struct netconn  *conn;
+} socket_conn_sync_t;
 
-enum sock_mt_stat{
+typedef int (*lwip_io_mt_fn)(int, int );
+
+enum sock_mt_stat {
     SOCK_MT_STATE_NONE = 0,
     SOCK_MT_STATE_BIND,
     SOCK_MT_STATE_LISTEN,
@@ -63,11 +69,11 @@ struct _sock_mt {
 typedef struct _sock_mt sock_mt_t;
 
 #if (SOCK_MT_DEBUG_LEVEL < 16)
-    #define SOCK_MT_DEBUG(level, ...)                                       \
+#define SOCK_MT_DEBUG(level, ...)                                           \
         if (level >= SOCK_MT_DEBUG_LEVEL)                                   \
             printf(__VA_ARGS__);
 #else
-    #define SOCK_MT_DEBUG(level, ...)
+#define SOCK_MT_DEBUG(level, ...)
 #endif
 
 #if 0
@@ -138,7 +144,7 @@ typedef struct _sock_mt sock_mt_t;
         vTaskDelay(1);                                                      \
     }                                                                       \
     SOCK_MT_DEBUG(1, "OK\n");                                               \
-}  
+}
 #endif
 
 #define SOCK_MT_TRYLOCK(s, l, r)                                            \
@@ -252,194 +258,194 @@ static sock_mt_t sockets_mt[NUM_SOCKETS];
 
 static int lwip_enter_mt_state(int s, int arg)
 {
-    if(tryget_socket(s) == NULL ||
-       SOCK_MT_GET_STATE(s) != SOCK_MT_STATE_NONE ||
-       SOCK_MT_GET_WRITE_SEL(s))
+    if (tryget_socket(s) == NULL ||
+        SOCK_MT_GET_STATE(s) != SOCK_MT_STATE_NONE ||
+        SOCK_MT_GET_WRITE_SEL(s))
         return -1;
 
     SOCK_MT_LOCK(s, SOCK_MT_STATE_LOCK);
     SOCK_MT_SET_STATE(s, arg);
-    
+
     return 0;
 }
 
 static int lwip_enter_mt_recv(int s, int arg)
 {
-    if(tryget_socket(s) == NULL ||
-       SOCK_MT_GET_READ_SEL(s))
+    if (tryget_socket(s) == NULL ||
+        SOCK_MT_GET_READ_SEL(s))
         return -1;
 
-	SOCK_MT_LOCK(s, SOCK_MT_RECV_LOCK);
-    
-	return 0;
+    SOCK_MT_LOCK(s, SOCK_MT_RECV_LOCK);
+
+    return 0;
 }
 
 static int lwip_enter_mt_shutdown(int s, int arg)
 {
-    if(tryget_socket(s) == NULL
-       || SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE)
+    if (tryget_socket(s) == NULL
+        || SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE)
         return -1;
 
-	SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_SHUTDOWN_OK);
-    
-	return 0;
+    SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_SHUTDOWN_OK);
+
+    return 0;
 }
 
 static int lwip_enter_mt_close(int s, int arg)
 {
-    if(tryget_socket(s) == NULL)
+    if (tryget_socket(s) == NULL)
         return -1;
 
-	SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_SHUTDOWN_OK);
+    SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_SHUTDOWN_OK);
 
-	return 0;
+    return 0;
 }
 
 
 static int lwip_enter_mt_select(int s, int arg)
 {
-	int i;
-	int *fdset = (int *)arg;
-	fd_set *read_set = (fd_set *)fdset[0];
-	fd_set *write_set = (fd_set *)fdset[1];
+    int i;
+    int *fdset = (int *)arg;
+    fd_set *read_set = (fd_set *)fdset[0];
+    fd_set *write_set = (fd_set *)fdset[1];
 
-	if (s > NUM_SOCKETS || s < 0)
-		return -1;
+    if (s > NUM_SOCKETS || s < 0)
+        return -1;
 
-	for (i = 0; i < s; i++) {
+    for (i = 0; i < s; i++) {
         if(FD_ISSET(i, read_set) || FD_ISSET(i, write_set))
             if (tryget_socket(i) == NULL)
                 goto failed1;
-        
-		if (FD_ISSET(i, read_set)) {
-			err_t err;
 
-			SOCK_MT_SET_READ_SEL(i);
-			SOCK_MT_LOCK_RET(i, SOCK_MT_RECV_LOCK, err);
-			if (err != ERR_OK) {
-				goto failed2;
-			}
-		}
-		
-		if (FD_ISSET(i, write_set)) {
-			err_t err;
+        if (FD_ISSET(i, read_set)) {
+            err_t err;
 
-			SOCK_MT_SET_WRITE_SEL(i);
-			SOCK_MT_LOCK_RET(i, SOCK_MT_STATE_LOCK, err);
-			if (err != ERR_OK) {
-				goto failed3;
-			}
-		}	
-	}
+            SOCK_MT_SET_READ_SEL(i);
+            SOCK_MT_LOCK_RET(i, SOCK_MT_RECV_LOCK, err);
+            if (err != ERR_OK) {
+                goto failed2;
+            }
+        }
 
-	return 0;
+        if (FD_ISSET(i, write_set)) {
+            err_t err;
+
+            SOCK_MT_SET_WRITE_SEL(i);
+            SOCK_MT_LOCK_RET(i, SOCK_MT_STATE_LOCK, err);
+            if (err != ERR_OK) {
+                goto failed3;
+            }
+        }
+    }
+
+    return 0;
 
 failed3:
-	SOCK_MT_UNLOCK(i, SOCK_MT_STATE_LOCK);
-	SOCK_MT_RESET_WRITE_SEL(i);
+    SOCK_MT_UNLOCK(i, SOCK_MT_STATE_LOCK);
+    SOCK_MT_RESET_WRITE_SEL(i);
 failed2:
-	if (FD_ISSET(i, read_set)) {
-		SOCK_MT_UNLOCK(i, SOCK_MT_RECV_LOCK);
-		SOCK_MT_RESET_READ_SEL(i);
-	}
+    if (FD_ISSET(i, read_set)) {
+        SOCK_MT_UNLOCK(i, SOCK_MT_RECV_LOCK);
+        SOCK_MT_RESET_READ_SEL(i);
+    }
 failed1:
-	for (i--; i >=0; i--) {
-		if (FD_ISSET(i, read_set) ){
-			SOCK_MT_UNLOCK(i, SOCK_MT_RECV_LOCK);
-			SOCK_MT_RESET_READ_SEL(i);
-		}
+    for (i--; i >=0; i--) {
+        if (FD_ISSET(i, read_set) ) {
+            SOCK_MT_UNLOCK(i, SOCK_MT_RECV_LOCK);
+            SOCK_MT_RESET_READ_SEL(i);
+        }
 
-		if (FD_ISSET(i, write_set)) {
-			SOCK_MT_UNLOCK(i, SOCK_MT_STATE_LOCK);
-			SOCK_MT_RESET_WRITE_SEL(i);
-		}
-	}
-	
-	return -1;
+        if (FD_ISSET(i, write_set)) {
+            SOCK_MT_UNLOCK(i, SOCK_MT_STATE_LOCK);
+            SOCK_MT_RESET_WRITE_SEL(i);
+        }
+    }
+
+    return -1;
 }
 
 static int lwip_enter_mt_ioctrl(int s, int arg)
 {
-    if(tryget_socket(s) == NULL)
+    if (tryget_socket(s) == NULL)
         return -1;
 
-	SOCK_MT_LOCK(s, SOCK_MT_IOCTRL_LOCK);
-    
-	return 0;
+    SOCK_MT_LOCK(s, SOCK_MT_IOCTRL_LOCK);
+
+    return 0;
 }
 
 static int lwip_exit_mt_state(int s, int arg)
 {
-	SOCK_MT_SET_STATE(s, SOCK_MT_STATE_NONE);
-	SOCK_MT_UNLOCK(s, SOCK_MT_STATE_LOCK);
+    SOCK_MT_SET_STATE(s, SOCK_MT_STATE_NONE);
+    SOCK_MT_UNLOCK(s, SOCK_MT_STATE_LOCK);
 
-	if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE) {
-		return -1;
-	}
-	
-	return 0;
+    if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE) {
+        return -1;
+    }
+
+    return 0;
 }
 
 static int lwip_exit_mt_recv(int s, int arg)
 {
-	SOCK_MT_UNLOCK(s, SOCK_MT_RECV_LOCK);
+    SOCK_MT_UNLOCK(s, SOCK_MT_RECV_LOCK);
 
-	if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE) {
-		return -1;
-	}
-	
-	return 0;
+    if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE) {
+        return -1;
+    }
+
+    return 0;
 }
 
 static int lwip_exit_mt_shutdown(int s, int arg)
 {
-	//SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_STATE_NONE);
-	return 0;
-} 
+    //SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_STATE_NONE);
+    return 0;
+}
 
 static int lwip_exit_mt_close(int s, int arg)
 {
-	return 0;
-} 
+    return 0;
+}
 
 static int lwip_exit_mt_select(int s, int arg)
 {
-	int i;
-	int *fdset = (int *)arg;
-	fd_set *read_set = (fd_set *)fdset[0];
-	fd_set *write_set = (fd_set *)fdset[1];
+    int i;
+    int *fdset = (int *)arg;
+    fd_set *read_set = (fd_set *)fdset[0];
+    fd_set *write_set = (fd_set *)fdset[1];
 
-	for (i = 0; i < s; i++) {
-		if (FD_ISSET(i, read_set)) {
-			SOCK_MT_UNLOCK(i, SOCK_MT_RECV_LOCK);
+    for (i = 0; i < s; i++) {
+        if (FD_ISSET(i, read_set)) {
+            SOCK_MT_UNLOCK(i, SOCK_MT_RECV_LOCK);
             SOCK_MT_RESET_READ_SEL(i);
-		}
+        }
 
-		if (FD_ISSET(i, write_set)) {
-			SOCK_MT_UNLOCK(i, SOCK_MT_STATE_LOCK);
+        if (FD_ISSET(i, write_set)) {
+            SOCK_MT_UNLOCK(i, SOCK_MT_STATE_LOCK);
             SOCK_MT_RESET_WRITE_SEL(i);
-		}
-	}
+        }
+    }
 
-	for (i = 0; i < s; i++) {
-	    if ((FD_ISSET(i, read_set) || FD_ISSET(i, write_set)) \
-	            && SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
-			return -1;
-		}	
-	}
-	
-	return 0;
+    for (i = 0; i < s; i++) {
+        if ((FD_ISSET(i, read_set) || FD_ISSET(i, write_set)) \
+                && SOCK_MT_GET_SHUTDOWN(i) != SOCK_MT_SHUTDOWN_NONE) {
+            return -1;
+        }
+    }
+
+    return 0;
 }
 
 static int lwip_exit_mt_ioctrl(int s, int arg)
 {
-	SOCK_MT_UNLOCK(s, SOCK_MT_IOCTRL_LOCK);
+    SOCK_MT_UNLOCK(s, SOCK_MT_IOCTRL_LOCK);
 
-	if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE) {
-		return -1;
-	}
-	
-	return 0;
+    if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE) {
+        return -1;
+    }
+
+    return 0;
 }
 
 static const lwip_io_mt_fn lwip_enter_mt_table[] = {
@@ -462,7 +468,8 @@ static const lwip_io_mt_fn lwip_exit_mt_table[] = {
 
 static void lwip_do_sync_send(void *arg)
 {
-    struct netconn *conn = arg;
+    socket_conn_sync_t *sync = (socket_conn_sync_t *)arg;
+    struct netconn *conn = sync->conn;
 
     SYS_ARCH_DECL_PROTECT(lev);
     SYS_ARCH_PROTECT(lev);
@@ -472,118 +479,119 @@ static void lwip_do_sync_send(void *arg)
     }
     conn->state = NETCONN_NONE;
     SYS_ARCH_UNPROTECT(lev);
-    if (sys_sem_valid(&(conn->snd_op_completed)))
-        sys_sem_signal(&(conn->snd_op_completed));
 
-    /*
-     * if we use "op_completed" for its sync semaphore, then socket functions
-     * which are blocked by op_completed will be waked up.
-     *
-     * So we had better use a specific semaphore for the function, ioctrl_completed
-     * may be a good choise.
-     */
-    sys_sem_signal(&(conn->ioctrl_completed));
+    sys_sem_signal(sync->sem);
 }
 
 static void lwip_do_sync_rst_state(void *arg)
 {
-    struct netconn *conn = arg;
+    socket_conn_sync_t *sync = (socket_conn_sync_t *)arg;
+    struct netconn *conn = sync->conn;
 
     SYS_ARCH_DECL_PROTECT(lev);
     SYS_ARCH_PROTECT(lev);
     conn->state = NETCONN_NONE;
     SYS_ARCH_UNPROTECT(lev);
 
-    sys_sem_signal(&(conn->ioctrl_completed)); 
+    sys_sem_signal(sync->sem);
 }
 
-static void lwip_sync_state_mt(struct lwip_sock *sock , int state)
+static void lwip_sync_state_mt(struct lwip_sock *sock, int state)
 {
-	SOCK_MT_DEBUG(1, "sync state %d\n", state);
+    SOCK_MT_DEBUG(1, "sync state %d\n", state);
 
-	switch (state) {
-		case SOCK_MT_STATE_ACCEPT :
-            if (sys_mbox_valid(&sock->conn->acceptmbox))
-			    sys_mbox_trypost(&sock->conn->acceptmbox, NULL);
-			break;
-		case SOCK_MT_STATE_SEND :
-		{
-			tcpip_callback(lwip_do_sync_send, sock->conn);
-			sys_arch_sem_wait(&sock->conn->ioctrl_completed, 0);
-			break;
-		}	
-		case SOCK_MT_STATE_CONNECT :
-            if (sys_sem_valid(&(sock->conn->op_completed)))
-			    sys_sem_signal(&(sock->conn->op_completed));
-			break;
-		default :
-			break;
-	}
+    switch (state) {
+    case SOCK_MT_STATE_ACCEPT :
+        if (sys_mbox_valid(&sock->conn->acceptmbox))
+            sys_mbox_trypost(&sock->conn->acceptmbox, NULL);
+        break;
+    case SOCK_MT_STATE_SEND :
+    {
+        socket_conn_sync_t sync;
+
+        sync.conn = sock->conn;
+        sync.sem = sys_thread_sem_get();
+
+        tcpip_callback(lwip_do_sync_send, &sync);
+        sys_arch_sem_wait(sync.sem, 0);
+        break;
+    }
+    case SOCK_MT_STATE_CONNECT :
+        if (sock->conn->current_msg && sys_sem_valid(sock->conn->current_msg->op_completed_sem))
+            sys_sem_signal(sock->conn->current_msg->op_completed_sem);
+        break;
+    default :
+        break;
+    }
 }
 
 static void lwip_sync_recv_mt(struct lwip_sock *sock)
 {
-	SOCK_MT_DEBUG(1, "sync recv %d\n", sock->conn->socket);
+    SOCK_MT_DEBUG(1, "sync recv %d\n", sock->conn->socket);
     if (sys_mbox_valid(&sock->conn->recvmbox))
-	    sys_mbox_trypost(&sock->conn->recvmbox, NULL);
+        sys_mbox_trypost(&sock->conn->recvmbox, NULL);
 }
 
 static void lwip_sync_select_mt(struct lwip_sock *sock)
 {
-	SOCK_MT_DEBUG(1, "sync select %d\n", sock->conn->socket);
-	event_callback(sock->conn, NETCONN_EVT_ERROR, 0);
+    SOCK_MT_DEBUG(1, "sync select %d\n", sock->conn->socket);
+    event_callback(sock->conn, NETCONN_EVT_ERROR, 0);
 }
 
 
 static void lwip_sync_mt(int s)
 {
-	int module = 0;
+    int module = 0;
     int ret;
     struct lwip_sock *sock;
 
-	while (module < SOCK_MT_SELECT) {
-		extern void sys_arch_msleep(int ms);
-		int ret;
+    while (module < SOCK_MT_SELECT) {
+        extern void sys_arch_msleep(int ms);
 
-		SOCK_MT_TRYLOCK(s, module, ret);
-		if (ret == ERR_OK) {
-			/*
-			 * we always lock the mutex in case of other thread entering,
-			 * other thread will be blocked at "SOCK_MT_LOCK" and poll-check
-			 */
-			//SOCK_MT_UNLOCK(s, module);
-			module++;
-			continue;
-		}
+        SOCK_MT_TRYLOCK(s, module, ret);
+        if (ret == ERR_OK) {
+            /*
+             * we always lock the mutex in case of other thread entering,
+             * other thread will be blocked at "SOCK_MT_LOCK" and poll-check
+             */
+            //SOCK_MT_UNLOCK(s, module);
+            module++;
+            continue;
+        }
 
-		sock = get_socket(s);
+        sock = get_socket(s);
 #if LWIP_SO_LINGER
-		if (SOCK_MT_GET_STATE(s) == SOCK_MT_STATE_SEND) {
-			SOCK_MT_SET_LINGER(sock);
-		}
+        if (SOCK_MT_GET_STATE(s) == SOCK_MT_STATE_SEND) {
+            SOCK_MT_SET_LINGER(sock);
+        }
 #endif
-		if (!SOCK_MT_GET_SEL(s)) {
-			switch (module) {
-				case SOCK_MT_STATE:
-					lwip_sync_state_mt(sock, SOCK_MT_GET_STATE(s));
-					break;
-				case SOCK_MT_RECV:
-					lwip_sync_recv_mt(sock);
-					break;
-				default :
-					break;
-			}
-		} else {
-			lwip_sync_select_mt(sock);
-		}
+        if (!SOCK_MT_GET_SEL(s)) {
+            switch (module) {
+            case SOCK_MT_STATE:
+                lwip_sync_state_mt(sock, SOCK_MT_GET_STATE(s));
+                break;
+            case SOCK_MT_RECV:
+                lwip_sync_recv_mt(sock);
+                break;
+            default :
+                break;
+            }
+        } else {
+            lwip_sync_select_mt(sock);
+        }
 
-		sys_arch_msleep(LWIP_SYNC_MT_SLEEP_MS);
-	}
+        sys_arch_msleep(LWIP_SYNC_MT_SLEEP_MS);
+    }
 
     sock = tryget_socket(s);
     if (sock) {
-        tcpip_callback(lwip_do_sync_rst_state, sock->conn);
-        sys_arch_sem_wait(&sock->conn->ioctrl_completed, 0);
+        socket_conn_sync_t sync;
+
+        sync.conn = sock->conn;
+        sync.sem = sys_thread_sem_get();
+
+        tcpip_callback(lwip_do_sync_rst_state, &sync);
+        sys_arch_sem_wait(sync.sem, 0);
     }
 }
 
@@ -664,7 +672,7 @@ int lwip_accept_mt(int s, struct sockaddr *addr, socklen_t *addrlen)
     LWIP_ENTER_MT(s, SOCK_MT_STATE, SOCK_MT_STATE_ACCEPT)
 
     ret = lwip_accept(s, addr, addrlen);
-	
+
     LWIP_EXIT_MT(s, SOCK_MT_STATE, SOCK_MT_STATE_ACCEPT);
 
     if (ret < 0)
@@ -733,17 +741,17 @@ int lwip_getsockopt_mt(int s, int level, int optname, void *optval, socklen_t *o
 {
     int ret;
 
-	if (optname == SO_ERROR ) {
-		int retval = 0;
-		
-		if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE)
-			retval = ENOTCONN;
+    if (optname == SO_ERROR) {
+        int retval = 0;
 
-		if (retval) {
-			*(int *)optval = retval;
-			return 0;
-		}
-	} 
+        if (SOCK_MT_GET_SHUTDOWN(s) != SOCK_MT_SHUTDOWN_NONE)
+            retval = ENOTCONN;
+
+        if (retval) {
+            *(int *)optval = retval;
+            return 0;
+        }
+    }
 
     LWIP_ENTER_MT(s, SOCK_MT_IOCTL, 0);
 
@@ -768,10 +776,10 @@ int lwip_ioctl_mt(int s, long cmd, void *argp)
 }
 
 int lwip_sendto_mt(int s, const void *data, size_t size, int flags,
-            const struct sockaddr *to, socklen_t tolen)
+                   const struct sockaddr *to, socklen_t tolen)
 {
     int ret;
-	
+
     LWIP_ENTER_MT(s, SOCK_MT_STATE, SOCK_MT_STATE_SEND);
 
     ret = lwip_sendto(s, data, size, flags, to, tolen);
@@ -795,7 +803,7 @@ int lwip_send_mt(int s, const void *data, size_t size, int flags)
 }
 
 int lwip_recvfrom_mt(int s, void *mem, size_t len, int flags,
-            struct sockaddr *from, socklen_t *fromlen)
+                     struct sockaddr *from, socklen_t *fromlen)
 {
     int ret;
 
@@ -825,10 +833,10 @@ int lwip_write_mt(int s, const void *data, size_t size)
 
 int lwip_fcntl_mt(int s, int cmd, int val)
 {
-	int ret;
+    int ret;
 
     LWIP_ENTER_MT(s, SOCK_MT_IOCTL, 0);
-    
+
     ret = lwip_fcntl(s, cmd, val);
 
     LWIP_EXIT_MT(s, SOCK_MT_IOCTL, 0);
@@ -863,9 +871,9 @@ int lwip_close_mt(int s)
     SYS_ARCH_DECL_PROTECT(lev);
     sys_mutex_t lock_tmp[SOCK_MT_LOCK_MAX];
 
-	__lwip_shutdown_mt(s, SHUT_RDWR);
+    __lwip_shutdown_mt(s, SHUT_RDWR);
 
-    LWIP_ENTER_MT(s, SOCK_MT_CLOSE, 0);	
+    LWIP_ENTER_MT(s, SOCK_MT_CLOSE, 0);
 
     ret = lwip_close(s);
 
@@ -875,31 +883,31 @@ int lwip_close_mt(int s)
     for (i = 0 ; i < SOCK_MT_LOCK_MAX; i++) {
         lock_tmp[i] = sockets_mt[s].lock[i];
         sockets_mt[s].lock[i] = NULL;
-    }    
+    }
     SYS_ARCH_UNPROTECT(lev);
 
     for (i = 0 ; i < SOCK_MT_LOCK_MAX; i++) {
         sys_mutex_free(&lock_tmp[i]);
-    }    
+    }
 
     return ret;
 }
 
 int lwip_select_mt(int maxfdp1, fd_set *readset, fd_set *writeset,
-        fd_set *exceptset, struct timeval *timeout)
+                   fd_set *exceptset, struct timeval *timeout)
 {
     int ret;
-	fd_set read_set, write_set;
-	int pset[2] = {(int)&read_set, (int)&write_set};
+    fd_set read_set, write_set;
+    int pset[2] = {(int)&read_set, (int)&write_set};
 
-	FD_ZERO(&read_set);
-  	FD_ZERO(&write_set);
+    FD_ZERO(&read_set);
+    FD_ZERO(&write_set);
 
-	if (readset)
-		MEMCPY(&read_set, readset, sizeof(fd_set));
+    if (readset)
+        MEMCPY(&read_set, readset, sizeof(fd_set));
 
-	if (writeset)
-		MEMCPY(&write_set, writeset, sizeof(fd_set));
+    if (writeset)
+        MEMCPY(&write_set, writeset, sizeof(fd_set));
 
     LWIP_ENTER_MT(maxfdp1, SOCK_MT_SELECT, (int)pset);
 
@@ -909,26 +917,5 @@ int lwip_select_mt(int maxfdp1, fd_set *readset, fd_set *writeset,
 
     return ret;
 }
-
-#ifdef SOCKETS_TCP_TRACE
-
-int lwip_trace_tcp(int s, int cmd, void *arg)
-{
-    struct lwip_sock *sock;
-    u32_t *pbuf = (u32_t *)arg;
-
-    if (!(sock = tryget_socket(s)))
-        return -1;
-
-    ADD_TCP_SEND_BYTES_GET(sock->conn, &pbuf[0]);
-    ADD_TCP_SEND_BYTES_OK_GET(sock->conn, &pbuf[2]);
-    ADD_TCP_SEND_BYTES_NOMEM_GET(sock->conn, &pbuf[4]);
-    
-    ADD_TCP_RECV_BYTES_GET(sock->conn, &pbuf[6]);
-    ADD_TCP_RECV_BYTES_ERR_GET(sock->conn, &pbuf[8]);
-
-    return 0;
-}
-#endif
 
 #endif
