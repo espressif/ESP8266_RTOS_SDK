@@ -10,14 +10,15 @@
 #include <string.h>
 #include <strings.h>
 
-#include "sdkconfig.h"
-
-#include "esp_misc.h"
-#include "esp_sta.h"
 #include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event_loop.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 
 #include <sys/socket.h>
 #include <netdb.h>
@@ -28,9 +29,24 @@
 
 #include "openssl/ssl.h"
 
-#define OPENSSL_CLIENT_THREAD_NAME "openssl_client"
-#define OPENSSL_CLIENT_THREAD_STACK_WORDS 2048
-#define OPENSSL_CLIENT_THREAD_PRORIOTY 6
+/* The examples use simple WiFi configuration that you can set via
+   'make menuconfig'.
+
+   If you'd rather not, just change the below entries to strings with
+   the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
+*/
+#define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
+#define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASSWORD
+
+/* FreeRTOS event group to signal when we are connected & ready to make a request */
+static EventGroupHandle_t wifi_event_group;
+
+static const char *TAG = "example";
+
+/* The event group allows multiple bits for each event,
+   but we only care about one event - are we connected
+   to the AP with an IP? */
+const int CONNECTED_BIT = 1 << 0;
 
 extern const uint8_t ca_pem_start[] asm("_binary_ca_pem_start");
 extern const uint8_t ca_pem_end[]   asm("_binary_ca_pem_end");
@@ -56,12 +72,51 @@ Fragment size range 2048~8192
 /* receive length */
 #define OPENSSL_CLIENT_RECV_BUF_LEN 1024
 
-static xTaskHandle openssl_handle;
-
 static char send_data[] = OPENSSL_CLIENT_REQUEST;
 static int send_bytes = sizeof(send_data);
 
 static char recv_buf[OPENSSL_CLIENT_RECV_BUF_LEN];
+
+static esp_err_t event_handler(void *ctx, system_event_t *event)
+{
+    switch(event->event_id) {
+    case SYSTEM_EVENT_STA_START:
+        esp_wifi_connect();
+        break;
+    case SYSTEM_EVENT_STA_GOT_IP:
+        xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+        break;
+    case SYSTEM_EVENT_STA_DISCONNECTED:
+        /* This is a workaround as ESP32 WiFi libs don't currently
+           auto-reassociate. */
+        esp_wifi_connect();
+        xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+        break;
+    default:
+        break;
+    }
+    return ESP_OK;
+}
+
+static void initialise_wifi(void)
+{
+    tcpip_adapter_init();
+    wifi_event_group = xEventGroupCreate();
+    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = EXAMPLE_WIFI_SSID,
+            .password = EXAMPLE_WIFI_PASS,
+        },
+    };
+    ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
+    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
+    ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
+    ESP_ERROR_CHECK( esp_wifi_start() );
+}
 
 #if CONFIG_SSL_USING_WOLFSSL
 static void get_time()
@@ -97,7 +152,7 @@ static void get_time()
 }
 #endif
 
-static void openssl_client_thread(void* p)
+static void openssl_client_task(void* p)
 {
     int ret;
 
@@ -268,23 +323,6 @@ failed1:
     return ;
 }
 
-void user_conn_init(void)
-{
-    int ret;
-
-    ret = xTaskCreate(openssl_client_thread,
-                      OPENSSL_CLIENT_THREAD_NAME,
-                      OPENSSL_CLIENT_THREAD_STACK_WORDS,
-                      NULL,
-                      OPENSSL_CLIENT_THREAD_PRORIOTY,
-                      &openssl_handle);
-
-    if (ret != pdPASS)  {
-        printf("create thread %s failed\n", OPENSSL_CLIENT_THREAD_NAME);
-        return ;
-    }
-}
-
 /******************************************************************************
  * FunctionName : user_rf_cal_sector_set
  * Description  : SDK just reversed 4 sectors, used for rf init data and paramters.
@@ -337,42 +375,9 @@ uint32_t user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-void wifi_event_handler_cb(System_Event_t* event)
+void app_main(void)
 {
-    if (event == NULL) {
-        return;
-    }
-
-    switch (event->event_id) {
-        case EVENT_STAMODE_GOT_IP:
-            printf("sta got ip , creat task %d\n", esp_get_free_heap_size());
-            user_conn_init();
-            break;
-
-        default:
-            break;
-    }
-}
-
-/******************************************************************************
- * FunctionName : user_init
- * Description  : entry of user application, init user function here
- * Parameters   : none
- * Returns      : none
-*******************************************************************************/
-void user_init(void)
-{
-    printf("SDK version:%s %d\n", esp_get_idf_version(), esp_get_free_heap_size());
-    wifi_set_opmode(STATION_MODE);
-
-    {
-        // set AP parameter
-        struct station_config config;
-        bzero(&config, sizeof(struct station_config));
-        sprintf((char*)config.ssid, CONFIG_WIFI_SSID);
-        sprintf((char*)config.password, CONFIG_WIFI_PASSWORD);
-        wifi_station_set_config(&config);
-    }
-
-    wifi_set_event_handler_cb(wifi_event_handler_cb);
+    ESP_ERROR_CHECK( nvs_flash_init() );
+    initialise_wifi();
+    xTaskCreate(&openssl_client_task, "openssl_client", 2048, NULL, 6, NULL);
 }
