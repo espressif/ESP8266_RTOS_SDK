@@ -11,23 +11,38 @@
 #include <string.h>
 #include <strings.h>
 
-#include "sdkconfig.h"
-
-#include "esp_misc.h"
-#include "esp_sta.h"
-#include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event_loop.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 
 #include <sys/socket.h>
 #include <netdb.h>
 
 #include "openssl/ssl.h"
 
-#define OPENSSL_DEMO_THREAD_NAME "ssl_demo"
-#define OPENSSL_DEMO_THREAD_STACK_WORDS 2048
-#define OPENSSL_DEMO_THREAD_PRORIOTY 6
+/* The examples use simple WiFi configuration that you can set via
+   'make menuconfig'.
+
+   If you'd rather not, just change the below entries to strings with
+   the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
+*/
+#define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
+#define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASSWORD
+
+/* FreeRTOS event group to signal when we are connected & ready to make a request */
+static EventGroupHandle_t wifi_event_group;
+
+/* The event group allows multiple bits for each event,
+   but we only care about one event - are we connected
+   to the AP with an IP? */
+const int CONNECTED_BIT = 1 << 0;
+
+static const char *TAG = "example";
 
 #define OPENSSL_DEMO_LOCAL_TCP_PORT 9999
 
@@ -38,27 +53,77 @@
 
 #define OPENSSL_DEMO_RECV_BUF_LEN 1024
 
-static xTaskHandle openssl_handle;
-
 static char send_data[] = OPENSSL_DEMO_REQUEST;
 static int send_bytes = sizeof(send_data);
 
 static char recv_buf[OPENSSL_DEMO_RECV_BUF_LEN];
 
-static void openssl_demo_thread(void* p)
+static esp_err_t event_handler(void *ctx, system_event_t *event)
+{
+    switch (event->event_id) {
+        case SYSTEM_EVENT_STA_START:
+            esp_wifi_connect();
+            break;
+
+        case SYSTEM_EVENT_STA_GOT_IP:
+            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+            break;
+
+        case SYSTEM_EVENT_STA_DISCONNECTED:
+            /* This is a workaround as ESP32 WiFi libs don't currently
+               auto-reassociate. */
+            esp_wifi_connect();
+            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+            break;
+
+        default:
+            break;
+    }
+
+    return ESP_OK;
+}
+
+static void initialise_wifi(void)
+{
+    tcpip_adapter_init();
+    wifi_event_group = xEventGroupCreate();
+    ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = EXAMPLE_WIFI_SSID,
+            .password = EXAMPLE_WIFI_PASS,
+        },
+    };
+    ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+}
+
+static void openssl_task(void *p)
 {
     int ret;
 
-    SSL_CTX* ctx;
-    SSL* ssl;
+    SSL_CTX *ctx;
+    SSL *ssl;
 
     int socket;
     struct sockaddr_in sock_addr;
-    struct hostent* entry = NULL;
+    struct hostent *entry = NULL;
 
     int recv_bytes = 0;
 
-    printf("OpenSSL demo thread start...\n");
+    ESP_LOGI(TAG, "OpenSSL demo thread start...");
+
+    /* Wait for the callback to set the CONNECTED_BIT in the
+       event group.
+    */
+    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
+                        false, true, portMAX_DELAY);
+    ESP_LOGI(TAG, "Connected to AP");
 
     /*get addr info for hostname*/
     do {
@@ -66,94 +131,94 @@ static void openssl_demo_thread(void* p)
         vTaskDelay(500 / portTICK_RATE_MS);
     } while (entry == NULL);
 
-    printf("get target IP is %d.%d.%d.%d\n", (unsigned char)((((struct in_addr*)(entry->h_addr))->s_addr & 0x000000ff) >> 0),
-           (unsigned char)((((struct in_addr*)(entry->h_addr))->s_addr & 0x0000ff00) >> 8),
-           (unsigned char)((((struct in_addr*)(entry->h_addr))->s_addr & 0x00ff0000) >> 16),
-           (unsigned char)((((struct in_addr*)(entry->h_addr))->s_addr & 0xff000000) >> 24));
+    ESP_LOGI(TAG, "get target IP is %d.%d.%d.%d", (unsigned char)((((struct in_addr *)(entry->h_addr))->s_addr & 0x000000ff) >> 0),
+           (unsigned char)((((struct in_addr *)(entry->h_addr))->s_addr & 0x0000ff00) >> 8),
+           (unsigned char)((((struct in_addr *)(entry->h_addr))->s_addr & 0x00ff0000) >> 16),
+           (unsigned char)((((struct in_addr *)(entry->h_addr))->s_addr & 0xff000000) >> 24));
 
-    printf("create SSL context ......");
+    ESP_LOGI(TAG, "create SSL context ......");
     ctx = SSL_CTX_new(TLSv1_1_client_method());
 
     if (!ctx) {
-        printf("failed\n");
+        ESP_LOGI(TAG, "failed");
         goto failed1;
     }
 
-    printf("OK\n");
+    ESP_LOGI(TAG, "OK");
 
     // The client will verify the certificate received from the server during the handshake.
     // This is turned on by default in wolfSSL.
     SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
 
-    printf("create socket ......");
+    ESP_LOGI(TAG, "create socket ......");
     socket = socket(AF_INET, SOCK_STREAM, 0);
 
     if (socket < 0) {
-        printf("failed\n");
+        ESP_LOGI(TAG, "failed");
         goto failed2;
     }
 
-    printf("OK\n");
+    ESP_LOGI(TAG, "OK");
 
-    printf("bind socket ......");
+    ESP_LOGI(TAG, "bind socket ......");
     memset(&sock_addr, 0, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_addr.s_addr = 0;
     sock_addr.sin_port = htons(OPENSSL_DEMO_LOCAL_TCP_PORT);
-    ret = bind(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
+    ret = bind(socket, (struct sockaddr *)&sock_addr, sizeof(sock_addr));
 
     if (ret) {
-        printf("failed\n");
+        ESP_LOGI(TAG, "failed");
         goto failed3;
     }
 
-    printf("OK\n");
+    ESP_LOGI(TAG, "OK");
 
-    printf("socket connect to remote ......");
+    ESP_LOGI(TAG, "socket connect to remote ......");
     memset(&sock_addr, 0, sizeof(sock_addr));
     sock_addr.sin_family = AF_INET;
-    sock_addr.sin_addr.s_addr = ((struct in_addr*)(entry->h_addr))->s_addr;
+    sock_addr.sin_addr.s_addr = ((struct in_addr *)(entry->h_addr))->s_addr;
     sock_addr.sin_port = htons(OPENSSL_DEMO_TARGET_TCP_PORT);
-    ret = connect(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
+    ret = connect(socket, (struct sockaddr *)&sock_addr, sizeof(sock_addr));
 
     if (ret) {
-        printf("failed\n");
+        ESP_LOGI(TAG, "failed\n");
         goto failed4;
     }
 
-    printf("OK\n");
+    ESP_LOGI(TAG, "OK");
 
-    printf("create SSL ......");
+    ESP_LOGI(TAG, "create SSL ......");
     ssl = SSL_new(ctx);
 
     if (!ssl) {
-        printf("failed\n");
+        ESP_LOGI(TAG, "failed");
         goto failed5;
     }
 
-    printf("OK\n");
+    ESP_LOGI(TAG, "OK");
 
     SSL_set_fd(ssl, socket);
 
-    printf("SSL connected to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
+    ESP_LOGI(TAG, "SSL connected to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = SSL_connect(ssl);
 
     if (!ret) {
-        printf("failed, return [-0x%x]\n", -ret);
+        ESP_LOGI(TAG, "failed, return [-0x%x]", -ret);
         goto failed6;
     }
 
-    printf("OK\n");
+    ESP_LOGI(TAG, "OK");
 
-    printf("send request to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
+    ESP_LOGI(TAG,  "send request to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = SSL_write(ssl, send_data, send_bytes);
 
     if (ret <= 0) {
-        printf("failed, return [-0x%x]\n", -ret);
+        ESP_LOGI(TAG, "failed, return [-0x%x]", -ret);
         goto failed7;
     }
 
-    printf("OK\n\n");
+    ESP_LOGI(TAG, "OK\n");
 
     do {
         ret = SSL_read(ssl, recv_buf, OPENSSL_DEMO_RECV_BUF_LEN - 1);
@@ -163,10 +228,10 @@ static void openssl_demo_thread(void* p)
         }
 
         recv_bytes += ret;
-        printf("%s", recv_buf);
+        ESP_LOGI(TAG, "%s", recv_buf);
     } while (1);
 
-    printf("read %d bytes data from %s ......\n", recv_bytes, OPENSSL_DEMO_TARGET_NAME);
+    ESP_LOGI(TAG, "read %d bytes data from %s ......", recv_bytes, OPENSSL_DEMO_TARGET_NAME);
 
 failed7:
     SSL_shutdown(ssl);
@@ -181,26 +246,9 @@ failed2:
 failed1:
     vTaskDelete(NULL);
 
-    printf("task exit\n");
+    ESP_LOGI(TAG, "task exit");
 
     return ;
-}
-
-void user_conn_init(void)
-{
-    int ret;
-
-    ret = xTaskCreate(openssl_demo_thread,
-                      OPENSSL_DEMO_THREAD_NAME,
-                      OPENSSL_DEMO_THREAD_STACK_WORDS,
-                      NULL,
-                      OPENSSL_DEMO_THREAD_PRORIOTY,
-                      &openssl_handle);
-
-    if (ret != pdPASS)  {
-        printf("create thread %s failed\n", OPENSSL_DEMO_THREAD_NAME);
-        return ;
-    }
 }
 
 /******************************************************************************
@@ -255,42 +303,9 @@ uint32_t user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-void wifi_event_handler_cb(System_Event_t* event)
+void app_main(void)
 {
-    if (event == NULL) {
-        return;
-    }
-
-    switch (event->event_id) {
-        case EVENT_STAMODE_GOT_IP:
-            printf("sta got ip , creat task %d\n", esp_get_free_heap_size());
-            user_conn_init();
-            break;
-
-        default:
-            break;
-    }
-}
-
-/******************************************************************************
- * FunctionName : user_init
- * Description  : entry of user application, init user function here
- * Parameters   : none
- * Returns      : none
-*******************************************************************************/
-void user_init(void)
-{
-    printf("SDK version:%s %d\n", esp_get_idf_version(), esp_get_free_heap_size());
-    wifi_set_opmode(STATION_MODE);
-
-    {
-        // set AP parameter
-        struct station_config config;
-        bzero(&config, sizeof(struct station_config));
-        sprintf((char*)config.ssid, CONFIG_WIFI_SSID);
-        sprintf((char*)config.password, CONFIG_WIFI_PASSWORD);
-        wifi_station_set_config(&config);
-    }
-
-    wifi_set_event_handler_cb(wifi_event_handler_cb);
+    ESP_ERROR_CHECK(nvs_flash_init());
+    initialise_wifi();
+    xTaskCreate(&openssl_task, "openssl_task", 2048, NULL, 5, NULL);
 }
