@@ -64,12 +64,12 @@ uint32_t user_rf_cal_sector_set(void)
 }
 
 /******************************************************************************
- * FunctionName : user_init
+ * FunctionName : app_main
  * Description  : entry of user application, init user function here
  * Parameters   : none
  * Returns      : none
 *******************************************************************************/
-void user_init(void)
+void app_main(void)
 {
     printf("SDK version:%s\n", esp_get_idf_version());
 }
