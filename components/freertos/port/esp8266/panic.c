@@ -38,8 +38,17 @@ void IRAM_ATTR panicHandler(void *frame)
         "A14",  "A15",  "SAR",  "EXCCAUSE"
     };
 
+    extern int _Pri_3_NMICount;
+
     /* NMI can interrupt exception. */
     ETS_INTR_LOCK();
+
+    if (_Pri_3_NMICount == -1) {
+        void show_critical_info(void);
+
+        ets_printf("\nWatch dog triggle:\n\n");
+        show_critical_info();
+    }
 
     for (x = 0; x < 20; x += 4) {
         for (y = 0; y < 4; y++) {

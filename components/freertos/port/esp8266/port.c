@@ -257,13 +257,11 @@ void IRAM_ATTR vPortExitCritical(void)
     }
 }
 
-void ShowCritical(void)
+void show_critical_info(void)
 {
-    printf("ShowCritical:%u\n", uxCriticalNesting);
-    printf("HdlMacSig:%u\n", HdlMacSig);
-    printf("SWReq:%u\n", SWReq);
-
-    ets_delay_us(50000);
+    ets_printf("ShowCritical:%u\n", uxCriticalNesting);
+    ets_printf("HdlMacSig:%u\n", HdlMacSig);
+    ets_printf("SWReq:%u\n", SWReq);
 }
 
 void IRAM_ATTR vPortETSIntrLock(void)
