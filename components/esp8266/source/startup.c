@@ -14,16 +14,16 @@
 
 static void user_init_entry(void *param)
 {
-    void (*func)(void);
+    void (**func)(void);
 
-    extern void (__init_array_start)(void);
-    extern void (__init_array_end)(void);
+    extern void (*__init_array_start)(void);
+    extern void (*__init_array_end)(void);
 
     extern void app_main(void);
 
     /* initialize C++ construture function */
     for (func = &__init_array_start; func < &__init_array_end; func++)
-        func();
+        func[0]();
 
     tcpip_adapter_init();
 
