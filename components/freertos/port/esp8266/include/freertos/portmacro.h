@@ -206,6 +206,8 @@ typedef struct _xt_isr_entry_ {
     void *  arg;
 } _xt_isr_entry;
 
+void show_critical_info(void);
+
 #ifdef __cplusplus
 }
 #endif

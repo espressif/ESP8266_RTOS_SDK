@@ -19,6 +19,67 @@
 #include "rom/ets_sys.h"
 #include "esp_err.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "private/list.h"
+#include "private/portable.h"
+
+#define STACK_VOL_NUM 16
+
+/*
+ * @Note: If freeRTOS is updated, the structure must be checked.
+ */
+typedef struct task_info
+{
+    volatile StackType_t	*pxTopOfStack;
+
+#if ( portUSING_MPU_WRAPPERS == 1 )
+    xMPU_SETTINGS	xMPUSettings;
+#endif
+
+    ListItem_t			xStateListItem;
+    ListItem_t			xEventListItem;
+    UBaseType_t			uxPriority;
+    StackType_t			*pxStack;
+    char				pcTaskName[ configMAX_TASK_NAME_LEN ];
+
+#if configRECORD_STACK_HIGH_ADDRESS != 1
+#error "configRECORD_STACK_HIGH_ADDRESS must enable"
+#endif
+
+#if portSTACK_GROWTH >= 0
+#error "Task stack must decrease growing."
+#endif
+
+    StackType_t		*pxEndOfStack;
+} task_info_t;
+
+static void IRAM_ATTR panic_stack(StackType_t *start, StackType_t *end)
+{
+    size_t i, j;
+    size_t size = end - start + 1;
+
+    ets_printf("%10s", " ");
+    for (i = 0; i < STACK_VOL_NUM; i++) {
+        ets_printf("%-8x ", i * sizeof(StackType_t));
+    }
+    ets_printf("\n\n");
+
+    for (i = 0; i < size; i += STACK_VOL_NUM) {
+        size_t len = size > i ? size - i : STACK_VOL_NUM - (i - size);
+
+        if (len > STACK_VOL_NUM)
+            len = STACK_VOL_NUM;
+
+        ets_printf("%-10x", &start[i]);
+
+        for (j = 0; j < len; j++) {
+            ets_printf("%08x ",start[i + j]);
+        }
+        ets_printf("\n");
+    }
+}
+
 /*
  * @brief output xtensa register value map when crash
  * 
@@ -44,10 +105,27 @@ void IRAM_ATTR panicHandler(void *frame)
     ETS_INTR_LOCK();
 
     if (_Pri_3_NMICount == -1) {
-        void show_critical_info(void);
-
         ets_printf("\nWatch dog triggle:\n\n");
         show_critical_info();
+    } else if (xPortInIsrContext()) {
+        ets_printf("\nISR:\n\n");
+    } else {
+        task_info_t *task = xTaskGetCurrentTaskHandle();
+
+        if (task) {
+            
+            StackType_t *pdata = task->pxStack;
+            StackType_t *end = task->pxEndOfStack + 1;
+
+            ets_printf("\nTask stack [%s] stack from [%p] to [%p], total [%d] size\n\n",
+                        task->pcTaskName, pdata, end, end - pdata + 1);
+
+            panic_stack(pdata, end);
+
+            ets_printf("\n");
+        } else {
+            ets_printf("\nNo task\n\n");
+        }
     }
 
     for (x = 0; x < 20; x += 4) {
