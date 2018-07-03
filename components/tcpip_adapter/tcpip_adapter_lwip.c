@@ -70,7 +70,6 @@ u32_t LwipTimOutLim = 0; // For light sleep. time out. limit is 3000ms
 err_t ethernetif_init(struct netif* netif);
 void system_station_got_ip_set();
 
-static os_timer_t* get_ip_timer;
 static int dhcp_fail_time;
 static tcpip_adapter_ip_info_t esp_ip[TCPIP_ADAPTER_IF_MAX];
 
@@ -102,30 +101,28 @@ static void tcpip_adapter_dhcpc_done()
 {
     struct dhcp *clientdhcp = netif_dhcp_data(esp_netif[TCPIP_ADAPTER_IF_STA]) ;
 
-    os_timer_disarm(get_ip_timer);
-
-    if (clientdhcp->state == DHCP_STATE_BOUND) {
-        /*send event here*/
-        tcpip_adapter_dhcpc_cb(esp_netif[TCPIP_ADAPTER_IF_STA]);
-        printf("ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n", IP2STR(ip_2_ip4(&(esp_netif[0]->ip_addr))),
-               IP2STR(ip_2_ip4(&(esp_netif[0]->netmask))), IP2STR(ip_2_ip4(&(esp_netif[0]->gw))));
-    } else if (dhcp_fail_time < (CONFIG_IP_LOST_TIMER_INTERVAL * 1000 / 100)) {
-        ESP_LOGD(TAG,"dhcpc time(ms): %d\n", dhcp_fail_time * 100);
-        dhcp_fail_time ++;
-        os_timer_setfn(get_ip_timer, tcpip_adapter_dhcpc_done, NULL);
-        os_timer_arm(get_ip_timer, 200, 1);
+    if (netif_is_up(esp_netif[TCPIP_ADAPTER_IF_STA])) {
+        if (clientdhcp->state == DHCP_STATE_BOUND) {
+            /*send event here*/
+            tcpip_adapter_dhcpc_cb(esp_netif[TCPIP_ADAPTER_IF_STA]);
+            ESP_LOGD(TAG,"ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n", IP2STR(ip_2_ip4(&(esp_netif[0]->ip_addr))),
+                IP2STR(ip_2_ip4(&(esp_netif[0]->netmask))), IP2STR(ip_2_ip4(&(esp_netif[0]->gw))));
+        } else if (dhcp_fail_time < (CONFIG_IP_LOST_TIMER_INTERVAL * 1000 / 500)) {
+            ESP_LOGD(TAG,"dhcpc time(ms): %d\n", dhcp_fail_time * 500);
+            dhcp_fail_time ++;
+            sys_timeout(500, tcpip_adapter_dhcpc_done, NULL);
+        } else {
+            ESP_LOGD(TAG,"ERROR dhcp get ip error\n");
+        }
     } else {
-        ESP_LOGD(TAG,"ERROR dhcp get ip error\n");
-        free(get_ip_timer);
-    }
-}
+        dhcp_release(esp_netif[TCPIP_ADAPTER_IF_STA]);
+        dhcp_stop(esp_netif[TCPIP_ADAPTER_IF_STA]);
+        dhcp_cleanup(esp_netif[TCPIP_ADAPTER_IF_STA]);
 
-static inline netif_init_fn tcpip_if_to_netif_init_fn(tcpip_adapter_if_t tcpip_if)
-{
-     if (tcpip_if < TCPIP_ADAPTER_IF_MAX)
-	  return esp_netif_init_fn[tcpip_if];
-     else
-	  return NULL;
+        dhcpc_status[TCPIP_ADAPTER_IF_STA] = TCPIP_ADAPTER_DHCP_INIT;
+
+        tcpip_adapter_reset_ip_info(TCPIP_ADAPTER_IF_STA);
+    }
 }
 
 static esp_err_t tcpip_adapter_update_default_netif(void)
@@ -144,6 +141,10 @@ esp_err_t tcpip_adapter_start(tcpip_adapter_if_t tcpip_if, uint8_t *mac, tcpip_a
     int s = -1;
     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || mac == NULL || ip_info == NULL) {
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
+    }
+
+    if (esp_netif[tcpip_if] != NULL && memcmp(esp_netif[tcpip_if]->hwaddr, mac, NETIF_MAX_HWADDR_LEN)) {
+        memcpy(esp_netif[tcpip_if]->hwaddr, mac, NETIF_MAX_HWADDR_LEN);
     }
 
     if (esp_netif[tcpip_if] == NULL || !netif_is_up(esp_netif[tcpip_if])) {
@@ -204,7 +205,8 @@ esp_err_t tcpip_adapter_stop(tcpip_adapter_if_t tcpip_if)
     if (esp_netif[tcpip_if] == NULL) {
         return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;
     }
-
+    
+    esp_close((int)esp_netif[tcpip_if]->state);
     if (!netif_is_up(esp_netif[tcpip_if])) {
         netif_remove(esp_netif[tcpip_if]);
         return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;
@@ -225,12 +227,11 @@ esp_err_t tcpip_adapter_stop(tcpip_adapter_if_t tcpip_if)
         tcpip_adapter_reset_ip_info(tcpip_if);
     }
 
-    esp_close((int)esp_netif[tcpip_if]->state);
     netif_set_down(esp_netif[tcpip_if]);
     netif_remove(esp_netif[tcpip_if]);
     tcpip_adapter_update_default_netif();
     //os_free(esp_netif[tcpip_if]);
-    //esp_netif[netif_index] = NULL;
+    //esp_netif[tcpip_if] = NULL;
     return ESP_OK;
 }
 
@@ -891,6 +892,12 @@ static void tcpip_adapter_ip_lost_timer(void *arg)
     tcpip_adapter_if_t tcpip_if = (tcpip_adapter_if_t)arg;
 
     ESP_LOGD(TAG, "if%d ip lost tmr: enter", tcpip_if);
+
+    if (esp_ip_lost_timer[tcpip_if].timer_running == false) {
+        ESP_LOGD(TAG, "ip lost time is not running");
+        return;
+    }
+
     esp_ip_lost_timer[tcpip_if].timer_running = false;
 
     if (tcpip_if == TCPIP_ADAPTER_IF_STA) {
@@ -925,12 +932,6 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
 
-    get_ip_timer = (os_timer_t*)malloc(sizeof(*get_ip_timer));
-
-    if (get_ip_timer == NULL) {
-        ESP_LOGE(TAG, "ERROR NO MEMORY\n");
-    }
-
     if (dhcpc_status[tcpip_if] != TCPIP_ADAPTER_DHCP_STARTED) {
         struct netif *p_netif = esp_netif[tcpip_if];
 
@@ -957,11 +958,7 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
                 return ESP_ERR_TCPIP_ADAPTER_DHCPC_START_FAILED;
             }
 
-            //dhcp_set_cb(p_netif, tcpip_adapter_dhcpc_cb);
-            os_timer_disarm(get_ip_timer);
-            os_timer_setfn(get_ip_timer, tcpip_adapter_dhcpc_done, NULL);
-            os_timer_arm(get_ip_timer, 100, 1);
-
+            sys_timeout(500, tcpip_adapter_dhcpc_done, NULL);
             ESP_LOGD(TAG, "dhcp client start successfully");
             dhcpc_status[tcpip_if] = TCPIP_ADAPTER_DHCP_STARTED;
             return ESP_OK;
@@ -983,13 +980,14 @@ esp_err_t tcpip_adapter_dhcpc_stop(tcpip_adapter_if_t tcpip_if)
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
 
+    esp_ip_lost_timer[tcpip_if].timer_running = false;
+
     if (dhcpc_status[tcpip_if] == TCPIP_ADAPTER_DHCP_STARTED) {
         struct netif *p_netif = esp_netif[tcpip_if];
 
         if (p_netif != NULL) {
             dhcp_stop(p_netif);
             tcpip_adapter_reset_ip_info(tcpip_if);
-            tcpip_adapter_start_ip_lost_timer(tcpip_if);
         } else {
             ESP_LOGD(TAG, "dhcp client if not ready");
             return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;
