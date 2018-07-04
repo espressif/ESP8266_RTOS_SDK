@@ -150,5 +150,8 @@ NVIC value of 255. */
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
 #define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
 
+/* add this to dump task stack information */
+#define configRECORD_STACK_HIGH_ADDRESS 1
+
 #endif /* FREERTOS_CONFIG_H */
 

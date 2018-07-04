@@ -335,7 +335,7 @@ uint16_t IRAM_ATTR _xt_isr_handler(uint16_t i)
     return i & ~(1 << index);
 }
 
-int xPortInIsrContext(void)
+int IRAM_ATTR xPortInIsrContext(void)
 {
     return _xt_isr_status != 0;
 }

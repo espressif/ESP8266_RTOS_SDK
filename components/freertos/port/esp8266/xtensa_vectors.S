@@ -1514,6 +1514,7 @@ nmi_common_panic:
 _xt_ext_panic:
     /* Allocate exception frame and save minimal context. */
     mov     a0, sp
+    movi    sp, _chip_interrupt_tmp
     addi    sp, sp, -XT_STK_FRMSZ
     s32i    a0, sp, XT_STK_A1
 
