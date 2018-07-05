@@ -287,10 +287,14 @@ static esp_err_t IRAM_ATTR spi_flash_write_status(uint32_t status_value)
     Cache_Read_Disable_2();
 
     Wait_SPI_Idle(&flashchip);
-    if(ESP_OK != SPI_write_enable(&flashchip))
+    if(ESP_OK != SPI_write_enable(&flashchip)){
+        FLASH_INTR_UNLOCK(c_tmp);
         return ESP_ERR_FLASH_OP_FAIL;
-    if(ESP_OK != SPI_write_status(&flashchip,status_value))
+    }
+    if(ESP_OK != SPI_write_status(&flashchip,status_value)){
+        FLASH_INTR_UNLOCK(c_tmp);
         return ESP_ERR_FLASH_OP_FAIL;
+    }
     Wait_SPI_Idle(&flashchip);
 
     Cache_Read_Enable_2();
