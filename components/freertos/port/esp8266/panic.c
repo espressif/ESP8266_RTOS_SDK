@@ -89,6 +89,9 @@ static void IRAM_ATTR panic_stack(StackType_t *start, StackType_t *end)
  */
 void IRAM_ATTR panicHandler(void *frame)
 {
+    // for panic the function that disable cache
+    Cache_Read_Enable_New();
+
     int *regs = (int *)frame;
     int x, y;
     const char *sdesc[] = {
