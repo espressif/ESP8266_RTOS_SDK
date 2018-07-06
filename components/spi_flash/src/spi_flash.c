@@ -98,6 +98,9 @@
 #define FLASH_INTR_LOCK(t)                      wifi_enter_critical(t)
 #define FLASH_INTR_UNLOCK(t)                    wifi_exit_critical(t)
 
+#define FLASH_ALIGN_BYTES                       4
+#define FLASH_ALIGN(addr)                       ((((size_t)addr) + (FLASH_ALIGN_BYTES - 1)) & (~(FLASH_ALIGN_BYTES - 1)))
+
 enum GD25Q32C_status {
     GD25Q32C_STATUS1=0,
     GD25Q32C_STATUS2,
@@ -128,6 +131,7 @@ bool special_flash_read_status(uint8_t command, uint32_t* status, int len);
 bool special_flash_write_status(uint8_t command, uint32_t status, int len, bool write_en);
 uint8_t en25q16x_read_sfdp();
 
+extern void pp_soft_wdt_feed(void);
 extern void pp_soft_wdt_stop(void);
 extern void pp_soft_wdt_restart(void);
 
@@ -451,11 +455,43 @@ esp_err_t spi_flash_enable_qmode(void)
     return ret;
 }
 
-esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t size)
+static esp_err_t IRAM_ATTR spi_flash_write_raw(size_t dest_addr, const void *src, size_t size)
 {
     esp_err_t ret;
-    uint32_t *tmp;
     FLASH_INTR_DECLARE(c_tmp);
+
+    spi_debug("W[%x] %d-", dest_addr / 4096, esp_get_time());
+
+    FLASH_INTR_LOCK(c_tmp);
+    pp_soft_wdt_stop();
+    FlashIsOnGoing = 1;
+    Cache_Read_Disable_2();
+
+    ret = SPIWrite(dest_addr, (uint32_t *)src, size);
+
+    Cache_Read_Enable_2();
+    FlashIsOnGoing = 0;
+    pp_soft_wdt_restart();
+    FLASH_INTR_UNLOCK(c_tmp);
+
+    spi_debug("%d\n", esp_get_time());
+
+    return ret;
+}
+
+esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t size)
+{
+#define FLASH_WRITE(dest, src, size)                \
+{                                                   \
+    ret = spi_flash_write_raw(dest, src, size);     \
+    pp_soft_wdt_feed();                             \
+    if (ret)                                        \
+        goto exit;                                  \
+}
+
+    esp_err_t ret = ESP_ERR_FLASH_OP_FAIL;
+    uint32_t *tmp;
+    size_t before_wbytes, align_wbytes;
 
     if (src == NULL) {
         return ESP_ERR_FLASH_OP_FAIL;
@@ -465,11 +501,7 @@ esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t si
         return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    if (size % 4) {
-        size = (size / 4 + 1) * 4;
-    }
-
-    if (IS_FLASH(src) || ((size_t)src) & 0x3) {
+    if (IS_FLASH(src)) {
         tmp = wifi_malloc(size, OSI_MALLOC_CAP_32BIT);
         if (!tmp) {
             return ESP_ERR_NO_MEM;
@@ -478,65 +510,103 @@ esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t si
     } else
         tmp = (uint32_t *)src;
 
-    spi_debug("W[%x] %d-", dest_addr / 4096, esp_get_time());
+    before_wbytes = FLASH_ALIGN(tmp) == (size_t)tmp ? 0 : FLASH_ALIGN(tmp) - (size_t)tmp;
+    align_wbytes = size - before_wbytes;
+
+    if (before_wbytes) {
+        uint8_t load_buf[FLASH_ALIGN_BYTES];
+
+        memcpy(load_buf, tmp, before_wbytes);
+        FLASH_WRITE(dest_addr, load_buf, FLASH_ALIGN_BYTES);
+    }
+
+    if (align_wbytes) {
+        void *align_addr = (void *)FLASH_ALIGN(tmp);
+
+        if (align_wbytes % FLASH_ALIGN_BYTES)
+            align_wbytes = (align_wbytes / FLASH_ALIGN_BYTES + 1) * FLASH_ALIGN_BYTES;
+
+        FLASH_WRITE(dest_addr + before_wbytes, align_addr, align_wbytes);
+    }
+
+exit:
+    if (IS_FLASH(src))
+        wifi_free(tmp);
+
+    return ret;
+}
+
+/******************************************************************************
+ * FunctionName : spi_flash_read_raw
+ * Description  : a
+ * Parameters   :
+ * Returns      :
+*******************************************************************************/
+static esp_err_t IRAM_ATTR spi_flash_read_raw(size_t src_addr, void *dest, size_t size)
+{
+    esp_err_t ret;
+    FLASH_INTR_DECLARE(c_tmp);
+
+    spi_debug("R[%x] %d-", src_addr / 4096, esp_get_time());
 
     FLASH_INTR_LOCK(c_tmp);
-
     pp_soft_wdt_stop();
     FlashIsOnGoing = 1;
-
     Cache_Read_Disable_2();
 
-    ret = SPIWrite(dest_addr, tmp, size);
+    ret = SPIRead(src_addr, dest, size);
 
     Cache_Read_Enable_2();
-
     FlashIsOnGoing = 0;
     pp_soft_wdt_restart();
-
     FLASH_INTR_UNLOCK(c_tmp);
-
-    if (IS_FLASH(src) || ((size_t)src) & 0x3)
-        wifi_free(tmp);
 
     spi_debug("%d\n", esp_get_time());
 
     return ret;
 }
 
-/******************************************************************************
- * FunctionName : spi_flash_read
- * Description  : a
- * Parameters   :
- * Returns      :
-*******************************************************************************/
 esp_err_t IRAM_ATTR spi_flash_read(size_t src_addr, void *dest, size_t size)
 {
+#define FLASH_READ(addr, dest, size)                        \
+{                                                           \
+    ret = spi_flash_read_raw(src_addr, dest, size);         \
+    pp_soft_wdt_feed();                                     \
+    if (ret)                                                \
+        return ret;                                         \
+}
+
     esp_err_t ret;
-    FLASH_INTR_DECLARE(c_tmp);
+    uint8_t load_buf[FLASH_ALIGN_BYTES];
+    size_t before_rbytes, after_rbytes, align_rbytes;
 
     if (dest == NULL) {
         return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    spi_debug("R[%x] %d-", src_addr / 4096, esp_get_time());
+    before_rbytes = FLASH_ALIGN(dest) == (size_t)dest ? 0 : FLASH_ALIGN(dest) - (size_t)dest;
+    after_rbytes = (size - before_rbytes) & (FLASH_ALIGN_BYTES - 1);
+    align_rbytes = size - before_rbytes - after_rbytes;
 
-    FLASH_INTR_LOCK(c_tmp);
+    if (before_rbytes) {
+        FLASH_READ(src_addr, load_buf, FLASH_ALIGN_BYTES);
+        memcpy(dest, &load_buf[FLASH_ALIGN_BYTES - before_rbytes], before_rbytes);
+    }
 
-    FlashIsOnGoing = 1;
+    if (align_rbytes) {
+        void *align_addr = (void *)FLASH_ALIGN(dest);
 
-    Cache_Read_Disable_2();
+        FLASH_READ(src_addr + before_rbytes, align_addr, align_rbytes);
+    }
 
-    ret = SPIRead(src_addr, dest, size);
+    if (after_rbytes) {
+        void *after_addr = (void *)FLASH_ALIGN((char *)dest + size - after_rbytes);
 
-    Cache_Read_Enable_2();
+        FLASH_READ(src_addr + before_rbytes + align_rbytes, load_buf, FLASH_ALIGN_BYTES);
+        memcpy(after_addr, load_buf, after_rbytes);
+    }
 
-    FlashIsOnGoing = 0;
-    FLASH_INTR_UNLOCK(c_tmp);
-
-    spi_debug("%d\n", esp_get_time());
-
-    return ret;
+    return ESP_OK;
 }
 
 static void spi_flash_enable_qio_bit6(void)
@@ -886,7 +956,6 @@ esp_err_t IRAM_ATTR spi_flash_erase_range(size_t start_address, size_t size)
 {
     esp_err_t ret;
     size_t sec, num;
-    FLASH_INTR_DECLARE(c_tmp);
 
     if (start_address % SPI_FLASH_SEC_SIZE
             || size % SPI_FLASH_SEC_SIZE) {
@@ -900,19 +969,15 @@ esp_err_t IRAM_ATTR spi_flash_erase_range(size_t start_address, size_t size)
     sec = start_address / SPI_FLASH_SEC_SIZE;
     num = size / SPI_FLASH_SEC_SIZE;
 
-    FLASH_INTR_LOCK(c_tmp);
-    pp_soft_wdt_stop();
-    FlashIsOnGoing = 1;
-    Cache_Read_Disable_2();
-
+    /*
+     * call "spi_flash_erase_sector" continuely to make the function to be able
+     * to enter/exit critical state so that system core can feed watch
+     */
     do {
-        ret = SPIEraseSector(sec++);
-    } while (ret == ESP_OK && --num);
+        ret = spi_flash_erase_sector(sec++);
 
-    Cache_Read_Enable_2();
-    FlashIsOnGoing = 0;
-    pp_soft_wdt_restart();
-    FLASH_INTR_UNLOCK(c_tmp);
+        pp_soft_wdt_feed();
+    } while (ret == ESP_OK && --num);
 
     return ret;
 }
