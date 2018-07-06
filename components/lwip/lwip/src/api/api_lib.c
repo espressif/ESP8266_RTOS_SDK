@@ -571,7 +571,14 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
 #endif /* LWIP_TCP && (LWIP_UDP || LWIP_RAW) */
 #if (LWIP_UDP || LWIP_RAW)
   {
+#ifdef SOCKETS_MT
+    if (!buf) {
+      API_EVENT(conn, NETCONN_EVT_ERROR, 0);
+      return ERR_CLSD;
+    }
+#else
     LWIP_ASSERT("buf != NULL", buf != NULL);
+#endif
     len = netbuf_len((struct netbuf*)buf);
   }
 #endif /* (LWIP_UDP || LWIP_RAW) */
