@@ -89,6 +89,7 @@ bool dhcp_search_ip_on_mac(u8_t *mac, ip4_addr_t *ip);
 void dhcps_dns_setserver(const ip_addr_t *dnsserver);
 ip4_addr_t dhcps_dns_getserver();
 void dhcps_set_new_lease_cb(dhcps_cb_t cb);
+void dhcps_coarse_tmr(void);
 
 #endif
 

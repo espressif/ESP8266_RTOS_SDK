@@ -1154,6 +1154,7 @@ void dhcps_start(struct netif *netif, ip4_addr_t ip)
 
     udp_bind(pcb_dhcps, &netif->ip_addr, DHCPS_SERVER_PORT);
     udp_recv(pcb_dhcps, handle_dhcp, NULL);
+    sys_timeout(1000, dhcps_coarse_tmr, NULL);
 #if DHCPS_DEBUG
     DHCPS_LOG("dhcps:dhcps_start->udp_recv function Set a receive callback handle_dhcp for UDP_PCB pcb_dhcps\n");
 #endif
@@ -1174,6 +1175,8 @@ void dhcps_stop(struct netif *netif)
         printf("dhcps_stop: apnetif == NULL\n");
         return;
     }
+
+    sys_untimeout(dhcps_coarse_tmr, NULL);
 
     if (pcb_dhcps != NULL) {
         udp_disconnect(pcb_dhcps);
@@ -1266,6 +1269,11 @@ void dhcps_coarse_tmr(void)
 
     if (num_dhcps_pool > MAX_STATION_NUM) {
         kill_oldest_dhcps_pool();
+    }
+
+    /*Do not restart timer when dhcp server is stopped*/
+    if  (pcb_dhcps != NULL) {
+        sys_timeout(1000, dhcps_coarse_tmr, NULL);
     }
 }
 
