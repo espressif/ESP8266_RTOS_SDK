@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string.h>
+
 #include "esp_libc.h"
 #include "esp_system.h"
 #include "esp_wifi_os_adapter.h"
@@ -275,30 +277,75 @@ static bool timer_delete_wrapper(void *timer, uint32_t ticks)
 
 static void *malloc_wrapper(uint32_t s, uint32_t cap)
 {
+    bool iram;
+    void *return_addr = (void *)__builtin_return_address(0);
+
     if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
-        return os_malloc(s);
+        iram = false;
     else
-        return os_malloc_iram(s);
+        iram = true;
+
+    return pvPortMalloc_trace(s, return_addr, (unsigned)-1, iram);
 }
 
 static void *zalloc_wrapper(uint32_t s, uint32_t cap)
 {
-    return os_zalloc(s);
+    bool iram;
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
+        iram = false;
+    else
+        iram = true;
+
+    char *p = pvPortMalloc_trace(s, return_addr, (unsigned)-1, iram);
+    if (p)
+        memset(p, 0, s);
+
+    return p;
 }
 
 static void *realloc_wrapper(void *ptr, uint32_t s, uint32_t cap)
 {
-    return os_realloc(ptr, s);
+    bool iram;
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
+        iram = false;
+    else
+        iram = true;
+
+    void *p = pvPortMalloc_trace(s, return_addr, (unsigned)-1, iram);
+    if (p && ptr) {
+        memcpy(p, ptr, s);
+        vPortFree_trace(ptr, return_addr, (unsigned)-1);
+    }
+
+    return p;
 }
 
 static void *calloc_wrapper(uint32_t cnt, uint32_t s, uint32_t cap)
 {
-    return os_calloc(cnt, s);
+    bool iram;
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
+        iram = false;
+    else
+        iram = true;
+
+    char *p = pvPortMalloc_trace(cnt * s, return_addr, (unsigned)-1, iram);
+    if (p)
+        memset(p, 0, cnt * s);
+
+    return p;
 }
 
 static void free_wrapper(void *ptr)
 {
-    os_free(ptr);
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    vPortFree_trace(ptr, return_addr, (unsigned)-1);
 }
 
 static void srand_wrapper(uint32_t seed)

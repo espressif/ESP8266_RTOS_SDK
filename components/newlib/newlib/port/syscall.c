@@ -91,19 +91,20 @@ void *_sbrk_r(struct _reent *r, ptrdiff_t incr)
 
 void *_malloc_r(struct _reent *r, size_t n)
 {
-#ifndef MEMLEAK_DEBUG
-    return pvPortMalloc(n);
-#else
-    return pvPortMalloc_trace(n, NULL, 0, false);
-#endif
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    return pvPortMalloc_trace(n, return_addr, (unsigned)-1, true);
+
 }
 
 void *_realloc_r(struct _reent *r, void *old_ptr, size_t n)
 {
-    void *p = pvPortMalloc(n);
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    void *p = pvPortMalloc_trace(n, return_addr, (unsigned)-1, true);
     if (p && old_ptr) {
         memcpy(p, old_ptr, n);
-        vPortFree(old_ptr);
+        vPortFree_trace(old_ptr, return_addr, 0);
     }
 
     return p;
@@ -111,7 +112,9 @@ void *_realloc_r(struct _reent *r, void *old_ptr, size_t n)
 
 void *_calloc_r(struct _reent *r, size_t c, size_t s)
 {
-    char *p = pvPortMalloc(c * s);
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    char *p = pvPortMalloc_trace(c * s, return_addr, (unsigned)-1, true);
     if (p)
         memset(p, 0, c * s);
 
@@ -120,7 +123,9 @@ void *_calloc_r(struct _reent *r, size_t c, size_t s)
 
 void _free_r(struct _reent *r, void *ptr)
 {
-    vPortFree(ptr);
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    vPortFree_trace(ptr, return_addr, (unsigned)-1);
 }
 
 void _exit(int status)
