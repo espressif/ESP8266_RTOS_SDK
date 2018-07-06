@@ -35,7 +35,7 @@
  */
 
 #include "ssl/ssl_os_port.h"
-#include "lwip/sockets.h"
+#include <sys/socket.h>
 
 #ifdef WIN32
 /**

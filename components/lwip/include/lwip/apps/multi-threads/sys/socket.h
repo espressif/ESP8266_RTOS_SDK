@@ -35,6 +35,7 @@
 
 #include "posix/sys/socket.h"
 
+#ifdef SOCKETS_MT
 int lwip_mt_init(void);
 int lwip_socket_mt(int domain, int type, int protocol);
 int lwip_bind_mt(int s, const struct sockaddr *name, socklen_t namelen);
@@ -109,5 +110,6 @@ int lwip_fcntl_mt(int s, int cmd, int val);
 #define closesocket(s)        lwip_close_mt(s)
 #define fcntl(a,b,c)          lwip_fcntl_mt(a,b,c)
 #endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
+#endif /* SOCKETS_MT */
 
 #endif /* _SOCKET_H_ */
