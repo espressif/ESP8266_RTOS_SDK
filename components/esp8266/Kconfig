@@ -4,6 +4,30 @@ config APP_OFFSET
        hex
        default 0x1000
 
+choice NEWLIB_STDOUT_LINE_ENDING
+    prompt "Line ending for UART output"
+    default NEWLIB_STDOUT_LINE_ENDING_CRLF
+    help
+        This option allows configuring the desired line endings sent to UART
+        when a newline ('\n', LF) appears on stdout.
+        Three options are possible:
+
+        CRLF: whenever LF is encountered, prepend it with CR
+
+        LF: no modification is applied, stdout is sent as is
+
+        CR: each occurence of LF is replaced with CR
+
+        This option doesn't affect behavior of the UART driver (drivers/uart.h).
+
+config NEWLIB_STDOUT_LINE_ENDING_CRLF
+    bool "CRLF"
+config NEWLIB_STDOUT_LINE_ENDING_LF
+    bool "LF"
+config NEWLIB_STDOUT_LINE_ENDING_CR
+    bool "CR"
+endchoice
+
 endmenu
 
 menu PHY

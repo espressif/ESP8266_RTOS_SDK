@@ -12,29 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 
-#include "rom/ets_sys.h"
-#include "esp8266/eagle_soc.h"
-#include "esp8266/uart_register.h"
+#include "esp_libc.h"
 #include "FreeRTOS.h"
 #include "esp_log.h"
-
-#define PANIC_UART 0
-
-static inline void panit_putc(char c)
-{
-    while (1) {
-        uint32_t fifo_cnt = READ_PERI_REG(UART_STATUS(PANIC_UART)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S);
-
-        if ((fifo_cnt >> UART_TXFIFO_CNT_S & UART_TXFIFO_CNT) < 126)
-            break;
-    }
-
-    WRITE_PERI_REG(UART_FIFO(PANIC_UART) , c);
-}
 
 int _open_r(struct _reent *r, const char *filename, int flags, int mode)
 {
@@ -51,8 +37,22 @@ _ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
     int i;
     const char *cbuf = buf;
 
-    for (i = 0; i < len; i++)
-        panit_putc(cbuf[i]);
+    for (i = 0; i < len; i++) {
+#ifdef CONFIG_NEWLIB_STDOUT_LINE_ENDING_CRLF
+        if (cbuf[i] == '\n') {
+            ets_putc('\r');
+            ets_putc('\n');
+        } else
+            ets_putc(cbuf[i]);
+#elif defined(CONFIG_NEWLIB_STDOUT_LINE_ENDING_CR)
+        if (cbuf[i] == '\n')
+            ets_putc('\r');
+        else
+            ets_putc(cbuf[i]);
+#elif defined(CONFIG_NEWLIB_STDOUT_LINE_ENDING_LF)
+        ets_putc(cbuf[i]);
+#endif
+    }
 
     return len;
 }
