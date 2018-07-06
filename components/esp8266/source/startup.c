@@ -1,16 +1,41 @@
+// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#include "sdkconfig.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
 #include <string.h>
-#include "esp_log.h"
+
+#include "sdkconfig.h"
+
 #include "nvs_flash.h"
 #include "tcpip_adapter.h"
-#include "esp_wifi_osi.h"
+
+#include "esp_log.h"
 #include "esp_image_format.h"
+#include "esp_phy_init.h"
+#include "esp_wifi_osi.h"
 
 #define FLASH_MAP_ADDR 0x40200000
+
+extern void chip_boot(void);
+extern int rtc_init(void);
+extern int mac_init(void);
+extern int base_gpio_init(void);
+extern int watchdog_init(void);
+extern int wifi_timer_init(void);
+extern int wifi_nvs_init(void);
 
 static void user_init_entry(void *param)
 {
@@ -25,6 +50,15 @@ static void user_init_entry(void *param)
     for (func = &__init_array_start; func < &__init_array_end; func++)
         func[0]();
 
+    assert(nvs_flash_init() == 0);
+    assert(wifi_nvs_init() == 0);
+    assert(rtc_init() == 0);
+    assert(mac_init() == 0);
+    assert(base_gpio_init() == 0);
+    esp_phy_load_cal_and_init(0);
+    assert(watchdog_init() == 0);
+    assert(wifi_timer_init() == 0);
+
     tcpip_adapter_init();
 
     app_main();
@@ -38,15 +72,6 @@ void call_user_start(void)
     int *p;
 
     extern int _bss_start, _bss_end;
-
-    extern void chip_boot(void);
-    extern int rtc_init(void);
-    extern int mac_init(void);
-    extern int base_gpio_init(void);
-    extern int phy_calibrate(void);
-    extern int watchdog_init(void);
-    extern int wifi_timer_init(void);
-    extern int wifi_nvs_init(void);
 
     esp_image_header_t *head = (esp_image_header_t *)(FLASH_MAP_ADDR + CONFIG_PARTITION_TABLE_CUSTOM_APP_BIN_OFFSET);
     esp_image_segment_header_t *segment = (esp_image_segment_header_t *)((uintptr_t)head + sizeof(esp_image_header_t));
@@ -78,14 +103,6 @@ void call_user_start(void)
 
     wifi_os_init();
 
-    assert(nvs_flash_init() == 0);
-    assert(wifi_nvs_init() == 0);
-    assert(rtc_init() == 0);
-    assert(mac_init() == 0);
-    assert(base_gpio_init() == 0);
-    assert(phy_calibrate() == 0);
-    assert(watchdog_init() == 0);
-    assert(wifi_timer_init() == 0);
     assert(wifi_task_create(user_init_entry, "uiT", 512, NULL, wifi_task_get_max_priority()) != NULL);
 
     wifi_os_start();
