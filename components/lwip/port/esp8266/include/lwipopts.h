@@ -50,7 +50,12 @@
 #include "esp_libc.h"
 #include "esp_system.h"
 
+#ifdef CONFIG_LWIP_SOCKET_MULTITHREAD
 #define SOCKETS_MT
+#if defined(LWIP_HDR_SOCKETS_H) && !defined(_SOCKET_MT_H_)
+#error Please use <sys/socket.h> instead of "lwip/sockets.h"
+#endif
+#endif
 
 //#define SOCKETS_TCP_TRACE
 
