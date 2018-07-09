@@ -1,6 +1,6 @@
 /* types.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
@@ -10,7 +10,9 @@
  */
 
 
-
+/*!
+    \file wolfssl/wolfcrypt/types.h
+*/
 
 #ifndef WOLF_CRYPT_TYPES_H
 #define WOLF_CRYPT_TYPES_H
@@ -91,7 +93,7 @@
           (defined(LP64) || defined(_LP64))
         /* LP64 with GNU GCC compiler is reserved for when long int is 64 bits
          * and int uses 32 bits. When using Solaris Studio sparc and __sparc are
-         * avialable for 32 bit detection but __sparc64__ could be missed. This
+         * available for 32 bit detection but __sparc64__ could be missed. This
          * uses LP64 for checking 64 bit CPU arch. */
 	    typedef word64 wolfssl_word;
         #define WC_64BIT_CPU
@@ -160,7 +162,7 @@
 	    #if defined(_MSC_VER)
 	        #define THREAD_LS_T __declspec(thread)
 	    /* Thread local storage only in FreeRTOS v8.2.1 and higher */
-	    #elif defined(FREERTOS)
+	    #elif defined(FREERTOS) || defined(FREERTOS_TCP)
 	        #define THREAD_LS_T
 	    #else
 	        #define THREAD_LS_T __thread
@@ -190,7 +192,7 @@
 	/* idea to add global alloc override by Moises Guimaraes  */
 	/* default to libc stuff */
 	/* XREALLOC is used once in normal math lib, not in fast math lib */
-	/* XFREE on some embeded systems doesn't like free(0) so test  */
+	/* XFREE on some embedded systems doesn't like free(0) so test  */
 	#if defined(HAVE_IO_POOL)
 		WOLFSSL_API void* XMALLOC(size_t n, void* heap, int type);
 		WOLFSSL_API void* XREALLOC(void *p, size_t n, void* heap, int type);
@@ -285,8 +287,12 @@
         #define FREE_ARRAY(VAR_NAME, VAR_ITEMS, HEAP)  /* nothing to free, its stack */
     #endif
 
-    #ifndef WOLFSSL_LEANPSK
-	    char* mystrnstr(const char* s1, const char* s2, unsigned int n);
+    #if !defined(USE_WOLF_STRTOK) && \
+            (defined(__MINGW32__) || defined(WOLFSSL_TIRTOS) || defined(WOLF_C99))
+        #define USE_WOLF_STRTOK
+    #endif
+    #if !defined(USE_WOLF_STRSEP) && (defined(WOLF_C99))
+        #define USE_WOLF_STRSEP
     #endif
 
 	#ifndef STRING_USER
@@ -305,12 +311,22 @@
 	    #define XSTRNCMP(s1,s2,n) strncmp((s1),(s2),(n))
 	    #define XSTRNCAT(s1,s2,n) strncat((s1),(s2),(n))
 
+        #ifdef USE_WOLF_STRSEP
+            #define XSTRSEP(s1,d) wc_strsep((s1),(d))
+        #else
+            #define XSTRSEP(s1,d) strsep((s1),(d))
+        #endif
+
         #if defined(MICROCHIP_PIC32) || defined(WOLFSSL_TIRTOS)
             /* XC32 does not support strncasecmp, so use case sensitive one */
             #define XSTRNCASECMP(s1,s2,n) strncmp((s1),(s2),(n))
-        #elif defined(USE_WINDOWS_API)
+        #elif defined(USE_WINDOWS_API) || defined(FREERTOS_TCP_WINSIM)
 	        #define XSTRNCASECMP(s1,s2,n) _strnicmp((s1),(s2),(n))
         #else
+            #if defined(HAVE_STRINGS_H) && defined(WOLF_C99) && \
+                !defined(WOLFSSL_SGX)
+                #include <strings.h>
+            #endif
 	        #define XSTRNCASECMP(s1,s2,n) strncasecmp((s1),(s2),(n))
 	    #endif
 
@@ -330,19 +346,22 @@
 
         #if defined(WOLFSSL_CERT_EXT) || defined(HAVE_ALPN)
             /* use only Thread Safe version of strtok */
-            #if defined(__MINGW32__) || defined(WOLFSSL_TIRTOS) || \
-                    defined(USE_WOLF_STRTOK)
-                #ifndef USE_WOLF_STRTOK
-                    #define USE_WOLF_STRTOK
-                #endif
-                #define XSTRTOK wc_strtok
+            #if defined(USE_WOLF_STRTOK)
+                #define XSTRTOK(s1,d,ptr) wc_strtok((s1),(d),(ptr))
             #elif defined(USE_WINDOWS_API) || defined(INTIME_RTOS)
-                #define XSTRTOK strtok_s
+                #define XSTRTOK(s1,d,ptr) strtok_s((s1),(d),(ptr))
             #else
-                #define XSTRTOK strtok_r
+                #define XSTRTOK(s1,d,ptr) strtok_r((s1),(d),(ptr))
             #endif
         #endif
 	#endif
+
+    #ifdef USE_WOLF_STRTOK
+        WOLFSSL_API char* wc_strtok(char *str, const char *delim, char **nextp);
+    #endif
+    #ifdef USE_WOLF_STRSEP
+        WOLFSSL_API char* wc_strsep(char **stringp, const char *delim);
+    #endif
 
     #if !defined(NO_FILESYSTEM) && defined(OPENSSL_EXTRA) && \
         !defined(NO_STDIO_FILESYSTEM)
@@ -468,6 +487,69 @@
 	    MIN_STACK_BUFFER = 8
 	};
 
+
+    /* Algorithm Types */
+    enum wc_AlgoType {
+        WC_ALGO_TYPE_NONE = 0,
+        WC_ALGO_TYPE_HASH = 1,
+        WC_ALGO_TYPE_CIPHER = 2,
+        WC_ALGO_TYPE_PK = 3,
+
+        WC_ALGO_TYPE_MAX = WC_ALGO_TYPE_PK
+    };
+
+    /* hash types */
+    enum wc_HashType {
+        WC_HASH_TYPE_NONE = 0,
+        WC_HASH_TYPE_MD2 = 1,
+        WC_HASH_TYPE_MD4 = 2,
+        WC_HASH_TYPE_MD5 = 3,
+        WC_HASH_TYPE_SHA = 4, /* SHA-1 (not old SHA-0) */
+        WC_HASH_TYPE_SHA224 = 5,
+        WC_HASH_TYPE_SHA256 = 6,
+        WC_HASH_TYPE_SHA384 = 7,
+        WC_HASH_TYPE_SHA512 = 8,
+        WC_HASH_TYPE_MD5_SHA = 9,
+        WC_HASH_TYPE_SHA3_224 = 10,
+        WC_HASH_TYPE_SHA3_256 = 11,
+        WC_HASH_TYPE_SHA3_384 = 12,
+        WC_HASH_TYPE_SHA3_512 = 13,
+        WC_HASH_TYPE_BLAKE2B = 14,
+
+        WC_HASH_TYPE_MAX = WC_HASH_TYPE_BLAKE2B
+    };
+
+    /* cipher types */
+    enum wc_CipherType {
+        WC_CIPHER_NONE = 0,
+        WC_CIPHER_AES = 1,
+        WC_CIPHER_AES_CBC = 2,
+        WC_CIPHER_AES_GCM = 3,
+        WC_CIPHER_AES_CTR = 4,
+        WC_CIPHER_AES_XTS = 5,
+        WC_CIPHER_AES_CFB = 6,
+        WC_CIPHER_DES3 = 7,
+        WC_CIPHER_DES = 8,
+        WC_CIPHER_CHACHA = 9,
+        WC_CIPHER_HC128 = 10,
+        WC_CIPHER_IDEA = 11,
+
+        WC_CIPHER_MAX = WC_CIPHER_HC128
+    };
+
+    /* PK=public key (asymmetric) based algorithms */
+    enum wc_PkType {
+        WC_PK_TYPE_NONE = 0,
+        WC_PK_TYPE_RSA = 1,
+        WC_PK_TYPE_DH = 2,
+        WC_PK_TYPE_ECDH = 3,
+        WC_PK_TYPE_ECDSA_SIGN = 4,
+        WC_PK_TYPE_ECDSA_VERIFY = 5,
+        WC_PK_TYPE_ED25519 = 6,
+        WC_PK_TYPE_CURVE25519 = 7,
+
+        WC_PK_TYPE_MAX = WC_PK_TYPE_CURVE25519
+    };
 
 
 	/* settings detection for compile vs runtime math incompatibilities */

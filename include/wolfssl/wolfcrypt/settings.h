@@ -1,6 +1,6 @@
 /* settings.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
@@ -977,7 +977,7 @@ extern void uITRON4_free(void *p) ;
 #endif
 
 #if defined(WOLFSSL_STM32F2) || defined(WOLFSSL_STM32F4) || \
-    defined(WOLFSSL_STM32F7)
+    defined(WOLFSSL_STM32F7) || defined(WOLFSSL_STM32F1)
 
     #define SIZEOF_LONG_LONG 8
     #define NO_DEV_RANDOM
@@ -1007,6 +1007,8 @@ extern void uITRON4_free(void *p) ;
             #include "stm32f4xx_hal.h"
         #elif defined(WOLFSSL_STM32F7)
             #include "stm32f7xx_hal.h"
+        #elif defined(WOLFSSL_STM32F1)
+            #include "stm32f1xx_hal.h"
         #endif
 
         #ifndef STM32_HAL_TIMEOUT
@@ -1031,6 +1033,8 @@ extern void uITRON4_free(void *p) ;
             #endif
         #elif defined(WOLFSSL_STM32F7)
             #include "stm32f7xx.h"
+        #elif defined(WOLFSSL_STM32F1)
+            #include "stm32f1xx.h"
         #endif
     #endif /* WOLFSSL_STM32_CUBEMX */
 #endif /* WOLFSSL_STM32F2 || WOLFSSL_STM32F4 || WOLFSSL_STM32F7 */
@@ -1551,7 +1555,7 @@ extern void uITRON4_free(void *p) ;
     #ifndef HAVE_AES_KEYWRAP
         #error PKCS7 requires AES key wrap please define HAVE_AES_KEYWRAP
     #endif
-    #ifndef HAVE_X963_KDF
+    #if defined(HAVE_ECC) && !defined(HAVE_X963_KDF)
         #error PKCS7 requires X963 KDF please define HAVE_X963_KDF
     #endif
 #endif
@@ -1574,7 +1578,7 @@ extern void uITRON4_free(void *p) ;
     #undef HAVE_GMTIME_R /* don't trust macro with windows */
 #endif /* WOLFSSL_MYSQL_COMPATIBLE */
 
-#if defined(WOLFSSL_NGINX) || defined(WOLFSSL_HAPROXY)
+#if defined(OPENSSL_ALL) || defined(WOLFSSL_NGINX) || defined(WOLFSSL_HAPROXY)
     #define SSL_OP_NO_COMPRESSION    SSL_OP_NO_COMPRESSION
     #define OPENSSL_NO_ENGINE
     #define X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT
@@ -1626,8 +1630,8 @@ extern void uITRON4_free(void *p) ;
 
 #if defined(NO_OLD_WC_NAMES) || defined(OPENSSL_EXTRA)
     /* added to have compatibility with SHA256() */
-    #if !defined(NO_OLD_SHA256_NAMES) && !defined(HAVE_FIPS)
-        #define NO_OLD_SHA256_NAMES
+    #if !defined(NO_OLD_SHA_NAMES) && !defined(HAVE_FIPS)
+        #define NO_OLD_SHA_NAMES
     #endif
 #endif
 
@@ -1637,7 +1641,39 @@ extern void uITRON4_free(void *p) ;
     #undef  OPENSSL_EXTRA_X509_SMALL
     #define OPENSSL_EXTRA_X509_SMALL
 #endif /* OPENSSL_EXTRA */
-    
+
+/* support for converting DER to PEM */
+#if defined(WOLFSSL_KEY_GEN) || defined(WOLFSSL_CERT_GEN) || \
+        defined(OPENSSL_EXTRA)
+    #undef  WOLFSSL_DER_TO_PEM
+    #define WOLFSSL_DER_TO_PEM
+#endif
+
+/* keep backwards compatibility enabling encrypted private key */
+#ifndef WOLFSSL_ENCRYPTED_KEYS
+    #if defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || \
+        defined(HAVE_WEBSERVER)
+        #define WOLFSSL_ENCRYPTED_KEYS
+    #endif
+#endif
+
+/* support for disabling PEM to DER */
+#if !defined(WOLFSSL_NO_PEM)
+    #undef  WOLFSSL_PEM_TO_DER
+    #define WOLFSSL_PEM_TO_DER
+#endif
+
+/* Parts of the openssl compatibility layer require peer certs */
+#if defined(OPENSSL_ALL) || defined(WOLFSSL_NGINX) || defined(WOLFSSL_HAPROXY)
+    #undef  KEEP_PEER_CERT
+    #define KEEP_PEER_CERT
+#endif
+
+/* RAW hash function APIs are not implemented with ARMv8 hardware acceleration*/
+#ifdef WOLFSSL_ARMASM
+    #undef  WOLFSSL_NO_HASH_RAW
+    #define WOLFSSL_NO_HASH_RAW
+#endif
 
 #ifdef __cplusplus
     }   /* extern "C" */
