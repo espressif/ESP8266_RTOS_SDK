@@ -185,7 +185,7 @@ void uart_init(void)
 
     xQueueUart = xQueueCreate(32, sizeof(os_event_t));
 
-    xTaskCreate(uart_task, (uint8_t const*)"uTask", 512, NULL, tskIDLE_PRIORITY + 2, &xUartTaskHandle);
+    xTaskCreate(uart_task, (uint8_t const*)"uTask", 2048, NULL, tskIDLE_PRIORITY + 2, &xUartTaskHandle);
 }
 #endif
 

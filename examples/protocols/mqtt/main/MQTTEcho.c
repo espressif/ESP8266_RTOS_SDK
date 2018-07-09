@@ -51,7 +51,7 @@ const int CONNECTED_BIT = 1<<0;
 #define MQTT_PORT    1883             /* MQTT Port*/
 
 #define MQTT_CLIENT_THREAD_NAME         "mqtt_client_thread"
-#define MQTT_CLIENT_THREAD_STACK_WORDS  2048
+#define MQTT_CLIENT_THREAD_STACK_WORDS  8192
 #define MQTT_CLIENT_THREAD_PRIO         8
 
 static const char *TAG = "example";

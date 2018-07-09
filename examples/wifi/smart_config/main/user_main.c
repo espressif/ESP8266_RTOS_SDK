@@ -210,6 +210,6 @@ void user_init(void)
     /* need to set opmode before you set config */
     wifi_set_opmode(STATION_MODE);
 
-    xTaskCreate(smartconfig_task, "smartconfig_task", 256, NULL, 2, NULL);
+    xTaskCreate(smartconfig_task, "smartconfig_task", 1024, NULL, 2, NULL);
 }
 

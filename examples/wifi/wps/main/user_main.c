@@ -52,5 +52,5 @@ static void wps_task(void* pvParameters)
 
 void user_init(void)
 {
-    xTaskCreate(wps_task, "wps_task", 1024, NULL, 4, NULL);
+    xTaskCreate(wps_task, "wps_task", 4096, NULL, 4, NULL);
 }

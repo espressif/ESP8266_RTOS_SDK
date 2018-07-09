@@ -1,10 +1,10 @@
 gwen:
     crypto:     8943c89
     espnow:     8943c89
-    core:       15348a7
-    net80211:   68f6a7c
-    pp:         bdb3c08
+    core:       fdd8880
+    net80211:   fdd8880
+    pp:         fdd8880
     pwm:        0181338
     smartconfig:9ec59b5
     wpa:        8943c89
-    wps:        8943c89
+    wps:        fdd8880

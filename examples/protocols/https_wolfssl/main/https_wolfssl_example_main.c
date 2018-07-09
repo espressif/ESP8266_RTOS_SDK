@@ -58,7 +58,7 @@ extern const uint8_t server_root_cert_pem_end[]   asm("_binary_server_root_cert_
     "\r\n"
 
 #define WOLFSSL_DEMO_THREAD_NAME        "wolfssl_client"
-#define WOLFSSL_DEMO_THREAD_STACK_WORDS 2048
+#define WOLFSSL_DEMO_THREAD_STACK_WORDS 8192
 #define WOLFSSL_DEMO_THREAD_PRORIOTY    6
 
 #define WOLFSSL_DEMO_SNTP_SERVERS       "pool.ntp.org"
