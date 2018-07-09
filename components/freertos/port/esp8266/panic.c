@@ -54,8 +54,9 @@ typedef struct task_info
     StackType_t		*pxEndOfStack;
 } task_info_t;
 
-static void IRAM_ATTR panic_stack(StackType_t *start, StackType_t *end)
+static void IRAM_ATTR panic_stack(StackType_t *start_stk, StackType_t *end_stk)
 {
+    uint32_t *start = (uint32_t *)start_stk, *end = (uint32_t *)end_stk;
     size_t i, j;
     size_t size = end - start + 1;
 
@@ -118,10 +119,10 @@ void IRAM_ATTR panicHandler(void *frame)
         if (task) {
             
             StackType_t *pdata = task->pxStack;
-            StackType_t *end = task->pxEndOfStack + 1;
+            StackType_t *end = task->pxEndOfStack + 4;
 
             ets_printf("\nTask stack [%s] stack from [%p] to [%p], total [%d] size\n\n",
-                        task->pcTaskName, pdata, end, end - pdata + 1);
+                        task->pcTaskName, pdata, end, end - pdata + 4);
 
             panic_stack(pdata, end);
 

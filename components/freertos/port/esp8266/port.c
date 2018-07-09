@@ -107,16 +107,16 @@ void _xt_timer_int1(void);
 /*
  * See header file for description.
  */
-portSTACK_TYPE* pxPortInitialiseStack(portSTACK_TYPE* pxTopOfStack, pdTASK_CODE pxCode, void* pvParameters)
+StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters)
 {
-#define SET_STKREG(r,v) sp[(r) >> 2] = (portSTACK_TYPE)(v)
-    portSTACK_TYPE* sp, *tp;
+#define SET_STKREG(r,v) sp[(r) >> 2] = (unsigned long)(v)
+    unsigned long *sp, *tp, *stk = (unsigned long *)pxTopOfStack;
 
     /* Create interrupt stack frame aligned to 16 byte boundary */
-    sp = (portSTACK_TYPE*)(((INT32U)(pxTopOfStack + 1) - XT_CP_SIZE - XT_STK_FRMSZ) & ~0xf);
+    sp = (unsigned long *)(((INT32U)(stk + 1) - XT_CP_SIZE - XT_STK_FRMSZ) & ~0xf);
 
     /* Clear the entire frame (do not use memset() because we don't depend on C library) */
-    for (tp = sp; tp <= pxTopOfStack; ++tp) {
+    for (tp = sp; tp <= stk; ++tp) {
         *tp = 0;
     }
 
@@ -135,7 +135,7 @@ portSTACK_TYPE* pxPortInitialiseStack(portSTACK_TYPE* pxTopOfStack, pdTASK_CODE 
     SET_STKREG(XT_STK_PS,      PS_UM | PS_EXCM | PS_WOE | PS_CALLINC(1));
 #endif
 
-    return sp;
+    return (StackType_t *)sp;
 }
 
 void IRAM_ATTR PendSV(char req)
@@ -361,7 +361,7 @@ signed portBASE_TYPE xTaskGenericCreate(TaskFunction_t pxTaskCode,
                                         void *pvParameters,
                                         unsigned portBASE_TYPE uxPriority,
                                         TaskHandle_t *pxCreatedTask,
-                                        portSTACK_TYPE *puxStackBuffer,
+                                        StackType_t *puxStackBuffer,
                                         const MemoryRegion_t * const xRegions)
 {
     (void)puxStackBuffer;
