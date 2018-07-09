@@ -1,3 +1,16 @@
+// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include "lwip/opt.h"
 
@@ -5,7 +18,7 @@
 
 #include "lwip/priv/api_msg.h"
 
-/* This helps code parsers/code completion by not having the COMPAT functions as defines */
+/* disable all LWIP socket API when compiling LWIP raw socket */
 
 #undef lwip_accept
 #undef lwip_bind
@@ -63,6 +76,39 @@
 #endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
 
 #include "../../lwip/src/api/sockets.c"
+
+/* disable macros to enable LWIP function */
+
+#undef lwip_accept
+#undef lwip_bind
+#undef lwip_shutdown
+#undef lwip_getpeername
+#undef lwip_getsockname
+#undef lwip_setsockopt
+#undef lwip_getsockopt
+#undef lwip_close
+#undef lwip_connect
+#undef lwip_listen
+#undef lwip_recv
+#undef lwip_recvfrom
+#undef lwip_send
+#undef lwip_sendmsg
+#undef lwip_sendto
+#undef lwip_socket
+#undef lwip_select
+#undef lwip_ioctlsocket
+
+#if LWIP_POSIX_SOCKETS_IO_NAMES
+#undef lwip_read
+#undef lwip_write
+#undef lwip_writev
+#undef lwip_close
+#undef closesocket
+#undef lwip_fcntl
+#undef lwip_ioctl
+#endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
+
+/********************************************************************/
 
 #ifndef LWIP_SYNC_MT_SLEEP_MS
 #define LWIP_SYNC_MT_SLEEP_MS 10
@@ -653,7 +699,7 @@ static void lwip_sync_mt(int s)
     }
 }
 
-int lwip_socket_mt(int domain, int type, int protocol)
+int lwip_socket(int domain, int type, int protocol)
 {
     int s;
     int i;
@@ -682,7 +728,7 @@ int lwip_socket_mt(int domain, int type, int protocol)
     return s;
 }
 
-int lwip_bind_mt(int s, const struct sockaddr *name, socklen_t namelen)
+int lwip_bind(int s, const struct sockaddr *name, socklen_t namelen)
 {
     int ret;
 
@@ -696,7 +742,7 @@ int lwip_bind_mt(int s, const struct sockaddr *name, socklen_t namelen)
     return ret;
 }
 
-int lwip_connect_mt(int s, const struct sockaddr *name, socklen_t namelen)
+int lwip_connect(int s, const struct sockaddr *name, socklen_t namelen)
 {
     int ret;
 
@@ -709,7 +755,7 @@ int lwip_connect_mt(int s, const struct sockaddr *name, socklen_t namelen)
     return ret;
 }
 
-int lwip_listen_mt(int s, int backlog)
+int lwip_listen(int s, int backlog)
 {
     int ret;
 
@@ -722,7 +768,7 @@ int lwip_listen_mt(int s, int backlog)
     return ret;
 }
 
-int lwip_accept_mt(int s, struct sockaddr *addr, socklen_t *addrlen)
+int lwip_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
 {
     int i;
     int ret;
@@ -756,7 +802,7 @@ int lwip_accept_mt(int s, struct sockaddr *addr, socklen_t *addrlen)
     return ret;
 }
 
-int lwip_getpeername_mt(int s, struct sockaddr *name, socklen_t *namelen)
+int lwip_getpeername(int s, struct sockaddr *name, socklen_t *namelen)
 {
     int ret;
 
@@ -769,7 +815,7 @@ int lwip_getpeername_mt(int s, struct sockaddr *name, socklen_t *namelen)
     return ret;
 }
 
-int lwip_getsockname_mt(int s, struct sockaddr *name, socklen_t *namelen)
+int lwip_getsockname(int s, struct sockaddr *name, socklen_t *namelen)
 {
     int ret;
 
@@ -782,7 +828,7 @@ int lwip_getsockname_mt(int s, struct sockaddr *name, socklen_t *namelen)
     return ret;
 }
 
-int lwip_setsockopt_mt(int s, int level, int optname, const void *optval, socklen_t optlen)
+int lwip_setsockopt(int s, int level, int optname, const void *optval, socklen_t optlen)
 {
     int ret;
 
@@ -795,7 +841,7 @@ int lwip_setsockopt_mt(int s, int level, int optname, const void *optval, sockle
     return ret;
 }
 
-int lwip_getsockopt_mt(int s, int level, int optname, void *optval, socklen_t *optlen)
+int lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optlen)
 {
     int ret;
 
@@ -820,7 +866,7 @@ int lwip_getsockopt_mt(int s, int level, int optname, void *optval, socklen_t *o
     return ret;
 }
 
-int lwip_ioctl_mt(int s, long cmd, void *argp)
+int lwip_ioctl(int s, long cmd, void *argp)
 {
     int ret;
 
@@ -833,7 +879,7 @@ int lwip_ioctl_mt(int s, long cmd, void *argp)
     return ret;
 }
 
-int lwip_sendto_mt(int s, const void *data, size_t size, int flags,
+int lwip_sendto(int s, const void *data, size_t size, int flags,
                    const struct sockaddr *to, socklen_t tolen)
 {
     int ret;
@@ -847,7 +893,7 @@ int lwip_sendto_mt(int s, const void *data, size_t size, int flags,
     return ret;
 }
 
-int lwip_send_mt(int s, const void *data, size_t size, int flags)
+int lwip_send(int s, const void *data, size_t size, int flags)
 {
     int ret;
 
@@ -860,7 +906,7 @@ int lwip_send_mt(int s, const void *data, size_t size, int flags)
     return ret;
 }
 
-int lwip_recvfrom_mt(int s, void *mem, size_t len, int flags,
+int lwip_recvfrom(int s, void *mem, size_t len, int flags,
                      struct sockaddr *from, socklen_t *fromlen)
 {
     int ret;
@@ -874,22 +920,22 @@ int lwip_recvfrom_mt(int s, void *mem, size_t len, int flags,
     return ret;
 }
 
-int lwip_recv_mt(int s, void *mem, size_t len, int flags)
+int lwip_recv(int s, void *mem, size_t len, int flags)
 {
-    return lwip_recvfrom_mt(s, mem, len, flags, NULL, NULL);
+    return lwip_recvfrom(s, mem, len, flags, NULL, NULL);
 }
 
-int lwip_read_mt(int s, void *mem, size_t len)
+int lwip_read(int s, void *mem, size_t len)
 {
-    return lwip_recvfrom_mt(s, mem, len, 0, NULL, NULL);
+    return lwip_recvfrom(s, mem, len, 0, NULL, NULL);
 }
 
-int lwip_write_mt(int s, const void *data, size_t size)
+int lwip_write(int s, const void *data, size_t size)
 {
-    return lwip_send_mt(s, data, size, 0);
+    return lwip_send(s, data, size, 0);
 }
 
-int lwip_fcntl_mt(int s, int cmd, int val)
+int lwip_fcntl(int s, int cmd, int val)
 {
     int ret;
 
@@ -917,12 +963,12 @@ static int __lwip_shutdown_mt(int s, int how)
     return ret;
 }
 
-int lwip_shutdown_mt(int s, int how)
+int lwip_shutdown(int s, int how)
 {
     return lwip_shutdown_esp(s, how);
 }
 
-int lwip_close_mt(int s)
+int lwip_close(int s)
 {
     int ret;
     int i;
@@ -951,7 +997,7 @@ int lwip_close_mt(int s)
     return ret;
 }
 
-int lwip_select_mt(int maxfdp1, fd_set *readset, fd_set *writeset,
+int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset,
                    fd_set *exceptset, struct timeval *timeout)
 {
     int ret;

@@ -22,10 +22,6 @@ config LWIP_SOCKET_MULTITHREAD
     help
         Enable the option can enable LWIP socket multithread and all
         function will be thread safe.
-        
-        But all LWIP raw socket APIs will be renamed ao that user can
-        not call "lwip_xxx"(for example "lwip_socket"), because compiling may faile.
-        So if you want to use LWIP raw socket APIs, please disable the option. 
 
 config LWIP_MAX_SOCKETS
     int "Max number of open sockets"
