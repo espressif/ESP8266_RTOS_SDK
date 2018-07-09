@@ -306,7 +306,7 @@ void SPICsPinSelect(SpiNum spiNum, SpiPinCS pinCs);
  *
  * @return void.
  */
-void SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc);
+void SPIIntEnable(SpiNum spiNum, SpiIntSrc_DoneEn intSrc);
 
 /**
  * @brief Disable SPI module interrupt source.
@@ -318,7 +318,7 @@ void SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc);
  *
  * @return void.
  */
-void SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc);
+void SPIIntDisable(SpiNum spiNum, SpiIntSrc_DoneEn intSrc);
 
 /**
  * @brief Clear all of spi interrupt.
