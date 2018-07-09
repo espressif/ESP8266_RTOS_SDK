@@ -19,5 +19,5 @@ void unityTask(void *pvParameters)
 void app_main(void)
 {
     wifi_station_set_auto_connect(false);
-    xTaskCreate(unityTask, "unityTask", 2048, NULL, UNITY_FREERTOS_PRIORITY, NULL);
+    xTaskCreate(unityTask, "unityTask", 8192, NULL, UNITY_FREERTOS_PRIORITY, NULL);
 }

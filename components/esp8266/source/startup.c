@@ -103,7 +103,7 @@ void call_user_start(void)
 
     wifi_os_init();
 
-    assert(wifi_task_create(user_init_entry, "uiT", 512, NULL, wifi_task_get_max_priority()) != NULL);
+    assert(wifi_task_create(user_init_entry, "uiT", 2048, NULL, wifi_task_get_max_priority()) != NULL);
 
     wifi_os_start();
 }

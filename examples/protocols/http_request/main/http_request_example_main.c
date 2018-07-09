@@ -188,5 +188,5 @@ void app_main()
 {
     ESP_ERROR_CHECK( nvs_flash_init() );
     initialise_wifi();
-    xTaskCreate(&http_get_task, "http_get_task", 4096, NULL, 5, NULL);
+    xTaskCreate(&http_get_task, "http_get_task", 16384, NULL, 5, NULL);
 }

@@ -86,7 +86,7 @@
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 80000000 )	
 #define configTICK_RATE_HZ			( ( portTickType ) 100 )
 #define configMAX_PRIORITIES		15
-#define configMINIMAL_STACK_SIZE	( ( unsigned short )176 )	
+#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 768 )
 //#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 17 * 1024 ) )
 #define configMAX_TASK_NAME_LEN		( 16 )
 #define configUSE_TRACE_FACILITY	0
@@ -106,7 +106,7 @@
 #if configUSE_TIMERS
 #define configTIMER_TASK_PRIORITY ( tskIDLE_PRIORITY + 2 )
 #define configTIMER_QUEUE_LENGTH (10)
-#define configTIMER_TASK_STACK_DEPTH  ( ( unsigned short ) 512 )
+#define configTIMER_TASK_STACK_DEPTH  ( ( unsigned short ) 2048 )
 #endif
 
 /* Co-routine definitions. */

@@ -327,5 +327,5 @@ void app_main(void)
 {
     ESP_ERROR_CHECK( nvs_flash_init() );
     initialise_wifi();
-    xTaskCreate(&openssl_client_task, "openssl_client", 2048, NULL, 6, NULL);
+    xTaskCreate(&openssl_client_task, "openssl_client", 8192, NULL, 6, NULL);
 }

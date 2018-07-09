@@ -98,7 +98,7 @@ esp_err_t esp_event_loop_init(system_event_cb_t cb, void *ctx)
     s_event_queue = wifi_queue_create(32, sizeof(system_event_t));
     if(s_event_queue == NULL)
         return ESP_ERR_NO_MEM;
-    if(wifi_task_create(esp_event_loop_task, "esp_event_loop_task", 512, NULL, 2) == NULL) {
+    if(wifi_task_create(esp_event_loop_task, "esp_event_loop_task", 2048, NULL, 2) == NULL) {
         return ESP_ERR_NO_MEM;
     }
     s_event_handler_cb = cb;
