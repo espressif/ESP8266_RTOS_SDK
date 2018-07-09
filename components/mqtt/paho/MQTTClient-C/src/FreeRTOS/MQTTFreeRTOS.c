@@ -15,10 +15,12 @@
  *    Ian Craggs - convert to FreeRTOS
  *******************************************************************************/
 
-#include "MQTTFreeRTOS.h"
-
 #include <string.h>
+
 #include <netdb.h>
+#include <sys/socket.h>
+
+#include "MQTTFreeRTOS.h"
 
 int ThreadStart(Thread* thread, void (*fn)(void*), void* arg)
 {
