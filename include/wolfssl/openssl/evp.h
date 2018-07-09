@@ -1,6 +1,6 @@
 /* evp.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
@@ -12,8 +12,9 @@
 
 
 
-/*  evp.h defines mini evp openssl compatibility layer
- *
+/*!
+    \file wolfssl/openssl/evp.h
+    \brief evp.h defines mini evp openssl compatibility layer
  */
 
 
@@ -255,12 +256,10 @@ WOLFSSL_API int wolfSSL_EVP_DigestSignUpdate(WOLFSSL_EVP_MD_CTX *ctx,
 WOLFSSL_API int wolfSSL_EVP_DigestSignFinal(WOLFSSL_EVP_MD_CTX *ctx,
                                             unsigned char *sig, size_t *siglen);
 
-#ifndef NO_MD5
 WOLFSSL_API int wolfSSL_EVP_BytesToKey(const WOLFSSL_EVP_CIPHER*,
                               const WOLFSSL_EVP_MD*, const unsigned char*,
                               const unsigned char*, int, int, unsigned char*,
                               unsigned char*);
-#endif
 
 WOLFSSL_API void wolfSSL_EVP_CIPHER_CTX_init(WOLFSSL_EVP_CIPHER_CTX* ctx);
 WOLFSSL_API int  wolfSSL_EVP_CIPHER_CTX_cleanup(WOLFSSL_EVP_CIPHER_CTX* ctx);

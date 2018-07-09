@@ -1,6 +1,6 @@
 /* ecc.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
@@ -9,6 +9,10 @@
  * http://www.wolfssl.com
  */
 
+
+/*!
+    \file wolfssl/wolfcrypt/ecc.h
+*/
 
 
 #ifndef WOLF_CRYPT_ECC_H
@@ -67,12 +71,12 @@
     #define MAX_ECC_BITS    384
 #elif defined(HAVE_ECC320)
     #define MAX_ECC_BITS    320
+#elif !defined(NO_ECC256)
+    #define MAX_ECC_BITS    256
 #elif defined(HAVE_ECC239)
     #define MAX_ECC_BITS    239
 #elif defined(HAVE_ECC224)
     #define MAX_ECC_BITS    224
-#elif !defined(NO_ECC256)
-    #define MAX_ECC_BITS    256
 #elif defined(HAVE_ECC192)
     #define MAX_ECC_BITS    192
 #elif defined(HAVE_ECC160)
@@ -109,9 +113,19 @@ enum {
     /* max crypto hardware size */
 #ifdef WOLFSSL_ATECC508A
     ECC_MAX_CRYPTO_HW_SIZE = ATECC_KEY_SIZE, /* from port/atmel/atmel.h */
+    ECC_MAX_CRYPTO_HW_PUBKEY_SIZE = (ATECC_KEY_SIZE*2),
 #elif defined(PLUTON_CRYPTO_ECC)
     ECC_MAX_CRYPTO_HW_SIZE = 32,
 #endif
+
+    /* point encoding type */
+    ECC_TYPE_HEX_STR = 1,
+    ECC_TYPE_UNSIGNED_BIN = 2,
+
+    /* point compression type */
+    ECC_POINT_COMP_EVEN = 0x02,
+    ECC_POINT_COMP_ODD = 0x03,
+    ECC_POINT_UNCOMP = 0x04,
 };
 
 /* Curve Types */
@@ -294,15 +308,19 @@ struct ecc_key {
     mp_int    k;        /* private key */
 #ifdef WOLFSSL_ATECC508A
     int  slot;        /* Key Slot Number (-1 unknown) */
-    byte pubkey_raw[PUB_KEY_SIZE];
+    byte pubkey_raw[ECC_MAX_CRYPTO_HW_PUBKEY_SIZE];
 #endif
-#ifdef PLUTON_CRYPTO_ECC
+#if defined(PLUTON_CRYPTO_ECC) || defined(WOLF_CRYPTO_DEV)
     int devId;
 #endif
 #ifdef WOLFSSL_ASYNC_CRYPT
     mp_int* r;          /* sign/verify temps */
     mp_int* s;
     WC_ASYNC_DEV asyncDev;
+    #ifdef HAVE_CAVIUM_V
+        mp_int* e;      /* Sign, Verify and Shared Secret */
+        mp_int* signK;
+    #endif
     #ifdef WOLFSSL_CERT_GEN
         CertSignCtx certSignCtx; /* context info for cert sign (MakeSignature) */
     #endif
@@ -474,6 +492,9 @@ int wc_ecc_import_private_key_ex(const byte* priv, word32 privSz,
 WOLFSSL_API
 int wc_ecc_rs_to_sig(const char* r, const char* s, byte* out, word32* outlen);
 WOLFSSL_API
+int wc_ecc_rs_raw_to_sig(const byte* r, word32 rSz, const byte* s, word32 sSz,
+    byte* out, word32* outlen);
+WOLFSSL_API
 int wc_ecc_sig_to_rs(const byte* sig, word32 sigLen, byte* r, word32* rLen,
                    byte* s, word32* sLen);
 WOLFSSL_API
@@ -482,6 +503,9 @@ int wc_ecc_import_raw(ecc_key* key, const char* qx, const char* qy,
 WOLFSSL_API
 int wc_ecc_import_raw_ex(ecc_key* key, const char* qx, const char* qy,
                    const char* d, int curve_id);
+WOLFSSL_API
+int wc_ecc_import_unsigned(ecc_key* key, byte* qx, byte* qy,
+                   byte* d, int curve_id);
 #endif /* HAVE_ECC_KEY_IMPORT */
 
 #ifdef HAVE_ECC_KEY_EXPORT
@@ -512,6 +536,8 @@ int wc_ecc_import_point_der(byte* in, word32 inLen, const int curve_idx,
 /* size helper */
 WOLFSSL_API
 int wc_ecc_size(ecc_key* key);
+WOLFSSL_API
+int wc_ecc_sig_size_calc(int sz);
 WOLFSSL_API
 int wc_ecc_sig_size(ecc_key* key);
 

@@ -1,6 +1,6 @@
 /* wc_port.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
@@ -10,7 +10,9 @@
  */
 
 
-
+/*!
+    \file wolfssl/wolfcrypt/wc_port.h
+*/
 
 #ifndef WOLF_CRYPT_PORT_H
 #define WOLF_CRYPT_PORT_H
@@ -22,6 +24,14 @@
     extern "C" {
 #endif
 
+/* Detect if compiler supports C99. "NO_WOLF_C99" can be defined in
+ * user_settings.h to disable checking for C99 support. */
+#if !defined(WOLF_C99) && defined(__STDC_VERSION__) && \
+    !defined(WOLFSSL_ARDUINO) && !defined(NO_WOLF_C99)
+    #if __STDC_VERSION__ >= 199901L
+        #define WOLF_C99
+    #endif
+#endif
 
 #ifdef USE_WINDOWS_API
     #ifdef WOLFSSL_GAME_BUILD
@@ -274,7 +284,8 @@ WOLFSSL_API int wolfCrypt_Cleanup(void);
     #define XBADFILE   NULL
     #define XFGETS     fgets
 
-    #if !defined(USE_WINDOWS_API) && !defined(NO_WOLFSSL_DIR)
+    #if !defined(USE_WINDOWS_API) && !defined(NO_WOLFSSL_DIR)\
+        && !defined(WOLFSSL_NUCLEUS)
         #include <dirent.h>
         #include <unistd.h>
         #include <sys/stat.h>
@@ -288,7 +299,7 @@ WOLFSSL_API int wolfCrypt_Cleanup(void);
         #define MAX_PATH 256
     #endif
 
-#if !defined(NO_WOLFSSL_DIR)
+#if !defined(NO_WOLFSSL_DIR) && !defined(WOLFSSL_NUCLEUS)
     typedef struct ReadDirCtx {
     #ifdef USE_WINDOWS_API
         WIN32_FIND_DATAA FindFileData;
@@ -307,10 +318,6 @@ WOLFSSL_API int wolfCrypt_Cleanup(void);
 #endif /* !NO_WOLFSSL_DIR */
 
 #endif /* !NO_FILESYSTEM */
-
-#ifdef USE_WOLF_STRTOK
-    WOLFSSL_LOCAL char* wc_strtok(char *str, const char *delim, char **nextp);
-#endif
 
 /* Windows API defines its own min() macro. */
 #if defined(USE_WINDOWS_API)
@@ -400,6 +407,9 @@ WOLFSSL_API int wolfCrypt_Cleanup(void);
     /* default */
     /* uses complete <time.h> facility */
     #include <time.h>
+    #if defined(HAVE_SYS_TIME_H) || defined(WOLF_C99)
+        #include <sys/time.h>
+    #endif
 
     /* PowerPC time_t is int */
     #ifdef __PPC__
@@ -413,7 +423,7 @@ WOLFSSL_API int wolfCrypt_Cleanup(void);
     #define XTIME(tl)       time((tl))
 #endif
 #if !defined(XGMTIME) && !defined(TIME_OVERRIDES)
-    #if defined(WOLFSSL_GMTIME) || !defined(HAVE_GMTIME_R)
+    #if defined(WOLFSSL_GMTIME) || !defined(HAVE_GMTIME_R) || defined(WOLF_C99)
         #define XGMTIME(c, t)   gmtime((c))
     #else
         #define XGMTIME(c, t)   gmtime_r((c), (t))
@@ -444,8 +454,18 @@ WOLFSSL_API int wolfCrypt_Cleanup(void);
 #if defined(USE_WOLF_TIME_T)
     typedef long time_t;
 #endif
+#if defined(USE_WOLF_SUSECONDS_T)
+    typedef long suseconds_t;
+#endif
+#if defined(USE_WOLF_TIMEVAL_T)
+    struct timeval
+    {
+        time_t tv_sec;
+        suseconds_t tv_usec;
+    };
+#endif
 
-/* forward declarations */
+    /* forward declarations */
 #if defined(USER_TIME)
     struct tm* gmtime(const time_t* timer);
     extern time_t XTIME(time_t * timer);
@@ -464,6 +484,16 @@ WOLFSSL_API int wolfCrypt_Cleanup(void);
     struct tm* gmtime(const time_t* timer);
 #endif
 #endif /* NO_ASN_TIME */
+
+#ifndef WOLFSSL_LEANPSK
+    char* mystrnstr(const char* s1, const char* s2, unsigned int n);
+#endif
+
+#ifndef FILE_BUFFER_SIZE
+    #define FILE_BUFFER_SIZE 1024     /* default static file buffer size for input,
+                                    will use dynamic buffer if not big enough */
+#endif
+
 
 #ifdef __cplusplus
     }  /* extern "C" */

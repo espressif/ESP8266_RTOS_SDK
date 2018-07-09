@@ -1,6 +1,6 @@
 /* des3.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
@@ -10,6 +10,9 @@
  */
 
 
+/*!
+    \file wolfssl/wolfcrypt/des3.h
+*/
 
 #ifndef WOLF_CRYPT_DES3_H
 #define WOLF_CRYPT_DES3_H
@@ -27,6 +30,14 @@
     extern "C" {
 #endif
 
+/* these are required for FIPS and non-FIPS */
+enum {
+    DES_KEY_SIZE        =  8,  /* des                     */
+    DES3_KEY_SIZE       = 24,  /* 3 des ede               */
+    DES_IV_SIZE         = 16,
+};
+
+
 #ifndef HAVE_FIPS /* to avoid redefinition of macros */
 
 #ifdef WOLFSSL_ASYNC_CRYPT
@@ -34,10 +45,11 @@
 #endif
 
 enum {
-    DES_ENC_TYPE    = 2,     /* cipher unique type */
-    DES3_ENC_TYPE   = 3,     /* cipher unique type */
+    DES_ENC_TYPE    = WC_CIPHER_DES,     /* cipher unique type */
+    DES3_ENC_TYPE   = WC_CIPHER_DES3,    /* cipher unique type */
+
     DES_BLOCK_SIZE  = 8,
-    DES_KS_SIZE     = 32,
+    DES_KS_SIZE     = 32,    /* internal DES key buffer size */
 
     DES_ENCRYPTION  = 0,
     DES_DECRYPTION  = 1

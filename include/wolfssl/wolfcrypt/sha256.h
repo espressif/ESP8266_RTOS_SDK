@@ -1,6 +1,6 @@
 /* sha256.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
@@ -9,6 +9,10 @@
  * http://www.wolfssl.com
  */
 
+
+/*!
+    \file wolfssl/wolfcrypt/sha256.h
+*/
 
 
 /* code submitted by raphael.huck@efixo.com */
@@ -68,9 +72,10 @@
     #define SHA256_NOINLINE
 #endif
 
-#ifndef NO_OLD_SHA256_NAMES
+#if !defined(NO_OLD_SHA_NAMES)
     #define SHA256             WC_SHA256
 #endif
+
 #ifndef NO_OLD_WC_NAMES
     #define Sha256             wc_Sha256
     #define SHA256_BLOCK_SIZE  WC_SHA256_BLOCK_SIZE
@@ -80,11 +85,12 @@
 
 /* in bytes */
 enum {
-    WC_SHA256              =  2,   /* hash type unique */
+    WC_SHA256              =  WC_HASH_TYPE_SHA256,
     WC_SHA256_BLOCK_SIZE   = 64,
     WC_SHA256_DIGEST_SIZE  = 32,
     WC_SHA256_PAD_SIZE     = 56
 };
+
 
 #ifdef WOLFSSL_TI_HASH
     #include "wolfssl/wolfcrypt/port/ti/ti-hash.h"
@@ -124,6 +130,7 @@ typedef struct wc_Sha256 {
 WOLFSSL_API int wc_InitSha256(wc_Sha256*);
 WOLFSSL_API int wc_InitSha256_ex(wc_Sha256*, void*, int);
 WOLFSSL_API int wc_Sha256Update(wc_Sha256*, const byte*, word32);
+WOLFSSL_API int wc_Sha256FinalRaw(wc_Sha256*, byte*);
 WOLFSSL_API int wc_Sha256Final(wc_Sha256*, byte*);
 WOLFSSL_API void wc_Sha256Free(wc_Sha256*);
 
@@ -147,11 +154,12 @@ WOLFSSL_API void wc_Sha256SizeSet(wc_Sha256*, word32);
 
 /* in bytes */
 enum {
-    WC_SHA224              =   8,   /* hash type unique */
+    WC_SHA224              =   WC_HASH_TYPE_SHA224,
     WC_SHA224_BLOCK_SIZE   =   WC_SHA256_BLOCK_SIZE,
     WC_SHA224_DIGEST_SIZE  =   28,
     WC_SHA224_PAD_SIZE     =   WC_SHA256_PAD_SIZE
 };
+
 
 typedef wc_Sha256 wc_Sha224;
 #endif /* HAVE_FIPS */

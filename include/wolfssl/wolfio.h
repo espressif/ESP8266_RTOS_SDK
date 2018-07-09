@@ -1,6 +1,6 @@
 /* io.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
@@ -10,6 +10,9 @@
  */
 
 
+/*!
+    \file wolfssl/wolfio.h   
+*/
 
 #ifndef WOLFSSL_IO_H
 #define WOLFSSL_IO_H
@@ -135,7 +138,6 @@
     #define SOCKET_EPIPE       WSAEPIPE
     #define SOCKET_ECONNREFUSED WSAENOTCONN
     #define SOCKET_ECONNABORTED WSAECONNABORTED
-    #define close(s) closesocket(s)
 #elif defined(__PPU)
     #define SOCKET_EWOULDBLOCK SYS_NET_EWOULDBLOCK
     #define SOCKET_EAGAIN      SYS_NET_EAGAIN
@@ -198,6 +200,23 @@
 #endif /* USE_WINDOWS_API */
 
 
+#ifdef USE_WINDOWS_API
+    #define CloseSocket(s) closesocket(s)
+    #define StartTCP() { WSADATA wsd; WSAStartup(0x0002, &wsd); }
+#elif defined(WOLFSSL_MDK_ARM) || defined(WOLFSSL_KEIL_TCP_NET)
+    extern int closesocket(int);
+    #define CloseSocket(s) closesocket(s)
+    #define StartTCP()
+#else
+    #define CloseSocket(s) close(s)
+    #define StartTCP()
+    #ifdef FREERTOS_TCP_WINSIM
+        extern int close(int);
+    #endif
+#endif
+
+
+
 #ifdef DEVKITPRO
     /* from network.h */
     int net_send(int, const void*, int, unsigned int);
@@ -249,6 +268,11 @@
         #endif
         typedef struct hostent          HOSTENT;
     #endif /* HAVE_SOCKADDR */
+
+    /* use gethostbyname for c99 */
+    #ifdef WOLF_C99
+        #undef HAVE_GETADDRINFO
+    #endif
 
     #ifdef HAVE_GETADDRINFO
         typedef struct addrinfo         ADDRINFO;
@@ -334,8 +358,11 @@ WOLFSSL_API int BioReceive(WOLFSSL* ssl, char* buf, int sz, void* ctx);
 /* I/O callbacks */
 typedef int (*CallbackIORecv)(WOLFSSL *ssl, char *buf, int sz, void *ctx);
 typedef int (*CallbackIOSend)(WOLFSSL *ssl, char *buf, int sz, void *ctx);
-WOLFSSL_API void wolfSSL_SetIORecv(WOLFSSL_CTX*, CallbackIORecv);
-WOLFSSL_API void wolfSSL_SetIOSend(WOLFSSL_CTX*, CallbackIOSend);
+WOLFSSL_API void wolfSSL_CTX_SetIORecv(WOLFSSL_CTX*, CallbackIORecv);
+WOLFSSL_API void wolfSSL_CTX_SetIOSend(WOLFSSL_CTX*, CallbackIOSend);
+/* deprecated old name */
+#define wolfSSL_SetIORecv wolfSSL_CTX_SetIORecv
+#define wolfSSL_SetIOSend wolfSSL_CTX_SetIOSend
 
 WOLFSSL_API void wolfSSL_SetIOReadCtx( WOLFSSL* ssl, void *ctx);
 WOLFSSL_API void wolfSSL_SetIOWriteCtx(WOLFSSL* ssl, void *ctx);
