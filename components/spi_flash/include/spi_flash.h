@@ -30,6 +30,8 @@ extern "C" {
 
 #define SPI_FLASH_SEC_SIZE        4096    /**< SPI Flash sector size */
 
+#define SPI_READ_BUF_MAX          64
+
 #ifdef CONFIG_ENABLE_FLASH_MMAP
 /**
  * @brief Enumeration which specifies memory space requested in an mmap call
