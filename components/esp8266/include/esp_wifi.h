@@ -565,8 +565,7 @@ esp_err_t esp_wifi_get_mac(wifi_interface_t ifx, uint8_t mac[6]);
   * @param type  promiscuous packet type.
   *
   */
-//typedef void (* wifi_promiscuous_cb_t)(void *buf, wifi_promiscuous_pkt_type_t type);
-typedef void (* wifi_promiscuous_cb_t)(uint8_t *buf, uint16_t len);
+typedef void (* wifi_promiscuous_cb_t)(void *buf, wifi_promiscuous_pkt_type_t type);
 /**
   * @brief Register the RX callback function in the promiscuous mode.
   *
