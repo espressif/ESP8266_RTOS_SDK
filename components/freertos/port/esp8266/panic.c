@@ -93,6 +93,7 @@ void IRAM_ATTR panicHandler(void *frame)
     // for panic the function that disable cache
     Cache_Read_Enable_New();
 
+    task_info_t *task;
     int *regs = (int *)frame;
     int x, y;
     const char *sdesc[] = {
@@ -108,35 +109,33 @@ void IRAM_ATTR panicHandler(void *frame)
     /* NMI can interrupt exception. */
     ETS_INTR_LOCK();
 
+    ets_printf("\r\n\r\n");
+
     if (_Pri_3_NMICount == -1) {
-        ets_printf("\nWatch dog triggle:\n\n");
+        ets_printf("Soft watch dog triggle:\r\n\r\n");
         show_critical_info();
-    } else if (xPortInIsrContext()) {
-        ets_printf("\nISR:\n\n");
+    } else if (xPortInIsrContext())
+        ets_printf("Core 0 was running in ISR context:\r\n\r\n");
+
+    if ((task = (task_info_t *)xTaskGetCurrentTaskHandle())) {
+        StackType_t *pdata = task->pxStack;
+        StackType_t *end = task->pxEndOfStack + 4;
+
+        ets_printf("Task stack [%s] stack from [%p] to [%p], total [%d] size\r\n\r\n",
+                    task->pcTaskName, pdata, end, end - pdata + 4);
+
+        panic_stack(pdata, end);
+
+        ets_printf("\r\n\r\n");
     } else {
-        task_info_t *task = xTaskGetCurrentTaskHandle();
-
-        if (task) {
-            
-            StackType_t *pdata = task->pxStack;
-            StackType_t *end = task->pxEndOfStack + 4;
-
-            ets_printf("\nTask stack [%s] stack from [%p] to [%p], total [%d] size\n\n",
-                        task->pcTaskName, pdata, end, end - pdata + 4);
-
-            panic_stack(pdata, end);
-
-            ets_printf("\n");
-        } else {
-            ets_printf("\nNo task\n\n");
-        }
+        ets_printf("No task\r\n\r\n");
     }
 
     for (x = 0; x < 20; x += 4) {
         for (y = 0; y < 4; y++) {
             ets_printf("%8s: 0x%08x  ", sdesc[x + y], regs[x + y + 1]);
         }
-        ets_printf("\n");
+        ets_printf("\r\n");
     }
 
     /*

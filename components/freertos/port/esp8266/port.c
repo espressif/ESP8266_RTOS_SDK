@@ -340,19 +340,14 @@ int IRAM_ATTR xPortInIsrContext(void)
     return _xt_isr_status != 0;
 }
 
-void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
+void __attribute__((weak)) vApplicationStackOverflowHook(xTaskHandle xTask, const char *pcTaskName)
 {
-    printf("task [%s] stask overflow\n", pcTaskName);
-}
+    int *p = NULL;
 
-void IRAM_ATTR __taskEXIT_CRITICAL(void)
-{
-    portEXIT_CRITICAL();
-}
-
-void IRAM_ATTR __taskENTER_CRITICAL(void)
-{
-    portENTER_CRITICAL();
+    ets_printf("***ERROR*** A stack overflow in task %s has been detected.\r\n", pcTaskName);
+    
+    /* cause a exception to jump into panic function */
+    *p = 0;
 }
 
 signed portBASE_TYPE xTaskGenericCreate(TaskFunction_t pxTaskCode,
