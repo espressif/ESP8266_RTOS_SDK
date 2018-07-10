@@ -27,7 +27,10 @@
 #include "mbedtls/esp_debug.h"
 
 #include "esp_log.h"
+
+#ifdef CONFIG_USE_VFS
 #include "esp_vfs.h"
+#endif
 
 static const char *TAG = "aws_iot";
 
@@ -139,8 +142,13 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
        path, if it's longer than this then it's raw cert data (PEM or DER,
        neither of which can start with a slash. */
     if (pNetwork->tlsConnectParams.pRootCALocation[0] == '/') {
+#ifdef CONFIG_USE_VFS
         ESP_LOGD(TAG, "Loading CA root certificate from file ...");
         ret = mbedtls_x509_crt_parse_file(&(tlsDataParams->cacert), pNetwork->tlsConnectParams.pRootCALocation);
+#else
+        ESP_LOGE(TAG, "Not to support load CA root certificate from file ...");
+        return NETWORK_SSL_CERT_ERROR;
+#endif
     } else {
         ESP_LOGD(TAG, "Loading embedded CA root certificate ...");
         ret = mbedtls_x509_crt_parse(&(tlsDataParams->cacert), (const unsigned char *)pNetwork->tlsConnectParams.pRootCALocation,
@@ -155,9 +163,14 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 
     /* Load client certificate... */
     if (pNetwork->tlsConnectParams.pDeviceCertLocation[0] == '/') {
+#ifdef CONFIG_USE_VFS
         ESP_LOGD(TAG, "Loading client cert from file...");
         ret = mbedtls_x509_crt_parse_file(&(tlsDataParams->clicert),
                                           pNetwork->tlsConnectParams.pDeviceCertLocation);
+#else
+        ESP_LOGE(TAG, "Not support to load client cert from file...");
+        return NETWORK_SSL_CERT_ERROR;
+#endif
     } else {
         ESP_LOGD(TAG, "Loading embedded client certificate...");
         ret = mbedtls_x509_crt_parse(&(tlsDataParams->clicert),
@@ -171,10 +184,15 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 
     /* Parse client private key... */
     if (pNetwork->tlsConnectParams.pDevicePrivateKeyLocation[0] == '/') {
+#ifdef CONFIG_USE_VFS
         ESP_LOGD(TAG, "Loading client private key from file...");
         ret = mbedtls_pk_parse_keyfile(&(tlsDataParams->pkey),
                                        pNetwork->tlsConnectParams.pDevicePrivateKeyLocation,
                                        "");
+#else
+        ESP_LOGE(TAG, "Not support to load client private key from file...");
+        return NETWORK_SSL_CERT_ERROR;
+#endif
     } else {
         ESP_LOGD(TAG, "Loading embedded client private key...");
         ret = mbedtls_pk_parse_key(&(tlsDataParams->pkey),
