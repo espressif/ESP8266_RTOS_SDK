@@ -34,8 +34,11 @@
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
+
+#ifdef CONFIG_EXAMPLE_FILESYSTEM_CERTS
 #include "esp_vfs_fat.h"
 #include "driver/sdmmc_host.h"
+#endif
 
 #include "nvs.h"
 #include "nvs_flash.h"
@@ -92,7 +95,7 @@ static EventGroupHandle_t wifi_event_group;
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
    to the AP with an IP? */
-const int CONNECTED_BIT = BIT0;
+const int CONNECTED_BIT = 1 << 0;
 
 
 /* CA Root certificate, device ("Thing") certificate and device
@@ -364,5 +367,5 @@ void app_main()
 
     initialise_wifi();
     /* Temporarily pin task to core, due to FPU uncertainty */
-    xTaskCreatePinnedToCore(&aws_iot_task, "aws_iot_task", 9216, NULL, 5, NULL, 1);
+    xTaskCreate(&aws_iot_task, "aws_iot_task", 9216, NULL, 5, NULL);
 }
