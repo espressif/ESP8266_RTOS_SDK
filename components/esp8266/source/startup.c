@@ -29,7 +29,7 @@
 
 #define FLASH_MAP_ADDR 0x40200000
 
-extern void chip_boot(void);
+extern void chip_boot(size_t start_addr, size_t map);
 extern int rtc_init(void);
 extern int mac_init(void);
 extern int base_gpio_init(void);
@@ -66,7 +66,7 @@ static void user_init_entry(void *param)
     wifi_task_delete(NULL);
 }
 
-void call_user_start(void)
+void call_user_start(size_t start_addr, size_t map)
 {
     int i;
     int *p;
@@ -91,6 +91,8 @@ void call_user_start(void)
     for (p = &_bss_start; p < &_bss_end; p++)
         *p = 0;
 
+    chip_boot(start_addr, map);
+
     __asm__ __volatile__(
         "rsil       a2, 2\n"
         "movi       a1, _chip_interrupt_tmp\n"
@@ -98,8 +100,6 @@ void call_user_start(void)
         "and        a1, a1, a2\n"
         "movi       a2, 0x40100000\n"
         "wsr        a2, vecbase\n");
-
-    chip_boot();
 
     wifi_os_init();
 
