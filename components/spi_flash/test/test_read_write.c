@@ -21,13 +21,8 @@
 #include <sys/param.h>
 
 #include <unity.h>
-#include <test_utils.h>
 #include <esp_spi_flash.h>
-#include <rom/spi_flash.h>
-#include "../cache_utils.h"
-#include "soc/timer_group_struct.h"
-#include "soc/timer_group_reg.h"
-#include "esp_heap_caps.h"
+#include "esp_attr.h"
 
 /* Base offset in flash for tests. */
 static size_t start;
@@ -35,8 +30,7 @@ static size_t start;
 static void setup_tests()
 {
     if (start == 0) {
-        const esp_partition_t *part = get_test_data_partition();
-        start = part->address;
+        start = 0x90000;
         printf("Test data partition @ 0x%x\n", start);
     }
 }
@@ -77,10 +71,8 @@ static void IRAM_ATTR test_read(int src_off, int dst_off, int len)
     memset(src_buf, 0xAA, sizeof(src_buf));
     fill(((char *) src_buf) + src_off, src_off, len);
     ESP_ERROR_CHECK(spi_flash_erase_sector((start + src_off) / SPI_FLASH_SEC_SIZE));
-    spi_flash_disable_interrupts_caches_and_other_cpu();
-    esp_rom_spiflash_result_t rc = esp_rom_spiflash_write(start, src_buf, sizeof(src_buf));
-    spi_flash_enable_interrupts_caches_and_other_cpu();
-    TEST_ASSERT_EQUAL_INT(rc, ESP_ROM_SPIFLASH_RESULT_OK);
+    esp_err_t rc = spi_flash_write(start, src_buf, sizeof(src_buf));
+    TEST_ASSERT_EQUAL_INT(rc, ESP_OK);
     memset(dst_buf, 0x55, sizeof(dst_buf));
     memset(dst_gold, 0x55, sizeof(dst_gold));
     fill(dst_gold + dst_off, src_off, len);
@@ -159,10 +151,8 @@ static void IRAM_ATTR test_write(int dst_off, int src_off, int len)
         fill(dst_gold + dst_off, src_off, len);
     }
     ESP_ERROR_CHECK(spi_flash_write(start + dst_off, src_buf + src_off, len));
-    spi_flash_disable_interrupts_caches_and_other_cpu();
-    esp_rom_spiflash_result_t rc = esp_rom_spiflash_read(start, dst_buf, sizeof(dst_buf));
-    spi_flash_enable_interrupts_caches_and_other_cpu();
-    TEST_ASSERT_EQUAL_INT(rc, ESP_ROM_SPIFLASH_RESULT_OK);
+    esp_err_t rc = spi_flash_read(start, dst_buf, sizeof(dst_buf));
+    TEST_ASSERT_EQUAL_INT(rc, ESP_OK);
     TEST_ASSERT_EQUAL_INT(cmp_or_dump(dst_buf, dst_gold, sizeof(dst_buf)), 0);
 }
 
