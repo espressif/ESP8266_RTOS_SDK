@@ -58,13 +58,11 @@ static const char *TAG = "chip_boot";
  * @brief initialize the chip including flash I/O and chip cache according to
  *        boot parameters which are stored at the flash
  */
-void chip_boot(void)
+void chip_boot(size_t start_addr, size_t map)
 {
     int ret;
-    int usebin;
     uint32_t freqdiv, flash_size, sect_size;
     uint32_t freqbits;
-    uint32_t cache_map;
     flash_hdr_t fhdr;
     boot_hdr_t bhdr;
 
@@ -86,7 +84,7 @@ void chip_boot(void)
 
     SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_USRREG, BIT5);
 
-    ret = spi_flash_read(CONFIG_PARTITION_TABLE_CUSTOM_APP_BIN_OFFSET, &fhdr, sizeof(flash_hdr_t));
+    ret = spi_flash_read(start_addr, &fhdr, sizeof(flash_hdr_t));
     if (ret) {
         ESP_LOGE(TAG, "SPI flash read result %d\n", ret);
     }
@@ -122,38 +120,7 @@ void chip_boot(void)
         ESP_LOGE(TAG, "Get boot parameters %d\n", ret);
     }
 
-    if (bhdr.user_bin == 1) {
-        if (bhdr.boot_status == 1)
-            usebin = 1;
-        else
-            usebin = 0;
-    } else {
-        if (bhdr.boot_status == 1)
-            usebin = 0;
-        else {
-            if (bhdr.version == 4) {
-                bhdr.boot_status = 1;
-                usebin = 0;
-            } else 
-                usebin = 1;
-        }
-    }
-
-    cache_map = 0;
-    if (fhdr.spi_size_map == FLASH_SIZE_16M_MAP_1024_1024
-        || fhdr.spi_size_map == FLASH_SIZE_32M_MAP_1024_1024
-        || fhdr.spi_size_map == FLASH_SIZE_64M_MAP_1024_1024
-        || fhdr.spi_size_map == FLASH_SIZE_128M_MAP_1024_1024) {
-        if (bhdr.version >= 4
-            && bhdr.version <= 0x1f) {
-            if (usebin == 1)
-                cache_map = 1;
-        } else {
-            ESP_LOGE(TAG, "Need boot 1.4+\n");
-        }
-    }
-
-    cache_init(cache_map, 0, 0);
+    cache_init(map, 0, 0);
 
     if (bhdr.to_qio == 0)
         user_spi_flash_dio_to_qio_pre_init();
