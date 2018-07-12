@@ -100,6 +100,9 @@
 
 #define FLASH_ALIGN_BYTES                       4
 #define FLASH_ALIGN(addr)                       ((((size_t)addr) + (FLASH_ALIGN_BYTES - 1)) & (~(FLASH_ALIGN_BYTES - 1)))
+#define FLASH_ALIGN_BEFORE(addr)                (FLASH_ALIGN(addr) - 4)
+#define NOT_ALIGN(addr)                         (((size_t)addr) & (FLASH_ALIGN_BYTES - 1))
+#define IS_ALIGN(addr)                          (NOT_ALIGN(addr) == 0)
 
 enum GD25Q32C_status {
     GD25Q32C_STATUS1=0,
@@ -129,6 +132,7 @@ extern uint32_t esp_get_time();
 bool IRAM_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd);
 bool special_flash_read_status(uint8_t command, uint32_t* status, int len);
 bool special_flash_write_status(uint8_t command, uint32_t status, int len, bool write_en);
+esp_err_t spi_flash_read(size_t src_addr, void *dest, size_t size);
 uint8_t en25q16x_read_sfdp();
 
 extern void pp_soft_wdt_feed(void);
@@ -148,7 +152,7 @@ uint8_t FlashIsOnGoing = 0;
 
 const char *TAG = "spi_flash";
 
-static esp_err_t IRAM_ATTR SPIWrite(uint32_t  target, uint32_t *src_addr, size_t len)
+esp_err_t IRAM_ATTR SPIWrite(uint32_t  target, uint32_t *src_addr, size_t len)
 {
     uint32_t  page_size;
     uint32_t  pgm_len, pgm_num;
@@ -481,17 +485,30 @@ static esp_err_t IRAM_ATTR spi_flash_write_raw(size_t dest_addr, const void *src
 
 esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t size)
 {
+#undef FLASH_WRITE
 #define FLASH_WRITE(dest, src, size)                \
 {                                                   \
     ret = spi_flash_write_raw(dest, src, size);     \
     pp_soft_wdt_feed();                             \
-    if (ret)                                        \
-        goto exit;                                  \
+    if (ret) {                                      \
+        return ret;                                 \
+    }                                               \
+}
+
+#undef FLASH_READ
+#define FLASH_READ(dest, src, size)                 \
+{                                                   \
+    ret = spi_flash_read(dest, src, size);          \
+    if (ret) {                                      \
+        return ret;                                 \
+    }                                               \
 }
 
     esp_err_t ret = ESP_ERR_FLASH_OP_FAIL;
-    uint32_t *tmp;
-    size_t before_wbytes, align_wbytes;
+    uint8_t *tmp = (uint8_t *)src;
+
+    if (!size)
+        return ESP_OK;
 
     if (src == NULL) {
         return ESP_ERR_FLASH_OP_FAIL;
@@ -501,40 +518,53 @@ esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t si
         return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    if (IS_FLASH(src)) {
-        tmp = wifi_malloc(size, OSI_MALLOC_CAP_32BIT);
-        if (!tmp) {
-            return ESP_ERR_NO_MEM;
+    if (NOT_ALIGN(dest_addr)
+        || NOT_ALIGN(tmp)
+        || NOT_ALIGN(size)
+        || IS_FLASH(src)) {
+        uint8_t buf[SPI_READ_BUF_MAX];
+
+        if (NOT_ALIGN(dest_addr)) {
+            size_t r_addr = FLASH_ALIGN_BEFORE(dest_addr);
+            size_t c_off = dest_addr - r_addr;
+            size_t wbytes = FLASH_ALIGN_BYTES - c_off;
+
+            wbytes = wbytes > size ? size : wbytes;
+
+            FLASH_READ(r_addr, buf, FLASH_ALIGN_BYTES);
+            memcpy(&buf[c_off], tmp, wbytes);
+            FLASH_WRITE(r_addr, buf, FLASH_ALIGN_BYTES);
+
+            dest_addr += wbytes;
+            tmp += wbytes;
+            size -= wbytes;
         }
-        memcpy(tmp, src, size);
-    } else
-        tmp = (uint32_t *)src;
 
-    before_wbytes = FLASH_ALIGN(tmp) == (size_t)tmp ? 0 : FLASH_ALIGN(tmp) - (size_t)tmp;
-    align_wbytes = size - before_wbytes;
+        while (size > 0) {
+            size_t len = size >= SPI_READ_BUF_MAX ? SPI_READ_BUF_MAX : size;
+            size_t wlen = FLASH_ALIGN(len);
 
-    if (before_wbytes) {
-        uint8_t load_buf[FLASH_ALIGN_BYTES];
+            if (wlen != len) {
+                size_t l_b = wlen - FLASH_ALIGN_BYTES;
 
-        memcpy(load_buf, tmp, before_wbytes);
-        FLASH_WRITE(dest_addr, load_buf, FLASH_ALIGN_BYTES);
+                FLASH_READ(dest_addr + l_b, &buf[l_b], FLASH_ALIGN_BYTES);                
+            }
+
+            memcpy(buf, tmp, len);
+
+            FLASH_WRITE(dest_addr, buf, wlen);
+
+            dest_addr += len;
+            tmp += len;
+            size -= len;
+        }
+    } else {
+        FLASH_WRITE(dest_addr, src, size);
     }
-
-    if (align_wbytes) {
-        void *align_addr = (void *)FLASH_ALIGN(tmp);
-
-        if (align_wbytes % FLASH_ALIGN_BYTES)
-            align_wbytes = (align_wbytes / FLASH_ALIGN_BYTES + 1) * FLASH_ALIGN_BYTES;
-
-        FLASH_WRITE(dest_addr + before_wbytes, align_addr, align_wbytes);
-    }
-
-exit:
-    if (IS_FLASH(src))
-        wifi_free(tmp);
 
     return ret;
 }
+
 
 /******************************************************************************
  * FunctionName : spi_flash_read_raw
@@ -568,42 +598,59 @@ static esp_err_t IRAM_ATTR spi_flash_read_raw(size_t src_addr, void *dest, size_
 
 esp_err_t IRAM_ATTR spi_flash_read(size_t src_addr, void *dest, size_t size)
 {
+#undef FLASH_READ
 #define FLASH_READ(addr, dest, size)                        \
 {                                                           \
-    ret = spi_flash_read_raw(src_addr, dest, size);         \
+    ret = spi_flash_read_raw(addr, dest, size);             \
     pp_soft_wdt_feed();                                     \
     if (ret)                                                \
         return ret;                                         \
 }
 
     esp_err_t ret;
-    uint8_t load_buf[FLASH_ALIGN_BYTES];
-    size_t before_rbytes, after_rbytes, align_rbytes;
+    uint8_t *tmp = (uint8_t *)dest;
 
-    if (dest == NULL) {
+    if (!size)
+        return ESP_OK;
+
+    if (tmp == NULL) {
         return ESP_ERR_FLASH_OP_FAIL;
     }
 
-    before_rbytes = FLASH_ALIGN(dest) == (size_t)dest ? 0 : FLASH_ALIGN(dest) - (size_t)dest;
-    after_rbytes = (size - before_rbytes) & (FLASH_ALIGN_BYTES - 1);
-    align_rbytes = size - before_rbytes - after_rbytes;
+    if (NOT_ALIGN(src_addr)
+        || NOT_ALIGN(tmp)
+        || NOT_ALIGN(size)) {
+        uint8_t buf[SPI_READ_BUF_MAX];
 
-    if (before_rbytes) {
-        FLASH_READ(src_addr, load_buf, FLASH_ALIGN_BYTES);
-        memcpy(dest, &load_buf[FLASH_ALIGN_BYTES - before_rbytes], before_rbytes);
-    }
+        if (NOT_ALIGN(src_addr)) {
+            size_t r_addr = FLASH_ALIGN_BEFORE(src_addr);
+            size_t c_off = src_addr - r_addr;
+            size_t wbytes = FLASH_ALIGN_BYTES - c_off;
 
-    if (align_rbytes) {
-        void *align_addr = (void *)FLASH_ALIGN(dest);
+            wbytes = wbytes > size ? size : wbytes;
 
-        FLASH_READ(src_addr + before_rbytes, align_addr, align_rbytes);
-    }
+            FLASH_READ(r_addr, buf, FLASH_ALIGN_BYTES);
+            memcpy(tmp, &buf[c_off], wbytes);
 
-    if (after_rbytes) {
-        void *after_addr = (void *)FLASH_ALIGN((char *)dest + size - after_rbytes);
+            tmp += wbytes;
+            src_addr += wbytes;
+            size -= wbytes;
+        }
 
-        FLASH_READ(src_addr + before_rbytes + align_rbytes, load_buf, FLASH_ALIGN_BYTES);
-        memcpy(after_addr, load_buf, after_rbytes);
+        while (size) {
+            size_t len = size >= SPI_READ_BUF_MAX ? SPI_READ_BUF_MAX : size;
+            size_t wlen = FLASH_ALIGN(len);
+
+            FLASH_READ(src_addr, buf, wlen);
+
+            memcpy(tmp, buf, len);
+
+            src_addr += len;
+            tmp += len;
+            size -= len;            
+        }
+    } else {
+        FLASH_READ(src_addr, tmp, size);
     }
 
     return ESP_OK;
