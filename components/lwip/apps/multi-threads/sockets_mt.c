@@ -643,22 +643,43 @@ static void lwip_sync_select_mt(struct lwip_sock *sock)
 }
 
 
-static void lwip_sync_mt(int s)
+static inline bool is_need_sync(int s, int how, int module)
+{
+    int ret;
+
+    switch (module) {
+        case SOCK_MT_STATE:
+            if (how == SHUT_RD)
+                return false;
+            break;
+        case SOCK_MT_RECV:
+            if (how == SHUT_WR)
+                return false;
+            break;
+        default:
+            break;
+    }
+
+    /*
+     * we always lock the mutex in case of other thread entering,
+     * other thread will be blocked at "SOCK_MT_LOCK" and poll-check
+     */
+    SOCK_MT_TRYLOCK(s, module, ret);
+
+    return ret == ERR_OK ? false : true;
+}
+
+static void lwip_sync_mt(int s, int how)
 {
     int module = 0;
     int ret;
     struct lwip_sock *sock;
 
     while (module < SOCK_MT_SELECT) {
+        int skip = 0;
         extern void sys_arch_msleep(int ms);
 
-        SOCK_MT_TRYLOCK(s, module, ret);
-        if (ret == ERR_OK) {
-            /*
-             * we always lock the mutex in case of other thread entering,
-             * other thread will be blocked at "SOCK_MT_LOCK" and poll-check
-             */
-            //SOCK_MT_UNLOCK(s, module);
+        if (is_need_sync(s, how, module) == false) {
             module++;
             continue;
         }
@@ -948,24 +969,19 @@ int lwip_fcntl(int s, int cmd, int val)
     return ret;
 }
 
-static int __lwip_shutdown_mt(int s, int how)
+int lwip_shutdown(int s, int how)
 {
     int ret;
 
     LWIP_ENTER_MT(s, SOCK_MT_SHUTDOWN, 0);
 
-    lwip_sync_mt(s);
+    lwip_sync_mt(s, how);
 
     ret = lwip_shutdown_esp(s, how);
 
     LWIP_EXIT_MT(s, SOCK_MT_SHUTDOWN, 0);
 
     return ret;
-}
-
-int lwip_shutdown(int s, int how)
-{
-    return lwip_shutdown_esp(s, how);
 }
 
 int lwip_close(int s)
@@ -975,7 +991,9 @@ int lwip_close(int s)
     SYS_ARCH_DECL_PROTECT(lev);
     sys_mutex_t lock_tmp[SOCK_MT_LOCK_MAX];
 
-    __lwip_shutdown_mt(s, SHUT_RDWR);
+    ret = lwip_shutdown(s, SHUT_RDWR);
+    if (ret)
+        return ret;
 
     LWIP_ENTER_MT(s, SOCK_MT_CLOSE, 0);
 
