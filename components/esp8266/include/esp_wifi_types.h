@@ -145,7 +145,7 @@ typedef enum {
     WIFI_ANT_MAX,           /**< Invalid WiFi antenna */
 } wifi_ant_t;
 
-/** @brief Description of an WiFi AP */
+/** @brief Description of a WiFi AP */
 typedef struct {
     uint8_t bssid[6];                     /**< MAC address of AP */
     uint8_t ssid[33];                     /**< SSID of AP */
@@ -299,13 +299,18 @@ typedef struct {
 /** @brief Received packet radio metadata header, this is the common header at the beginning of all promiscuous mode RX callback buffers */
 typedef struct {
     signed rssi:8;            /**< signal intensity of packet */
-    unsigned rate:5;          /**< data rate */
+    unsigned rate:4;          /**< data rate */
+    unsigned is_group:1;
     unsigned :1;              /**< reserve */
     unsigned sig_mode:2;      /**< 0:is not 11n packet; 1:is 11n packet */
-    unsigned :16;             /**< reserve */
+    unsigned legacy_length:12;
+    unsigned damatch0:1;
+    unsigned damatch1:1;
+    unsigned bssidmatch0:1;
+    unsigned bssidmatch1:1;
     unsigned mcs:7;           /**< if is 11n packet, shows the modulation(range from 0 to 76) */
     unsigned cwb:1;           /**< if is 11n packet, shows if is HT40 packet or not */
-    unsigned :16;             /**< reserve */
+    unsigned HT_length:16;             /**< reserve */
     unsigned smoothing:1;     /**< reserve */
     unsigned not_sounding:1;  /**< reserve */
     unsigned :1;              /**< reserve */
@@ -313,16 +318,11 @@ typedef struct {
     unsigned stbc:2;          /**< STBC */
     unsigned fec_coding:1;    /**< Flag is set for 11n packets which are LDPC */
     unsigned sgi:1;           /**< SGI */
-    unsigned noise_floor:8;   /**< noise floor */
+    unsigned rxend_state:8;
     unsigned ampdu_cnt:8;     /**< ampdu cnt */
     unsigned channel:4;       /**< which channel this packet in */
-    unsigned :12;             /**< reserve */
-    unsigned timestamp:32;    /**< timestamp */
-    unsigned :32;             /**< reserve */
-    unsigned :32;             /**< reserve */
-    unsigned sig_len:12;      /**< length of packet */
-    unsigned :12;             /**< reserve */
-    unsigned rx_state:8;      /**< rx state */
+    unsigned :4;              /**< reserve */
+    signed noise_floor:8;
 } wifi_pkt_rx_ctrl_t;
 
 /** @brief Payload passed to 'buf' parameter of promiscuous mode RX callback.
@@ -340,6 +340,7 @@ typedef struct {
   */
 typedef enum {
     WIFI_PKT_MGMT,  /**< Management frame, indicates 'buf' argument is wifi_promiscuous_pkt_t */
+    WIFI_PKT_CTRL,  /**< Control frame, indicates 'buf' argument is wifi_promiscuous_pkt_t */
     WIFI_PKT_DATA,  /**< Data frame, indiciates 'buf' argument is wifi_promiscuous_pkt_t */
     WIFI_PKT_MISC,  /**< Other type, such as MIMO etc. 'buf' argument is wifi_promiscuous_pkt_t but the payload is zero length. */
 } wifi_promiscuous_pkt_type_t;
@@ -347,10 +348,20 @@ typedef enum {
 
 #define WIFI_PROMIS_FILTER_MASK_ALL         (0xFFFFFFFF)  /**< filter all packets */
 #define WIFI_PROMIS_FILTER_MASK_MGMT        (1)           /**< filter the packets with type of WIFI_PKT_MGMT */
-#define WIFI_PROMIS_FILTER_MASK_DATA        (1<<1)        /**< filter the packets with type of WIFI_PKT_DATA */
-#define WIFI_PROMIS_FILTER_MASK_MISC        (1<<2)        /**< filter the packets with type of WIFI_PKT_MISC */
-#define WIFI_PROMIS_FILTER_MASK_DATA_MPDU   (1<<3)        /**< filter the MPDU which is a kind of WIFI_PKT_DATA */
-#define WIFI_PROMIS_FILTER_MASK_DATA_AMPDU  (1<<4)        /**< filter the AMPDU which is a kind of WIFI_PKT_DATA */
+#define WIFI_PROMIS_FILTER_MASK_CTRL        (1<<1)        /**< filter the packets with type of WIFI_PKT_CTRL */
+#define WIFI_PROMIS_FILTER_MASK_DATA        (1<<2)        /**< filter the packets with type of WIFI_PKT_DATA */
+#define WIFI_PROMIS_FILTER_MASK_MISC        (1<<3)        /**< filter the packets with type of WIFI_PKT_MISC */
+
+#define WIFI_PROMIS_CTRL_FILTER_MASK_ALL         (0xFF800000)  /**< filter all control packets */
+#define WIFI_PROMIS_CTRL_FILTER_MASK_WRAPPER     (1<<23)       /**< filter the control packets with subtype of Control Wrapper */
+#define WIFI_PROMIS_CTRL_FILTER_MASK_BAR         (1<<24)       /**< filter the control packets with subtype of Block Ack Request */
+#define WIFI_PROMIS_CTRL_FILTER_MASK_BA          (1<<25)       /**< filter the control packets with subtype of Block Ack */
+#define WIFI_PROMIS_CTRL_FILTER_MASK_PSPOLL      (1<<26)       /**< filter the control packets with subtype of PS-Poll */
+#define WIFI_PROMIS_CTRL_FILTER_MASK_RTS         (1<<27)       /**< filter the control packets with subtype of RTS */
+#define WIFI_PROMIS_CTRL_FILTER_MASK_CTS         (1<<28)       /**< filter the control packets with subtype of CTS */
+#define WIFI_PROMIS_CTRL_FILTER_MASK_ACK         (1<<29)       /**< filter the control packets with subtype of ACK */
+#define WIFI_PROMIS_CTRL_FILTER_MASK_CFEND       (1<<30)       /**< filter the control packets with subtype of CF-END */
+#define WIFI_PROMIS_CTRL_FILTER_MASK_CFENDACK    (1<<31)       /**< filter the control packets with subtype of CF-END+CF-ACK */
 
 /** @brief Mask for filtering different packet types in promiscuous mode. */
 typedef struct {
