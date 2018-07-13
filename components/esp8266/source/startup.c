@@ -87,19 +87,25 @@ void call_user_start(size_t start_addr, size_t map)
             *dest++ = *src++;
     }
 
+    /* 
+     * When finish copying IRAM program, the exception vect must be initialized.
+     * And then user can load/store data which is not aligned by 4-byte.
+     */
+    __asm__ __volatile__(
+        "movi       a2, 0x40100000\n"
+        "wsr        a2, vecbase\n");
+
+    chip_boot(start_addr, map);
+
     /* clear bss data */
     for (p = &_bss_start; p < &_bss_end; p++)
         *p = 0;
-
-    chip_boot(start_addr, map);
 
     __asm__ __volatile__(
         "rsil       a2, 2\n"
         "movi       a1, _chip_interrupt_tmp\n"
         "movi       a2, 0xffffff00\n"
-        "and        a1, a1, a2\n"
-        "movi       a2, 0x40100000\n"
-        "wsr        a2, vecbase\n");
+        "and        a1, a1, a2\n");
 
     wifi_os_init();
 
