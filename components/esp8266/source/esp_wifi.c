@@ -17,6 +17,7 @@
 #include "esp_wifi.h"
 #include "esp_socket.h"
 #include "net/sockio.h"
+#include "phy.h"
 
 esp_err_t esp_wifi_init_internal(const wifi_init_config_t *config);
 
@@ -43,4 +44,9 @@ esp_err_t esp_wifi_init(const wifi_init_config_t *config)
 {
     esp_event_set_default_wifi_handlers();
     return esp_wifi_init_internal(config);
+}
+
+void esp_deep_sleep_set_rf_option(uint8_t option)
+{
+    phy_afterwake_set_rfoption(option);
 }
