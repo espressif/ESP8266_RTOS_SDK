@@ -98,7 +98,7 @@ esp_err_t esp_smartconfig_stop(void);
   *     - ESP_OK: succeed
   *     - others: fail
   */
-esp_err_t esptouch_set_timeout(uint8_t time_s);
+esp_err_t esp_esptouch_set_timeout(uint8_t time_s);
 
 /**
   * @brief     Set protocol type of SmartConfig.
@@ -113,6 +113,21 @@ esp_err_t esptouch_set_timeout(uint8_t time_s);
   *     - others: fail
   */
 esp_err_t esp_smartconfig_set_type(smartconfig_type_t type);
+
+/**
+  * @brief     Set mode of SmartConfig. default normal mode.
+  *
+  * @attention 1. Please call it before API esp_smartconfig_start.
+  * @attention 2. Fast mode have corresponding APP(phone).
+  * @attention 3. Two mode is compatible.
+  *
+  * @param     enable  false-disable(default); true-enable;
+  *
+  * @return
+  *     - ESP_OK: succeed
+  *     - others: fail
+  */
+esp_err_t esp_smartconfig_fast_mode(bool enable);
 
 #ifdef __cplusplus
 }
