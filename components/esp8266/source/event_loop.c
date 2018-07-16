@@ -71,7 +71,7 @@ esp_err_t esp_event_send(system_event_t *event)
         return ESP_ERR_INVALID_STATE;
     }
 
-    int ret = wifi_queue_send(s_event_queue, event, 0, OSI_QUEUE_SEND_FRONT);
+    int ret = wifi_queue_send(s_event_queue, event, 0, OSI_QUEUE_SEND_BACK);
     if (ret != true) {
         if (event) {
             ESP_LOGE(TAG, "e=%d f", event->event_id);
