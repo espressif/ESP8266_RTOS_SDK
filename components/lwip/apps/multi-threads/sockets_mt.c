@@ -329,14 +329,6 @@ typedef struct _sock_mt sock_mt_t;
 #define SOCK_MT_GET_SEL(s)                                                  \
     sockets_mt[s].sel
 
-#define SOCK_MT_SET_LINGER(sock)                                            \
-{                                                                           \
-    SYS_ARCH_DECL_PROTECT(lev);                                             \
-    SYS_ARCH_PROTECT(lev);                                                  \
-    sock->conn->linger = 1;                                                 \
-    SYS_ARCH_UNPROTECT(lev);                                                \
-}
-
 #define LWIP_ENTER_MT(s, m, p)                                              \
 {                                                                           \
     int r;                                                                  \
@@ -579,6 +571,8 @@ static void lwip_do_sync_send(void *arg)
     SYS_ARCH_PROTECT(lev);
     if (conn->current_msg) {
         conn->current_msg->err = ERR_OK;
+        if (conn->current_msg && sys_sem_valid(conn->current_msg->op_completed_sem))
+            sys_sem_signal(conn->current_msg->op_completed_sem);
         conn->current_msg = NULL;
     }
     conn->state = NETCONN_NONE;
@@ -609,6 +603,7 @@ static void lwip_sync_state_mt(struct lwip_sock *sock, int state)
         if (sys_mbox_valid(&sock->conn->acceptmbox))
             sys_mbox_trypost(&sock->conn->acceptmbox, NULL);
         break;
+    case SOCK_MT_STATE_CONNECT:
     case SOCK_MT_STATE_SEND :
     {
         socket_conn_sync_t sync;
@@ -620,10 +615,6 @@ static void lwip_sync_state_mt(struct lwip_sock *sock, int state)
         sys_arch_sem_wait(sync.sem, 0);
         break;
     }
-    case SOCK_MT_STATE_CONNECT :
-        if (sock->conn->current_msg && sys_sem_valid(sock->conn->current_msg->op_completed_sem))
-            sys_sem_signal(sock->conn->current_msg->op_completed_sem);
-        break;
     default :
         break;
     }
@@ -672,11 +663,9 @@ static inline bool is_need_sync(int s, int how, int module)
 static void lwip_sync_mt(int s, int how)
 {
     int module = 0;
-    int ret;
     struct lwip_sock *sock;
 
     while (module < SOCK_MT_SELECT) {
-        int skip = 0;
         extern void sys_arch_msleep(int ms);
 
         if (is_need_sync(s, how, module) == false) {
@@ -685,11 +674,6 @@ static void lwip_sync_mt(int s, int how)
         }
 
         sock = get_socket(s);
-#if LWIP_SO_LINGER
-        if (SOCK_MT_GET_STATE(s) == SOCK_MT_STATE_SEND) {
-            SOCK_MT_SET_LINGER(sock);
-        }
-#endif
         if (!SOCK_MT_GET_SEL(s)) {
             switch (module) {
             case SOCK_MT_STATE:
