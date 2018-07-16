@@ -2711,7 +2711,7 @@ def main():
             initial_baud = args.baud
 
         ser_list = sorted(ports.device for ports in list_ports.comports())
-        if args.port is None or args.port not in ser_list:
+        if args.port is None:
             raise FatalError('Cannot find target port named \'%s\'.' % args.port)
 
         try:
