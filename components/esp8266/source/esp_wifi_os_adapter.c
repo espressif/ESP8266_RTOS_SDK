@@ -199,11 +199,19 @@ static void queue_delete_wrapper(void *queue)
 static bool queue_send_wrapper(void *queue, void *item, uint32_t block_time_tick, uint32_t pos)
 {
     signed portBASE_TYPE ret;
+    BaseType_t os_pos;
+
+    if (pos == OSI_QUEUE_SEND_BACK)
+        os_pos = queueSEND_TO_BACK;
+    else if (pos == OSI_QUEUE_SEND_FRONT)
+        os_pos = queueSEND_TO_FRONT;
+    else
+        os_pos = queueOVERWRITE;
 
     if (block_time_tick == OSI_FUNCS_TIME_BLOCKING) {
-        ret = xQueueGenericSend(queue, item, portMAX_DELAY, pos);
+        ret = xQueueGenericSend(queue, item, portMAX_DELAY, os_pos);
     } else {
-        ret = xQueueGenericSend(queue, item, block_time_tick, pos);
+        ret = xQueueGenericSend(queue, item, block_time_tick, os_pos);
     }
 
     return ret == pdPASS ? true : false;
