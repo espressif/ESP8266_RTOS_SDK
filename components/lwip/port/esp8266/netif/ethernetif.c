@@ -22,6 +22,8 @@
 #include "tcpip_adapter.h"
 #include "esp_socket.h"
 
+#include "esp8266/eagle_soc.h"
+
 int8_t ieee80211_output_pbuf(uint8_t fd, uint8_t* dataptr, uint16_t datalen);
 int8_t wifi_get_netif(uint8_t fd);
 void wifi_station_set_default_hostname(uint8_t* hwaddr);
@@ -143,8 +145,15 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
 #endif
 
     p = ethernetif_transform_pbuf(p);
-    if (!p)
-        return ERR_OK;
+    if (!p) {
+        LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: lack memory\n"));
+        goto exit;
+    }
+
+    if (IS_IRAM(p->payload)) {
+        LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: data in IRAM\n"));
+        goto error;
+    }
 
     aio.fd = (int)netif->state;
     aio.pbuf = p->payload;
@@ -158,10 +167,10 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
      * header, meaning we should not pass target low-level address here.
      */
     err = esp_aio_sendto(&aio, NULL, 0);
-
-    if (err == ERR_MEM) {
+    if (err == ERR_MEM)
         err = ERR_OK;
-    }
+
+    return err;
 
 //  signal that packet should be sent();
 
@@ -172,7 +181,10 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
 #if LWIP_STATS
     LINK_STATS_INC(link.xmit);
 #endif
-    return err;
+error:
+    pbuf_free(p);
+exit:
+    return ERR_OK;
 }
 
 /**
