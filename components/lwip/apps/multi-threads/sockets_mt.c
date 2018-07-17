@@ -975,9 +975,7 @@ int lwip_close(int s)
     SYS_ARCH_DECL_PROTECT(lev);
     sys_mutex_t lock_tmp[SOCK_MT_LOCK_MAX];
 
-    ret = lwip_shutdown(s, SHUT_RDWR);
-    if (ret)
-        return ret;
+    lwip_shutdown(s, SHUT_RDWR);
 
     LWIP_ENTER_MT(s, SOCK_MT_CLOSE, 0);
 
