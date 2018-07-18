@@ -271,20 +271,9 @@ _exit:
  */
 int8_t ethernetif_init(struct netif* netif)
 {
-    uint8_t mac[NETIF_MAX_HWADDR_LEN];
-
     if (netif == NULL) {
         LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_init: netif is NULL\n"));
     }
-
-    /* set MAC hardware address */
-    if (wifi_get_netif(TCPIP_ADAPTER_IF_STA) == TCPIP_ADAPTER_IF_STA) {
-        esp_wifi_get_mac(TCPIP_ADAPTER_IF_STA, mac);
-    } else {
-        esp_wifi_get_mac(TCPIP_ADAPTER_IF_AP, mac);
-    }
-
-    memcpy(netif->hwaddr, mac, NETIF_MAX_HWADDR_LEN);
 
 #if LWIP_NETIF_HOSTNAME
 
