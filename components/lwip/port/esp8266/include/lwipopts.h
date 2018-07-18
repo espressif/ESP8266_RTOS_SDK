@@ -1867,6 +1867,8 @@
    ---------------------------------------
 */
 
+#define LWIP_HOOK_IP4_ROUTE_SRC         ip4_route_src_hook
+
 /**
  * @defgroup lwip_opts_hooks Hooks
  * @ingroup lwip_opts_infrastructure
