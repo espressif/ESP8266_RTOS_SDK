@@ -653,6 +653,8 @@ _DebugExceptionVector:
     jx      a3
     #else
     wsr     a0, EXCSAVE+XCHAL_DEBUGLEVEL    /* save original a0 somewhere */
+    wsr     a0, EXCSAVE_1
+    wsr     a1, EXCSAVE_2
     call0   _xt_ext_panic                       /* does not return */
     rfi     XCHAL_DEBUGLEVEL                /* make a0 point here not later */
     #endif
@@ -677,6 +679,7 @@ Double exceptions are not a normal occurrence. They indicate a bug of some kind.
     .literal_position
 _DoubleExceptionVector:
     wsr     a0, EXCSAVE_1
+    wsr     a1, EXCSAVE_2
     j       _xt_ext_panic
 
     #if XCHAL_HAVE_DEBUG
@@ -702,6 +705,7 @@ Kernel Exception (including Level 1 Interrupt from kernel mode).
     .literal_position
 _KernelExceptionVector:
     wsr     a0, EXCSAVE_1                   /* preserve a0 */
+    wsr     a1, EXCSAVE_2
     j       _xt_ext_panic
 
     /* never returns here - call0 is used as a jump (see note at top) */
@@ -1512,13 +1516,21 @@ nmi_common_panic:
     .align      4
     .literal_position
 _xt_ext_panic:
+    /*
+     * First close intrrupt, only use code, can't use data
+     *
+     * Todo: Close NMI
+     */
+    rsil    a0, XCHAL_EXCM_LEVEL
+    wsr     a0, EXCSAVE_2
+
     /* Allocate exception frame and save minimal context. */
     mov     a0, sp
     movi    sp, _chip_interrupt_tmp
     addi    sp, sp, -XT_STK_FRMSZ
     s32i    a0, sp, XT_STK_A1
 
-    rsr     a0, PS                          /* save interruptee's PS */
+    rsr     a0, EXCSAVE_2                   /* save interruptee's PS */
     s32i    a0, sp, XT_STK_PS
     rsr     a0, EPC_1                       /* save interruptee's PC */
     s32i    a0, sp, XT_STK_PC
@@ -1537,10 +1549,6 @@ _xt_ext_panic:
     rsr     a0, EXCSAVE_1                   /* save interruptee's a0 */
 
     s32i    a0, sp, XT_STK_A0
-
-    /* Set up PS for C, disable all interrupts except NMI and debug, and clear EXCM. */
-    movi    a0, PS_INTLEVEL(5) | PS_UM | PS_WOE
-    wsr     a0, PS
 
     //Call panic handler
     mov     a2, sp
