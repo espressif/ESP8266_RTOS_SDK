@@ -1521,8 +1521,14 @@ _xt_ext_panic:
      *
      * Todo: Close NMI
      */
-    rsil    a0, XCHAL_EXCM_LEVEL
+    rsil    a0, PS_INTLEVEL(5)
     wsr     a0, EXCSAVE_2
+
+    /*
+     * CPU must switch from kernel mode to user mode
+     */
+    movi    a0, PS_INTLEVEL(5) | PS_UM
+    wsr     a0, PS
 
     /* Allocate exception frame and save minimal context. */
     mov     a0, sp
