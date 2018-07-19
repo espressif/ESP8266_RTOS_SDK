@@ -60,10 +60,6 @@ config LWIP_SO_RCVBUF
     help
         Enabling this option allows checking for available data on a netconn.
 
-config LWIP_SO_LINGER
-    bool "Enable SO_LINGER processing"
-    default n
-
 config LWIP_RECV_BUFSIZE_DEFAULT
     int "The default value for recv_bufsize"
     default 11680
