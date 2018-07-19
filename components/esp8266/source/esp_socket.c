@@ -28,12 +28,12 @@
 #define ESP_SOCKET_MAX 3
 #endif
 
-#define SET_ERR(err)
+#define SET_ERR(err)                    errno = err
 
 #define CHECK_FD(s)                     \
     if (s >= ESP_SOCKET_MAX             \
         || !s_socket[s].info) {         \
-        SET_ERR(EINVAL)                 \
+        SET_ERR(EINVAL);                \
         return -1;                      \
     }
 
@@ -139,14 +139,14 @@ int esp_socket(int domain, int type, int protocol)
 
     s = alloc_socket();
     if (s < 0) {
-        SET_ERR(ENOMEM)
+        SET_ERR(ENOMEM);
         return -1;
     }
 
     s_socket[s].info = malloc(sizeof(esp_socket_info_t));
     if (!s_socket[s].info) {
         free_socket(s);
-        SET_ERR(ENOMEM)
+        SET_ERR(ENOMEM);
         return -1;
     }
 
@@ -185,7 +185,7 @@ int esp_aio_event(int fd, unsigned int event, esp_aio_cb_t cb, void *arg)
 
     e = alloc_event(s, event);
     if (e < 0) {
-        SET_ERR(ENOMEM)
+        SET_ERR(ENOMEM);
         return -1;
     }
 
@@ -264,7 +264,7 @@ static int map_socket_ll(int fd, const char *name)
             break;
     }
     if (p >= &__stop_ksymatabesp_socket) {
-        SET_ERR(ENXIO)
+        SET_ERR(ENXIO);
         return -1;
     }
 
