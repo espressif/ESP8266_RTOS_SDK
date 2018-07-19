@@ -16,6 +16,8 @@
 
 #ifdef SOCKETS_MT
 
+#define SOCKETS_MT_DISABLE_SHUTDOWN
+
 #include "lwip/priv/api_msg.h"
 
 /* disable all LWIP socket API when compiling LWIP raw socket */
@@ -953,6 +955,12 @@ int lwip_fcntl(int s, int cmd, int val)
     return ret;
 }
 
+#ifdef SOCKETS_MT_DISABLE_SHUTDOWN
+int lwip_shutdown(int s, int how)
+{
+    return 0;
+}
+#else
 int lwip_shutdown(int s, int how)
 {
     int ret;
@@ -967,6 +975,8 @@ int lwip_shutdown(int s, int how)
 
     return ret;
 }
+#endif
+
 
 int lwip_close(int s)
 {
@@ -975,7 +985,11 @@ int lwip_close(int s)
     SYS_ARCH_DECL_PROTECT(lev);
     sys_mutex_t lock_tmp[SOCK_MT_LOCK_MAX];
 
+#ifdef SOCKETS_MT_DISABLE_SHUTDOWN
+    lwip_sync_mt(s, SHUT_RDWR);
+#else
     lwip_shutdown(s, SHUT_RDWR);
+#endif
 
     LWIP_ENTER_MT(s, SOCK_MT_CLOSE, 0);
 
