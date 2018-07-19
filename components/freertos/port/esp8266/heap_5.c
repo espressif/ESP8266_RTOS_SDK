@@ -332,6 +332,17 @@ size_t xPortWantedSizeAlign(size_t xWantedSize)
 	return xWantedSize;
 }
 
+/*
+ * @brief add trace information to allocated memory
+ */
+void esp_mem_trace(const void *ptr, const char *trace, int no)
+{
+	BlockLink_t *pxLink = (BlockLink_t *)((uint8_t *)ptr - uxHeapStructSize);
+
+	pxLink->file = trace;
+	pxLink->line = (unsigned)no;
+}
+
 void *pvPortMalloc( size_t xWantedSize )
 #ifdef MEMLEAK_DEBUG
 {
