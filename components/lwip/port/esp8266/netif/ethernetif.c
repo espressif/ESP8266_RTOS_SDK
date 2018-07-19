@@ -167,8 +167,8 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
      * header, meaning we should not pass target low-level address here.
      */
     err = esp_aio_sendto(&aio, NULL, 0);
-    if (err == ERR_MEM)
-        err = ERR_OK;
+    if (err != ERR_OK)
+        goto error;
 
     return err;
 

@@ -706,6 +706,25 @@ static void lwip_sync_mt(int s, int how)
     }
 }
 
+#if LWIP_SO_LINGER
+static void lwip_socket_set_so_link(int s, int linger)
+{
+    struct lwip_sock *sock = get_socket(s);
+
+    if (sock) {
+        /*
+         * linker:
+         *     -1: nothing
+         *      0: free sent_buf immediately
+         */
+        sock->conn->linger = linger;
+    }
+}
+#else
+#error "LWIP_SO_LINGER must be enable"
+#endif
+
+
 int lwip_socket(int domain, int type, int protocol)
 {
     int s;
@@ -729,8 +748,10 @@ int lwip_socket(int domain, int type, int protocol)
         s = -1;
     }
 
-    if (s >= 0)
+    if (s >= 0) {
+        lwip_socket_set_so_link(s, 0);
         SOCK_MT_SET_SHUTDOWN(s, SOCK_MT_SHUTDOWN_NONE);
+    }
 
     return s;
 }
@@ -768,6 +789,8 @@ int lwip_listen(int s, int backlog)
 
     LWIP_ENTER_MT(s, SOCK_MT_STATE, SOCK_MT_STATE_LISTEN);
 
+    lwip_socket_set_so_link(s, -1);
+
     ret = lwip_listen_esp(s, backlog);
 
     LWIP_EXIT_MT(s, SOCK_MT_STATE, SOCK_MT_STATE_LISTEN);
@@ -781,6 +804,8 @@ int lwip_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
     int ret;
 
     LWIP_ENTER_MT(s, SOCK_MT_STATE, SOCK_MT_STATE_ACCEPT)
+
+    lwip_socket_set_so_link(s, -1);
 
     ret = lwip_accept_esp(s, addr, addrlen);
 
@@ -803,8 +828,10 @@ int lwip_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
         ret = -1;
     }
 
-    if (ret >= 0)
+    if (ret >= 0) {
+        lwip_socket_set_so_link(s, 0);
         SOCK_MT_SET_SHUTDOWN(ret, SOCK_MT_SHUTDOWN_NONE);
+    }
 
     return ret;
 }
@@ -976,7 +1003,6 @@ int lwip_shutdown(int s, int how)
     return ret;
 }
 #endif
-
 
 int lwip_close(int s)
 {
