@@ -24,6 +24,7 @@
 #include "lwip/dhcp.h"
 #include "lwip/dns.h"
 #include "lwip/errno.h"
+#include "lwip/timeouts.h"
 #include "lwip/prot/dhcp.h"
 #include "netif/etharp.h"
 #include "esp_wifi.h"
@@ -50,7 +51,6 @@ static tcpip_adapter_ip_info_t esp_ip_old[TCPIP_ADAPTER_IF_MAX];
 /*TODO need add ip6*/
 static tcpip_adapter_ip6_info_t esp_ip6[TCPIP_ADAPTER_IF_MAX];
 #endif
-static netif_init_fn esp_netif_init_fn[TCPIP_ADAPTER_IF_MAX];
 static tcpip_adapter_ip_lost_timer_t esp_ip_lost_timer[TCPIP_ADAPTER_IF_MAX];
 
 static tcpip_adapter_dhcp_status_t dhcps_status = TCPIP_ADAPTER_DHCP_INIT;
@@ -1093,6 +1093,30 @@ esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void ** netif)
         return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;
     }
     return ESP_OK;
+}
+
+struct netif* ip4_route_src_hook(const ip4_addr_t* dest, const ip4_addr_t* src)
+{
+    /* destination IP is broadcast IP? */
+    if ((src != NULL) && (dest->addr == IPADDR_BROADCAST)) {
+        if (esp_netif[TCPIP_ADAPTER_IF_STA] != NULL
+                && netif_is_up(esp_netif[TCPIP_ADAPTER_IF_STA])
+                && netif_is_link_up(esp_netif[TCPIP_ADAPTER_IF_STA])
+                && !ip4_addr_isany_val(*netif_ip4_addr(esp_netif[TCPIP_ADAPTER_IF_STA]))
+                && ip4_addr_cmp(src, netif_ip4_addr(esp_netif[TCPIP_ADAPTER_IF_STA]))) {
+            return esp_netif[TCPIP_ADAPTER_IF_STA];
+        }
+
+        if (esp_netif[TCPIP_ADAPTER_IF_AP] != NULL
+                && netif_is_up(esp_netif[TCPIP_ADAPTER_IF_AP])
+                && netif_is_link_up(esp_netif[TCPIP_ADAPTER_IF_AP])
+                && !ip4_addr_isany_val(*netif_ip4_addr(esp_netif[TCPIP_ADAPTER_IF_AP]))
+                && ip4_addr_cmp(src, netif_ip4_addr(esp_netif[TCPIP_ADAPTER_IF_AP]))) {
+            return esp_netif[TCPIP_ADAPTER_IF_AP];
+        }
+    }
+
+    return NULL;
 }
 
 #endif /* CONFIG_TCPIP_LWIP */
