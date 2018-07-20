@@ -236,8 +236,8 @@ sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
     return;
   }
 
-  if (next_timeout->time > msecs) {
-    next_timeout->time -= msecs;
+  if (next_timeout->time > timeout->time) {
+    next_timeout->time -= timeout->time;
     timeout->next = next_timeout;
     next_timeout = timeout;
   } else {
