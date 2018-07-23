@@ -1,5 +1,9 @@
 menu "LWIP"
 
+config LWIP_USE_IRAM
+    bool "Enable lwip use iram option"
+    default n
+
 menu "ARP"
 
 config LWIP_ARP_TABLE_SIZE
@@ -607,6 +611,11 @@ config LWIP_SNTP_DEBUG
 
 config LWIP_THREAD_SAFE_DEBUG
     bool "Enable debugging for LWIP thread safety."
+    depends on LWIP_DEBUG
+    default n
+
+config LWIP_PBUF_CACHE_DEBUG
+    bool "Enable debugging for LWIP pbuf cache."
     depends on LWIP_DEBUG
     default n
 

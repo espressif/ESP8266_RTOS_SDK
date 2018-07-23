@@ -21,6 +21,9 @@
 #include "esp_wifi.h"
 #include "tcpip_adapter.h"
 #include "esp_socket.h"
+#include "freertos/semphr.h"
+#include "lwip/tcpip.h"
+#include "stdlib.h"
 
 #include "esp8266/eagle_soc.h"
 
@@ -30,6 +33,137 @@ void wifi_station_set_default_hostname(uint8_t* hwaddr);
 
 #define IFNAME0 'e'
 #define IFNAME1 'n'
+
+
+typedef struct pbuf_send_list {
+    struct pbuf_send_list* next;
+    struct pbuf* p;
+    int aiofd;
+    int err_cnt;
+} pbuf_send_list_t;
+
+static pbuf_send_list_t* pbuf_list_head = NULL;
+static int pbuf_send_list_num = 0;
+static int low_level_send_cb(esp_aio_t* aio);
+
+static inline bool check_pbuf_to_insert(struct pbuf* p)
+{
+    uint8_t* buf = (uint8_t *)p->payload;
+    /*Check if pbuf is tcp ip*/
+    if (buf[12] == 0x08 && buf[13] == 0x00 && buf[23] == 0x06) {
+      return true;
+    }
+    return false;
+}
+
+static void insert_to_list(int fd, struct pbuf* p)
+{
+    pbuf_send_list_t* tmp_pbuf_list1;
+    pbuf_send_list_t* tmp_pbuf_list2;
+
+    if (pbuf_send_list_num > (TCP_SND_QUEUELEN * MEMP_NUM_TCP_PCB + MEMP_NUM_TCP_PCB)) {
+        return;
+    }
+
+    if (!check_pbuf_to_insert(p)) {
+        return;
+    }
+
+    LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Insert %p,%d\n",p,pbuf_send_list_num));
+    if (pbuf_list_head == NULL) {
+        pbuf_list_head = (pbuf_send_list_t* )malloc(sizeof(pbuf_send_list_t));
+        pbuf_send_list_num++;
+
+        if (!pbuf_list_head) {
+            LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no menory malloc pbuf list error\n"));
+            return;
+        }
+        pbuf_ref(p);
+        pbuf_list_head->aiofd = fd;
+        pbuf_list_head->p = p;
+        pbuf_list_head->next = NULL;
+        pbuf_list_head->err_cnt = 0;
+        return;
+    }
+
+    tmp_pbuf_list1 = pbuf_list_head;
+    tmp_pbuf_list2 = tmp_pbuf_list1;
+
+    while (tmp_pbuf_list1 != NULL) {
+        if (tmp_pbuf_list1->p == p) {
+            tmp_pbuf_list1->err_cnt ++;
+            return;
+        }
+        tmp_pbuf_list2 = tmp_pbuf_list1;
+        tmp_pbuf_list1 = tmp_pbuf_list2->next;
+    }
+
+    tmp_pbuf_list2->next = (pbuf_send_list_t*)malloc(sizeof(pbuf_send_list_t));
+    pbuf_send_list_num++;
+    tmp_pbuf_list1 = tmp_pbuf_list2->next;
+
+    if (!tmp_pbuf_list1) {
+        LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no menory malloc pbuf list error\n"));
+        return;
+    }
+
+    pbuf_ref(p);
+    tmp_pbuf_list1->aiofd = fd;
+    tmp_pbuf_list1->p = p;
+    tmp_pbuf_list1->next = NULL;
+    tmp_pbuf_list1->err_cnt = 0;
+}
+
+void send_from_list()
+{
+    pbuf_send_list_t* tmp_pbuf_list1;
+
+    while (pbuf_list_head != NULL) {
+        if (pbuf_list_head->p->ref == 1) {
+            tmp_pbuf_list1 = pbuf_list_head->next;
+            LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n",pbuf_list_head->p,pbuf_send_list_num));
+            pbuf_free(pbuf_list_head->p);
+            free(pbuf_list_head);
+            pbuf_send_list_num--;
+            pbuf_list_head = tmp_pbuf_list1;
+        } else {
+            esp_aio_t aio;
+            esp_err_t err;
+            aio.fd = (int)pbuf_list_head->aiofd;
+            aio.pbuf = pbuf_list_head->p->payload;
+            aio.len = pbuf_list_head->p->len;
+            aio.cb = low_level_send_cb;
+            aio.arg = pbuf_list_head->p;
+            aio.ret = 0;
+
+            err = esp_aio_sendto(&aio, NULL, 0);
+            tmp_pbuf_list1 = pbuf_list_head->next;
+
+            if (err == ERR_MEM) {
+                pbuf_list_head->err_cnt++;
+                if (pbuf_list_head->err_cnt >= 3) {
+                    LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n",pbuf_list_head->p,pbuf_send_list_num));
+                    pbuf_free(pbuf_list_head->p);
+                    free(pbuf_list_head);
+                    pbuf_send_list_num--;
+                    pbuf_list_head = tmp_pbuf_list1;
+                }
+                return;
+            } else if (err == ERR_OK){
+                LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n",pbuf_list_head->p,pbuf_send_list_num));
+                free(pbuf_list_head);
+                pbuf_send_list_num--;
+                pbuf_list_head = tmp_pbuf_list1;
+            } else {
+                LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n",pbuf_list_head->p,pbuf_send_list_num));
+                pbuf_free(pbuf_list_head->p);
+                free(pbuf_list_head);
+                pbuf_send_list_num--;
+                pbuf_list_head = tmp_pbuf_list1;
+            }
+        }
+    }
+}
 
 /**
  * In this function, the hardware should be initialized.
@@ -169,8 +303,10 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
      */
     err = esp_aio_sendto(&aio, NULL, 0);
     if (err != ERR_OK) {
-        if (err == ERR_MEM)
+        if (err == ERR_MEM){
+            insert_to_list(aio.fd, p);
             err = ERR_OK;
+        }
 
         pbuf_free(p);
     }
