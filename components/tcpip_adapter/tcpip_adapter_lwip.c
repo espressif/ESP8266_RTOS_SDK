@@ -1102,26 +1102,24 @@ esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void ** netif)
 
 struct netif* ip4_route_src_hook(const ip4_addr_t* dest, const ip4_addr_t* src)
 {
-    /* destination IP is broadcast IP? */
-    if ((src != NULL) && (dest->addr == IPADDR_BROADCAST)) {
-        if (esp_netif[TCPIP_ADAPTER_IF_STA] != NULL
-                && netif_is_up(esp_netif[TCPIP_ADAPTER_IF_STA])
-                && netif_is_link_up(esp_netif[TCPIP_ADAPTER_IF_STA])
-                && !ip4_addr_isany_val(*netif_ip4_addr(esp_netif[TCPIP_ADAPTER_IF_STA]))
-                && ip4_addr_cmp(src, netif_ip4_addr(esp_netif[TCPIP_ADAPTER_IF_STA]))) {
-            return esp_netif[TCPIP_ADAPTER_IF_STA];
-        }
+    extern struct netif *netif_list;
+    struct netif *netif = NULL;
 
-        if (esp_netif[TCPIP_ADAPTER_IF_AP] != NULL
-                && netif_is_up(esp_netif[TCPIP_ADAPTER_IF_AP])
-                && netif_is_link_up(esp_netif[TCPIP_ADAPTER_IF_AP])
-                && !ip4_addr_isany_val(*netif_ip4_addr(esp_netif[TCPIP_ADAPTER_IF_AP]))
-                && ip4_addr_cmp(src, netif_ip4_addr(esp_netif[TCPIP_ADAPTER_IF_AP]))) {
-            return esp_netif[TCPIP_ADAPTER_IF_AP];
+    /* destination IP is broadcast IP? */
+    if ((src != NULL) && !ip4_addr_isany(src)) {
+        /* iterate through netifs */
+        for (netif = netif_list; netif != NULL; netif = netif->next) {
+        /* is the netif up, does it have a link and a valid address? */
+            if (netif_is_up(netif) && netif_is_link_up(netif) && !ip4_addr_isany_val(*netif_ip4_addr(netif))) {
+                /* source IP matches? */
+                if (ip4_addr_cmp(src, netif_ip4_addr(netif))) {
+                    /* return netif on which to forward IP packet */
+                    return netif;
+                }
+            }
         }
     }
-
-    return NULL;
+    return netif;
 }
 
 #endif /* CONFIG_TCPIP_LWIP */
