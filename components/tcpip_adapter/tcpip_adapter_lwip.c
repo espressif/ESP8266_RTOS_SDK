@@ -70,7 +70,7 @@ u32_t LwipTimOutLim = 0; // For light sleep. time out. limit is 3000ms
 err_t ethernetif_init(struct netif* netif);
 void system_station_got_ip_set();
 
-static int dhcp_fail_time;
+static int dhcp_fail_time = 0;
 static tcpip_adapter_ip_info_t esp_ip[TCPIP_ADAPTER_IF_MAX];
 static os_timer_t dhcp_check_timer;
 
@@ -109,15 +109,18 @@ static void tcpip_adapter_dhcpc_done()
             tcpip_adapter_dhcpc_cb(esp_netif[TCPIP_ADAPTER_IF_STA]);
             ESP_LOGD(TAG,"ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n", IP2STR(ip_2_ip4(&(esp_netif[0]->ip_addr))),
                 IP2STR(ip_2_ip4(&(esp_netif[0]->netmask))), IP2STR(ip_2_ip4(&(esp_netif[0]->gw))));
+            dhcp_fail_time = 0;
         } else if (dhcp_fail_time < (CONFIG_IP_LOST_TIMER_INTERVAL * 1000 / 500)) {
             ESP_LOGD(TAG,"dhcpc time(ms): %d\n", dhcp_fail_time * 500);
             dhcp_fail_time ++;
             os_timer_setfn(&dhcp_check_timer, (os_timer_func_t*)tcpip_adapter_dhcpc_done, NULL);
             os_timer_arm(&dhcp_check_timer, 500, 0);
         } else {
+            dhcp_fail_time = 0;
             ESP_LOGD(TAG,"ERROR dhcp get ip error\n");
         }
     } else {
+        dhcp_fail_time = 0;
         dhcp_release(esp_netif[TCPIP_ADAPTER_IF_STA]);
         dhcp_stop(esp_netif[TCPIP_ADAPTER_IF_STA]);
         dhcp_cleanup(esp_netif[TCPIP_ADAPTER_IF_STA]);
@@ -961,6 +964,7 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
                 return ESP_ERR_TCPIP_ADAPTER_DHCPC_START_FAILED;
             }
 
+            dhcp_fail_time = 0;
             os_timer_disarm(&dhcp_check_timer);
             os_timer_setfn(&dhcp_check_timer, (os_timer_func_t*)tcpip_adapter_dhcpc_done, NULL);
             os_timer_arm(&dhcp_check_timer, 500, 0);
