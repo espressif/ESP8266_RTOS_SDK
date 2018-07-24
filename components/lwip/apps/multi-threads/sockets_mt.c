@@ -1012,12 +1012,14 @@ int lwip_close(int s)
     sys_mutex_t lock_tmp[SOCK_MT_LOCK_MAX];
 
 #ifdef SOCKETS_MT_DISABLE_SHUTDOWN
+    LWIP_ENTER_MT(s, SOCK_MT_CLOSE, 0);
+
     lwip_sync_mt(s, SHUT_RDWR);
 #else
     lwip_shutdown(s, SHUT_RDWR);
-#endif
 
     LWIP_ENTER_MT(s, SOCK_MT_CLOSE, 0);
+#endif
 
     ret = lwip_close_esp(s);
 
