@@ -287,11 +287,12 @@ const void *bootloader_mmap(uint32_t src_addr, uint32_t size)
 
     Cache_Read_Disable();
 
-    /* */
+    /* 0 and 0x100000 address use same mmap addresss 0x40200000 */
     if (src_addr < 0x100000) {
         Cache_Read_Enable(0, 0, 0);
     } else {
         Cache_Read_Enable(1, 0, 0);
+        src_addr -= 0x100000;
     }
 
     mapped = true;
