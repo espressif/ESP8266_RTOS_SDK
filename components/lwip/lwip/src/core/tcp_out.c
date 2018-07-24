@@ -481,6 +481,7 @@ tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
     LWIP_ASSERT("inconsistent oversize vs. len", (oversize == 0) || (pos == len));
 #endif /* TCP_OVERSIZE */
 
+#if !LWIP_NETIF_TX_SINGLE_PBUF
     /*
      * Phase 2: Chain a new pbuf to the end of pcb->unsent.
      *
@@ -491,6 +492,10 @@ tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
      * We don't extend segments containing SYN/FIN flags or options
      * (len==0). The new pbuf is kept in concat_p and pbuf_cat'ed at
      * the end.
+     *
+     * This phase is skipped for LWIP_NETIF_TX_SINGLE_PBUF as we could only execute
+     * it after rexmit puts a segment from unacked to unsent and at this point,
+     * oversize info is lost.
      */
     if ((pos < len) && (space > 0) && (last_unsent->len > 0)) {
       u16_t seglen = LWIP_MIN(space, len - pos);
@@ -543,6 +548,7 @@ tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
 
       pos += seglen;
     }
+#endif /* !LWIP_NETIF_TX_SINGLE_PBUF */
   } else {
 #if TCP_OVERSIZE
     LWIP_ASSERT("unsent_oversize mismatch (pcb->unsent is NULL)",
