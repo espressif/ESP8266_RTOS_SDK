@@ -147,12 +147,12 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
     p = ethernetif_transform_pbuf(p);
     if (!p) {
         LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: lack memory\n"));
-        goto exit;
+        goto exit; // return ERR_OK
     }
 
     if (IS_IRAM(p->payload)) {
         LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: data in IRAM\n"));
-        goto error;
+        goto error; // return ERR_OK
     }
 
     aio.fd = (int)netif->state;
@@ -167,10 +167,14 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
      * header, meaning we should not pass target low-level address here.
      */
     err = esp_aio_sendto(&aio, NULL, 0);
-    if (err != ERR_OK)
-        goto error;
+    if (err != ERR_OK) {
+        if (err == ERR_MEM)
+            err = ERR_OK;
 
-    return err;
+        goto error;
+    }
+
+    return ERR_OK;
 
 //  signal that packet should be sent();
 
@@ -184,7 +188,7 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
 error:
     pbuf_free(p);
 exit:
-    return ERR_OK;
+    return err;
 }
 
 /**
