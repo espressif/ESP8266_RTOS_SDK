@@ -183,8 +183,8 @@ typedef struct {
 
 typedef enum {
     WIFI_PS_NONE,        /**< No power save */
-    WIFI_PS_MIN_MODEM,   /**< Minimum modem power saving. In this mode, station wakes up to receive beacon every DTIM period */
-    WIFI_PS_MAX_MODEM,   /**< Maximum modem power saving. In this mode, interval to receive beacons is determined by the listen_interval parameter in wifi_sta_config_t */
+    WIFI_PS_MAX_MODEM,   /**< Maximum modem power saving. In this mode, station close cpu and RF in DTIM period */
+    WIFI_PS_MIN_MODEM,   /**< Minimum modem power saving. In this mode, station close RF in DTIM period */
 } wifi_ps_type_t;
 
 #define WIFI_PS_MODEM WIFI_PS_MIN_MODEM /**< @deprecated Use WIFI_PS_MIN_MODEM or WIFI_PS_MAX_MODEM instead */
