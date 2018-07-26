@@ -52,6 +52,10 @@
 
 #define ESP_LWIP 1
 
+#ifdef CONFIG_ESP_UDP_SYNC_SEND
+#define ESP_UDP  1
+#endif
+
 #ifdef CONFIG_LWIP_SOCKET_MULTITHREAD
 #define SOCKETS_MT
 #endif
@@ -2212,5 +2216,13 @@ void *memp_malloc_ll(size_t type);
 /**
  * @}
  */
+
+#if ESP_UDP
+#if !LWIP_UDP || !LWIP_SOCKET || !ESP_LWIP
+#error "LWIP_UDP & LWIP_SOCKET & ESP_LWIP must be enable"
+#else
+#include "udp_sync.h"
+#endif
+#endif
 
 #endif /* __LWIP_HDR_LWIPOPTS_H__ */

@@ -415,6 +415,10 @@ again:
   extern void send_from_list();
   send_from_list();
 
+#if ESP_UDP
+  udp_sync_proc();
+#endif
+
   sleeptime = sys_timeouts_sleeptime();
   if (sleeptime == 0 || sys_arch_mbox_fetch(mbox, msg, sleeptime) == SYS_ARCH_TIMEOUT) {
     /* If a SYS_ARCH_TIMEOUT value is returned, a timeout occurred
