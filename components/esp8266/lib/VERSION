@@ -1,7 +1,7 @@
 gwen:
     crypto:     8943c89
     espnow:     8943c89
-    core:       f59f0e0
+    core:       2f2b0ef
     net80211:   06e0988
     pp:         06e0988
     pwm:        0181338
