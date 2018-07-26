@@ -9,4 +9,11 @@ config FREERTOS_ENABLE_REENT
 
         The configuration will enable newlib.
 
+config FREERTOS_HZ
+    int "Tick rate (Hz)"
+    range 1 1000
+    default 100
+    help
+        Select the tick rate at which FreeRTOS does pre-emptive context switching.
+        
 endmenu
