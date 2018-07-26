@@ -50,6 +50,8 @@
 #include "esp_libc.h"
 #include "esp_system.h"
 
+#define ESP_LWIP 1
+
 #ifdef CONFIG_LWIP_SOCKET_MULTITHREAD
 #define SOCKETS_MT
 #endif
@@ -194,12 +196,32 @@
  */
 #define MEM_LIBC_MALLOC                 1
 
+#ifdef ESP_LWIP
+/*
+ * @brief allocate an only DRAM memory block for LWIP pbuf
+ * 
+ * @param s memory size
+ * 
+ * @return memory block pointer
+ */
+void *mem_malloc_ll(size_t s);
+
+/*
+ * @brief allocate an only DRAM memory pool for LWIP pbuf
+ * 
+ * @param type memory type
+ * 
+ * @return memory pool pointer
+ */
+void *memp_malloc_ll(size_t type);
+#endif
+
 /**
  * Use DRAM instead of IRAM
  */
-#define mem_clib_free os_free
-#define mem_clib_malloc os_malloc
-#define mem_clib_calloc os_calloc
+#define mem_clib_free free
+#define mem_clib_malloc malloc
+#define mem_clib_calloc calloc
 
 /**
  * MEMP_MEM_MALLOC==1: Use mem_malloc/mem_free instead of the lwip pool allocator.

@@ -282,7 +282,12 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
   switch (type) {
   case PBUF_POOL:
     /* allocate head of pbuf chain into p */
+#ifdef ESP_LWIP
+      /* Only DRAM data can be sent by low-level WIFI */
+    p = (struct pbuf *)memp_malloc_ll(MEMP_PBUF_POOL);
+#else
     p = (struct pbuf *)memp_malloc(MEMP_PBUF_POOL);
+#endif
     LWIP_DEBUGF(PBUF_DEBUG | LWIP_DBG_TRACE, ("pbuf_alloc: allocated pbuf %p\n", (void *)p));
     if (p == NULL) {
       PBUF_POOL_IS_EMPTY();
@@ -315,7 +320,12 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
     rem_len = length - p->len;
     /* any remaining pbufs to be allocated? */
     while (rem_len > 0) {
+#ifdef ESP_LWIP
+      /* Only DRAM data can be sent by low-level WIFI */
+      q = (struct pbuf *)memp_malloc_ll(MEMP_PBUF_POOL);
+#else
       q = (struct pbuf *)memp_malloc(MEMP_PBUF_POOL);
+#endif
       if (q == NULL) {
         PBUF_POOL_IS_EMPTY();
         /* free chain so far allocated */
@@ -357,9 +367,14 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
       if (alloc_len < LWIP_MEM_ALIGN_SIZE(length)) {
         return NULL;
       }
-    
+
       /* If pbuf is to be allocated in RAM, allocate memory for it. */
+#ifdef ESP_LWIP
+      /* Only DRAM data can be sent by low-level WIFI */
+      p = (struct pbuf*)mem_malloc_ll(alloc_len);
+#else
       p = (struct pbuf*)mem_malloc(alloc_len);
+#endif
     }
 
     if (p == NULL) {

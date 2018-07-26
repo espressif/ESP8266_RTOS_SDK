@@ -89,7 +89,7 @@ static inline struct pbuf *ethernetif_transform_pbuf(struct pbuf *pbuf)
 {
     struct pbuf *p;
 
-    if (!(pbuf->flags & PBUF_FLAG_IS_CUSTOM)) {
+    if (!(pbuf->flags & PBUF_FLAG_IS_CUSTOM) && IS_DRAM(pbuf->payload)) {
         /*
          * Add ref to pbuf to avoid it to be freed by upper layer.
          */
@@ -100,6 +100,12 @@ static inline struct pbuf *ethernetif_transform_pbuf(struct pbuf *pbuf)
     p = pbuf_alloc(PBUF_RAW, pbuf->len, PBUF_RAM);
     if (!p)
         return NULL;
+
+    if (IS_IRAM(p->payload)) {
+        LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: data in IRAM\n"));
+        pbuf_free(p);
+        return NULL;
+    }
 
     memcpy(p->payload, pbuf->payload, pbuf->len);
 
@@ -147,12 +153,7 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
     p = ethernetif_transform_pbuf(p);
     if (!p) {
         LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: lack memory\n"));
-        goto exit; // return ERR_OK
-    }
-
-    if (IS_IRAM(p->payload)) {
-        LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: data in IRAM\n"));
-        goto error; // return ERR_OK
+        return ERR_OK;
     }
 
     aio.fd = (int)netif->state;
@@ -171,10 +172,8 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
         if (err == ERR_MEM)
             err = ERR_OK;
 
-        goto error;
+        pbuf_free(p);
     }
-
-    return ERR_OK;
 
 //  signal that packet should be sent();
 
@@ -185,9 +184,6 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
 #if LWIP_STATS
     LINK_STATS_INC(link.xmit);
 #endif
-error:
-    pbuf_free(p);
-exit:
     return err;
 }
 
