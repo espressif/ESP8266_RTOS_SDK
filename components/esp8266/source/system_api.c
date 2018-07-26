@@ -25,6 +25,9 @@
 
 #include "FreeRTOS.h"
 
+#include "nvs.h"
+#include "nvs_flash.h"
+
 static const char* TAG = "system_api";
 
 static uint8_t base_mac_addr[6] = { 0 };
@@ -88,7 +91,7 @@ esp_err_t esp_efuse_mac_get_default(uint8_t* mac)
 
         if (efuse_crc != calc_crc) {
             ESP_LOGE(TAG, "High MAC CRC error, efuse_crc = 0x%02x; calc_crc = 0x%02x", efuse_crc, calc_crc);
-            abort();
+            return ESP_ERR_INVALID_MAC;
         }
 
         version = (efuse[1] >> EFUSE_VERSION_S) & EFUSE_VERSION_V;
@@ -104,7 +107,7 @@ esp_err_t esp_efuse_mac_get_default(uint8_t* mac)
 
             if (efuse_crc != calc_crc) {
                 ESP_LOGE(TAG, "CRC8 error, efuse_crc = 0x%02x; calc_crc = 0x%02x", efuse_crc, calc_crc);
-                abort();
+                return ESP_ERR_INVALID_MAC;
             }
         }
     } else {
@@ -114,6 +117,128 @@ esp_err_t esp_efuse_mac_get_default(uint8_t* mac)
     }
 
     return ESP_OK;
+}
+
+static const char *BACKUP_MAC_NAMESPACE = "backup_mac";
+static const char *BACKUP_MAC_DATA_KEY = "backup_mac_data";
+#define MAC_DATA_LEN_WITH_CRC (4*4)
+
+static esp_err_t load_backup_mac_data(uint8_t *mac)
+{
+    esp_err_t err;
+    nvs_handle handle;
+    uint32_t efuse[4];
+    uint8_t efuse_crc = 0;
+    uint8_t calc_crc = 0;
+    uint8_t version;
+
+    if (mac == NULL) {
+        ESP_LOGE(TAG, "mac address param is NULL");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    err = nvs_open(BACKUP_MAC_NAMESPACE, NVS_READONLY, &handle);
+
+    if (err == ESP_ERR_NVS_NOT_INITIALIZED) {
+        ESP_LOGE(TAG, "%s: NVS has not been initialized. "
+                 "Call nvs_flash_init before starting WiFi/BT.", __func__);
+        return ESP_ERR_INVALID_MAC;
+    } else if (err != ESP_OK) {
+        ESP_LOGD(TAG, "%s: failed to open NVS namespace (0x%x)", __func__, err);
+        return ESP_ERR_INVALID_MAC;
+    }
+
+    size_t length = MAC_DATA_LEN_WITH_CRC;
+    err = nvs_get_blob(handle, BACKUP_MAC_DATA_KEY, efuse, &length);
+    if (err != ESP_OK) {
+        ESP_LOGD(TAG, "%s: failed to get backup mac (0x%x)", __func__, err);
+        return ESP_ERR_INVALID_MAC;
+    }
+    if (length != MAC_DATA_LEN_WITH_CRC) {
+        ESP_LOGD(TAG, "%s: invalid length of backup mac (%d)", __func__, length);
+        return ESP_ERR_INVALID_MAC;
+    }
+    nvs_close(handle);
+
+    mac[3] = efuse[1] >> 8;
+    mac[4] = efuse[1];
+    mac[5] = efuse[0] >> 24;
+
+    if (efuse[2] & EFUSE_IS_48BITS_MAC) {
+        uint8_t tmp_mac[4];
+
+        mac[0] = efuse[3] >> 16;
+        mac[1] = efuse[3] >> 8;
+        mac[2] = efuse[3];
+
+        tmp_mac[0] = mac[2];
+        tmp_mac[1] = mac[1];
+        tmp_mac[2] = mac[0];
+
+        efuse_crc = efuse[2] >> 24;
+        calc_crc = esp_crc8(tmp_mac, 3);
+
+        if (efuse_crc != calc_crc) {
+            ESP_LOGE(TAG, "High MAC CRC error, efuse_crc = 0x%02x; calc_crc = 0x%02x", efuse_crc, calc_crc);
+            return ESP_ERR_INVALID_MAC;
+        }
+
+        version = (efuse[1] >> EFUSE_VERSION_S) & EFUSE_VERSION_V;
+
+        if (version == EFUSE_VERSION_1 || version == EFUSE_VERSION_2) {
+            tmp_mac[0] = mac[5];
+            tmp_mac[1] = mac[4];
+            tmp_mac[2] = mac[3];
+            tmp_mac[3] = efuse[1] >> 16;
+
+            efuse_crc = efuse[0] >> 16;
+            calc_crc = esp_crc8(tmp_mac, 4);
+
+            if (efuse_crc != calc_crc) {
+                ESP_LOGE(TAG, "CRC8 error, efuse_crc = 0x%02x; calc_crc = 0x%02x", efuse_crc, calc_crc);
+                return ESP_ERR_INVALID_MAC;
+            }
+        }
+    } else {
+        mac[0] = 0x18;
+        mac[1] = 0xFE;
+        mac[2] = 0x34;
+    }
+
+    return ESP_OK;
+}
+
+static esp_err_t store_backup_mac_data()
+{
+    esp_err_t err;
+    nvs_handle handle;
+    uint32_t efuse[4];
+    efuse[0] = REG_READ(EFUSE_DATA0_REG);
+    efuse[1] = REG_READ(EFUSE_DATA1_REG);
+    efuse[2] = REG_READ(EFUSE_DATA2_REG);
+    efuse[3] = REG_READ(EFUSE_DATA3_REG);
+
+    err = nvs_open(BACKUP_MAC_NAMESPACE, NVS_READWRITE, &handle);
+
+    if (err != ESP_OK) {
+        ESP_LOGD(TAG, "%s: failed to open NVS namespace (0x%x)", __func__, err);
+        return err;
+    }
+
+    err = nvs_set_blob(handle, BACKUP_MAC_DATA_KEY, efuse, MAC_DATA_LEN_WITH_CRC);
+
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "%s: store backup mac data failed(0x%x)\n", __func__, err);
+        return err;
+    }
+
+    err = nvs_commit(handle);
+
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "%s: store backup mac data failed(0x%x)\n", __func__, err);
+    }
+
+    return err;
 }
 
 esp_err_t esp_derive_mac(uint8_t* local_mac, const uint8_t* universal_mac)
@@ -153,7 +278,14 @@ esp_err_t esp_read_mac(uint8_t* mac, esp_mac_type_t type)
     }
 
     if (esp_base_mac_addr_get(efuse_mac) != ESP_OK) {
-        esp_efuse_mac_get_default(efuse_mac);
+        if (load_backup_mac_data(efuse_mac) != ESP_OK) {
+            if (esp_efuse_mac_get_default(efuse_mac) != ESP_OK) {
+                ESP_LOGE(TAG, "Get mac address error");
+                abort();
+            } else {
+                store_backup_mac_data();
+            }
+        }
     }
 
     switch (type) {
