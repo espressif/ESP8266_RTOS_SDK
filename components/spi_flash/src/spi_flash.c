@@ -25,7 +25,8 @@
 #include "esp8266/pin_mux_register.h"
 #include "driver/spi_register.h"
 
-#define spi_debug(fmt, ...)                     ESP_LOGD(TAG, fmt, ##__VA_ARGS__)
+/* Todo: Refactor SPI debug */
+#define spi_debug(fmt, ...)                     //ESP_LOGD(TAG, fmt, ##__VA_ARGS__)
 
 #define SPI_EXT2(i)                             (REG_SPI_BASE(i) + 0xF8)
 #define SPI_EXT3(i)                             (REG_SPI_BASE(i) + 0xFC)

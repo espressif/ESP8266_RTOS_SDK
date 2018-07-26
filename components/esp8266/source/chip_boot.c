@@ -86,7 +86,7 @@ void chip_boot(size_t start_addr, size_t map)
 
     ret = spi_flash_read(start_addr, &fhdr, sizeof(flash_hdr_t));
     if (ret) {
-        ESP_LOGE(TAG, "SPI flash read result %d\n", ret);
+        ESP_EARLY_LOGE(TAG, "SPI flash read result %d\n", ret);
     }
 
     if (3 > fhdr.spi_speed)
@@ -100,7 +100,7 @@ void chip_boot(size_t start_addr, size_t map)
         flash_size = flash_map_table[fhdr.spi_size_map];
     } else {
         flash_size = 0; 
-        ESP_LOGE(TAG, "SPI size error is %d\n", fhdr.spi_size_map);
+        ESP_EARLY_LOGE(TAG, "SPI size error is %d\n", fhdr.spi_size_map);
     }
     sect_size = 4 * 1024;
 
@@ -117,7 +117,7 @@ void chip_boot(size_t start_addr, size_t map)
 
     ret = esp_get_boot_param(flash_size, sect_size, &bhdr, sizeof(boot_hdr_t));
     if (ret) {
-        ESP_LOGE(TAG, "Get boot parameters %d\n", ret);
+        ESP_EARLY_LOGE(TAG, "Get boot parameters %d\n", ret);
     }
 
     cache_init(map, 0, 0);
