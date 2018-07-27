@@ -48,8 +48,10 @@ void *memp_malloc_ll(size_t type)
     const struct memp_desc *desc = memp_pools[type];
 
     p = (uint8_t *)mem_malloc_ll(MEMP_SIZE + MEMP_ALIGN_SIZE(desc->size));
+    if (p)
+        p += MEMP_SIZE;
 
-    return p + MEMP_SIZE;
+    return p;
 }
 
 #endif
