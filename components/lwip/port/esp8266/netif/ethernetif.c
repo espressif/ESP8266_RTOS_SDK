@@ -302,6 +302,9 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
      * header, meaning we should not pass target low-level address here.
      */
     err = esp_aio_sendto(&aio, NULL, 0);
+#if ESP_UDP
+    udp_sync_set_ret(err);
+#endif
     if (err != ERR_OK) {
         if (err == ERR_MEM){
             insert_to_list(aio.fd, p);

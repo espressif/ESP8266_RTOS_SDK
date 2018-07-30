@@ -27,6 +27,23 @@ config LWIP_SOCKET_MULTITHREAD
         Enable the option can enable LWIP socket multithread and all
         function will be thread safe.
 
+config ESP_UDP_SYNC_SEND
+    bool "LWIP socket UDP sync send"
+    default y
+    help
+        Enable the option can enable LWIP socket UDP sync send. CPU cost
+        should decrease but memory cost increase and it can make UDP
+        throughput increase a lot.
+
+config ESP_UDP_SYNC_RETRY_MAX
+    int "LWIP socket UDP sync send retry max count"
+    range 1 10
+    default 5
+    depends on ESP_UDP_SYNC_SEND
+    help
+        When UDP sync send count reaches the value, then the packet should
+        be lost and LWIP core thread wake up the up-level send thread.
+
 config LWIP_MAX_SOCKETS
     int "Max number of open sockets"
     range 1 16
