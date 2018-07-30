@@ -30,6 +30,20 @@ endchoice
 
 endmenu
 
+menu WIFI
+
+config SCAN_AP_MAX
+    int "Max scan AP number"
+    range 1 64
+    default 32
+    help
+        Function "esp_wifi_scan_get_ap_num" return value will be less than this. It is said that user cannot
+        scan more than this.
+
+        User can use own function "esp_wifi_scan_get_ap_num_max" to determin how many AP to scan , too.
+
+endmenu
+
 menu PHY
 
 config ESP_PHY_CALIBRATION_AND_DATA_STORAGE

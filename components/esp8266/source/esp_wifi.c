@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
 #include "esp_libc.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
@@ -49,4 +50,9 @@ esp_err_t esp_wifi_init(const wifi_init_config_t *config)
 void esp_deep_sleep_set_rf_option(uint8_t option)
 {
     phy_afterwake_set_rfoption(option);
+}
+
+size_t __attribute__((weak)) esp_wifi_scan_get_ap_num_max(void)
+{
+    return CONFIG_SCAN_AP_MAX;
 }
