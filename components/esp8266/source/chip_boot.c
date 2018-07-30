@@ -18,6 +18,8 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp8266/eagle_soc.h"
+#include "esp8266/rom_functions.h"
+#include "esp_image_format.h"
 
 #define PERIPHS_SPI_FLASH_USRREG        (0x60000200 + 0x1c)
 #define PERIPHS_SPI_FLASH_CTRL          (0x60000200 + 0x08)
@@ -25,32 +27,6 @@
 
 #define SPI0_CLK_EQU_SYSCLK             BIT8
 #define SPI_FLASH_CLK_EQU_SYSCLK        BIT12
-
-typedef struct flash_hdr {
-    uint8_t         magic;
-    uint8_t         blocks;
-    uint8_t         spi_mode;
-    uint8_t         spi_speed : 4;
-    uint8_t         spi_size_map : 4;
-    uint32_t        entry_addr;
-} flash_hdr_t;
-
-typedef struct boot_hdr {
-    uint8_t     user_bin : 2;
-    uint8_t     boot_status : 1;
-    uint8_t     to_qio : 1;
-    uint8_t     reserve : 4;
-
-    uint8_t     version : 5;
-    uint8_t     test_pass_flag : 1;
-    uint8_t     test_start_flag : 1;
-    uint8_t     enhance_boot_flag : 1;
-
-    uint8_t     test_bin_addr[3];
-    uint8_t     user_bin_addr[3];
-} boot_hdr_t;
-
-extern int ets_printf(const char *fmt, ...);
 
 static const char *TAG = "chip_boot";
 
@@ -61,10 +37,9 @@ static const char *TAG = "chip_boot";
 void chip_boot(size_t start_addr, size_t map)
 {
     int ret;
-    uint32_t freqdiv, flash_size, sect_size;
+    uint32_t freqdiv, flash_size;
     uint32_t freqbits;
-    flash_hdr_t fhdr;
-    boot_hdr_t bhdr;
+    esp_image_header_t fhdr;
 
     uint32_t flash_map_table[FALSH_SIZE_MAP_MAX] = {
         1 * 1024 * 1024,
@@ -75,6 +50,7 @@ void chip_boot(size_t start_addr, size_t map)
     };
     uint32_t flash_map_table_size = sizeof(flash_map_table) / sizeof(flash_map_table[0]);
 
+    extern esp_spi_flash_chip_t flashchip;
     extern void phy_get_bb_evm(void);
     extern void cache_init(uint32_t , uint32_t, uint32_t);
     extern void user_spi_flash_dio_to_qio_pre_init(void);
@@ -84,7 +60,7 @@ void chip_boot(size_t start_addr, size_t map)
 
     SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_USRREG, BIT5);
 
-    ret = spi_flash_read(start_addr, &fhdr, sizeof(flash_hdr_t));
+    ret = spi_flash_read(start_addr, &fhdr, sizeof(esp_image_header_t));
     if (ret) {
         ESP_EARLY_LOGE(TAG, "SPI flash read result %d\n", ret);
     }
@@ -96,13 +72,14 @@ void chip_boot(size_t start_addr, size_t map)
     else
         freqdiv = 2;
 
-    if (fhdr.spi_size_map < flash_map_table_size) {
-        flash_size = flash_map_table[fhdr.spi_size_map];
+    if (fhdr.spi_size < flash_map_table_size) {
+        flash_size = flash_map_table[fhdr.spi_size];
+        ESP_EARLY_LOGD(TAG, "SPI flash size is %d\n", flash_size);
     } else {
         flash_size = 0; 
-        ESP_EARLY_LOGE(TAG, "SPI size error is %d\n", fhdr.spi_size_map);
+        ESP_EARLY_LOGE(TAG, "SPI size error is %d\n", fhdr.spi_size);
     }
-    sect_size = 4 * 1024;
+    flashchip.chip_size = flash_size;
 
     if (1 >= freqdiv) {
         freqbits = SPI_FLASH_CLK_EQU_SYSCLK;
@@ -115,13 +92,11 @@ void chip_boot(size_t start_addr, size_t map)
     }
     SET_PERI_REG_BITS(PERIPHS_SPI_FLASH_CTRL, 0xfff, freqbits, 0);
 
-    ret = esp_get_boot_param(flash_size, sect_size, &bhdr, sizeof(boot_hdr_t));
-    if (ret) {
-        ESP_EARLY_LOGE(TAG, "Get boot parameters %d\n", ret);
-    }
-
+    ESP_EARLY_LOGD(TAG, "SPI flash cache map is %d\n", map);
     cache_init(map, 0, 0);
 
-    if (bhdr.to_qio == 0)
+    if (fhdr.spi_mode == ESP_IMAGE_SPI_MODE_QIO) {
+        ESP_EARLY_LOGD(TAG, "SPI flash enable QIO mode\n");
         user_spi_flash_dio_to_qio_pre_init();
+    }
 }
