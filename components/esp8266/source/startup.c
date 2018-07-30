@@ -26,6 +26,7 @@
 #include "esp_image_format.h"
 #include "esp_phy_init.h"
 #include "esp_wifi_osi.h"
+#include "internal/esp_wifi_internal.h"
 
 #define FLASH_MAP_ADDR 0x40200000
 
@@ -60,6 +61,7 @@ static void user_init_entry(void *param)
     assert(wifi_timer_init() == 0);
 
     tcpip_adapter_init();
+    esp_wifi_set_rx_pbuf_mem_type(WIFI_RX_PBUF_DRAM);
 
     app_main();
 

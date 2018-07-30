@@ -219,9 +219,15 @@ void *memp_malloc_ll(size_t type);
 /**
  * Use DRAM instead of IRAM
  */
+#if CONFIG_LWIP_USE_IRAM
 #define mem_clib_free free
 #define mem_clib_malloc malloc
 #define mem_clib_calloc calloc
+#else
+#define mem_clib_free os_free
+#define mem_clib_malloc os_malloc
+#define mem_clib_calloc os_calloc
+#endif
 
 /**
  * MEMP_MEM_MALLOC==1: Use mem_malloc/mem_free instead of the lwip pool allocator.
@@ -2173,6 +2179,15 @@ void *memp_malloc_ll(size_t type);
 #define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_ON
 #else
 #define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_OFF
+#endif
+
+/**
+ * PBUF_CACHE_DEBUG: Enable debugging for SNTP.
+ */
+#if CONFIG_LWIP_PBUF_CACHE_DEBUG
+#define PBUF_CACHE_DEBUG                      LWIP_DBG_ON
+#else
+#define PBUF_CACHE_DEBUG                      LWIP_DBG_OFF
 #endif
 
 /**
