@@ -300,6 +300,20 @@ void ResetCcountVal(unsigned int cnt_val)
     asm volatile("wsr a2, ccount");
 }
 
+/*
+ * @brief check if CPU core interrupt is disable
+ */
+bool interrupt_is_disable(void)
+{
+    uint32_t tmp;
+
+    __asm__ __volatile__ (
+        "rsr %0, PS\n"
+        : "=a"(tmp) : : "memory");
+
+    return tmp & 0xFUL ? true : false;
+}
+
 _xt_isr_entry isr[16];
 char _xt_isr_status = 0;
 
