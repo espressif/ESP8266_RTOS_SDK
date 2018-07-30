@@ -112,6 +112,10 @@ void _lock_close_recursive(_lock_t *lock) {
    mutex_type is queueQUEUE_TYPE_RECURSIVE_MUTEX or queueQUEUE_TYPE_MUTEX
 */
 static int lock_acquire_generic(_lock_t *lock, uint32_t delay, uint8_t mutex_type) {
+    /* If application function has disabled interrupt, then it must not acquire the mutex */
+    if (interrupt_is_disable() == true && !xPortInIsrContext())
+        return 0;
+
     xSemaphoreHandle h = (xSemaphoreHandle)(*lock);
     if (!h) {
         if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED) {
@@ -171,6 +175,10 @@ int _lock_try_acquire_recursive(_lock_t *lock) {
    mutex_type is queueQUEUE_TYPE_RECURSIVE_MUTEX or queueQUEUE_TYPE_MUTEX
 */
 static void lock_release_generic(_lock_t *lock, uint8_t mutex_type) {
+    /* If application function has disabled interrupt, then it must not release the mutex */
+    if (interrupt_is_disable() == true && !xPortInIsrContext())
+        return ;
+
     xSemaphoreHandle h = (xSemaphoreHandle)(*lock);
     if (h == NULL) {
         /* This is probably because the scheduler isn't running yet,

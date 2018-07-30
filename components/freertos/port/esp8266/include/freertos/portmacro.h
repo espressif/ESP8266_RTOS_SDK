@@ -224,6 +224,13 @@ void esp_mem_trace(const void *ptr, const char *trace, int no);
  */
 #define esp_mem_mark_file(ptr) esp_mem_trace((ptr), __FILE__, LINE__)
 
+/*
+ * @brief check if CPU core interrupt is disable
+ *
+ * @return true if interrupt is disable or false
+ */
+bool interrupt_is_disable(void);
+
 #ifdef __cplusplus
 }
 #endif
