@@ -799,12 +799,18 @@ netconn_drain(struct netconn *conn)
         /* Only tcp pcbs have an acceptmbox, so no need to check conn->type */
         /* pcb might be set to NULL already by err_tcp() */
         /* drain recvmbox */
+#ifdef ESP_LWIP
+        if (newconn) {
+#endif /* ESP_LWIP */
         netconn_drain(newconn);
         if (newconn->pcb.tcp != NULL) {
           tcp_abort(newconn->pcb.tcp);
           newconn->pcb.tcp = NULL;
         }
         netconn_free(newconn);
+#ifdef ESP_LWIP
+        }
+#endif /* ESP_LWIP */
       }
     }
     sys_mbox_free(&conn->acceptmbox);
