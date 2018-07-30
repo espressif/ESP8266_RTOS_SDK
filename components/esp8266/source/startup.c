@@ -92,8 +92,9 @@ void call_user_start(size_t start_addr, size_t map)
      * And then user can load/store data which is not aligned by 4-byte.
      */
     __asm__ __volatile__(
-        "movi       a2, 0x40100000\n"
-        "wsr        a2, vecbase\n");
+        "movi       a0, 0x40100000\n"
+        "wsr        a0, vecbase\n"
+        : : :"memory");
 
     chip_boot(start_addr, map);
 
