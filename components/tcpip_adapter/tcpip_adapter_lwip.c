@@ -117,6 +117,16 @@ static err_t _dhcp_release(struct tcpip_api_call_data *p)
     return 0;
 }
 
+static err_t _dhcp_clean(struct tcpip_api_call_data *p)
+{
+    struct tcpip_adapter_api_call_data *call = (struct tcpip_adapter_api_call_data *)p;
+
+    dhcp_stop(call->netif);
+    dhcp_cleanup(call->netif);
+
+    return 0;
+}
+
 static int tcpip_adapter_start_dhcp(struct netif *netif)
 {
     struct tcpip_adapter_api_call_data call;
@@ -142,6 +152,15 @@ static int tcpip_adapter_release_dhcp(struct netif *netif)
     call.netif = netif;
 
     return tcpip_api_call(_dhcp_release, (struct tcpip_api_call_data *)&call);
+}
+
+static int tcpip_adapter_clean_dhcp(struct netif *netif)
+{
+    struct tcpip_adapter_api_call_data call;
+
+    call.netif = netif;
+
+    return tcpip_api_call(_dhcp_clean, (struct tcpip_api_call_data *)&call);
 }
 
 void tcpip_adapter_init(void)
@@ -273,6 +292,7 @@ esp_err_t tcpip_adapter_stop(tcpip_adapter_if_t tcpip_if)
     
     esp_close((int)esp_netif[tcpip_if]->state);
     if (!netif_is_up(esp_netif[tcpip_if])) {
+        tcpip_adapter_clean_dhcp(esp_netif[tcpip_if]);
         netif_remove(esp_netif[tcpip_if]);
         return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;
     }
