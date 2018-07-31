@@ -36,6 +36,7 @@
 #include "net/sockio.h"
 #include "esp_socket.h"
 #include "esp_log.h"
+#include "esp_wifi_osi.h"
 
 struct tcpip_adapter_pbuf {
     struct pbuf_custom  pbuf;
@@ -67,6 +68,7 @@ static esp_err_t tcpip_adapter_start_ip_lost_timer(tcpip_adapter_if_t tcpip_if);
 static void tcpip_adapter_dhcpc_cb(struct netif *netif);
 static void tcpip_adapter_ip_lost_timer(void *arg);
 static int tcpip_adapter_bind_netcard(const char *name, struct netif *netif);
+static void tcpip_adapter_dhcpc_done(void *arg);
 static bool tcpip_inited = false;
 
 static const char* TAG = "tcpip_adapter";
@@ -79,7 +81,7 @@ void system_station_got_ip_set();
 
 static int dhcp_fail_time = 0;
 static tcpip_adapter_ip_info_t esp_ip[TCPIP_ADAPTER_IF_MAX];
-static os_timer_t dhcp_check_timer;
+static void *dhcp_check_timer;
 
 static void tcpip_adapter_dhcps_cb(u8_t client_ip[4])
 {
@@ -175,14 +177,19 @@ void tcpip_adapter_init(void)
         IP4_ADDR(&esp_ip[TCPIP_ADAPTER_IF_AP].ip, 192, 168 , 4, 1);
         IP4_ADDR(&esp_ip[TCPIP_ADAPTER_IF_AP].gw, 192, 168 , 4, 1);
         IP4_ADDR(&esp_ip[TCPIP_ADAPTER_IF_AP].netmask, 255, 255 , 255, 0);
+
+        dhcp_check_timer = wifi_timer_create("check_dhcp", wifi_task_ms_to_ticks(500), true, NULL, tcpip_adapter_dhcpc_done);
+        if (!dhcp_check_timer) {
+            ESP_LOGI(TAG, "TCPIP adapter timer create error");
+        }
     }
 }
 
-static void tcpip_adapter_dhcpc_done()
+static void tcpip_adapter_dhcpc_done(void *arg)
 {
     struct dhcp *clientdhcp = netif_dhcp_data(esp_netif[TCPIP_ADAPTER_IF_STA]) ;
 
-    os_timer_disarm(&dhcp_check_timer);
+    wifi_timer_stop(dhcp_check_timer, 0);
     if (netif_is_up(esp_netif[TCPIP_ADAPTER_IF_STA])) {
         if (clientdhcp->state == DHCP_STATE_BOUND) {
             /*send event here*/
@@ -193,8 +200,7 @@ static void tcpip_adapter_dhcpc_done()
         } else if (dhcp_fail_time < (CONFIG_IP_LOST_TIMER_INTERVAL * 1000 / 500)) {
             ESP_LOGD(TAG,"dhcpc time(ms): %d\n", dhcp_fail_time * 500);
             dhcp_fail_time ++;
-            os_timer_setfn(&dhcp_check_timer, (os_timer_func_t*)tcpip_adapter_dhcpc_done, NULL);
-            os_timer_arm(&dhcp_check_timer, 500, 0);
+            wifi_timer_reset(dhcp_check_timer, 0);
         } else {
             dhcp_fail_time = 0;
             ESP_LOGD(TAG,"ERROR dhcp get ip error\n");
@@ -1042,9 +1048,7 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
             }
 
             dhcp_fail_time = 0;
-            os_timer_disarm(&dhcp_check_timer);
-            os_timer_setfn(&dhcp_check_timer, (os_timer_func_t*)tcpip_adapter_dhcpc_done, NULL);
-            os_timer_arm(&dhcp_check_timer, 500, 0);
+            wifi_timer_reset(dhcp_check_timer, 0);
             ESP_LOGD(TAG, "dhcp client start successfully");
             dhcpc_status[tcpip_if] = TCPIP_ADAPTER_DHCP_STARTED;
             return ESP_OK;
