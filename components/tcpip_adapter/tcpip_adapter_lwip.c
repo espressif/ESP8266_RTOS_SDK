@@ -26,6 +26,7 @@
 #include "lwip/errno.h"
 #include "lwip/timeouts.h"
 #include "lwip/prot/dhcp.h"
+#include "lwip/priv/tcpip_priv.h"
 #include "netif/etharp.h"
 #include "esp_wifi.h"
 #include "esp_timer.h"
@@ -40,6 +41,12 @@ struct tcpip_adapter_pbuf {
     struct pbuf_custom  pbuf;
 
     void                *base;
+
+    struct netif        *netif;
+};
+
+struct tcpip_adapter_api_call_data {
+    struct tcpip_api_call_data call;
 
     struct netif        *netif;
 };
@@ -83,6 +90,60 @@ static void tcpip_adapter_dhcps_cb(u8_t client_ip[4])
     esp_event_send(&evt);
 }
 
+static err_t _dhcp_start(struct tcpip_api_call_data *p)
+{
+    struct tcpip_adapter_api_call_data *call = (struct tcpip_adapter_api_call_data *)p;
+
+    return dhcp_start(call->netif);
+}
+
+static err_t _dhcp_stop(struct tcpip_api_call_data *p)
+{
+    struct tcpip_adapter_api_call_data *call = (struct tcpip_adapter_api_call_data *)p;
+
+    dhcp_stop(call->netif);
+
+    return 0;
+}
+
+static err_t _dhcp_release(struct tcpip_api_call_data *p)
+{
+    struct tcpip_adapter_api_call_data *call = (struct tcpip_adapter_api_call_data *)p;
+
+    dhcp_release(call->netif);
+    dhcp_stop(call->netif);
+    dhcp_cleanup(call->netif);
+
+    return 0;
+}
+
+static int tcpip_adapter_start_dhcp(struct netif *netif)
+{
+    struct tcpip_adapter_api_call_data call;
+
+    call.netif = netif;
+
+    return tcpip_api_call(_dhcp_start, (struct tcpip_api_call_data *)&call);
+}
+
+static int tcpip_adapter_stop_dhcp(struct netif *netif)
+{
+    struct tcpip_adapter_api_call_data call;
+
+    call.netif = netif;
+
+    return tcpip_api_call(_dhcp_stop, (struct tcpip_api_call_data *)&call);
+}
+
+static int tcpip_adapter_release_dhcp(struct netif *netif)
+{
+    struct tcpip_adapter_api_call_data call;
+
+    call.netif = netif;
+
+    return tcpip_api_call(_dhcp_release, (struct tcpip_api_call_data *)&call);
+}
+
 void tcpip_adapter_init(void)
 {
     if (tcpip_inited == false) {
@@ -121,9 +182,7 @@ static void tcpip_adapter_dhcpc_done()
         }
     } else {
         dhcp_fail_time = 0;
-        dhcp_release(esp_netif[TCPIP_ADAPTER_IF_STA]);
-        dhcp_stop(esp_netif[TCPIP_ADAPTER_IF_STA]);
-        dhcp_cleanup(esp_netif[TCPIP_ADAPTER_IF_STA]);
+        tcpip_adapter_release_dhcp(esp_netif[TCPIP_ADAPTER_IF_STA]);
 
         dhcpc_status[TCPIP_ADAPTER_IF_STA] = TCPIP_ADAPTER_DHCP_INIT;
 
@@ -224,9 +283,7 @@ esp_err_t tcpip_adapter_stop(tcpip_adapter_if_t tcpip_if)
             dhcps_status = TCPIP_ADAPTER_DHCP_INIT;
         }
     } else if (tcpip_if == TCPIP_ADAPTER_IF_STA || tcpip_if == TCPIP_ADAPTER_IF_ETH) {
-        dhcp_release(esp_netif[tcpip_if]);
-        dhcp_stop(esp_netif[tcpip_if]);
-        dhcp_cleanup(esp_netif[tcpip_if]);
+        tcpip_adapter_release_dhcp(esp_netif[tcpip_if]);
 
         dhcpc_status[tcpip_if] = TCPIP_ADAPTER_DHCP_INIT;
 
@@ -357,7 +414,7 @@ esp_err_t tcpip_adapter_down(tcpip_adapter_if_t tcpip_if)
         }
 
         if (dhcpc_status[tcpip_if] == TCPIP_ADAPTER_DHCP_STARTED) {
-            dhcp_stop(esp_netif[tcpip_if]);
+            tcpip_adapter_stop_dhcp(esp_netif[tcpip_if]);
 
             dhcpc_status[tcpip_if] = TCPIP_ADAPTER_DHCP_INIT;
 
@@ -959,7 +1016,7 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
                 return ESP_OK;
             }
 
-            if (dhcp_start(p_netif) != ERR_OK) {
+            if (tcpip_adapter_start_dhcp(p_netif) != ERR_OK) {
                 ESP_LOGD(TAG, "dhcp client start failed");
                 return ESP_ERR_TCPIP_ADAPTER_DHCPC_START_FAILED;
             }
@@ -995,7 +1052,7 @@ esp_err_t tcpip_adapter_dhcpc_stop(tcpip_adapter_if_t tcpip_if)
         struct netif *p_netif = esp_netif[tcpip_if];
 
         if (p_netif != NULL) {
-            dhcp_stop(p_netif);
+            tcpip_adapter_stop_dhcp(p_netif);
             tcpip_adapter_reset_ip_info(tcpip_if);
         } else {
             ESP_LOGD(TAG, "dhcp client if not ready");
