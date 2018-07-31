@@ -62,6 +62,7 @@
 
 //#define SOCKETS_TCP_TRACE
 
+#define TCP_HIGH_SPEED_RETRANSMISSION CONFIG_TCP_HIGH_SPEED_RETRANSMISSION
 
  /*
    ------------------------------------

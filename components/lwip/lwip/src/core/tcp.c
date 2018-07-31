@@ -108,8 +108,13 @@ static u16_t tcp_port = TCP_LOCAL_PORT_RANGE_START;
 
 /* Incremented every coarse grained timer shot (typically every 500 ms). */
 u32_t tcp_ticks;
+#if TCP_HIGH_SPEED_RETRANSMISSION
+static const u8_t tcp_backoff[13] =
+    { 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7};
+#else
 static const u8_t tcp_backoff[13] =
     { 1, 2, 3, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7};
+#endif
  /* Times per slowtmr hits */
 static const u8_t tcp_persist_backoff[7] = { 3, 6, 12, 24, 48, 96, 120 };
 

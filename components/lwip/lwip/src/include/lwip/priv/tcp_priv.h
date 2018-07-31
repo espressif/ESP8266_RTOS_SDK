@@ -114,7 +114,11 @@ err_t            tcp_process_refused_data(struct tcp_pcb *pcb);
 #define TCP_SEQ_BETWEEN(a,b,c) (TCP_SEQ_GEQ(a,b) && TCP_SEQ_LEQ(a,c))
 
 #ifndef TCP_TMR_INTERVAL
+#if TCP_HIGH_SPEED_RETRANSMISSION
+#define TCP_TMR_INTERVAL       125  /* The TCP timer interval in milliseconds. */
+#else
 #define TCP_TMR_INTERVAL       250  /* The TCP timer interval in milliseconds. */
+#endif
 #endif /* TCP_TMR_INTERVAL */
 
 #ifndef TCP_FAST_INTERVAL
