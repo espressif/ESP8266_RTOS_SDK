@@ -56,3 +56,11 @@ size_t __attribute__((weak)) esp_wifi_scan_get_ap_num_max(void)
 {
     return CONFIG_SCAN_AP_MAX;
 }
+
+bool IRAM_ATTR esp_wifi_try_rate_from_high(void) {
+#if CONFIG_WIFI_TX_RATE_SEQUENCE_FROM_HIGH
+    return true;
+#else
+    return false;
+#endif
+}
