@@ -554,22 +554,24 @@ print_flash_cmd:
 ifdef CONFIG_TOOLPREFIX
 ifndef MAKE_RESTARTS
 TOOLCHAIN_COMMIT_DESC := $(shell $(CC) --version | sed -E -n 's|.*crosstool-ng-([0-9]+).([0-9]+).([0-9]+)-([0-9]+)-g([0-9a-f]{7}).*|\1.\2.\3-\4-g\5|gp')
-TOOLCHAIN_GCC_VER := $(shell $(CC) --version | sed -E -n 's|xtensa-esp32-elf-gcc.*\ \(.*\)\ (.*)|\1|gp')
+TOOLCHAIN_GCC_VER := $(shell $(CC) --version | sed -E -n 's|.*gcc.*\ \(.*\)\ (.*)|\1|gp')
 
 # Officially supported version(s)
-SUPPORTED_TOOLCHAIN_COMMIT_DESC := 1.22.0-80-g6c4433a
-SUPPORTED_TOOLCHAIN_GCC_VERSIONS := 5.2.0
+SUPPORTED_TOOLCHAIN_COMMIT_DESC ?= 1.22.0-80-g6c4433a
+SUPPORTED_TOOLCHAIN_GCC_VERSIONS ?= 5.2.0
 
 ifdef TOOLCHAIN_COMMIT_DESC
 ifneq ($(TOOLCHAIN_COMMIT_DESC), $(SUPPORTED_TOOLCHAIN_COMMIT_DESC))
 $(info WARNING: Toolchain version is not supported: $(TOOLCHAIN_COMMIT_DESC))
 $(info Expected to see version: $(SUPPORTED_TOOLCHAIN_COMMIT_DESC))
 $(info Please check ESP-IDF setup instructions and update the toolchain, or proceed at your own risk.)
+$(info Please download and use the toolchain from the URL of README.md)
 endif
 ifeq (,$(findstring $(TOOLCHAIN_GCC_VER), $(SUPPORTED_TOOLCHAIN_GCC_VERSIONS)))
 $(info WARNING: Compiler version is not supported: $(TOOLCHAIN_GCC_VER))
 $(info Expected to see version(s): $(SUPPORTED_TOOLCHAIN_GCC_VERSIONS))
 $(info Please check ESP-IDF setup instructions and update the toolchain, or proceed at your own risk.)
+$(info Please download and use the toolchain from the URL of README.md)
 endif
 else
 $(info WARNING: Failed to find Xtensa toolchain, may need to alter PATH or set one in the configuration menu)
