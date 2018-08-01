@@ -111,8 +111,7 @@ void udp_sync_ack(void *in_msg)
         s_udp_sync[s].ret = ERR_OK;
         s_udp_sync_num--;
 
-        /* Todo: return real result */
-        msg->err = ESP_OK;
+        ESP_LOGD(TAG, "UDP sync ret %d", s_udp_sync[s].ret);
 
         TCPIP_APIMSG_ACK(msg);
     } else {
