@@ -26,6 +26,8 @@ and the Xtensa core configuration need not have a timer.
 #ifndef XTENSA_TIMER_H
 #define XTENSA_TIMER_H
 
+#include "freertos/FreeRTOSConfig.h"
+
 #ifdef XT_RTOS_TIMER_INT        /* skip all this stuff if no timer int */
 
 #ifdef __ASSEMBLER__
@@ -125,7 +127,7 @@ editing this here or in xtensa_rtos.h, or compiling with xt-xcc option
 "-DXT_TICKS_PER_SEC <value>" where <value> is a suitable number.
 */
 #ifndef XT_TICK_PER_SEC
-#define XT_TICK_PER_SEC     100         /* 10 ms tick = 100 ticks per second */
+#define XT_TICK_PER_SEC     CONFIG_FREERTOS_HZ         /* 10 ms tick = 100 ticks per second */
 #endif
 
 /*
