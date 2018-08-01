@@ -10,6 +10,7 @@ config LWIP_HIGH_THROUGHPUT
     select TCP_QUEUE_OOSEQ
     select TCP_HIGH_SPEED_RETRANSMISSION
     select SOC_FULL_ICACHE
+    select WIFI_TX_RATE_SEQUENCE_FROM_HIGH
     help
         Enable this option, also enable "TCP_QUEUE_OOSEQ", "TCP_HIGH_SPEED_RETRANSMISSION" and
         "SOC_FULL_ICACHE", so lwip should cache TCP message received in disorder sequence and
