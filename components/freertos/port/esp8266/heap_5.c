@@ -105,6 +105,8 @@
  * Note 0x80000000 is the lower address so appears in the array first.
  *
  */
+#include "sdkconfig.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -363,8 +365,10 @@ static bool is_inited = false;
         xHeapRegions[0].pucStartAddress = ( uint8_t * )&_heap_start;
         xHeapRegions[0].xSizeInBytes = (( size_t)( 0x40000000 - (uint32_t)&_heap_start));
         
+#ifndef CONFIG_SOC_FULL_ICACHE
         xHeapRegions[1].pucStartAddress = ( uint8_t * )&_lit4_end;
         xHeapRegions[1].xSizeInBytes = (( size_t)( 0x4010C000 - (uint32_t)&_lit4_end));
+#endif
 
         is_inited = true;
         vPortDefineHeapRegions(xHeapRegions);

@@ -28,6 +28,13 @@ config NEWLIB_STDOUT_LINE_ENDING_CR
     bool "CR"
 endchoice
 
+config SOC_FULL_ICACHE
+    bool "Enable full cache mode"
+    default n
+    help
+        Enable this option, full 32 KB iram instead of 16 KB iram will be used as icache, so the heap use can use
+        may reduce a lot.
+
 endmenu
 
 menu WIFI

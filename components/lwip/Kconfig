@@ -4,6 +4,18 @@ config LWIP_USE_IRAM
     bool "Enable lwip use iram option"
     default n
 
+config LWIP_HIGH_THROUGHPUT
+    bool "Enable lwip high throughput"
+    default n
+    select TCP_QUEUE_OOSEQ
+    select TCP_HIGH_SPEED_RETRANSMISSION
+    select SOC_FULL_ICACHE
+    help
+        Enable this option, also enable "TCP_QUEUE_OOSEQ", "TCP_HIGH_SPEED_RETRANSMISSION" and
+        "SOC_FULL_ICACHE", so lwip should cache TCP message received in disorder sequence and
+        chip should full 32 KB IRAM as icache. For these 2 reasons, the global heap user can used
+        may reduce a lot.
+
 menu "ARP"
 
 config LWIP_ARP_TABLE_SIZE
@@ -228,6 +240,12 @@ config LWIP_LOOPBACK_MAX_PBUFS
          to be dropped, but will avoid filling memory with queued packet data.
 
 menu "TCP"
+
+config TCP_HIGH_SPEED_RETRANSMISSION
+    bool "TCP high speed retransmissions"
+    default n
+    help
+        "Enable this option, TCP retransmissions time will always be set to 500ms forcely."
 
 config LWIP_MAX_ACTIVE_TCP
     int "Maximum active TCP Connections"

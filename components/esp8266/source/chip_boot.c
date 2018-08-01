@@ -52,9 +52,8 @@ void chip_boot(size_t start_addr, size_t map)
 
     extern esp_spi_flash_chip_t flashchip;
     extern void phy_get_bb_evm(void);
-    extern void cache_init(uint32_t , uint32_t, uint32_t);
+    extern void cache_init(uint8_t);
     extern void user_spi_flash_dio_to_qio_pre_init(void);
-    extern int esp_get_boot_param(uint32_t, uint32_t, void *, uint32_t);
 
     phy_get_bb_evm();
 
@@ -93,7 +92,7 @@ void chip_boot(size_t start_addr, size_t map)
     SET_PERI_REG_BITS(PERIPHS_SPI_FLASH_CTRL, 0xfff, freqbits, 0);
 
     ESP_EARLY_LOGD(TAG, "SPI flash cache map is %d\n", map);
-    cache_init(map, 0, 0);
+    cache_init(map);
 
     if (fhdr.spi_mode == ESP_IMAGE_SPI_MODE_QIO) {
         ESP_EARLY_LOGD(TAG, "SPI flash enable QIO mode\n");
