@@ -1,0 +1,24 @@
+menu "Example Configuration"
+
+config CHANNEL
+    int "Channel"
+    range 1 13
+    default 1
+
+config FILTER_MASK_MGMT
+    bool "Receive management packets"
+    default y
+
+config FILTER_MASK_CTRL
+    bool "Receive ctrl packets"
+    default n
+
+config FILTER_MASK_DATA
+    bool "Receive data packets"
+    default n
+
+config FILTER_MASK_MISC
+    bool "Receive misc packets"
+    default n
+
+endmenu
