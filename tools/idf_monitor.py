@@ -83,6 +83,14 @@ MATCH_PCADDR = re.compile(r'0x4[0-9a-f]{7}', re.IGNORECASE)
 
 DEFAULT_TOOLCHAIN_PREFIX = "xtensa-esp32-elf-"
 
+def get_time_stamp():
+    ct = time.time()
+    local_time = time.localtime(ct)
+    data_head = time.strftime("%Y-%m-%d %H:%M:%S", local_time)
+    data_secs = (ct - long(ct)) * 1000
+    time_stamp = "%s.%03d" % (data_head, data_secs)
+    return time_stamp
+
 class StoppableThread(object):
     """
     Provide a Thread-like class which can be 'cancelled' via a subclass-provided
@@ -218,7 +226,7 @@ class Monitor(object):
 
     Main difference is that all event processing happens in the main thread, not the worker threads.
     """
-    def __init__(self, serial_instance, elf_file, make="make", toolchain_prefix=DEFAULT_TOOLCHAIN_PREFIX, eol="CRLF"):
+    def __init__(self, serial_instance, elf_file, make="make", toolchain_prefix=DEFAULT_TOOLCHAIN_PREFIX, eol="CRLF", enable_time='n'):
         super(Monitor, self).__init__()
         self.event_queue = queue.Queue()
         self.console = miniterm.Console()
@@ -245,6 +253,7 @@ class Monitor(object):
         self.toolchain_prefix = toolchain_prefix
         self.menu_key = CTRL_T
         self.exit_key = CTRL_RBRACKET
+        self.enable_time = enable_time
 
         self.translate_eol = {
             "CRLF": lambda c: c.replace(b"\n", b"\r\n"),
@@ -299,8 +308,13 @@ class Monitor(object):
         # this may need to be made more efficient, as it pushes out a byte
         # at a time to the console
         for b in data:
-            self.console.write_bytes(b)
             if b == b'\n': # end of line
+                self._read_line += '\n'
+                if self.enable_time == 'y':
+                    s_out = get_time_stamp() + ":  " + self._read_line
+                else:
+                    s_out = self._read_line
+                self.console.write_bytes(s_out)
                 self.handle_serial_input_line(self._read_line.strip())
                 self._read_line = b""
             else:
@@ -466,6 +480,12 @@ def main():
         'elf_file', help='ELF file of application',
         type=argparse.FileType('rb'))
 
+    parser.add_argument(
+        '--enable-time',
+        help='Serial port device',
+        default=False
+    )
+
     args = parser.parse_args()
 
     if args.port.startswith("/dev/tty."):
@@ -491,7 +511,7 @@ def main():
     except KeyError:
         pass  # not running a make jobserver
 
-    monitor = Monitor(serial_instance, args.elf_file.name, args.make, args.toolchain_prefix, args.eol)
+    monitor = Monitor(serial_instance, args.elf_file.name, args.make, args.toolchain_prefix, args.eol, args.enable_time)
 
     yellow_print('--- idf_monitor on {p.name} {p.baudrate} ---'.format(
         p=serial_instance))
