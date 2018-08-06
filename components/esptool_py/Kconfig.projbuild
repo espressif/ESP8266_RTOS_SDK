@@ -205,4 +205,10 @@ config MONITOR_BAUD
     default 2000000 if MONITOR_BAUD_2MB
     default MONITOR_BAUD_OTHER_VAL if MONITOR_BAUD_OTHER
 
+config ESPTOOLPY_ENABLE_TIME
+	bool "Enable monitor time information"
+	default n
+	help
+		Enable this option, time string will be added at the head of serial input data line.
+
 endmenu
