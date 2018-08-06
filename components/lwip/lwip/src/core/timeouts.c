@@ -112,6 +112,9 @@ const struct lwip_cyclic_timer lwip_cyclic_timers[] = {
 static struct sys_timeo *next_timeout;
 static u32_t timeouts_last_time;
 
+/** For light sleep. time out. limit is 3000ms  */
+u32_t LwipTimOutLim = 0;
+
 #if LWIP_TCP
 /** global variable that shows if the tcp timer is currently scheduled or not */
 static int tcpip_tcp_timer_active;
@@ -196,6 +199,7 @@ void sys_timeouts_init(void)
  * @param handler callback function to call when msecs have elapsed
  * @param arg argument to pass to the callback function
  */
+
 #if LWIP_DEBUG_TIMERNAMES
 void
 sys_timeout_debug(u32_t msecs, sys_timeout_handler handler, void *arg, const char* handler_name)
@@ -224,7 +228,18 @@ sys_timeout(u32_t msecs, sys_timeout_handler handler, void *arg)
   timeout->next = NULL;
   timeout->h = handler;
   timeout->arg = arg;
+
+#ifdef ESP_LWIP
+  if ((msecs + diff) < LwipTimOutLim) {
+    timeout->time = LwipTimOutLim;
+    msecs = LwipTimOutLim;
+  } else {
+    timeout->time = msecs + diff;
+  }
+#else
   timeout->time = msecs + diff;
+#endif
+
 #if LWIP_DEBUG_TIMERNAMES
   timeout->handler_name = handler_name;
   LWIP_DEBUGF(TIMERS_DEBUG, ("sys_timeout: %p msecs=%"U32_F" handler=%s arg=%p\n",
