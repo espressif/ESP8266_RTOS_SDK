@@ -264,6 +264,9 @@ esp_err_t bootloader_flash_erase_sector(size_t sector)
 #include "esp_err.h"
 #include "esp_log.h"
 
+extern void Cache_Read_Disable();
+extern void Cache_Read_Enable(uint8_t map, uint8_t p, uint8_t v);
+
 static const char *TAG = "bootloader_flash";
 
 typedef enum { SPI_FLASH_RESULT_OK = 0,
@@ -335,7 +338,6 @@ esp_err_t bootloader_flash_read(size_t src_addr, void *dest, size_t size, bool a
 
 esp_err_t bootloader_flash_write(size_t dest_addr, void *src, size_t size, bool write_encrypted)
 {
-    esp_err_t err;
     size_t alignment = write_encrypted ? 32 : 4;
     if ((dest_addr % alignment) != 0) {
         ESP_LOGE(TAG, "bootloader_flash_write dest_addr 0x%x not %d-byte aligned", dest_addr, alignment);

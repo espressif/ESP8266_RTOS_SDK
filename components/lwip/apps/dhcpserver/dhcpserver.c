@@ -27,6 +27,7 @@
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
 #include "lwip/mem.h"
+#include "lwip/timeouts.h"
 #include "dhcpserver/dhcpserver.h"
 #include "dhcpserver/dhcpserver_options.h"
 
@@ -1154,7 +1155,7 @@ void dhcps_start(struct netif *netif, ip4_addr_t ip)
 
     udp_bind(pcb_dhcps, &netif->ip_addr, DHCPS_SERVER_PORT);
     udp_recv(pcb_dhcps, handle_dhcp, NULL);
-    sys_timeout(1000, dhcps_coarse_tmr, NULL);
+    sys_timeout(1000, (sys_timeout_handler)dhcps_coarse_tmr, NULL);
 #if DHCPS_DEBUG
     DHCPS_LOG("dhcps:dhcps_start->udp_recv function Set a receive callback handle_dhcp for UDP_PCB pcb_dhcps\n");
 #endif
@@ -1176,7 +1177,7 @@ void dhcps_stop(struct netif *netif)
         return;
     }
 
-    sys_untimeout(dhcps_coarse_tmr, NULL);
+    sys_untimeout((sys_timeout_handler)dhcps_coarse_tmr, NULL);
 
     if (pcb_dhcps != NULL) {
         udp_disconnect(pcb_dhcps);
@@ -1273,7 +1274,7 @@ void dhcps_coarse_tmr(void)
 
     /*Do not restart timer when dhcp server is stopped*/
     if  (pcb_dhcps != NULL) {
-        sys_timeout(1000, dhcps_coarse_tmr, NULL);
+        sys_timeout(1000, (sys_timeout_handler)dhcps_coarse_tmr, NULL);
     }
 }
 

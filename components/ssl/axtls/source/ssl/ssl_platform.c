@@ -184,6 +184,8 @@ EXP_FUNC int STDCALL esp_base64_encode(uint8_t *dst, size_t dlen, size_t *olen,
 
 		return 0;
 	}
+
+    return 0;
 }
 
 static char *key_password = NULL;
@@ -1098,11 +1100,11 @@ void esp_ssl_sleep(uint16_t mseconds)
 	vTaskDelay(mseconds / portTICK_RATE_MS);
 }
 
-esp_ssl_CTX_set_client_cert_cb(){}
+void esp_ssl_CTX_set_client_cert_cb(){}
 
-esp_ssl_CTX_set_mode(){}
+void esp_ssl_CTX_set_mode(){}
 
-esp_ssl_pending()
+void esp_ssl_pending()
 {
 
 }

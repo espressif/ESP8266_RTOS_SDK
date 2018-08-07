@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "stdlib.h"
+
 #include "esp_attr.h"
 #include "esp_libc.h"
 
 #include "esp8266/eagle_soc.h"
+#include "esp8266/rom_functions.h"
 #include "rom/ets_sys.h"
 #include "esp_err.h"
 

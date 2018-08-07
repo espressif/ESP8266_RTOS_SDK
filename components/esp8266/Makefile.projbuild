@@ -66,9 +66,3 @@ endif
 
 # global CFLAGS for ESP8266
 CFLAGS += -DMEMLEAK_DEBUG -DICACHE_FLASH
-
-# void compiler error, we should remove these later
-CFLAGS += -Wno-error=char-subscripts -Wno-error=unknown-pragmas -Wno-error=implicit-function-declaration \
-          -Wno-error=pointer-sign -Wno-error=switch -Wno-error=maybe-uninitialized -Wno-error=format= \
-          -Wno-error=unused-value -Wno-error=address -Wno-error=return-type -Wno-error=format-extra-args \
-          -Wno-error=format-zero-length -Wno-error=unused-label -Wno-error=sizeof-pointer-memaccess

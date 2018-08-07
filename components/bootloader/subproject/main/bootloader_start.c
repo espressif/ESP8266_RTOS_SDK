@@ -14,9 +14,10 @@
 
 #include "sdkconfig.h"
 
+#include <string.h>
 #include "bootloader_config.h"
 #include "bootloader_init.h"
-
+#include "bootloader_utility.h"
 #include "esp_image_format.h"
 #include "esp_log.h"
 

@@ -545,6 +545,7 @@ void __assert_func(const char *file, int line, const char *func, const char *exp
 
 #include "esp_image_format.h"
 #include "esp_flash_partitions.h"
+#include "bootloader_flash.h"
 
 extern int _bss_start;
 extern int _bss_end;
@@ -589,28 +590,28 @@ static esp_err_t bootloader_main()
 
 static void update_flash_config(const esp_image_header_t* pfhdr)
 {
-    uint32_t size;
-    switch(pfhdr->spi_size) {
-        case ESP_IMAGE_FLASH_SIZE_1MB:
-            size = 1;
-            break;
-        case ESP_IMAGE_FLASH_SIZE_2MB:
-        case ESP_IMAGE_FLASH_SIZE_2MB_C1:
-            size = 2;
-            break;
-        case ESP_IMAGE_FLASH_SIZE_4MB:
-        case ESP_IMAGE_FLASH_SIZE_4MB_C1:
-            size = 4;
-            break;
-        case ESP_IMAGE_FLASH_SIZE_8MB:
-            size = 8;
-            break;
-        case ESP_IMAGE_FLASH_SIZE_16MB:
-            size = 16;
-            break;
-        default:
-            size = 2;
-    }
+    // uint32_t size;
+    // switch(pfhdr->spi_size) {
+    //     case ESP_IMAGE_FLASH_SIZE_1MB:
+    //         size = 1;
+    //         break;
+    //     case ESP_IMAGE_FLASH_SIZE_2MB:
+    //     case ESP_IMAGE_FLASH_SIZE_2MB_C1:
+    //         size = 2;
+    //         break;
+    //     case ESP_IMAGE_FLASH_SIZE_4MB:
+    //     case ESP_IMAGE_FLASH_SIZE_4MB_C1:
+    //         size = 4;
+    //         break;
+    //     case ESP_IMAGE_FLASH_SIZE_8MB:
+    //         size = 8;
+    //         break;
+    //     case ESP_IMAGE_FLASH_SIZE_16MB:
+    //         size = 16;
+    //         break;
+    //     default:
+    //         size = 2;
+    // }
 
     // Set flash chip size
 //    esp_rom_spiflash_config_param(g_rom_flashchip.device_id, size * 0x100000, 0x10000, 0x1000, 0x100, 0xffff);

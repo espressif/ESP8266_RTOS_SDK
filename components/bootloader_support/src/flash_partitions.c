@@ -94,6 +94,7 @@ esp_err_t esp_partition_table_basic_verify(const esp_partition_info_t *partition
 #ifdef CONFIG_TARGET_PLATFORM_ESP8266
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "bootloader_config.h"
 
@@ -115,7 +116,7 @@ esp_err_t esp_partition_table_basic_verify(const esp_partition_info_t *partition
         esp_partition_info_t part_local;
         esp_partition_info_t *part = &part_local;//partition_table[num_parts];
 
-        memcpy(&part_local, (intptr_t)partition_table + num_parts * sizeof(esp_partition_info_t), sizeof(esp_partition_info_t));
+        memcpy(&part_local, (void *)((intptr_t)partition_table + num_parts * sizeof(esp_partition_info_t)), sizeof(esp_partition_info_t));
 
         if (part->magic == ESP_PARTITION_MAGIC) {
             const esp_partition_pos_t *pos = &part->pos;

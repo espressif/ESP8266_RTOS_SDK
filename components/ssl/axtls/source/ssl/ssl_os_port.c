@@ -88,14 +88,14 @@ EXP_FUNC int STDCALL getdomainname(char *buf, int buf_size)
 }
 #endif
 
-static const char * out_of_mem_str = "out of memory %s %d\n";
+//static const char * out_of_mem_str = "out of memory %s %d\n";
 
 #define exit_now    printf
 //#define SSL_LOG
 #ifdef	SSL_LOG
 #define debug_now   printf
 #else
-#define debug_now
+#define debug_now(fmt, ...)
 #endif
 
 #if 0

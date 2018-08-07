@@ -482,9 +482,12 @@ static void set_cache_and_start_app(
 
 #include <stdbool.h>
 #include <sys/param.h>
+#include <string.h>
 
 #include "bootloader_config.h"
 #include "bootloader_utility.h"
+#include "bootloader_flash.h"
+#include "bootloader_common.h"
 
 #include "esp_err.h"
 #include "esp_log.h"
@@ -536,7 +539,7 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
         esp_partition_info_t partiton_local;
         esp_partition_info_t *partition = &partiton_local;
 
-        memcpy(&partiton_local, (intptr_t)partitions + i * sizeof(esp_partition_info_t), sizeof(esp_partition_info_t));
+        memcpy(&partiton_local, (void *)((intptr_t)partitions + i * sizeof(esp_partition_info_t)), sizeof(esp_partition_info_t));
 
         ESP_LOGD(TAG, "load partition table entry 0x%x", (intptr_t)partition);
         ESP_LOGD(TAG, "type=%x subtype=%x", partition->type, partition->subtype);
@@ -774,6 +777,9 @@ bool bootloader_utility_load_boot_image(const bootloader_state_t *bs, int start_
 
 void bootloader_utility_load_image(const esp_image_metadata_t* image_data)
 {
+    void (*user_start)(size_t start_addr, size_t map);
+    extern void Cache_Read_Enable(uint8_t map, uint8_t p, uint8_t v);
+
 #if defined(CONFIG_SECURE_BOOT_ENABLED) || defined(CONFIG_FLASH_ENCRYPTION_ENABLED)
     esp_err_t err;
 #endif
@@ -833,8 +839,6 @@ void bootloader_utility_load_image(const esp_image_metadata_t* image_data)
     }
 
     Cache_Read_Enable(map, 0, 0);
-
-    void (*user_start)(size_t start_addr, size_t map);
 
     user_start = (void *)image_data->image.entry_addr;
     user_start(image_data->start_addr, map);

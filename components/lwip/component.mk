@@ -20,6 +20,7 @@ COMPONENT_SRCDIRS += apps/dhcpserver \
 CFLAGS += -Wno-address #lots of LWIP source files evaluate macros that check address of stack variables
 
 lwip/src/apps/sntp/sntp.o: CFLAGS += -Wno-implicit-function-declaration
+lwip/src/core/ipv4/ip4.o: CFLAGS += -Wno-implicit-function-declaration
 
 ifdef CONFIG_LWIP_SOCKET_MULTITHREAD
 COMPONENT_OBJEXCLUDE := lwip/src/api/sockets.o
