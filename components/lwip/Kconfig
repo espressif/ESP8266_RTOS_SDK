@@ -745,4 +745,9 @@ config LWIP_PBUF_CACHE_DEBUG
     depends on LWIP_DEBUG
     default n
 
+config LWIP_TCP_TXRX_PBUF_DEBUG
+    bool "Enable debugging for TCP TX/RX data."
+    depends on LWIP_DEBUG
+    default n
+
 endmenu

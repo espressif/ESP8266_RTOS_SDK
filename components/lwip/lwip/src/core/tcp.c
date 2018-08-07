@@ -1066,6 +1066,10 @@ tcp_slowtmr_start:
                                       " pcb->rto %"S16_F"\n",
                                       pcb->rtime, pcb->rto));
 
+#if ESP_TCP_TXRX_PBUF_DEBUG
+          tcp_print_status(LWIP_RETRY_DATA_WHEN_RECV_ACK_TIMEOUT, (void*)pcb->unacked->p, pcb->rtime, pcb->rto, 0);
+#endif
+
           /* Double retransmission time-out unless we are trying to
            * connect to somebody (i.e., we are in SYN_SENT). */
           if (pcb->state != SYN_SENT) {
