@@ -6,7 +6,7 @@ concept of "components"
 
 Read this document if you want to know how to organise a new ESP-IDF project.
 
-We recommend using the esp-idf-template_ project as a starting point for your project.
+We recommend using the project_template project at directory of examples/get-started as a starting point for your project.
 
 Using the Build System
 ======================
@@ -17,19 +17,17 @@ Overview
 ========
 
 An ESP-IDF project can be seen as an amalgamation of a number of components.
-For example, for a webserver that shows the current humidity, there could be:
+For example, for a http request example that shows the current humidity, there could be:
 
-- The ESP32 base libraries (libc, rom bindings etc)
+- The SoC base libraries (libc, rom bindings etc)
 - The WiFi drivers
 - A TCP/IP stack
 - The FreeRTOS operating system
-- A webserver
-- A driver for the humidity sensor
 - Main code tying it all together
 
 ESP-IDF makes these components explicit and configurable. To do that,
 when a project is compiled, the build environment will look up all the
-components in the ESP-IDF directories, the project directories and
+components in the SDK directories, the project directories and
 (optionally) in additional custom component directories. It then
 allows the user to configure the ESP-IDF project using a a text-based
 menu system to customize each component. After the components in the
@@ -567,7 +565,7 @@ The file's contents will be added to the .rodata section in flash, and are avail
 
 The names are generated from the full name of the file, as given in COMPONENT_EMBED_FILES. Characters /, ., etc. are replaced with underscores. The _binary prefix in the symbol name is added by objcopy and is the same for both text and binary files.
 
-For an example of using this technique, see :example:`protocols/https_request` - the certificate file contents are loaded from the text .pem file at compile time.
+For an example of using this technique, see :example:`protocols/https_mbedtls` - the certificate file contents are loaded from the text .pem file at compile time.
 
 
 Fully Overriding The Component Makefile
@@ -586,7 +584,6 @@ $(COMPONENT_LIBRARY) for the project make process to link into the app binary.
 is overridden then the component can instruct the linker to link other binaries instead.)
 
 
-.. _esp-idf-template: https://github.com/espressif/esp-idf-template
 .. _GNU Make Manual: https://www.gnu.org/software/make/manual/make.html
 
 
@@ -605,11 +602,11 @@ Save flash arguments
 
 There're some scenarios that we want to flash the target board without IDF. For this case we want to save the built binaries, esptool.py and esptool write_flash arguments. It's simple to write a script to save binaries and esptool.py. We can use command ``make print_flash_cmd``, it will print the flash arguments::
 
-    --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader/bootloader.bin 0x10000 example_app.bin 0x8000 partition_table_unit_test_app.bin
+    --flash_mode qio --flash_freq 40m --flash_size 2MB 0x0000 bootloader/bootloader.bin 0x10000 ssc.bin 0x8000 partitions_singleapp.bin
 
 Then use flash arguments as the arguemnts for esptool write_flash arguments::
 
-    python esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader/bootloader.bin 0x10000 example_app.bin 0x8000 partition_table_unit_test_app.bin
+    python esptool.py --chip esp8266 --port /dev/ttyUSB0 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode qio --flash_freq 40m --flash_size detect 0 bootloader/bootloader.bin 0x10000 example_app.bin 0x8000 partitions_singleapp.bin
 
 Building the Bootloader
 =======================
