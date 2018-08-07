@@ -73,8 +73,6 @@ static bool tcpip_inited = false;
 
 static const char* TAG = "tcpip_adapter";
 
-u32_t LwipTimOutLim = 0; // For light sleep. time out. limit is 3000ms
-
 /* Avoid warning. No header file has include these function */
 err_t ethernetif_init(struct netif* netif);
 void system_station_got_ip_set();
