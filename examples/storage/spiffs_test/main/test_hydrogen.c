@@ -233,7 +233,7 @@ TEST(list_dir)
   while ((pe = SPIFFS_readdir(&d, pe))) {
     printf("  %s [%04x] size:%i\n", pe->name, pe->obj_id, pe->size);
     for (i = 0; i < file_cnt; i++) {
-      if (strcmp(files[i], pe->name) == 0) {
+      if (strcmp(files[i], (char *)pe->name) == 0) {
         found++;
         break;
       }
@@ -276,7 +276,7 @@ TEST(open_by_dirent) {
   while ((pe = SPIFFS_readdir(&d, pe))) {
     spiffs_file fd = SPIFFS_open_by_dirent(FS, pe, SPIFFS_RDWR, 0);
     TEST_CHECK(fd >= 0);
-    res = read_and_verify_fd(fd, pe->name);
+    res = read_and_verify_fd(fd, (char *)pe->name);
     TEST_CHECK(res == SPIFFS_OK);
     fd = SPIFFS_open_by_dirent(FS, pe, SPIFFS_RDWR, 0);
     TEST_CHECK(fd >= 0);
@@ -872,7 +872,6 @@ TEST(lseek_simple_modification) {
   int res;
   spiffs_file fd;
   char *fname = "seekfile";
-  int i;
   int len = 4096;
   fd = SPIFFS_open(FS, fname, SPIFFS_TRUNC | SPIFFS_CREAT | SPIFFS_RDWR, 0);
   TEST_CHECK(fd > 0);
@@ -914,7 +913,6 @@ TEST(lseek_modification_append) {
   int res;
   spiffs_file fd;
   char *fname = "seekfile";
-  int i;
   int len = 4096;
   fd = SPIFFS_open(FS, fname, SPIFFS_TRUNC | SPIFFS_CREAT | SPIFFS_RDWR, 0);
   TEST_CHECK(fd > 0);

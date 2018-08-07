@@ -63,7 +63,7 @@ void spiffs_fs1_init(void)
     esp_spiffs_init(&config);
 }
 
-void user_init(void)
+void app_main(void)
 {
     spiffs_fs1_init();
 
