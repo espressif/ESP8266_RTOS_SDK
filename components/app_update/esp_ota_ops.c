@@ -27,15 +27,17 @@
 #include "esp_spi_flash.h"
 #include "esp_image_format.h"
 #include "esp_secure_boot.h"
-#include "esp_flash_encrypt.h"
 #include "sdkconfig.h"
 
 #include "esp_ota_ops.h"
-#include "rom/queue.h"
-#include "rom/crc.h"
-#include "soc/dport_reg.h"
+#include "sys/queue.h"
+#include "crc.h"
 #include "esp_log.h"
 
+#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#include "spi_flash.h"
+esp_err_t bootloader_flash_read(size_t src_addr, void *dest, size_t size, bool allow_decrypt);
+#endif
 
 #define OTA_MAX(a,b) ((a) >= (b) ? (a) : (b)) 
 #define OTA_MIN(a,b) ((a) <= (b) ? (a) : (b)) 
@@ -150,6 +152,7 @@ esp_err_t esp_ota_write(esp_ota_handle_t handle, const void *data, size_t size)
                 return ESP_ERR_OTA_VALIDATE_FAILED;
             }
 
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
             if (esp_flash_encryption_enabled()) {
                 /* Can only write 16 byte blocks to flash, so need to cache anything else */
                 size_t copy_len;
@@ -182,6 +185,7 @@ esp_err_t esp_ota_write(esp_ota_handle_t handle, const void *data, size_t size)
                 }
             }
 
+#endif
             ret = esp_partition_write(it->part, it->wrote_size, data_bytes, size);
             if(ret == ESP_OK){
                 it->wrote_size += size;
@@ -191,7 +195,7 @@ esp_err_t esp_ota_write(esp_ota_handle_t handle, const void *data, size_t size)
     }
 
     //if go to here ,means don't find the handle
-    ESP_LOGE(TAG,"not found the handle")
+    ESP_LOGE(TAG,"not found the handle");
     return ESP_ERR_INVALID_ARG;
 }
 
@@ -299,7 +303,6 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
     uint16_t ota_app_count = 0;
     uint32_t i = 0;
     uint32_t seq;
-    static spi_flash_mmap_memory_t ota_data_map;
     const void *result = NULL;
 
     find_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, NULL);
@@ -323,7 +326,8 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
         if (SUB_TYPE_ID(subtype) >= ota_app_count) {
             return ESP_ERR_INVALID_ARG;
         }
-
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+        static spi_flash_mmap_memory_t ota_data_map;
         ret = esp_partition_mmap(find_partition, 0, find_partition->size, SPI_FLASH_MMAP_DATA, &result, &ota_data_map);
         if (ret != ESP_OK) {
             result = NULL;
@@ -333,6 +337,21 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
             memcpy(&s_ota_select[1], result + SPI_FLASH_SEC_SIZE, sizeof(ota_select));
             spi_flash_munmap(ota_data_map);
         }
+#endif
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+        ret = spi_flash_read(find_partition->address, &s_ota_select[0], sizeof(ota_select));
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "read failed");
+            return NULL;
+        }
+
+        ret = spi_flash_read(find_partition->address + 0x1000, &s_ota_select[1], sizeof(ota_select));
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "read failed");
+            return NULL;
+        }
+#endif
 
         if (ota_select_valid(&s_ota_select[0]) && ota_select_valid(&s_ota_select[1])) {
             seq = OTA_MAX(s_ota_select[0].ota_seq, s_ota_select[1].ota_seq);
@@ -445,7 +464,7 @@ const esp_partition_t *esp_ota_get_boot_partition(void)
 {
     esp_err_t ret;
     const esp_partition_t *find_partition = NULL;
-    static spi_flash_mmap_memory_t ota_data_map;
+
     const void *result = NULL;
     uint16_t ota_app_count = 0;
     find_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, NULL);
@@ -455,6 +474,8 @@ const esp_partition_t *esp_ota_get_boot_partition(void)
         return NULL;
     }
 
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+    static spi_flash_mmap_memory_t ota_data_map;
     ret = esp_partition_mmap(find_partition, 0, find_partition->size, SPI_FLASH_MMAP_DATA, &result, &ota_data_map);
     if (ret != ESP_OK) {
         spi_flash_munmap(ota_data_map);
@@ -464,9 +485,23 @@ const esp_partition_t *esp_ota_get_boot_partition(void)
         memcpy(&s_ota_select[0], result, sizeof(ota_select));
         memcpy(&s_ota_select[1], result + 0x1000, sizeof(ota_select));
         spi_flash_munmap(ota_data_map);
-    }
-    ota_app_count = get_ota_partition_count();
 
+#endif
+
+#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+    ret = spi_flash_read(find_partition->address, &s_ota_select[0], sizeof(ota_select));
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "read failed");
+        return NULL;
+    }
+
+    ret = spi_flash_read(find_partition->address + 0x1000, &s_ota_select[1], sizeof(ota_select));
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "read failed");
+        return NULL;
+    }
+#endif
+    ota_app_count = get_ota_partition_count();
     ESP_LOGD(TAG, "found ota app max = %d", ota_app_count);
 
     if (s_ota_select[0].ota_seq == 0xFFFFFFFF && s_ota_select[1].ota_seq == 0xFFFFFFFF) {
@@ -504,10 +539,13 @@ const esp_partition_t* esp_ota_get_running_partition(void)
     /* Find the flash address of this exact function. By definition that is part
        of the currently running firmware. Then find the enclosing partition. */
 
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
     size_t phys_offs = spi_flash_cache2phys(esp_ota_get_running_partition);
 
     assert (phys_offs != SPI_FLASH_CACHE2PHYS_FAIL); /* indicates cache2phys lookup is buggy */
+#endif
 
+#if CONFIG_TARGET_PLATFORM_ESP32
     esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP,
                                                      ESP_PARTITION_SUBTYPE_ANY,
                                                      NULL);
@@ -523,6 +561,9 @@ const esp_partition_t* esp_ota_get_running_partition(void)
     }
 
     abort(); /* Partition table is invalid or corrupt */
+#else
+    return esp_ota_get_boot_partition();
+#endif
 }
 
 
