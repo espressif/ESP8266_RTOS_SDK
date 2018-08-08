@@ -29,8 +29,6 @@
 
 #include "esp8266/eagle_soc.h"
 
-#include "freertos/portmacro.h"
-
 /* interrupt related */
 #define ETS_SPI_INUM        2
 #define ETS_GPIO_INUM       4

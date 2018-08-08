@@ -67,6 +67,10 @@
 
 #include "sdkconfig.h"
 
+#ifndef __ASSEMBLER__
+#include "rom/ets_sys.h"
+#endif
+
 /*-----------------------------------------------------------
  * Application specific definitions.
  *
