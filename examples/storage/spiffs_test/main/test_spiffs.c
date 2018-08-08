@@ -170,7 +170,6 @@ static s32_t _read(u32_t addr, u32_t size, u8_t *dst) {
 }
 
 static s32_t _write(u32_t addr, u32_t size, u8_t *src) {
-  int i;
   //printf("wr %08x %i\n", addr, size);
   if (log_flash_ops) {
     bytes_wr += size;
@@ -375,7 +374,7 @@ void dump_flash_access_stats() {
 }
 
 
-static u32_t old_perc = 999;
+//static u32_t old_perc = 999;
 static void spiffs_check_cb_f(spiffs_check_type type, spiffs_check_report report,
     u32_t arg1, u32_t arg2) {
 /*  if (report == SPIFFS_CHECK_PROGRESS && old_perc != arg1) {
@@ -458,7 +457,11 @@ void fs_reset_specific(u32_t addr_offset, u32_t phys_addr, u32_t phys_size,
   memset(erases,0,sizeof(erases));
   memset(_cache,0,sizeof(_cache));
 
+#if SPIFFS_USE_MAGIC
   s32_t res = fs_mount_specific(phys_addr, phys_size, phys_sector_size, log_block_size, log_page_size);
+#else
+  fs_mount_specific(phys_addr, phys_size, phys_sector_size, log_block_size, log_page_size);
+#endif
 
 #if SPIFFS_USE_MAGIC
   if (res == SPIFFS_OK) {
@@ -539,7 +542,6 @@ void real_assert(int c, const char *n, const char *file, int l) {
 }
 
 int read_and_verify(char *name) {
-  s32_t res;
   int fd = SPIFFS_open(&__fs, name, SPIFFS_RDONLY, 0);
   if (fd < 0) {
     printf("  read_and_verify: could not open file %s\n", name);
@@ -891,7 +893,7 @@ int run_file_config(int cfg_count, tfile_conf* cfgs, int max_runs, int max_concu
           res = SPIFFS_remove(FS, tf->name);
           CHECK_RES(res);
           remove(make_test_fname(tf->name));
-          memset(tf, 0, sizeof(tf));
+          memset(tf, 0, sizeof(*tf));
         }
 
       }

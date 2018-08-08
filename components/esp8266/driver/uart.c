@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "esp8266/pin_mux_register.h"
 #include "esp8266/uart_register.h"

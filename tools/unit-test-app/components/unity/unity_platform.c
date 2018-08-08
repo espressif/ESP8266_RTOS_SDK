@@ -185,6 +185,8 @@ static void unity_run_single_test_by_index_parse(const char* filter, int index_m
     int test_index = strtol(filter, NULL, 10);
     if (test_index >= 1 && test_index <= index_max)
     {
+        extern uint32_t system_get_cpu_freq(void);
+
         uint32_t start;
         asm volatile ("rsr %0, CCOUNT" : "=r" (start));
         unity_run_single_test_by_index(test_index - 1);

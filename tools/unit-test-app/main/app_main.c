@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "esp_sta.h"
 #include "esp_system.h"
 
 #include "freertos/FreeRTOS.h"
@@ -18,6 +17,5 @@ void unityTask(void *pvParameters)
 
 void app_main(void)
 {
-    wifi_station_set_auto_connect(false);
     xTaskCreate(unityTask, "unityTask", 8192, NULL, UNITY_FREERTOS_PRIORITY, NULL);
 }

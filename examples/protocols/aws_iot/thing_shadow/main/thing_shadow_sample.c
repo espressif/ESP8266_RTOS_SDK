@@ -316,7 +316,7 @@ void aws_iot_task(void *param) {
             }
         }
         ESP_LOGI(TAG, "*****************************************************************************************");
-        ESP_LOGI(TAG, "Stack remaining for task '%s' is %d bytes", pcTaskGetTaskName(NULL), uxTaskGetStackHighWaterMark(NULL));
+        ESP_LOGI(TAG, "Stack remaining for task '%s' is %lu bytes", pcTaskGetTaskName(NULL), uxTaskGetStackHighWaterMark(NULL));
 
         vTaskDelay(1000 / portTICK_RATE_MS);
     }

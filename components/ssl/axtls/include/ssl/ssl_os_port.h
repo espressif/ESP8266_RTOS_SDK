@@ -42,12 +42,22 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/unistd.h>
+
+#include "rom/ets_sys.h"
 
 #if 0
 #define ssl_printf(fmt, args...) printf(fmt,## args)
 #else
 #define ssl_printf(fmt, args...)
 #endif
+
+void *zalloc(size_t n);
+uint32_t system_get_data_of_array_8(const uint8_t*, uint8_t);
+void system_get_string_from_flash(const char *, char *, size_t n);
 
 #define STDCALL
 #define EXP_FUNC
@@ -89,11 +99,11 @@ static __inline__ uint64_t be64toh(uint64_t __x) {return (((uint64_t)be32toh(__x
 #endif
 
 #ifdef MEMLEAK_DEBUG
-#define SSL_MALLOC(size) 		  ax_malloc(size, __FILE__, __LINE__)
-#define SSL_REALLOC(mem_ref,size) ax_realloc(mem_ref, size, __FILE__, __LINE__)
-#define SSL_CALLOC(element, size) ax_calloc(element, size, __FILE__, __LINE__)
-#define SSL_ZALLOC(size) 		  ax_zalloc(size, __FILE__, __LINE__)
-#define SSL_FREE(mem_ref)         ax_free(mem_ref, __FILE__, __LINE__)
+#define SSL_MALLOC(size)          os_malloc(size)
+#define SSL_REALLOC(mem_ref,size) os_realloc(mem_ref, size)
+#define SSL_CALLOC(element, size) os_calloc(element, size)
+#define SSL_ZALLOC(size)          os_zalloc(size)
+#define SSL_FREE(mem_ref)         os_free(mem_ref)
 #else
 #define SSL_MALLOC(size) 		  malloc(size)
 #define SSL_REALLOC(mem_ref,size) realloc(mem_ref, size)

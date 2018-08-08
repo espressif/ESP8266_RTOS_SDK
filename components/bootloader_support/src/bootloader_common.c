@@ -167,10 +167,9 @@ bool bootloader_common_erase_part_type_data(const char *list_erase, bool ota_dat
 
 #include "esp_err.h"
 #include "esp_log.h"
+#include "crc.h"
 
 #include "bootloader_config.h"
-
-static const char* TAG = "boot_comm";
 
 uint32_t bootloader_common_ota_select_crc(const esp_ota_select_entry_t *s)
 {

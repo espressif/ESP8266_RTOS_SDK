@@ -224,6 +224,8 @@ static int pem_decrypt(const char *where, const char *end,
     MD5_CTX md5_ctx;
     AES_CTX aes_ctx;
     uint8_t key[32];        /* AES256 size */
+    char *aes_str_0_ram = NULL;
+    char *aes_str_1_ram = NULL;
 
     if (password == NULL || strlen(password) == 0)
     {
@@ -233,8 +235,8 @@ static int pem_decrypt(const char *where, const char *end,
         goto error;
     }
 
-    char *aes_str_0_ram = (char *)SSL_MALLOC(24);
-    char *aes_str_1_ram = (char *)SSL_MALLOC(24);
+    aes_str_0_ram = (char *)SSL_MALLOC(24);
+    aes_str_1_ram = (char *)SSL_MALLOC(24);
 
     system_get_string_from_flash(aes_str[0], aes_str_0_ram, 24);
     system_get_string_from_flash(aes_str[1], aes_str_1_ram, 24);

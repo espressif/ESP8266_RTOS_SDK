@@ -491,7 +491,7 @@ end_verify:
 /**
  * Used for diagnostics.
  */
-static const char *not_part_of_cert = "<Not Part Of Certificate>";
+//static const char *not_part_of_cert = "<Not Part Of Certificate>";
 void x509_print(const X509_CTX *cert, CA_CERT_CTX *ca_cert_ctx)
 {
     if (cert == NULL)

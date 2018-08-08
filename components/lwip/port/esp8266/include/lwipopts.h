@@ -1900,7 +1900,7 @@ void *memp_malloc_ll(size_t type);
    ---------------------------------------
 */
 
-#define LWIP_HOOK_IP4_ROUTE_SRC         ip4_route_src_hook
+#define LWIP_HOOK_IP4_ROUTE_SRC(d, s)         (void *)ip4_route_src_hook(d, s)
 
 /**
  * @defgroup lwip_opts_hooks Hooks

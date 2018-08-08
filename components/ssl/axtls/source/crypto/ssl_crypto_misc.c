@@ -266,6 +266,7 @@ int get_random_NZ(int num_rand_bytes, uint8_t *rand_data)
 int hex_finish;
 int hex_index;
 
+#if 0
 static void print_hex_init(int finish)
 {
     hex_finish = finish;
@@ -297,6 +298,7 @@ static void print_hex(uint8_t hex)
         ssl_printf("\n");
     }
 }
+#endif
 
 /**
  * Spit out a blob of data for diagnostics. The data is is a nice column format
@@ -402,8 +404,9 @@ EXP_FUNC int STDCALL base64_decode(const char *in, int len,
 
 error:
 #ifdef CONFIG_SSL_FULL_MODE
-    if (ret < 0)
+    if (ret < 0) {
         ssl_printf("Error: Invalid base64\n"); //TTY_FLUSH();
+    }
 #endif
     //TTY_FLUSH();
     SSL_FREE(base64_map);
