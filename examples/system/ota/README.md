@@ -9,9 +9,9 @@ This example is a *simplified demonstration*, for production firmware updates yo
 
 # Aim
 
-An app running on ESP32 can upgrade itself by downloading a new app "image" binary file, and storing it in flash.
+An app running on ESP8266 can upgrade itself by downloading a new app "image" binary file, and storing it in flash.
 
-In this example, the ESP32 has 3 images in flash: factory, OTA_0, OTA_1. Each of these is a self-contained partition. The number of OTA image partition is determined by the partition table layout.
+In this example, the ESP8266 has 3 images in flash: factory, OTA_0, OTA_1. Each of these is a self-contained partition. The number of OTA image partition is determined by the partition table layout.
 
 Flashing the example over serial with "make flash" updates the factory app image. On first boot, the bootloader loads this factory app image which then performs an OTA update (triggered in the example code). The update downloads a new image from an http server and saves it into the OTA_0 partition. At this point the example code updates the ota_data partition to indicate the new app partition, and resets. The bootloader reads ota_data, determines the new OTA image has been selected, and runs it.
 
@@ -24,7 +24,7 @@ The OTA_workflow.png diagram demonstrates the overall workflow:
 
 ## Step 1: Connect to AP
 
-Connect your host PC to the same AP that you will use for the ESP32.
+Connect your host PC to the same AP that you will use for the ESP8266.
 
 ## Step 2: Run HTTP Server
 
@@ -82,7 +82,7 @@ When the example starts up, it will print "ota: Starting OTA example..." then:
 
 # Troubleshooting
 
-* Check your PC can ping the ESP32 at its IP, and that the IP, AP and other configuration settings are correct in menuconfig.
+* Check your PC can ping the ESP8266 at its IP, and that the IP, AP and other configuration settings are correct in menuconfig.
 * Check if any firewall software is preventing incoming connections on the PC.
 * Check you can see the configured file (default hello-world.bin) if you browse the file listing at http://127.0.0.1/
 * If you have another PC or a phone, try viewing the file listing from the separate host.

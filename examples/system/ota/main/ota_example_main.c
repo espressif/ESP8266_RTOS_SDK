@@ -6,6 +6,7 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -28,7 +29,7 @@
 #define EXAMPLE_SERVER_IP   CONFIG_SERVER_IP
 #define EXAMPLE_SERVER_PORT CONFIG_SERVER_PORT
 #define EXAMPLE_FILENAME CONFIG_EXAMPLE_FILENAME
-#define BUFFSIZE 1024
+#define BUFFSIZE 1500
 #define TEXT_BUFFSIZE 1024
 
 static const char *TAG = "ota";
