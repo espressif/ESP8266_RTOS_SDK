@@ -1581,10 +1581,8 @@ class ESP8266V3FirmwareImage(BaseFirmwareImage):
             # by padding with parts of the non-flash segments...
             while len(flash_segments) > 0:
                 segment = flash_segments[0]
-                print('yyy %x' % segment.addr)
                 pad_len = 0
                 #get_alignment_data_needed(segment)
-                print('pad len %x' % pad_len)
                 if pad_len > 0:  # need to pad
                     #if len(ram_segments) > 0 and pad_len > self.SEG_HEADER_LEN:
                     #    pad_segment = ram_segments[0].split_image(pad_len)
