@@ -45,7 +45,7 @@ static EventGroupHandle_t wifi_event_group;
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
    to the AP with an IP? */
-const int CONNECTED_BIT = 1<<0;
+const int CONNECTED_BIT = BIT0;
 
 #define MQTT_BROKER  "iot.eclipse.org"  /* MQTT Broker Address*/
 #define MQTT_PORT    1883             /* MQTT Port*/
