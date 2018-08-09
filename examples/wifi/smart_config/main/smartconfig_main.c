@@ -26,8 +26,8 @@ static EventGroupHandle_t wifi_event_group;
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
    to the AP with an IP? */
-static const int CONNECTED_BIT = 1<<0;
-static const int ESPTOUCH_DONE_BIT = 1<<1;
+static const int CONNECTED_BIT = BIT0;
+static const int ESPTOUCH_DONE_BIT = BIT1;
 static const char *TAG = "sc";
 
 void smartconfig_example_task(void * parm);

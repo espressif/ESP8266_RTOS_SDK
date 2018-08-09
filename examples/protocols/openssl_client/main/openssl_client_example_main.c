@@ -46,7 +46,7 @@ static const char *TAG = "example";
 /* The event group allows multiple bits for each event,
    but we only care about one event - are we connected
    to the AP with an IP? */
-const int CONNECTED_BIT = 1 << 0;
+const int CONNECTED_BIT = BIT0;
 
 extern const uint8_t ca_pem_start[] asm("_binary_ca_pem_start");
 extern const uint8_t ca_pem_end[]   asm("_binary_ca_pem_end");
