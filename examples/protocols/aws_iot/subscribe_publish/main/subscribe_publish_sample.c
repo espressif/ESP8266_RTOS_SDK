@@ -271,7 +271,7 @@ void aws_iot_task(void *param) {
     paramsQOS1.payload = (void *) cPayload;
     paramsQOS1.isRetained = 0;
 
-    while((NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc)) {
+    while(1) {
 
         //Max time the yield function will wait for read messages
         rc = aws_iot_mqtt_yield(&client, 100);
