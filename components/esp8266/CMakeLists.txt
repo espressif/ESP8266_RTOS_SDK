@@ -12,7 +12,7 @@ register_component()
 target_link_libraries(${COMPONENT_NAME} "-L ${CMAKE_CURRENT_SOURCE_DIR}/lib")
 if(NOT CONFIG_NO_BLOBS)
     target_link_libraries(${COMPONENT_NAME} airkiss crypto espnow gcc hal core mirom
-                                            net80211 phy pp pwm smartconfig ssc wpa wps cirom)
+                                            net80211 phy pp pwm smartconfig ssc wpa cirom)
 endif()
 
 target_link_libraries(${COMPONENT_NAME} "-u call_user_start")
