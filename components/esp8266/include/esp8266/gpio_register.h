@@ -83,7 +83,6 @@
 #define GPIO_ID_PIN(n)                      (GPIO_ID_PIN0+(n))
 #define GPIO_LAST_REGISTER_ID               GPIO_ID_PIN(15)
 #define GPIO_ID_NONE                        0xffffffff
-#define GPIO_PIN_COUNT                      16
 
 #define GPIO_PIN_CONFIG_MSB                 12
 #define GPIO_PIN_CONFIG_LSB                 11

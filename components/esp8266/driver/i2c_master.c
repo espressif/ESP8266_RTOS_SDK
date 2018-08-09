@@ -16,7 +16,7 @@
 #include <stdbool.h>
 
 #include "rom/ets_sys.h"
-
+#if 0
 #include "gpio.h"
 #include "i2c_master.h"
 
@@ -315,3 +315,5 @@ void i2c_master_writeByte(uint8_t wrdata)
         i2c_master_wait(5);
     }
 }
+
+#endif
