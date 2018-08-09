@@ -289,7 +289,7 @@ void aws_iot_task(void *param) {
     temperature = STARTING_ROOMTEMPERATURE;
 
     // loop and publish a change in temperature
-    while(NETWORK_ATTEMPTING_RECONNECT == rc || NETWORK_RECONNECTED == rc || SUCCESS == rc) {
+    while(1) {
         rc = aws_iot_shadow_yield(&mqttClient, 200);
         if(NETWORK_ATTEMPTING_RECONNECT == rc || shadowUpdateInProgress) {
             rc = aws_iot_shadow_yield(&mqttClient, 1000);
