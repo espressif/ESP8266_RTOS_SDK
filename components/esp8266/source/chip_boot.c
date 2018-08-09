@@ -34,7 +34,7 @@ static const char *TAG = "chip_boot";
  * @brief initialize the chip including flash I/O and chip cache according to
  *        boot parameters which are stored at the flash
  */
-void chip_boot(size_t start_addr, size_t map)
+void chip_boot(size_t start_addr)
 {
     int ret;
     uint32_t freqdiv, flash_size;
@@ -90,9 +90,6 @@ void chip_boot(size_t start_addr, size_t map)
         CLEAR_PERI_REG_MASK(PERIPHS_IO_MUX_CONF_U, SPI0_CLK_EQU_SYSCLK);
     }
     SET_PERI_REG_BITS(PERIPHS_SPI_FLASH_CTRL, 0xfff, freqbits, 0);
-
-    ESP_EARLY_LOGD(TAG, "SPI flash cache map is %d\n", map);
-    cache_init(map);
 
     if (fhdr.spi_mode == ESP_IMAGE_SPI_MODE_QIO) {
         ESP_EARLY_LOGD(TAG, "SPI flash enable QIO mode\n");
