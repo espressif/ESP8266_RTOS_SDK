@@ -229,11 +229,12 @@ static void IRAM_ATTR Cache_Read_Disable_2(void)
     CLEAR_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL,SPI_ENABLE_AHB);
 }
 
-static void IRAM_ATTR Cache_Read_Enable_2()
+void IRAM_ATTR Cache_Read_Enable_2()
 {
     SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL,SPI_ENABLE_AHB);
     SET_PERI_REG_MASK(CACHE_FLASH_CTRL_REG,CACHE_READ_EN_BIT);
 }
+void Cache_Read_Enable_New(void) __attribute__((alias("Cache_Read_Enable_2")));
 
 static uint32_t IRAM_ATTR spi_flash_get_id(void)
 {

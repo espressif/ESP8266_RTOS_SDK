@@ -30,7 +30,7 @@
 
 #define FLASH_MAP_ADDR 0x40200000
 
-extern void chip_boot(size_t start_addr, size_t map);
+extern void chip_boot(size_t start_addr);
 extern int rtc_init(void);
 extern int mac_init(void);
 extern int base_gpio_init(void);
@@ -68,7 +68,7 @@ static void user_init_entry(void *param)
     wifi_task_delete(NULL);
 }
 
-void call_user_start(size_t start_addr, size_t map)
+void call_user_start(size_t start_addr)
 {
     int i;
     int *p;
@@ -98,7 +98,7 @@ void call_user_start(size_t start_addr, size_t map)
         "wsr        a0, vecbase\n"
         : : :"memory");
 
-    chip_boot(start_addr, map);
+    chip_boot(start_addr);
 
     /* clear bss data */
     for (p = &_bss_start; p < &_bss_end; p++)
