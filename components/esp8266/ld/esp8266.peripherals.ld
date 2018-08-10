@@ -1,1 +1,4 @@
 PROVIDE ( GPIO = 0x60000300);
+
+PROVIDE ( uart0 = 0x60000000 );
+PROVIDE ( uart1 = 0x60000f00 );
