@@ -586,6 +586,7 @@ static void debug_log_hash(const uint8_t *image_hash, const char *label)
 #ifdef CONFIG_TARGET_PLATFORM_ESP8266
 
 #include <string.h>
+#include <stdlib.h>
 #include <sys/param.h>
 
 #include <esp_image_format.h>
@@ -599,6 +600,8 @@ static void debug_log_hash(const uint8_t *image_hash, const char *label)
 static const char *TAG = "esp_image";
 
 #define HASH_LEN 32 /* SHA-256 digest length */
+
+#define MAX_CHECKSUM_READ_SIZE SPI_FLASH_SEC_SIZE
 
 #define SIXTEEN_MB 0x1000000
 #define ESP_ROM_CHECKSUM_INITIAL 0xEF
@@ -923,6 +926,7 @@ err:
 
 static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, uint32_t data_len, bool do_load, bootloader_sha256_handle_t sha_handle, uint32_t *checksum)
 {
+#ifdef BOOTLOADER_BUILD
     const uint32_t *data = (const uint32_t *)bootloader_mmap(data_addr, data_len);
     if(!data) {
         ESP_LOGE(TAG, "bootloader_mmap(0x%x, 0x%x) failed",
@@ -965,6 +969,55 @@ static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, ui
     bootloader_munmap(data);
 
     return ESP_OK;
+#endif
+
+#ifndef BOOTLOADER_BUILD
+    uint32_t had_read_size = 0, to_read_size = 0;
+    uint32_t* data = 0;
+
+    data = (uint32_t*)malloc(MAX_CHECKSUM_READ_SIZE);
+    if(data == NULL) {
+        return ESP_FAIL;
+    }
+
+    const uint32_t *src = data;
+    for (; had_read_size != data_len; ) {
+        to_read_size = ((data_len - had_read_size) < MAX_CHECKSUM_READ_SIZE) ? (data_len - had_read_size) : MAX_CHECKSUM_READ_SIZE;
+        int ret = ESP_OK;
+        ret = spi_flash_read(data_addr + had_read_size, data, to_read_size);
+        if (ret) {
+            ESP_LOGE(TAG, "SPI flash read result %d\n", ret);
+            free(data);
+            return ESP_FAIL;
+        }
+
+        had_read_size += to_read_size;
+
+        for (int i = 0; i < to_read_size; i += 4) {
+            int w_i = i/4; // Word index
+            uint32_t w = src[w_i];
+            *checksum ^= w;
+    #ifdef BOOTLOADER_BUILD
+            if (do_load) {
+    //            dest[w_i] = w ^ ((w_i & 1) ? ram_obfs_value[0] : ram_obfs_value[1]);
+            }
+    #endif
+            // SHA_CHUNK determined experimentally as the optimum size
+            // to call bootloader_sha256_data() with. This is a bit
+            // counter-intuitive, but it's ~3ms better than using the
+            // SHA256 block size.
+            const size_t SHA_CHUNK = 1024;
+            if (sha_handle != NULL && i % SHA_CHUNK == 0) {
+    //            bootloader_sha256_data(sha_handle, &src[w_i],
+    //                                   MIN(SHA_CHUNK, data_len - i));
+            }
+        }
+
+
+    }   // end for
+    free(data);
+    return ESP_OK;
+#endif
 }
 
 static esp_err_t verify_segment_header(int index, const esp_image_segment_header_t *segment, uint32_t segment_data_offs, bool silent)
