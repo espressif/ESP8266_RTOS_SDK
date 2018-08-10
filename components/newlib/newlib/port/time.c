@@ -14,12 +14,14 @@
 
 #include <stdint.h>
 #include <reent.h>
+#include <sys/times.h>
 #include <sys/time.h>
 
 #include "esp_system.h"
 #include "esp_timer.h"
 
 #include "FreeRTOS.h"
+#include "task.h"
 
 extern uint32_t esp_get_time();
 
@@ -126,6 +128,16 @@ int settimeofday(const struct timeval* tv, const struct timezone* tz)
         uint64_t since_boot = get_time_since_boot();
         set_boot_time(now - since_boot);
     }
+
+    return 0;
+}
+
+clock_t _times_r(struct _reent *r, struct tms *tms)
+{
+    tms->tms_utime = xTaskGetTickCount();
+    tms->tms_stime = 0;
+    tms->tms_cutime = 0;
+    tms->tms_cstime = 0;
 
     return 0;
 }

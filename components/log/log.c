@@ -49,6 +49,11 @@ static const char s_log_prefix[ESP_LOG_MAX] = {
     'V', //  ESP_LOG_VERBOSE
 };
 
+static uint32_t IRAM_ATTR esp_log_early_timestamp()
+{
+    return xthal_get_ccount() / (80 * 1000);
+}
+
 #ifndef BOOTLOADER_BUILD
 static _lock_t s_lock;
 static putchar_like_t s_putchar_func = &putchar;
@@ -66,18 +71,9 @@ static int esp_log_write_str(const char *s)
 
 static uint32_t esp_log_timestamp()
 {
-    time_t t;
-
-    t = time(NULL);
-
-    return t;
+    return clock() * (1000 / CLOCKS_PER_SEC) + esp_log_early_timestamp() % (1000 / CLOCKS_PER_SEC);
 }
 #endif
-
-static uint32_t IRAM_ATTR esp_log_early_timestamp()
-{
-    return xthal_get_ccount() / (80 * 1000);
-}
 
 /**
  * @brief Write message into the log at system startup or critical state
