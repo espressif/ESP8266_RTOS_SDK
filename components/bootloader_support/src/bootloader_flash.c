@@ -264,6 +264,10 @@ esp_err_t bootloader_flash_erase_sector(size_t sector)
 #include "esp_err.h"
 #include "esp_log.h"
 
+#ifndef BOOTLOADER_BUILD
+#include "esp_spi_flash.h"
+#endif
+
 extern void Cache_Read_Disable();
 extern void Cache_Read_Enable(uint8_t map, uint8_t p, uint8_t v);
 
@@ -313,7 +317,11 @@ void bootloader_munmap(const void *mapping)
 
 static esp_err_t bootloader_flash_read_no_decrypt(size_t src_addr, void *dest, size_t size)
 {
+#ifdef BOOTLOADER_BUILD
     SPIRead(src_addr, dest, size);
+#else
+    spi_flash_read(src_addr, dest, size);
+#endif
 
     return ESP_OK;
 }
