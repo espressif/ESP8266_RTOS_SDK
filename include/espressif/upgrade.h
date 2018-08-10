@@ -59,6 +59,10 @@ extern "C" {
 #define UPGRADE_FW_BIN1     0x00    /**< firmware, user1.bin */
 #define UPGRADE_FW_BIN2     0x01    /**< firmware, user2.bin */
 
+#define SYSTEM_BIN_NO_MAP_MAX_SECTOR    58
+#define SYSTEM_BIN_MAP_512_512_MAX_SECTOR  122
+#define SYSTEM_BIN_MAP_1024_1024_MAX_SECTOR 250
+
 /**
   * @brief  Callback of upgrading firmware through WiFi.
   *
