@@ -254,6 +254,7 @@ class Monitor(object):
         self.menu_key = CTRL_T
         self.exit_key = CTRL_RBRACKET
         self.enable_time = enable_time
+        self.next_line = True
 
         self.translate_eol = {
             "CRLF": lambda c: c.replace(b"\n", b"\r\n"),
@@ -308,15 +309,14 @@ class Monitor(object):
         # this may need to be made more efficient, as it pushes out a byte
         # at a time to the console
         for b in data:
+            if self.enable_time == 'y' and self.next_line == True:
+                self.console.write_bytes(get_time_stamp() + ":  ")
+                self.next_line = False
+            self.console.write_bytes(b)
             if b == b'\n': # end of line
-                self._read_line += '\n'
-                if self.enable_time == 'y':
-                    s_out = get_time_stamp() + ":  " + self._read_line
-                else:
-                    s_out = self._read_line
-                self.console.write_bytes(s_out)
                 self.handle_serial_input_line(self._read_line.strip())
                 self._read_line = b""
+                self.next_line = True
             else:
                 self._read_line += b
             self.check_gdbstub_trigger(b)
