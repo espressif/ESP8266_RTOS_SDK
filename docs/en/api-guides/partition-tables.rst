@@ -26,7 +26,7 @@ Here is the summary printed for the "Single factory app, no OTA" configuration::
   # Name,   Type, SubType, Offset,  Size
   nvs,      data, nvs,     0x9000,  0x6000
   phy_init, data, phy,     0xf000,  0x1000
-  factory,  app,  factory, 0x10000, 1M
+  factory,  app,  factory, 0x10000, 0xF0000
 
 * At a 0x10000 (64KB) offset in the flash is the app labelled "factory". The bootloader will run this app by default.
 * There are also two data regions defined in the partition table for storing NVS library partition and PHY init data.
@@ -38,8 +38,8 @@ Here is the summary printed for the "Two OTA definitions" configuration::
   nvs,      data, nvs,     0x9000,   0x4000
   otadata,  data, ota,     0xd000,   0x2000
   phy_init, data, phy,     0xf000,   0x1000
-  ota_0,    0,    ota_0,   0x10000,  1M
-  ota_1,    0,    ota_1,   0x110000, 1M
+  ota_0,    0,    ota_0,   0x10000,  0xF0000
+  ota_1,    0,    ota_1,   0x110000, 0xF0000
 
 * There are now two app partition definitions, ota_0 at 0x10000 and ota_1 at 0x110000
 * There is also a new "ota data" slot, which holds the data for OTA updates. The bootloader consults this data in order to know which app to execute. If "ota data" is empty, it will execute the ota_0 app.
@@ -55,8 +55,8 @@ The CSV format is the same format as printed in the summaries shown above. Howev
   nvs,      data, nvs,     0x9000,   0x4000
   otadata,  data, ota,     0xd000,   0x2000
   phy_init, data, phy,     0xf000,   0x1000
-  ota_0,    app,  ota_0,   0x10000,  1M
-  ota_1,    app,  ota_1,   0x110000, 1M
+  ota_0,    app,  ota_0,   0x10000,  0xF0000
+  ota_1,    app,  ota_1,   0x110000, 0xF0000
 
 * Whitespace between fields is ignored, and so is any line starting with # (comments).
 * Each non-comment line in the CSV file is a partition definition.
@@ -90,22 +90,22 @@ When type is "app", the subtype field can be specified as ota_0 (0x10), ota_1 (0
 
 - ota_0 (0x10) is the default app partition. The bootloader will execute the ota_0 app unless there it sees another partition of type data/ota, in which case it reads this partition to determine which OTA image to boot.
 
-- ota_0 (0x10) ... ota_15 (0x1F) are the OTA app slots. Refer to the :doc:`OTA documentation <../api-reference/system/ota>` for more details, which then use the OTA data partition to configure which app slot the bootloader should boot. If using OTA, an application should have at least two OTA application slots (ota_0 & ota_1). Refer to the :doc:`OTA documentation <../api-reference/system/ota>` for more details.
+- ota_0 (0x10) ... ota_15 (0x1F) are the OTA app slots. If using OTA, an application should have at least two OTA application slots (ota_0 & ota_1).
 
 Data Subtypes
 ~~~~~~~~~~~~~
 
 When type is "data", the subtype field can be specified as ota (0), phy (1), nvs (2).
 
-- ota (0) is the :ref:`OTA data partition <ota_data_partition>` which stores information about the currently selected OTA application. This partition should be 0x2000 bytes in size. Refer to the :ref:`OTA documentation <ota_data_partition>` for more details.
+- ota (0) is the **OTA data partition** which stores information about the currently selected OTA application. This partition should be 0x2000 bytes in size. Refer to the **OTA documentation** for more details.
 - phy (1) is for storing PHY initialisation data. This allows PHY to be configured per-device, instead of in firmware.
 
   - In the default configuration, the phy partition is not used and PHY initialisation data is compiled into the app itself. As such, this partition can be removed from the partition table to save space.
-  - To load PHY data from this partition, run ``make menuconfig`` and enable :envvar:`ESP_PHY_INIT_DATA_IN_PARTITION` option. You will also need to flash your devices with phy init data as the esp-idf build system does not do this automatically.
-- nvs (2) is for the :doc:`Non-Volatile Storage (NVS) API <../api-reference/storage/nvs_flash>`.
+  - To load PHY data from this partition, run ``make menuconfig`` and enable **ESP_PHY_INIT_DATA_IN_PARTITION** option. You will also need to flash your devices with phy init data as the esp-idf build system does not do this automatically.
+- nvs (2) is for the **Non-Volatile Storage (NVS) API**.
 
   - NVS is used to store per-device PHY calibration data (different to initialisation data).
-  - NVS is used to store WiFi data if the :doc:`esp_wifi_set_storage(WIFI_STORAGE_FLASH) <../api-reference/wifi/esp_wifi>` initialisation function is used.
+  - NVS is used to store WiFi data if the **esp_wifi_set_storage(WIFI_STORAGE_FLASH)** initialisation function is used.
   - The NVS API can also be used for other application data.
   - It is strongly recommended that you include an NVS partition of at least 0x3000 bytes in your project.
   - If using NVS API to store a lot of data, increase the NVS partition size from the default 0x6000 bytes.
@@ -124,7 +124,7 @@ Sizes and offsets can be specified as decimal numbers, hex numbers with the pref
 Generating Binary Partition Table
 ---------------------------------
 
-The partition table which is flashed to the ESP8266 is in a binary format, not CSV. The tool :component_file:`partition_table/gen_esp32part.py` is used to convert between CSV and binary formats.
+The partition table which is flashed to the ESP8266 is in a binary format, not CSV. The tool **partition_table/gen_esp32part.py** is used to convert between CSV and binary formats.
 
 If you configure the partition table CSV name in ``make menuconfig`` and then ``make partition_table``, this conversion is done as part of the build process.
 
