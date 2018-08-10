@@ -481,7 +481,7 @@ void ICACHE_FLASH_ATTR SPICsPinSelect(SpiNum spiNum, SpiPinCS pinCs)
  * @brief Enable SPI interrupt source.
  *
  */
-void ICACHE_FLASH_ATTR SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc)
+void ICACHE_FLASH_ATTR SPIIntEnable(SpiNum spiNum, SpiIntSrc_DoneEn intSrc)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
@@ -493,7 +493,7 @@ void ICACHE_FLASH_ATTR SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc)
  * @brief Disable SPI interrupt source.
  *
  */
-void ICACHE_FLASH_ATTR SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc)
+void ICACHE_FLASH_ATTR SPIIntDisable(SpiNum spiNum, SpiIntSrc_DoneEn intSrc)
 {
     if (spiNum > SpiNum_HSPI) {
         return;
@@ -510,11 +510,11 @@ void ICACHE_FLASH_ATTR SPIIntClear(SpiNum spiNum)
     if (spiNum > SpiNum_HSPI) {
         return;
     }
-    CLEAR_PERI_REG_MASK(SPI_SLAVE(spiNum), SpiIntSrc_TransDoneEn
-                        | SpiIntSrc_WrStaDoneEn
-                        | SpiIntSrc_RdStaDoneEn
-                        | SpiIntSrc_WrBufDoneEn
-                        | SpiIntSrc_RdBufDoneEn);
+    CLEAR_PERI_REG_MASK(SPI_SLAVE(spiNum), SpiIntSrc_TransDone
+                        | SpiIntSrc_WrStaDone
+                        | SpiIntSrc_RdStaDone
+                        | SpiIntSrc_WrBufDone
+                        | SpiIntSrc_RdBufDone);
 }
 
 

@@ -108,15 +108,24 @@ typedef enum
     SpiBitOrder_LSBFirst = 1,
 } SpiBitOrder;
 
-// @brief SPI interrupt soource defined.
+// @brief SPI interrupt source done defined.
 typedef enum
 {
+    SpiIntSrc_TransDone = SPI_TRANS_DONE,
+    SpiIntSrc_WrStaDone = SPI_SLV_WR_STA_DONE,
+    SpiIntSrc_RdStaDone = SPI_SLV_RD_STA_DONE,
+    SpiIntSrc_WrBufDone = SPI_SLV_WR_BUF_DONE,
+    SpiIntSrc_RdBufDone = SPI_SLV_RD_BUF_DONE,
+} SpiIntSrc_Done;
+
+// @brief SPI interrupt source done enable defined.
+typedef enum {
     SpiIntSrc_TransDoneEn = SPI_TRANS_DONE_EN,
     SpiIntSrc_WrStaDoneEn = SPI_SLV_WR_STA_DONE_EN,
     SpiIntSrc_RdStaDoneEn = SPI_SLV_RD_STA_DONE_EN,
     SpiIntSrc_WrBufDoneEn = SPI_SLV_WR_BUF_DONE_EN,
     SpiIntSrc_RdBufDoneEn = SPI_SLV_RD_BUF_DONE_EN,
-} SpiIntSrc;
+} SpiIntSrc_DoneEn;
 
 // @brief SPI CS pin.
 typedef enum
@@ -297,7 +306,7 @@ void SPICsPinSelect(SpiNum spiNum, SpiPinCS pinCs);
  *
  * @return void.
  */
-void SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc);
+void SPIIntEnable(SpiNum spiNum, SpiIntSrc_DoneEn intSrc);
 
 /**
  * @brief Disable SPI module interrupt source.
@@ -309,7 +318,7 @@ void SPIIntEnable(SpiNum spiNum, SpiIntSrc intSrc);
  *
  * @return void.
  */
-void SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc);
+void SPIIntDisable(SpiNum spiNum, SpiIntSrc_DoneEn intSrc);
 
 /**
  * @brief Clear all of spi interrupt.
