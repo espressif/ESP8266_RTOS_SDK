@@ -115,9 +115,15 @@ Other data subtypes are reserved for future esp-idf uses.
 Offset & Size
 ~~~~~~~~~~~~~
 
-Only the first offset field is required (we recommend using 0x10000). Partitions with blank offsets will start after the previous partition.
+Please note that the app partition must fall in only one integrated partition of 1M. Otherwise, the application crashes.
 
-App partitions have to be at offsets aligned to 0x10000 (64K). If you leave the offset field blank, the tool will automatically align the partition. If you specify an unaligned offset for an app partition, the tool will return an error.
+The starting address of firmware is configured to 0x10000 by default. If you want to change the starting address of firmware, please:
+
+- Configure the value in `menu -> partition table -> select "Custom partition table CSV" -> (0x10000) Factory app partition offset`;
+- Configure the ota_1 offset in the CSV file of partition table to the value , and ota_2 offset to the mirror value (ota_2 = ota_1 + 0x100000).
+	
+  - Please enter an aligned offset. Otherwise, the tool will return errors.	
+  - Don't leave it blank, because, in this case, the tool will automatically align the app partition, which may cause app partition overlaps. That said, the app partition falls in more than one integrated partitions of 1M. 
 
 Sizes and offsets can be specified as decimal numbers, hex numbers with the prefix 0x, or size multipliers K or M (1024 and 1024*1024 bytes).
 
