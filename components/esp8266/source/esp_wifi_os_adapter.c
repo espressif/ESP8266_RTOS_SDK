@@ -16,6 +16,7 @@
 
 #include "esp_libc.h"
 #include "esp_system.h"
+#include "esp_attr.h"
 #include "esp_wifi_os_adapter.h"
 
 #include "freertos/FreeRTOS.h"
@@ -30,14 +31,14 @@
 #include "esp_newlib.h"
 #endif
 
-static uint32_t enter_critical_wrapper(void)
+static uint32_t IRAM_ATTR enter_critical_wrapper(void)
 {
     taskENTER_CRITICAL();
 
     return 0;
 }
 
-static void exit_critical_wrapper(uint32_t tmp)
+static void IRAM_ATTR exit_critical_wrapper(uint32_t tmp)
 {
     taskEXIT_CRITICAL();
 }
