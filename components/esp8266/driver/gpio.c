@@ -141,18 +141,6 @@ esp_err_t gpio_set_intr_type(gpio_num_t gpio_num, gpio_int_type_t intr_type)
     return ESP_OK;
 }
 
-esp_err_t gpio_intr_enable(gpio_num_t gpio_num)
-{
-    _xt_isr_unmask(0x1 << ETS_GPIO_INUM);
-    return ESP_OK;
-}
-
-esp_err_t gpio_intr_disable(gpio_num_t gpio_num)
-{
-    _xt_isr_mask(0x1 << ETS_GPIO_INUM);
-    return ESP_OK;
-}
-
 static esp_err_t gpio_output_disable(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
@@ -327,12 +315,6 @@ esp_err_t gpio_config(const gpio_config_t *gpio_cfg)
 
             if (!RTC_GPIO_IS_VALID_GPIO(io_num)) {
                 gpio_set_intr_type(io_num, gpio_cfg->intr_type);
-
-                if (gpio_cfg->intr_type) {
-                    gpio_intr_enable(io_num);
-                } else {
-                    gpio_intr_disable(io_num);
-                }
             }
 
             pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(io_num));
@@ -418,14 +400,13 @@ esp_err_t gpio_isr_handler_remove(gpio_num_t gpio_num)
     return ESP_OK;
 }
 
-esp_err_t gpio_isr_register(void (*fn)(void *), void *arg, int no_use, gpio_isr_handle_t *handle)
+esp_err_t gpio_isr_register(void (*fn)(void *), void *arg, int no_use, gpio_isr_handle_t *handle_no_use)
 {
     GPIO_CHECK(fn, "GPIO ISR null", ESP_ERR_INVALID_ARG);
 
-    _xt_isr_attach(ETS_GPIO_INUM, gpio_intr_service, NULL);
+    _xt_isr_attach(ETS_GPIO_INUM, fn, arg);
     return ESP_OK;
 }
-
 
 esp_err_t gpio_install_isr_service(int no_use)
 {
