@@ -444,7 +444,7 @@ endmenu  # LWIP RAW API
 
 menuconfig LWIP_IPV6
     bool "Enable IPv6"
-    default y
+    default n
 
 config LWIP_IPV6_NUM_ADDRESSES
     int "Number of IPv6 addresses per netif"

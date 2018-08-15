@@ -27,6 +27,8 @@
 extern "C" {
 #endif
 
+#define ESP_EVENT_IPV6 LWIP_IPV6
+
 typedef enum {
     SYSTEM_EVENT_WIFI_READY = 0,           /**< ESP8266 WiFi ready */
     SYSTEM_EVENT_SCAN_DONE,                /**< ESP8266 finish scanning AP */

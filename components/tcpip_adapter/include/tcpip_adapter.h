@@ -40,6 +40,7 @@
 
 #define CONFIG_TCPIP_LWIP 1
 #define CONFIG_DHCP_STA_LIST 1
+#define TCPIP_ADAPTER_IPV6 LWIP_IPV6
 
 #if CONFIG_TCPIP_LWIP
 #include "lwip/ip_addr.h"
@@ -73,9 +74,17 @@ typedef struct {
     ip4_addr_t gw;
 } tcpip_adapter_ip_info_t;
 
+#if TCPIP_ADAPTER_IPV6
 typedef struct {
     ip6_addr_t ip;
 } tcpip_adapter_ip6_info_t;
+#else
+typedef struct {
+    struct {
+        uint32_t addr[4];
+    } ip;
+} tcpip_adapter_ip6_info_t;
+#endif
 
 typedef dhcps_lease_t tcpip_adapter_dhcps_lease_t;
 
@@ -349,6 +358,7 @@ esp_err_t tcpip_adapter_set_old_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapt
  */
 esp_err_t tcpip_adapter_create_ip6_linklocal(tcpip_adapter_if_t tcpip_if);
 
+#if TCPIP_ADAPTER_IPV6
 /**
  * @brief  get interface's linkloacl IPv6 information
  *
@@ -362,6 +372,7 @@ esp_err_t tcpip_adapter_create_ip6_linklocal(tcpip_adapter_if_t tcpip_if);
  *         ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS
  */
 esp_err_t tcpip_adapter_get_ip6_linklocal(tcpip_adapter_if_t tcpip_if, ip6_addr_t *if_ip6);
+#endif
 
 #if 0
 esp_err_t tcpip_adapter_get_mac(tcpip_adapter_if_t tcpip_if, uint8_t *mac);
