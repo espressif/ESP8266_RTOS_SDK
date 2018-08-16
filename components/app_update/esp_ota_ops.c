@@ -303,7 +303,6 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
     uint16_t ota_app_count = 0;
     uint32_t i = 0;
     uint32_t seq;
-    const void *result = NULL;
 
     find_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, NULL);
     if (find_partition != NULL) {
@@ -327,6 +326,7 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
             return ESP_ERR_INVALID_ARG;
         }
 #ifdef CONFIG_TARGET_PLATFORM_ESP32
+        const void *result = NULL;
         static spi_flash_mmap_memory_t ota_data_map;
         ret = esp_partition_mmap(find_partition, 0, find_partition->size, SPI_FLASH_MMAP_DATA, &result, &ota_data_map);
         if (ret != ESP_OK) {
@@ -343,13 +343,13 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
         ret = spi_flash_read(find_partition->address, &s_ota_select[0], sizeof(ota_select));
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "read failed");
-            return NULL;
+            return ret;
         }
 
         ret = spi_flash_read(find_partition->address + 0x1000, &s_ota_select[1], sizeof(ota_select));
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "read failed");
-            return NULL;
+            return ret;
         }
 #endif
 
@@ -465,7 +465,6 @@ const esp_partition_t *esp_ota_get_boot_partition(void)
     esp_err_t ret;
     const esp_partition_t *find_partition = NULL;
 
-    const void *result = NULL;
     uint16_t ota_app_count = 0;
     find_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_OTA, NULL);
 
@@ -475,6 +474,7 @@ const esp_partition_t *esp_ota_get_boot_partition(void)
     }
 
 #ifdef CONFIG_TARGET_PLATFORM_ESP32
+    const void *result = NULL;
     static spi_flash_mmap_memory_t ota_data_map;
     ret = esp_partition_mmap(find_partition, 0, find_partition->size, SPI_FLASH_MMAP_DATA, &result, &ota_data_map);
     if (ret != ESP_OK) {
