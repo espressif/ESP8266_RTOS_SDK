@@ -56,6 +56,9 @@
 #include "lwip/autoip.h"
 #include "netif/etharp.h"
 #include "lwip/ip6.h"
+#include "lwip/netif.h"
+#include "esp_wifi.h"
+#include "esp_sta.h"
 
 #if PPPOE_SUPPORT
 #include "netif/ppp_oe.h"
@@ -149,6 +152,23 @@ static u8_t etharp_cached_entry;
   #error "ARP_TABLE_SIZE must fit in an s8_t, you have to reduce it in your lwipopts.h"
 #endif
 
+#if ESP_GRATUITOUS_ARP
+void garp_tmr(void)
+{
+  uint8 status = wifi_station_get_connect_status();
+  struct netif* garp_netif = (struct netif *)eagle_lwip_getif(STATION_IF);
+  struct ip_info sta_info;
+
+  if (garp_netif != NULL && status == STATION_GOT_IP) {
+    wifi_get_ip_info(STATION_IF, &sta_info);
+    if (netif_is_up(garp_netif) && netif_is_link_up(garp_netif) && !ip_addr_isany(&(sta_info.ip))) {
+      if (garp_netif->flags & NETIF_FLAG_ETHARP) {
+        etharp_gratuitous(garp_netif);
+      }
+    }
+  }
+}
+#endif
 
 #if ARP_QUEUEING
 /**

@@ -35,6 +35,8 @@
 #define LWIP_ESP8266
 
 #define SOCKETS_MT
+#define ESP_GRATUITOUS_ARP 1
+#define GARP_TMR_INTERVAL 10000
 
 //#define SOCKETS_TCP_TRACE
 /*
