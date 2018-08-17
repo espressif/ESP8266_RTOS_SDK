@@ -14,7 +14,7 @@ gitlab:
     driver:     7bee5263
     espconn:    3a998034
     freertos:   a9985a9c
-    lwip:       1651e055
+    lwip:       f296ae76
     mbedtls:    1ac9f1f4
     mqtt:       6c098065
     nopoll:     31f0ea07
