@@ -76,7 +76,7 @@ typedef enum {
     GPIO_NUM_13 = 13,   /*!< GPIO13, input and output */
     GPIO_NUM_14 = 14,   /*!< GPIO14, input and output */
     GPIO_NUM_15 = 15,   /*!< GPIO15, input and output */
-    GPIO_NUM_16 = 16,   /*!< GPIO15, input and output */
+    GPIO_NUM_16 = 16,   /*!< GPIO16, input and output */
     GPIO_NUM_MAX = 17,
     /** @endcond */
 } gpio_num_t;
@@ -152,28 +152,6 @@ esp_err_t gpio_config(const gpio_config_t *gpio_cfg);
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t gpio_set_intr_type(gpio_num_t gpio_num, gpio_int_type_t intr_type);
-
-/**
- * @brief  Enable GPIO module interrupt signal
- *
- * @param  gpio_num GPIO number. If you want to enable an interrupt on e.g. GPIO12, gpio_num should be GPIO_NUM_12 (12);
- *
- * @return
- *     - ESP_OK Success
- *     - ESP_ERR_INVALID_ARG Parameter error
- */
-esp_err_t gpio_intr_enable(gpio_num_t gpio_num);
-
-/**
- * @brief  Disable GPIO module interrupt signal
- *
- * @param  gpio_num GPIO number. If you want to disable the interrupt of e.g. GPIO12, gpio_num should be GPIO_NUM_12 (12);
- *
- * @return
- *     - ESP_OK success
- *     - ESP_ERR_INVALID_ARG Parameter error
- */
-esp_err_t gpio_intr_disable(gpio_num_t gpio_num);
 
 /**
  * @brief  GPIO set output level
@@ -267,14 +245,14 @@ esp_err_t gpio_wakeup_disable(gpio_num_t gpio_num);
  * @param  fn  Interrupt handler function.
  * @param  no_use In order to be compatible with esp32, the parameter has no practical meaning and can be filled with 0.
  * @param  arg  Parameter for handler function
- * @param  handle Pointer to return handle. In order to be compatible with esp32,the parameter has no practical meaning and can be filled with NULL.
+ * @param  handle_no_use Pointer to return handle. In order to be compatible with esp32,the parameter has no practical meaning and can be filled with NULL.
  *
  * @return
  *     - ESP_OK Success ;
  *     - ESP_ERR_INVALID_ARG GPIO error
  *     - ESP_ERR_NOT_FOUND No free interrupt found with the specified flags
  */
-esp_err_t gpio_isr_register(void (*fn)(void *), void *arg, int no_use, gpio_isr_handle_t *handle);
+esp_err_t gpio_isr_register(void (*fn)(void *), void *arg, int no_use, gpio_isr_handle_t *handle_no_use);
 
 /**
   * @brief Enable pull-up on GPIO.
