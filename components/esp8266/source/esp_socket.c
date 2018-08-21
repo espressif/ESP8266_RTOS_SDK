@@ -25,7 +25,7 @@
 #define CRITICAL_EXIT(t)
 
 #ifndef ESP_SOCKET_MAX
-#define ESP_SOCKET_MAX 3
+#define ESP_SOCKET_MAX 2
 #endif
 
 #define SET_ERR(err)                    errno = err
