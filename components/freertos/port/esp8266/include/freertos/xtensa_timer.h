@@ -111,7 +111,9 @@ Adjust this frequency to taste (it's not real-time anyway!).
 #ifdef XT_XT2000    /* deprecated */
 #define XT_CLOCK_FREQ       16500000    /* 16.5 MHz (XT2000 default) */
 #else
-#define XT_CLOCK_FREQ       80000000
+//#define XT_CLOCK_FREQ       80000000
+#define XT_BOARD
+#define xtbsp_clock_freq_hz() 80000000
 #endif
 #endif /* XT_SIMULATOR */
 
