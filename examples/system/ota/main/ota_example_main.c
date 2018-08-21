@@ -212,6 +212,18 @@ static void ota_example_task(void *pvParameter)
         task_fatal_error();
     }
 
+    update_partition = esp_ota_get_next_update_partition(NULL);
+    ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%x",
+             update_partition->subtype, update_partition->address);
+    assert(update_partition != NULL);
+
+    err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "esp_ota_begin failed, error=%d", err);
+        task_fatal_error();
+    }
+    ESP_LOGI(TAG, "esp_ota_begin succeeded");
+
     /*send GET request to http server*/
     const char *GET_FORMAT =
         "GET %s HTTP/1.0\r\n"
@@ -233,18 +245,6 @@ static void ota_example_task(void *pvParameter)
     } else {
         ESP_LOGI(TAG, "Send GET request to server succeeded");
     }
-
-    update_partition = esp_ota_get_next_update_partition(NULL);
-    ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%x",
-             update_partition->subtype, update_partition->address);
-    assert(update_partition != NULL);
-
-    err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "esp_ota_begin failed, error=%d", err);
-        task_fatal_error();
-    }
-    ESP_LOGI(TAG, "esp_ota_begin succeeded");
 
     bool resp_body_start = false, flag = true;
     /*deal with all receive packet*/
