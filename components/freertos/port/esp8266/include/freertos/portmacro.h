@@ -167,6 +167,8 @@ void PortEnableInt_NoNest( void );
 #define portENTER_CRITICAL()                vPortEnterCritical()
 #define portEXIT_CRITICAL()                 vPortExitCritical()
 
+#define xPortGetCoreID()                    0
+
 // no need to disable/enable lvl1 isr again in ISR
 //#define  portSET_INTERRUPT_MASK_FROM_ISR()		PortDisableInt_NoNest()
 //#define  portCLEAR_INTERRUPT_MASK_FROM_ISR(x)		PortEnableInt_NoNest()
