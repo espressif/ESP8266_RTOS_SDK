@@ -775,7 +775,7 @@ esp_err_t tcpip_adapter_set_dns_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_
     }
 
     ESP_LOGD(TAG, "set dns if=%d type=%d dns=%x", tcpip_if, type, ip_2_ip4(&(dns->ip))->addr);
-    IP_SET_TYPE_VAL(dns->ip, IPADDR_TYPE_V4)
+    IP_SET_TYPE_VAL(dns->ip, IPADDR_TYPE_V4);
 
     if (tcpip_if == TCPIP_ADAPTER_IF_STA || tcpip_if == TCPIP_ADAPTER_IF_ETH) {
         dns_setserver(type, &(dns->ip));
