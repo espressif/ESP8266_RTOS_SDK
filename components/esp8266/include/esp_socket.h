@@ -138,6 +138,36 @@ typedef struct esp_socket_method {
 } esp_socket_method_t;
 
 /*
+ * @brief free an aio control block by calling the callback function
+ * 
+ * @param aio asynchronous I/O controlling block
+ * @param aio data handling result
+ * 
+ * @return none
+ */
+static inline void esp_aio_free(esp_aio_t *aio, int status)
+{
+    if (aio->cb) {
+        aio->ret = status;
+        aio->cb(aio);
+    }
+}
+
+/*
+ * @brief drop an aio control block by disable "pbuf" and "cb"
+ *        and then the aio control block has no meaning
+ * 
+ * @param aio asynchronous I/O controlling block
+ * 
+ * @return none
+ */
+static inline void esp_aio_drop(esp_aio_t *aio)
+{
+    aio->pbuf = NULL;
+    aio->cb = NULL;
+}
+
+/*
  * @brief create a socket file description
  *
  * @param domain protocal domain and it must be "AF_PACKET" now
