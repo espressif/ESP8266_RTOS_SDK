@@ -204,6 +204,7 @@ portBASE_TYPE xPortStartScheduler(void)
     _xt_isr_unmask(1 << ETS_SOFT_INUM);
 
     /* Initialize system tick timer interrupt and schedule the first tick. */
+    _xt_tick_divisor_init();
     _xt_tick_timer_init();
 
     vTaskSwitchContext();
