@@ -596,6 +596,7 @@ static void tcpip_adapter_nd6_cb(struct netif *p_netif, uint8_t ip_idex)
 }
 #endif
 
+#if TCPIP_ADAPTER_IPV6
 esp_err_t tcpip_adapter_create_ip6_linklocal(tcpip_adapter_if_t tcpip_if)
 {
     struct netif *p_netif;
@@ -632,6 +633,7 @@ esp_err_t tcpip_adapter_get_ip6_linklocal(tcpip_adapter_if_t tcpip_if, ip6_addr_
     }
     return ESP_OK;
 }
+#endif
 
 esp_err_t tcpip_adapter_dhcps_option(tcpip_adapter_option_mode_t opt_op, tcpip_adapter_option_id_t opt_id, void *opt_val, uint32_t opt_len)
 {
@@ -766,14 +768,14 @@ esp_err_t tcpip_adapter_set_dns_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_
         ESP_LOGD(TAG, "set dns invalid type=%d", type);
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
-    
-    if (ip4_addr_isany_val(dns->ip.u_addr.ip4)) {
+
+    if (ip4_addr_isany_val(*ip_2_ip4(&(dns->ip)))) {
         ESP_LOGD(TAG, "set dns invalid dns");
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
 
-    ESP_LOGD(TAG, "set dns if=%d type=%d dns=%x", tcpip_if, type, dns->ip.u_addr.ip4.addr);
-    dns->ip.type = IPADDR_TYPE_V4;
+    ESP_LOGD(TAG, "set dns if=%d type=%d dns=%x", tcpip_if, type, ip_2_ip4(&(dns->ip))->addr);
+    IP_SET_TYPE_VAL(dns->ip, IPADDR_TYPE_V4)
 
     if (tcpip_if == TCPIP_ADAPTER_IF_STA || tcpip_if == TCPIP_ADAPTER_IF_ETH) {
         dns_setserver(type, &(dns->ip));
@@ -812,7 +814,7 @@ esp_err_t tcpip_adapter_get_dns_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_
         ns = dns_getserver(type);
         dns->ip = *ns;
     } else {
-        dns->ip.u_addr.ip4 = dhcps_dns_getserver();
+        *ip_2_ip4(&(dns->ip)) = dhcps_dns_getserver();
     }
 
     return ESP_OK;
