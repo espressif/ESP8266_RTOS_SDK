@@ -21,16 +21,22 @@
 #include "esp_freertos_hooks.h"
 
 #include "sdkconfig.h"
-#include "esp_pm.h"
-#include "pm_impl.h"
 
 //We use just a static array here because it's not expected many components will need
 //an idle or tick hook.
-#define MAX_HOOKS 8
+#define MAX_HOOKS CONFIG_FREERTOS_MAX_HOOK
 
+#undef portENTER_CRITICAL
+#undef portEXIT_CRITICAL
+
+#define portENTER_CRITICAL(_s)  vPortEnterCritical()
+#define portEXIT_CRITICAL(_s)   vPortExitCritical()
+
+#if portNUM_PROCESSORS > 1
 static portMUX_TYPE hooks_spinlock = portMUX_INITIALIZER_UNLOCKED;
-static esp_freertos_idle_cb_t idle_cb[portNUM_PROCESSORS][MAX_HOOKS]={0};
-static esp_freertos_tick_cb_t tick_cb[portNUM_PROCESSORS][MAX_HOOKS]={0};
+#endif
+static esp_freertos_idle_cb_t idle_cb[portNUM_PROCESSORS][MAX_HOOKS];
+static esp_freertos_tick_cb_t tick_cb[portNUM_PROCESSORS][MAX_HOOKS];
 
 void IRAM_ATTR esp_vApplicationTickHook() 
 {
