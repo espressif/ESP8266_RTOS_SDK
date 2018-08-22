@@ -44,5 +44,10 @@ config LOG_COLORS
 
       In order to view these, your terminal program must support ANSI color codes.
 
+config LOG_SET_LEVEL
+    bool "Enable log set level"
+    default n
+    help
+        Enable this option, user can set tag level.
 
 endmenu
