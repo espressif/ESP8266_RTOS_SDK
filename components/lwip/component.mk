@@ -2,9 +2,10 @@
 # Component Makefile
 #
 COMPONENT_ADD_INCLUDEDIRS += include/lwip/apps \
+                             include/lwip \
                              lwip/src/include \
-                             port/esp8266/include \
-                             lwip/src/include/posix
+                             lwip/src/include/posix \
+                             port/esp8266/include
 
 COMPONENT_SRCDIRS += apps/dhcpserver \
                      apps/multi-threads \
