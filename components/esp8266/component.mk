@@ -11,8 +11,8 @@ COMPONENT_SRCDIRS := driver source
 
 LIBS ?=
 ifndef CONFIG_NO_BLOBS
-LIBS += airkiss crypto espnow gcc hal core net80211 \
-        phy pp pwm smartconfig ssc wpa
+LIBS += crypto gcc hal core net80211 \
+        phy pp smartconfig ssc wpa
 endif
 
 #Linker scripts used to link the final application.
