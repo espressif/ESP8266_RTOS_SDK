@@ -13,21 +13,19 @@
 // limitations under the License.
 
 #include <stdarg.h>
-#include <sys/ioctl.h>
+#include <fcntl.h>
 
-int ioctl(int fd, int request, ...)
+int fcntl(int fd, int request, ...)
 {
-    int ret;
-    void *p;
+    int val, ret;
     va_list va;
 
     va_start(va, request);
     
-    p = va_arg(va, void *);
-    ret = lwip_ioctl(fd, request, p);
+    val = va_arg(va, int);
+    ret = lwip_fcntl(fd, request, val);
 
     va_end(va);
 
-    return ret;
+    return ret;    
 }
-
