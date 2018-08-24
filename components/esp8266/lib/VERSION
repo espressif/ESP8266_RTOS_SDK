@@ -7,3 +7,4 @@ gwen:
     pwm:        0181338
     smartconfig:eca7811
     wpa:        eca7811
+    phy:	1055_8
