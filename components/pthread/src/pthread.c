@@ -21,15 +21,27 @@
 #include <errno.h>
 #include <pthread.h>
 #include <string.h>
+#include <stdlib.h>
 #include "esp_err.h"
 #include "esp_attr.h"
-#include "rom/queue.h"
+#include "sys/queue.h"
+#include "sys/types.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 
 #include "pthread_internal.h"
 #include "esp_pthread.h"
+
+#ifdef CONFIG_ENABLE_PTHREAD
+
+#if portNUM_PROCESSORS == 1
+#undef portENTER_CRITICAL
+#undef portEXIT_CRITICAL
+
+#define portENTER_CRITICAL(l)   vPortEnterCritical()
+#define portEXIT_CRITICAL(l)    vPortExitCritical()
+#endif
 
 #define LOG_LOCAL_LEVEL CONFIG_LOG_DEFAULT_LEVEL
 #include "esp_log.h"
@@ -65,13 +77,23 @@ typedef struct {
 
 
 static SemaphoreHandle_t s_threads_mux  = NULL;
+#if portNUM_PROCESSORS > 1
 static portMUX_TYPE s_mutex_init_lock   = portMUX_INITIALIZER_UNLOCKED;
+#endif
 static SLIST_HEAD(esp_thread_list_head, esp_pthread_entry) s_threads_list
                                         = SLIST_HEAD_INITIALIZER(s_threads_list);
 static pthread_key_t s_pthread_cfg_key;
 
 
 static int IRAM_ATTR pthread_mutex_lock_internal(esp_pthread_mutex_t *mux, TickType_t tmo);
+
+static inline void uxPortCompareSet(volatile uint32_t *addr, uint32_t compare, uint32_t *set)
+{
+    portENTER_CRITICAL(&s_mutex_init_lock);
+    *addr = compare;
+    *set = 0;
+    portEXIT_CRITICAL(&s_mutex_init_lock);
+}
 
 static void esp_pthread_cfg_key_destructor(void *value)
 {
@@ -205,7 +227,7 @@ static void pthread_task_func(void *arg)
     }
     xSemaphoreGive(s_threads_mux);
 
-    ESP_LOGD(TAG, "Task stk_wm = %d", uxTaskGetStackHighWaterMark(NULL));
+    ESP_LOGD(TAG, "Task stk_wm = %lu", uxTaskGetStackHighWaterMark(NULL));
     vTaskDelete(NULL);
 
     ESP_LOGV(TAG, "%s EXIT", __FUNCTION__);
@@ -586,3 +608,5 @@ int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type)
     }
     return res;
 }
+
+#endif

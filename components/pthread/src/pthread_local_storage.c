@@ -14,16 +14,27 @@
 #include <errno.h>
 #include <pthread.h>
 #include <string.h>
+#include <stdlib.h>
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "sys/lock.h"
-#include "rom/queue.h"
+#include "sys/queue.h"
 
 #include "pthread_internal.h"
 
-#define PTHREAD_TLS_INDEX 0
+#ifdef CONFIG_ENABLE_PTHREAD
+
+#define PTHREAD_TLS_INDEX 1
+
+#if portNUM_PROCESSORS == 1
+#undef portENTER_CRITICAL
+#undef portEXIT_CRITICAL
+
+#define portENTER_CRITICAL(l)   vPortEnterCritical()
+#define portEXIT_CRITICAL(l)    vPortExitCritical()
+#endif
 
 typedef void (*pthread_destructor_t)(void*);
 
@@ -42,7 +53,9 @@ typedef struct key_entry_t_ {
 // List of all keys created with pthread_key_create()
 SLIST_HEAD(key_list_t, key_entry_t_) s_keys = SLIST_HEAD_INITIALIZER(s_keys);
 
+#if portNUM_PROCESSORS > 1
 static portMUX_TYPE s_keys_lock = portMUX_INITIALIZER_UNLOCKED;
+#endif
 
 // List of all value entries associated with a thread via pthread_setspecific()
 typedef struct value_entry_t_ {
@@ -255,3 +268,5 @@ int pthread_setspecific(pthread_key_t key, const void *value)
 
     return 0;
 }
+
+#endif

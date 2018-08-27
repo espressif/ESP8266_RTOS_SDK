@@ -1,5 +1,6 @@
 // Test pthread_create_key, pthread_delete_key, pthread_setspecific, pthread_getspecific
 #include <pthread.h>
+#include <stdio.h>
 #include "unity.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

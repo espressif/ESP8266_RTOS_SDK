@@ -32,7 +32,7 @@ _ssize_t _read_r(struct _reent *r, int fd, void *buf, size_t len)
     return 0;
 }
 
-_ssize_t _write_r(struct _reent *r, int fd, void *buf, size_t len)
+_ssize_t _write_r(struct _reent *r, int fd, const void *buf, size_t len)
 {
     int i;
     const char *cbuf = buf;

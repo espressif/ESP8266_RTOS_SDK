@@ -2,7 +2,9 @@
 # Component Makefile
 #
 
-COMPONENT_SRCDIRS := .
+ifdef CONFIG_ENABLE_PTHREAD
+COMPONENT_SRCDIRS := src
+endif
 
 COMPONENT_ADD_INCLUDEDIRS := include
 
