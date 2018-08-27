@@ -37,8 +37,6 @@ extern "C" {
 
 typedef struct {
     int32_t version;
-    uint32_t (*enter_critical)(void);
-    void (*exit_critical)(uint32_t tmp);
 
     void *(*task_create)(void *task_func, const char *name, uint32_t stack_depth, void *param, uint32_t prio);
     void (*task_delete)(void *task_handle);

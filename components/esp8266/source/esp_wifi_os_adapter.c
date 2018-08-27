@@ -31,18 +31,6 @@
 #include "esp_newlib.h"
 #endif
 
-static uint32_t IRAM_ATTR enter_critical_wrapper(void)
-{
-    taskENTER_CRITICAL();
-
-    return 0;
-}
-
-static void IRAM_ATTR exit_critical_wrapper(uint32_t tmp)
-{
-    taskEXIT_CRITICAL();
-}
-
 static void *task_create_wrapper(void *task_func, const char *name, uint32_t stack_depth, void *param, uint32_t prio)
 {
     portBASE_TYPE ret;
@@ -367,11 +355,8 @@ static int32_t rand_wrapper(void)
     return (int32_t)esp_random();
 }
 
-wifi_osi_funcs_t s_wifi_osi_funcs = {
+const wifi_osi_funcs_t s_wifi_osi_funcs = {
     .version = ESP_WIFI_OS_ADAPTER_VERSION,
-
-    .enter_critical = enter_critical_wrapper,
-    .exit_critical = exit_critical_wrapper,
     
     .task_create = task_create_wrapper,
     .task_delete = task_delete_wrapper,

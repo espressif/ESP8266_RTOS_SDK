@@ -1,9 +1,9 @@
 gwen:
-    crypto:     8943c89
+    crypto:     eca7811
     espnow:     8943c89
-    core:       b394446
-    net80211:   b394446
-    pp:         830c0c8
+    core:       eca7811
+    net80211:   eca7811
+    pp:         eca7811
     pwm:        0181338
-    smartconfig:68bd9c5
-    wpa:        f59f0e0
+    smartconfig:eca7811
+    wpa:        eca7811

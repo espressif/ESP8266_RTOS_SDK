@@ -95,9 +95,9 @@
 #define SPI_FLASH_RDSR2      0x35
 #define SPI_FLASH_PROTECT_STATUS                (BIT(2)|BIT(3)|BIT(4)|BIT(5)|BIT(6)|BIT(14))
 
-#define FLASH_INTR_DECLARE(t)                   uint32_t t
-#define FLASH_INTR_LOCK(t)                      wifi_enter_critical(t)
-#define FLASH_INTR_UNLOCK(t)                    wifi_exit_critical(t)
+#define FLASH_INTR_DECLARE(t)
+#define FLASH_INTR_LOCK(t)                      vPortEnterCritical()
+#define FLASH_INTR_UNLOCK(t)                    vPortExitCritical()
 
 #define FLASH_ALIGN_BYTES                       4
 #define FLASH_ALIGN(addr)                       ((((size_t)addr) + (FLASH_ALIGN_BYTES - 1)) & (~(FLASH_ALIGN_BYTES - 1)))
@@ -139,6 +139,9 @@ uint8_t en25q16x_read_sfdp();
 extern void pp_soft_wdt_feed(void);
 extern void pp_soft_wdt_stop(void);
 extern void pp_soft_wdt_restart(void);
+
+extern void vPortEnterCritical(void);
+extern void vPortExitCritical(void);
 
 esp_spi_flash_chip_t flashchip = {
     0x1640ef,
