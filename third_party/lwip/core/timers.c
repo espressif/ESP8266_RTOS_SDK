@@ -228,6 +228,19 @@ dns_timer(void *arg)
 }
 #endif /* LWIP_DNS */
 
+#if ESP_GRATUITOUS_ARP
+extern void garp_tmr(void);
+
+static void garp_timer(void *arg)
+{
+  LWIP_UNUSED_ARG(arg);
+  LWIP_DEBUGF(TIMERS_DEBUG, ("tcpip: garp_tmr()\n"));
+  garp_tmr();
+  sys_timeout(GARP_TMR_INTERVAL, garp_timer, NULL);
+
+}
+#endif
+
 #if LWIP_IPV6
 /**
  * Timer callback function that calls nd6_tmr() and reschedules itself.
@@ -309,6 +322,10 @@ sys_timeouts_init(void)
   sys_timeout(MLD6_TMR_INTERVAL, mld6_timer, NULL);
 #endif /* LWIP_IPV6_MLD */
 #endif /* LWIP_IPV6 */
+
+#if ESP_GRATUITOUS_ARP
+  sys_timeout(GARP_TMR_INTERVAL, garp_timer, NULL);
+#endif
 
 #if NO_SYS
   /* Initialise timestamp for sys_check_timeouts */
