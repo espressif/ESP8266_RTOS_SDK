@@ -71,18 +71,19 @@ static void insert_to_list(int fd, struct pbuf* p)
 
     LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Insert %p,%d\n",p,pbuf_send_list_num));
     if (pbuf_list_head == NULL) {
-        pbuf_list_head = (pbuf_send_list_t* )malloc(sizeof(pbuf_send_list_t));
-        pbuf_send_list_num++;
+        tmp_pbuf_list1 = (pbuf_send_list_t*)malloc(sizeof(pbuf_send_list_t));
 
-        if (!pbuf_list_head) {
+        if (!tmp_pbuf_list1) {
             LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no menory malloc pbuf list error\n"));
             return;
         }
         pbuf_ref(p);
-        pbuf_list_head->aiofd = fd;
-        pbuf_list_head->p = p;
-        pbuf_list_head->next = NULL;
-        pbuf_list_head->err_cnt = 0;
+        tmp_pbuf_list1->aiofd = fd;
+        tmp_pbuf_list1->p = p;
+        tmp_pbuf_list1->next = NULL;
+        tmp_pbuf_list1->err_cnt = 0;
+        pbuf_list_head = tmp_pbuf_list1;
+        pbuf_send_list_num++;
         return;
     }
 
@@ -98,9 +99,7 @@ static void insert_to_list(int fd, struct pbuf* p)
         tmp_pbuf_list1 = tmp_pbuf_list2->next;
     }
 
-    tmp_pbuf_list2->next = (pbuf_send_list_t*)malloc(sizeof(pbuf_send_list_t));
-    pbuf_send_list_num++;
-    tmp_pbuf_list1 = tmp_pbuf_list2->next;
+    tmp_pbuf_list1 = (pbuf_send_list_t*)malloc(sizeof(pbuf_send_list_t));
 
     if (!tmp_pbuf_list1) {
         LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no menory malloc pbuf list error\n"));
@@ -112,6 +111,8 @@ static void insert_to_list(int fd, struct pbuf* p)
     tmp_pbuf_list1->p = p;
     tmp_pbuf_list1->next = NULL;
     tmp_pbuf_list1->err_cnt = 0;
+    tmp_pbuf_list2->next = tmp_pbuf_list1;
+    pbuf_send_list_num++;
 }
 
 void send_from_list()
@@ -205,6 +206,28 @@ static void low_level_init(struct netif* netif)
 static int low_level_send_cb(esp_aio_t *aio)
 {
     struct pbuf *pbuf = aio->arg;
+    wifi_tx_status_t* status = (wifi_tx_status_t*) & (aio->ret);
+
+    if ((TX_STATUS_SUCCESS != status->wifi_tx_result) && check_pbuf_to_insert(pbuf)) {
+        uint8_t* buf = (uint8_t*)pbuf->payload;
+        struct eth_hdr ethhdr;
+
+        if (*(buf - 17) & 0x01) { //From DS
+            memcpy(&ethhdr.dest, buf - 2, ETH_HWADDR_LEN);
+            memcpy(&ethhdr.src, buf - 2 - ETH_HWADDR_LEN, ETH_HWADDR_LEN);
+        } else if (*(buf - 17) & 0x02) { //To DS
+            memcpy(&ethhdr.dest, buf - 2 - ETH_HWADDR_LEN - ETH_HWADDR_LEN, ETH_HWADDR_LEN);
+            memcpy(&ethhdr.src, buf - 2, 6);
+        } else {
+            pbuf_free(pbuf);
+            return 0;
+        }
+
+        memcpy(buf, &ethhdr, (ETH_HWADDR_LEN + ETH_HWADDR_LEN));
+        LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Send packet fail: result:%d, LRC:%d, SRC:%d, RATE:%d",
+                                       status->wifi_tx_result, status->wifi_tx_lrc, status->wifi_tx_src, status->wifi_tx_rate));
+        insert_to_list(aio->fd, aio->arg);
+    }
 
     pbuf_free(pbuf);
 

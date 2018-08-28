@@ -372,6 +372,40 @@ typedef struct {
 #define WIFI_EVENT_MASK_NONE                (0)           /**< mask none of the WiFi events */
 #define WIFI_EVENT_MASK_AP_PROBEREQRECVED   (BIT(0))      /**< mask SYSTEM_EVENT_AP_PROBEREQRECVED event */
 
+typedef enum {
+    TX_STATUS_SUCCESS = 1,
+    TX_STATUS_SRC_EXCEED,
+    TX_STATUS_LRC_EXCEED,
+    TX_STATUS_DISCARD,
+} wifi_tx_result_t;
+
+typedef enum {
+    PHY_RATE_1_LONG,
+    PHY_RATE_2_LONG,
+    PHY_RATE_5_LONG,
+    PHY_RATE_11_LONG,
+    PHY_RATE_RESERVED,
+    PHY_RATE_2_SHORT,
+    PHY_RATE_5_SHORT,
+    PHY_RATE_11_SHORT,
+    PHY_RATE_48,
+    PHY_RATE_24,
+    PHY_RATE_12,
+    PHY_RATE_6,
+    PHY_RATE_54,
+    PHY_RATE_36,
+    PHY_RATE_18,
+    PHY_RATE_9,
+} wifi_tx_rate_t;
+
+typedef struct {
+    unsigned wifi_tx_result: 8;
+    unsigned wifi_tx_src: 6;
+    unsigned wifi_tx_lrc: 6;
+    unsigned wifi_tx_rate: 8;
+    unsigned unused: 4;
+} wifi_tx_status_t;
+
 #ifdef __cplusplus
 }
 #endif
