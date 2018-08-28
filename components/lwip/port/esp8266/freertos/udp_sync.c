@@ -22,7 +22,7 @@
 
 #include "esp_log.h"
 
-#if ESP_UDP
+#if ESP_UDP && LWIP_NETIF_TX_SINGLE_PBUF
 
 #define UDP_SYNC_MAX MEMP_NUM_NETCONN
 #define UDP_SYNC_RETRY_MAX CONFIG_ESP_UDP_SYNC_RETRY_MAX
@@ -40,15 +40,16 @@
 typedef struct udp_sync {
     struct api_msg      *msg;
 
-    int                 ret;
+    struct netif        *netif;
 
-    int                 retry;
+    int8_t              ret;
+
+    uint8_t             retry;
 } udp_sync_t;
 
 static const char *TAG = "udp_sync";
 static size_t s_udp_sync_num;
 static udp_sync_t s_udp_sync[UDP_SYNC_MAX];
-static bool s_register_locked;
 static struct api_msg *s_cur_msg;
 
 /*
@@ -57,7 +58,6 @@ static struct api_msg *s_cur_msg;
 void udp_sync_init(void)
 {
     memset(s_udp_sync, 0, sizeof(s_udp_sync));
-    s_register_locked = false;
     s_udp_sync_num = 0;
 }
 
@@ -68,24 +68,38 @@ void udp_sync_regitser(void *in_msg)
 {
     s_cur_msg = in_msg;
 
-    if (s_register_locked == true)
-        return ;
-
     struct api_msg *msg = (struct api_msg *)in_msg;
     int s = msg->conn->socket;
 
     if (s < 0 || s >= UDP_SYNC_MAX) {
         ESP_LOGE(TAG, "UDP sync register error, socket is %d", s);
-        return ;
     } else if (s_udp_sync[s].msg) {
         ESP_LOGE(TAG, "UDP sync register error, msg is %p", s_udp_sync[s].msg);
-        return ;
     }
 
     s_udp_sync_num++;
     s_udp_sync[s].ret = ERR_OK;
     s_udp_sync[s].retry = 0;
     s_udp_sync[s].msg = msg;
+}
+
+static void _udp_sync_ack_ret(int s, struct api_msg *msg)
+{
+    /* Only cache when low-level has no buffer to send packet */
+    if (s_udp_sync[s].ret != ERR_MEM || s_udp_sync[s].retry >= UDP_SYNC_RETRY_MAX) {
+
+        ESP_LOGD(TAG, "UDP sync ret %d retry %d", s_udp_sync[s].ret, s_udp_sync[s].retry);
+
+        s_udp_sync[s].msg = NULL;
+        s_udp_sync[s].retry = 0;
+        s_udp_sync[s].ret = ERR_OK;
+        s_udp_sync_num--;
+
+        TCPIP_APIMSG_ACK(msg);
+    } else {
+        s_udp_sync[s].retry++;
+        ESP_LOGD(TAG, "UDP sync ack error, errno %d", s_udp_sync[s].ret);
+    }
 }
 
 /*
@@ -98,26 +112,11 @@ void udp_sync_ack(void *in_msg)
 
     if (s < 0 || s >= UDP_SYNC_MAX) {
         ESP_LOGE(TAG, "UDP sync ack error, socket is %d", s);
-        return ;
     } else if (!s_udp_sync[s].msg) {
         ESP_LOGE(TAG, "UDP sync ack error, msg is NULL");
-        return ;
     }
 
-    /* Only cache when low-level has no buffer to send packet */
-    if (s_udp_sync[s].ret != ERR_MEM || s_udp_sync[s].retry >= UDP_SYNC_RETRY_MAX) {
-        s_udp_sync[s].msg = NULL;
-        s_udp_sync[s].retry = 0;
-        s_udp_sync[s].ret = ERR_OK;
-        s_udp_sync_num--;
-
-        ESP_LOGD(TAG, "UDP sync ret %d", s_udp_sync[s].ret);
-
-        TCPIP_APIMSG_ACK(msg);
-    } else {
-        s_udp_sync[s].retry++;
-        ESP_LOGD(TAG, "UDP sync ack error, errno %d", s_udp_sync[s].ret);
-    }
+    _udp_sync_ack_ret(s, msg);
 
     s_cur_msg = NULL;
 }
@@ -125,7 +124,7 @@ void udp_sync_ack(void *in_msg)
 /*
  * @brief set the current message send result
  */
-void udp_sync_set_ret(int ret)
+void udp_sync_set_ret(void *netif, int ret)
 {
     /* Only poll and regitser can set current message */
     if (!s_cur_msg) {
@@ -139,13 +138,26 @@ void udp_sync_set_ret(int ret)
 
     if (s < 0 || s >= UDP_SYNC_MAX) {
         ESP_LOGE(TAG, "UDP sync ack error, socket is %d", s);
-        return ;
     } else if (!s_udp_sync[s].msg) {
         ESP_LOGE(TAG, "UDP sync ack error, msg is NULL");
-        return ;
     }
 
+    s_udp_sync[s].netif = netif;
     s_udp_sync[s].ret = ret;
+}
+
+static void udp_sync_send(struct api_msg *msg)
+{
+    struct pbuf *p = msg->msg.b->p;
+    int s = msg->conn->socket;
+    struct netif *netif = s_udp_sync[s].netif;
+
+    s_cur_msg = msg;
+
+    netif->linkoutput(netif, p);
+    _udp_sync_ack_ret(s, msg);
+
+    s_cur_msg = NULL;
 }
 
 /*
@@ -156,19 +168,17 @@ void udp_sync_proc(void)
     if (!s_udp_sync_num)
         return ;
 
-    s_register_locked = true;
     for (int i = 0; i < UDP_SYNC_MAX; i++) {
         if (!s_udp_sync[i].msg)
             continue;
 
-        lwip_netconn_do_send(s_udp_sync[i].msg);
+        udp_sync_send(s_udp_sync[i].msg);
 #if 0
         //Todo: Add this later
         if (s_udp_sync[i].ret != ERR_OK)
             break;
 #endif
     }
-    s_register_locked = false;
 }
 
 #endif /* ESP_UDP */

@@ -43,7 +43,7 @@ void udp_sync_ack(void *in_msg);
  * 
  * @param ret current message send result
  */
-void udp_sync_set_ret(int ret);
+void udp_sync_set_ret(void *netif, int ret);
 
 /*
  * @brief process the sync
