@@ -23,12 +23,6 @@ extern "C" {
 
 extern wifi_osi_funcs_t s_wifi_osi_funcs;
 
-#define wifi_enter_critical(t) \
-    t = s_wifi_osi_funcs.enter_critical()
-
-#define wifi_exit_critical(t) \
-    s_wifi_osi_funcs.exit_critical(t)
-
 #define wifi_task_create(func, name, depth, param, pri) \
     s_wifi_osi_funcs.task_create(func, name, depth, param, pri)
 
