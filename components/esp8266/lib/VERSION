@@ -2,7 +2,7 @@ gwen:
     crypto:     eca7811
     core:       8ee40dd
     net80211:   eca7811
-    pp:         eca7811
+    pp:         82269d9
     smartconfig:eca7811
     wpa:        eca7811
     phy:	1055_8
