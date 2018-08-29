@@ -238,6 +238,8 @@ static int low_level_send_cb(esp_aio_t* aio)
 
     pbuf_free(pbuf);
 
+    udp_sync_trigger();
+
     return 0;
 }
 

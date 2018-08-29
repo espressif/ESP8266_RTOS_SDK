@@ -57,6 +57,10 @@ void sys_thread_sem_deinit(void);
 sys_sem_t* sys_thread_sem_get(void);
 err_t sys_mutex_trylock(sys_mutex_t *pxMutex);
 
+int sys_current_task_is_tcpip(void);
+
+char *sys_current_task_name(void);
+
 #define LWIP_NETCONN_THREAD_SEM_ALLOC() sys_thread_sem_init()
 #define LWIP_NETCONN_THREAD_SEM_FREE()  sys_thread_sem_deinit()
 #define LWIP_NETCONN_THREAD_SEM_GET()   sys_thread_sem_get()

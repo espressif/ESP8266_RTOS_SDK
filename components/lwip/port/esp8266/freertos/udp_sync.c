@@ -127,9 +127,9 @@ void udp_sync_ack(void *in_msg)
 void udp_sync_set_ret(void *netif, int ret)
 {
     /* Only poll and regitser can set current message */
-    if (!s_cur_msg) {
+    if (!s_cur_msg || !sys_current_task_is_tcpip()) {
         /* You may use it to debug */
-        //ESP_LOGE(TAG, "UDP sync ack error, current message is NULL");
+        //ESP_LOGE(TAG, "UDP sync ack error, current message is %p, task name is %s", s_cur_msg, sys_current_task_name());
         return ;
     }
 
@@ -173,12 +173,29 @@ void udp_sync_proc(void)
             continue;
 
         udp_sync_send(s_udp_sync[i].msg);
-#if 0
-        //Todo: Add this later
-        if (s_udp_sync[i].ret != ERR_OK)
+
+        if (s_udp_sync[i].ret == ERR_MEM)
             break;
-#endif
     }
+}
+
+/*
+ * @brief NULL function and just as sync message
+ */
+static void udp_sync_trigger_null(void *p)
+{
+
+}
+
+/*
+ * @brief trigger a UDP sync process
+ */
+void udp_sync_trigger(void)
+{
+    if (!s_udp_sync_num)
+        return ;
+
+    tcpip_callback_with_block((tcpip_callback_fn)udp_sync_trigger_null, NULL, 0);
 }
 
 #endif /* ESP_UDP */

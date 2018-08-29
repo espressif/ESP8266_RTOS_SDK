@@ -52,6 +52,11 @@ void udp_sync_set_ret(void *netif, int ret);
  */
 void udp_sync_proc(void);
 
+/*
+ * @brief trigger a UDP sync process
+ */
+void udp_sync_trigger(void);
+
 #ifdef __cplusplus
 }
 #endif
