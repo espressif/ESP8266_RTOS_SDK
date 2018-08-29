@@ -77,7 +77,7 @@ static void insert_to_list(int fd, struct pbuf* p)
         tmp_pbuf_list1 = (pbuf_send_list_t*)malloc(sizeof(pbuf_send_list_t));
 
         if (!tmp_pbuf_list1) {
-            LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no menory malloc pbuf list error\n"));
+            LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no memory malloc pbuf list error\n"));
             return;
         }
 
@@ -107,7 +107,7 @@ static void insert_to_list(int fd, struct pbuf* p)
     tmp_pbuf_list1 = (pbuf_send_list_t*)malloc(sizeof(pbuf_send_list_t));
 
     if (!tmp_pbuf_list1) {
-        LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no menory malloc pbuf list error\n"));
+        LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no memory malloc pbuf list error\n"));
         return;
     }
 
