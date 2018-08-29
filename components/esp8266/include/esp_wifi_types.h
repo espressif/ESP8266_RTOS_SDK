@@ -121,8 +121,8 @@ typedef union {
 
 /** @brief Parameters for an SSID scan. */
 typedef struct {
-    uint8_t *ssid;               /**< SSID of AP */
-    uint8_t *bssid;              /**< MAC address of AP */
+    uint8_t* ssid;               /**< SSID of AP */
+    uint8_t* bssid;              /**< MAC address of AP */
     uint8_t channel;             /**< channel, scan the specific channel */
     bool show_hidden;            /**< enable to scan AP whose SSID is hidden */
     wifi_scan_type_t scan_type;  /**< scan type, active or passive */
@@ -156,30 +156,30 @@ typedef struct {
     wifi_cipher_type_t pairwise_cipher;   /**< pairwise cipher of AP */
     wifi_cipher_type_t group_cipher;      /**< group cipher of AP */
     wifi_ant_t ant;                       /**< antenna used to receive beacon from AP */
-    uint32_t phy_11b:1;                   /**< bit: 0 flag to identify if 11b mode is enabled or not */
-    uint32_t phy_11g:1;                   /**< bit: 1 flag to identify if 11g mode is enabled or not */
-    uint32_t phy_11n:1;                   /**< bit: 2 flag to identify if 11n mode is enabled or not */
-    uint32_t phy_lr:1;                    /**< bit: 3 flag to identify if low rate is enabled or not */
-    uint32_t wps:1;                       /**< bit: 4 flag to identify if WPS is supported or not */
-    uint32_t reserved:27;                 /**< bit: 5..31 reserved */
+    uint32_t phy_11b: 1;                  /**< bit: 0 flag to identify if 11b mode is enabled or not */
+    uint32_t phy_11g: 1;                  /**< bit: 1 flag to identify if 11g mode is enabled or not */
+    uint32_t phy_11n: 1;                  /**< bit: 2 flag to identify if 11n mode is enabled or not */
+    uint32_t phy_lr: 1;                   /**< bit: 3 flag to identify if low rate is enabled or not */
+    uint32_t wps: 1;                      /**< bit: 4 flag to identify if WPS is supported or not */
+    uint32_t reserved: 27;                /**< bit: 5..31 reserved */
     wifi_country_t country;               /**< country information of AP */
 } wifi_ap_record_t;
 
 typedef enum {
     WIFI_FAST_SCAN = 0,                   /**< Do fast scan, scan will end after find SSID match AP */
     WIFI_ALL_CHANNEL_SCAN,                /**< All channel scan, scan will end after scan all the channel */
-}wifi_scan_method_t;
+} wifi_scan_method_t;
 
 typedef enum {
     WIFI_CONNECT_AP_BY_SIGNAL = 0,        /**< Sort match AP in scan list by RSSI */
     WIFI_CONNECT_AP_BY_SECURITY,          /**< Sort match AP in scan list by security mode */
-}wifi_sort_method_t;
+} wifi_sort_method_t;
 
 /** @brief Structure describing parameters for a WiFi fast scan */
 typedef struct {
     int8_t              rssi;             /**< The minimum rssi to accept in the fast scan mode */
     wifi_auth_mode_t    authmode;         /**< The weakest authmode to accept in the fast scan mode */
-}wifi_fast_scan_threshold_t;
+} wifi_fast_scan_threshold_t;
 
 typedef enum {
     WIFI_PS_NONE,        /**< No power save */
@@ -238,11 +238,11 @@ typedef union {
 /** @brief Description of STA associated with AP */
 typedef struct {
     uint8_t mac[6];  /**< mac address */
-    uint32_t phy_11b:1;      /**< bit: 0 flag to identify if 11b mode is enabled or not */
-    uint32_t phy_11g:1;      /**< bit: 1 flag to identify if 11g mode is enabled or not */
-    uint32_t phy_11n:1;      /**< bit: 2 flag to identify if 11n mode is enabled or not */
-    uint32_t phy_lr:1;       /**< bit: 3 flag to identify if low rate is enabled or not */
-    uint32_t reserved:28;    /**< bit: 4..31 reserved */
+    uint32_t phy_11b: 1;     /**< bit: 0 flag to identify if 11b mode is enabled or not */
+    uint32_t phy_11g: 1;     /**< bit: 1 flag to identify if 11g mode is enabled or not */
+    uint32_t phy_11n: 1;     /**< bit: 2 flag to identify if 11n mode is enabled or not */
+    uint32_t phy_lr: 1;      /**< bit: 3 flag to identify if low rate is enabled or not */
+    uint32_t reserved: 28;   /**< bit: 4..31 reserved */
 } wifi_sta_info_t;
 
 #define ESP_WIFI_MAX_CONN_NUM  (10)       /**< max number of stations which can connect to ESP8266 soft-AP */
@@ -298,31 +298,31 @@ typedef struct {
 
 /** @brief Received packet radio metadata header, this is the common header at the beginning of all promiscuous mode RX callback buffers */
 typedef struct {
-    signed rssi:8;            /**< signal intensity of packet */
-    unsigned rate:4;          /**< data rate */
-    unsigned is_group:1;
-    unsigned :1;              /**< reserve */
-    unsigned sig_mode:2;      /**< 0:is not 11n packet; 1:is 11n packet */
-    unsigned legacy_length:12;
-    unsigned damatch0:1;
-    unsigned damatch1:1;
-    unsigned bssidmatch0:1;
-    unsigned bssidmatch1:1;
-    unsigned mcs:7;           /**< if is 11n packet, shows the modulation(range from 0 to 76) */
-    unsigned cwb:1;           /**< if is 11n packet, shows if is HT40 packet or not */
-    unsigned HT_length:16;             /**< reserve */
-    unsigned smoothing:1;     /**< reserve */
-    unsigned not_sounding:1;  /**< reserve */
-    unsigned :1;              /**< reserve */
-    unsigned aggregation:1;   /**< Aggregation */
-    unsigned stbc:2;          /**< STBC */
-    unsigned fec_coding:1;    /**< Flag is set for 11n packets which are LDPC */
-    unsigned sgi:1;           /**< SGI */
-    unsigned rxend_state:8;
-    unsigned ampdu_cnt:8;     /**< ampdu cnt */
-    unsigned channel:4;       /**< which channel this packet in */
-    unsigned :4;              /**< reserve */
-    signed noise_floor:8;
+    signed rssi: 8;           /**< signal intensity of packet */
+    unsigned rate: 4;         /**< data rate */
+    unsigned is_group: 1;
+    unsigned : 1;             /**< reserve */
+    unsigned sig_mode: 2;     /**< 0:is not 11n packet; 1:is 11n packet */
+    unsigned legacy_length: 12;
+    unsigned damatch0: 1;
+    unsigned damatch1: 1;
+    unsigned bssidmatch0: 1;
+    unsigned bssidmatch1: 1;
+    unsigned mcs: 7;          /**< if is 11n packet, shows the modulation(range from 0 to 76) */
+    unsigned cwb: 1;          /**< if is 11n packet, shows if is HT40 packet or not */
+    unsigned HT_length: 16;            /**< reserve */
+    unsigned smoothing: 1;    /**< reserve */
+    unsigned not_sounding: 1; /**< reserve */
+    unsigned : 1;             /**< reserve */
+    unsigned aggregation: 1;  /**< Aggregation */
+    unsigned stbc: 2;         /**< STBC */
+    unsigned fec_coding: 1;   /**< Flag is set for 11n packets which are LDPC */
+    unsigned sgi: 1;          /**< SGI */
+    unsigned rxend_state: 8;
+    unsigned ampdu_cnt: 8;    /**< ampdu cnt */
+    unsigned channel: 4;      /**< which channel this packet in */
+    unsigned : 4;             /**< reserve */
+    signed noise_floor: 8;
 } wifi_pkt_rx_ctrl_t;
 
 /** @brief Payload passed to 'buf' parameter of promiscuous mode RX callback.
