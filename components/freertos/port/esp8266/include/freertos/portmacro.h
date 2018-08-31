@@ -121,7 +121,7 @@ typedef unsigned int INT32U;
 /* Architecture specifics. */
 #define portSTACK_GROWTH			( -1 )
 #define portTICK_PERIOD_MS			( ( portTickType ) 1000 / configTICK_RATE_HZ )
-#define portBYTE_ALIGNMENT			8
+#define portBYTE_ALIGNMENT			4
 /*-----------------------------------------------------------*/
 
 /* Scheduler utilities. */

@@ -28,25 +28,19 @@ void *_xmalloc(size_t n)
 {
     void *return_addr = (void *)__builtin_return_address(0);
 
-    return pvPortMalloc_trace(n, return_addr, (unsigned)-1, false);
+    return _heap_caps_malloc(n, MALLOC_CAP_8BIT, return_addr, 0);
 }
 
 void _xfree(void *ptr)
 {
     void *return_addr = (void *)__builtin_return_address(0);
 
-    vPortFree_trace(ptr, return_addr, (unsigned)-1);
+    _heap_caps_free(ptr, return_addr, 0);
 }
 
 void *_xrealloc(void *ptr, size_t n)
 {
     void *return_addr = (void *)__builtin_return_address(0);
-    void *p = pvPortMalloc_trace(n, return_addr, (unsigned)-1, false);
-    if (p && ptr) {
-        // n ?
-        memcpy(p, ptr, n);
-        vPortFree_trace(ptr, return_addr, (unsigned)-1);
-    }
 
-    return p;
+    return _heap_caps_realloc(ptr, n, MALLOC_CAP_8BIT, return_addr, 0);
 }

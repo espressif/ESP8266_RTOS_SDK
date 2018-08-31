@@ -28,16 +28,9 @@
  */
 void *mem_malloc_ll(size_t s)
 {
-    void *p;
     void *return_addr = (void *)__builtin_return_address(0);
 
-    p = pvPortMalloc_trace(s, return_addr, (unsigned)-1, false);
-    if (IS_IRAM(p)) {
-        vPortFree_trace(p, return_addr, (unsigned)-1);
-        p = NULL;
-    }
-
-    return p;
+    return _heap_caps_malloc(s, MALLOC_CAP_8BIT, return_addr, 0);
 }
 
 void *memp_malloc_ll(size_t type)

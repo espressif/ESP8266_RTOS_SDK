@@ -21,48 +21,34 @@ void *malloc(size_t n)
 {
     void *return_addr = (void *)__builtin_return_address(0);
 
-    return pvPortMalloc_trace(n, return_addr, (unsigned)-1, true);
+    return _heap_caps_malloc(n, MALLOC_CAP_32BIT, return_addr, 0);
 }
 
 void *realloc(void *old_ptr, size_t n)
 {
     void *return_addr = (void *)__builtin_return_address(0);
 
-    void *p = pvPortMalloc_trace(n, return_addr, (unsigned)-1, true);
-    if (p && old_ptr) {
-        memcpy(p, old_ptr, n);
-        vPortFree_trace(old_ptr, return_addr, 0);
-    }
-
-    return p;
+    return _heap_caps_realloc(old_ptr, n, MALLOC_CAP_32BIT, return_addr, 0);
 }
 
 void *zalloc(size_t n)
 {
     void *return_addr = (void *)__builtin_return_address(0);
 
-    char *p = pvPortMalloc_trace(n, return_addr, (unsigned)-1, true);
-    if (p)
-        memset(p, 0, n);
-
-    return p;
+    return _heap_caps_zalloc(n, MALLOC_CAP_32BIT, return_addr, 0);
 }
 
 void *calloc(size_t c, size_t s)
 {
     void *return_addr = (void *)__builtin_return_address(0);
 
-    char *p = pvPortMalloc_trace(c * s, return_addr, (unsigned)-1, true);
-    if (p)
-        memset(p, 0, c * s);
-
-    return p;
+    return _heap_caps_calloc(c, s, MALLOC_CAP_32BIT, return_addr, 0);
 }
 
 void free(void *ptr)
 {
     void *return_addr = (void *)__builtin_return_address(0);
 
-    vPortFree_trace(ptr, return_addr, (unsigned)-1);
+    _heap_caps_free(ptr, return_addr, 0);
 }
 

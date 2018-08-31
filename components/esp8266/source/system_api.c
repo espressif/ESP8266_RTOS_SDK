@@ -339,7 +339,7 @@ void esp_chip_info(esp_chip_info_t* out_info)
   */
 uint32_t esp_get_free_heap_size(void)
 {
-    return xPortGetFreeHeapSize();
+    return heap_caps_get_free_size(MALLOC_CAP_32BIT);
 }
 
 /**
@@ -347,5 +347,5 @@ uint32_t esp_get_free_heap_size(void)
   */
 uint32_t esp_get_minimum_free_heap_size(void)
 {
-    return xPortGetMinimumEverFreeHeapSize();
+    return heap_caps_get_minimum_free_size(MALLOC_CAP_32BIT);
 }

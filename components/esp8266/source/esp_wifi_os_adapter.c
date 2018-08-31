@@ -274,75 +274,61 @@ static bool timer_delete_wrapper(void *timer, uint32_t ticks)
 
 static void *malloc_wrapper(uint32_t s, uint32_t cap)
 {
-    bool iram;
+    uint32_t os_caps;
     void *return_addr = (void *)__builtin_return_address(0);
 
     if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
-        iram = false;
+        os_caps = MALLOC_CAP_8BIT | MALLOC_CAP_DMA;
     else
-        iram = true;
+        os_caps = MALLOC_CAP_32BIT;
 
-    return pvPortMalloc_trace(s, return_addr, (unsigned)-1, iram);
+    return _heap_caps_malloc(s, os_caps, return_addr, 0);
 }
 
 static void *zalloc_wrapper(uint32_t s, uint32_t cap)
 {
-    bool iram;
+    uint32_t os_caps;
     void *return_addr = (void *)__builtin_return_address(0);
 
     if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
-        iram = false;
+        os_caps = MALLOC_CAP_8BIT | MALLOC_CAP_DMA;
     else
-        iram = true;
+        os_caps = MALLOC_CAP_32BIT;
 
-    char *p = pvPortMalloc_trace(s, return_addr, (unsigned)-1, iram);
-    if (p)
-        memset(p, 0, s);
-
-    return p;
+    return _heap_caps_zalloc(s, os_caps, return_addr, 0);
 }
 
 static void *realloc_wrapper(void *ptr, uint32_t s, uint32_t cap)
 {
-    bool iram;
+    uint32_t os_caps;
     void *return_addr = (void *)__builtin_return_address(0);
 
     if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
-        iram = false;
+        os_caps = MALLOC_CAP_8BIT | MALLOC_CAP_DMA;
     else
-        iram = true;
+        os_caps = MALLOC_CAP_32BIT;
 
-    void *p = pvPortMalloc_trace(s, return_addr, (unsigned)-1, iram);
-    if (p && ptr) {
-        memcpy(p, ptr, s);
-        vPortFree_trace(ptr, return_addr, (unsigned)-1);
-    }
-
-    return p;
+    return _heap_caps_realloc(ptr, s, os_caps, return_addr, 0);
 }
 
 static void *calloc_wrapper(uint32_t cnt, uint32_t s, uint32_t cap)
 {
-    bool iram;
+    uint32_t os_caps;
     void *return_addr = (void *)__builtin_return_address(0);
 
     if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
-        iram = false;
+        os_caps = MALLOC_CAP_8BIT | MALLOC_CAP_DMA;
     else
-        iram = true;
+        os_caps = MALLOC_CAP_32BIT;
 
-    char *p = pvPortMalloc_trace(cnt * s, return_addr, (unsigned)-1, iram);
-    if (p)
-        memset(p, 0, cnt * s);
-
-    return p;
+    return _heap_caps_calloc(cnt , s, os_caps, return_addr, 0);
 }
 
 static void free_wrapper(void *ptr)
 {
     void *return_addr = (void *)__builtin_return_address(0);
 
-    vPortFree_trace(ptr, return_addr, (unsigned)-1);
+    _heap_caps_free(ptr, return_addr, 0);
 }
 
 static void srand_wrapper(uint32_t seed)

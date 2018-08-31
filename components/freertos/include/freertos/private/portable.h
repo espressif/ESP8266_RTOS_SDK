@@ -89,6 +89,7 @@ extern "C" {
 #endif
 
 #include "mpu_wrappers.h"
+#include "esp_heap_caps.h"
 
 /*
  * Setup the stack of a new task so it is ready to be placed under the
@@ -102,49 +103,14 @@ extern "C" {
 	StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t pxCode, void *pvParameters ) PRIVILEGED_FUNCTION;
 #endif
 
-/* Used by heap_5.c. */
-typedef struct HeapRegion
-{
-	uint8_t *pucStartAddress;
-	size_t xSizeInBytes;
-} HeapRegion_t;
+#define pvMALLOC_DRAM (MALLOC_CAP_8BIT | MALLOC_CAP_32BIT | MALLOC_CAP_DMA)
+#define pvMALLOC_IRAM (MALLOC_CAP_32BIT)
 
-/*
- * Used to define multiple heap regions for use by heap_5.c.  This function
- * must be called before any calls to pvPortMalloc() - not creating a task,
- * queue, semaphore, mutex, software timer, event group, etc. will result in
- * pvPortMalloc being called.
- *
- * pxHeapRegions passes in an array of HeapRegion_t structures - each of which
- * defines a region of memory that can be used as the heap.  The array is
- * terminated by a HeapRegions_t structure that has a size of 0.  The region
- * with the lowest start address must appear first in the array.
- */
-void vPortDefineHeapRegions( const HeapRegion_t * const pxHeapRegions ) PRIVILEGED_FUNCTION;
-
-
-/*
- * Map to the memory management routines required for the port.
- */
-void *pvPortMalloc( size_t xSize ) PRIVILEGED_FUNCTION;
-void *pvPortZalloc( size_t xWantedSize ) PRIVILEGED_FUNCTION;
-void *pvPortCalloc( size_t count, size_t size ) PRIVILEGED_FUNCTION;
-void *pvPortRealloc( void *pv, size_t newsize ) PRIVILEGED_FUNCTION;
-void vPortFree( void *pv ) PRIVILEGED_FUNCTION;
-
-#ifdef MEMLEAK_DEBUG
-void *pvPortMalloc_trace( size_t xWantedSize, const char * file, unsigned line, bool use_iram ) PRIVILEGED_FUNCTION;
-void *pvPortZalloc_trace( size_t xWantedSize, const char * file, unsigned line ) PRIVILEGED_FUNCTION;
-void *pvPortCalloc_trace( size_t count, size_t size, const char * file, unsigned line ) PRIVILEGED_FUNCTION;
-void *pvPortRealloc_trace( void *pv, size_t newsize, const char *file, unsigned line ) PRIVILEGED_FUNCTION;
-void vPortFree_trace( void *pv, const char * file, unsigned line ) PRIVILEGED_FUNCTION;
-
-void pvShowMalloc();
-#endif
-
-void vPortInitialiseBlocks( void ) PRIVILEGED_FUNCTION;
-size_t xPortGetFreeHeapSize( void ) PRIVILEGED_FUNCTION;
-size_t xPortGetMinimumEverFreeHeapSize( void ) PRIVILEGED_FUNCTION;
+#define pvPortMalloc(s)     heap_caps_malloc(s, pvMALLOC_DRAM)
+#define pvPortZalloc(s)     heap_caps_zalloc(s, pvMALLOC_IRAM)
+#define pvPortCalloc(c, s)  heap_caps_calloc(c, s, pvMALLOC_IRAM)
+#define pvPortRealloc(p, s) heap_caps_realloc(p, s, pvMALLOC_IRAM)
+#define vPortFree(p)        heap_caps_free(p)
 
 /*
  * Setup the hardware ready for the scheduler to take control.  This generally

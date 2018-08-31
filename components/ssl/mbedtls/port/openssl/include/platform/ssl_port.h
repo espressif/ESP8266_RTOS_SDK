@@ -19,44 +19,15 @@
 #include <stdio.h>
 
 #include "esp_system.h"
+#include "esp_heap_caps.h"
 
 #ifdef __cplusplus
  extern "C" {
 #endif
 
-#ifdef MEMLEAK_DEBUG
-
-extern void *pvPortMalloc( size_t xWantedSize, const char * file, unsigned line, bool use_iram);
-extern void *pvPortZalloc( size_t xWantedSize, const char * file, unsigned line);
-extern void vPortFree(void *pv, const char * file, unsigned line);
-
-#define ssl_mem_malloc(s)    \
-    ({  \
-        pvPortMalloc(s, __FILE__, __LINE__, false);  \
-    })
-
-#define ssl_mem_zalloc(s)    \
-    ({  \
-        pvPortZalloc(s, __FILE__, __LINE__);  \
-    })
-
-#define ssl_mem_free(s) \
-do{\
-    vPortFree(s, __FILE__, __LINE__);\
-}while(0)
-
-
-#else
-
-extern void *pvPortMalloc( size_t xWantedSize );
-extern void *pvPortZalloc( size_t xWantedSize );
-extern void vPortFree(void *pv);
-
-#define ssl_mem_zalloc(s) pvPortZalloc(s)
-#define ssl_mem_malloc(s) pvPortMalloc(s)
-#define ssl_mem_free(p) vPortFree(p)
-
-#endif
+#define ssl_mem_zalloc(s) heap_caps_zalloc(s, MALLOC_CAP_32BIT)
+#define ssl_mem_malloc(s) heap_caps_malloc(s, MALLOC_CAP_32BIT)
+#define ssl_mem_free(p)   heap_caps_free(p)
 
 #define ssl_memcpy memcpy
 #define ssl_strlen strlen
