@@ -33,7 +33,7 @@ void SHA1Transform(u32 state[5], const unsigned char buffer[64]);
  * @mac: Buffer for the hash
  * Returns: 0 on success, -1 of failure
  */
-int ICACHE_FLASH_ATTR
+int 
 sha1_vector(size_t num_elem, const u8 *addr[], const size_t *len, u8 *mac)
 {
 	SHA1_CTX ctx;
@@ -175,7 +175,7 @@ void SHAPrintContext(SHA1_CTX *context, char *msg)
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
 
-void ICACHE_FLASH_ATTR
+void 
 SHA1Transform(u32 state[5], const unsigned char buffer[64])
 {
 	u32 a, b, c, d, e;
@@ -234,7 +234,7 @@ SHA1Transform(u32 state[5], const unsigned char buffer[64])
 
 /* SHA1Init - Initialize new context */
 
-void ICACHE_FLASH_ATTR
+void 
 SHA1Init(SHA1_CTX* context)
 {
 	/* SHA1 initialization constants */
@@ -249,7 +249,7 @@ SHA1Init(SHA1_CTX* context)
 
 /* Run your data through this. */
 
-void ICACHE_FLASH_ATTR
+void 
 SHA1Update(SHA1_CTX* context, const void *_data, u32 len)
 {
 	u32 i, j;
@@ -280,7 +280,7 @@ SHA1Update(SHA1_CTX* context, const void *_data, u32 len)
 
 /* Add padding and return the message digest. */
 
-void ICACHE_FLASH_ATTR
+void 
 SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 {
 	u32 i;

@@ -40,7 +40,7 @@ static int sha256_done(struct sha256_state *md, unsigned char *out);
  * @mac: Buffer for the hash
  * Returns: 0 on success, -1 of failure
  */
-int ICACHE_FLASH_ATTR
+int 
 sha256_vector(size_t num_elem, const u8 *addr[], const size_t *len,
 		  u8 *mac)
 {
@@ -97,7 +97,7 @@ static const unsigned long K[64] = {
 #endif
 
 /* compress 512-bits */
-static int ICACHE_FLASH_ATTR
+static int 
 sha256_compress(struct sha256_state *md, unsigned char *buf)
 {
 	u32 S[8], W[64], t0, t1;
@@ -141,7 +141,7 @@ sha256_compress(struct sha256_state *md, unsigned char *buf)
 
 
 /* Initialize the hash state */
-static void ICACHE_FLASH_ATTR
+static void 
 sha256_init(struct sha256_state *md)
 {
 	md->curlen = 0;
@@ -163,7 +163,7 @@ sha256_init(struct sha256_state *md)
    @param inlen  The length of the data (octets)
    @return CRYPT_OK if successful
 */
-static int ICACHE_FLASH_ATTR
+static int 
 sha256_process(struct sha256_state *md, const unsigned char *in,
 			  unsigned long inlen)
 {
@@ -204,7 +204,7 @@ sha256_process(struct sha256_state *md, const unsigned char *in,
    @param out [out] The destination of the hash (32 bytes)
    @return CRYPT_OK if successful
 */
-static int ICACHE_FLASH_ATTR
+static int 
 sha256_done(struct sha256_state *md, unsigned char *out)
 {
 	int i;

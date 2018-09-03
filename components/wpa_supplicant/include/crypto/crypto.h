@@ -27,6 +27,8 @@
 #ifndef CRYPTO_H
 #define CRYPTO_H
 
+#include "common.h"
+
 /**
  * md4_vector - MD4 hash for data vector
  * @num_elem: Number of elements in the data vector
@@ -154,8 +156,9 @@ void aes_decrypt_deinit(void *ctx);
 
 
 enum crypto_hash_alg {
-	CRYPTO_HASH_ALG_MD5, CRYPTO_HASH_ALG_SHA1,
-	CRYPTO_HASH_ALG_HMAC_MD5, CRYPTO_HASH_ALG_HMAC_SHA1
+        CRYPTO_HASH_ALG_MD5, CRYPTO_HASH_ALG_SHA1,
+        CRYPTO_HASH_ALG_HMAC_MD5, CRYPTO_HASH_ALG_HMAC_SHA1,
+        CRYPTO_HASH_ALG_SHA256, CRYPTO_HASH_ALG_HMAC_SHA256
 };
 
 struct crypto_hash;

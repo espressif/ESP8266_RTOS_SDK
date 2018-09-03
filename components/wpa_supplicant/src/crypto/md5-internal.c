@@ -34,7 +34,7 @@ typedef struct MD5Context MD5_CTX;
  * @mac: Buffer for the hash
  * Returns: 0 on success, -1 of failure
  */
-int ICACHE_FLASH_ATTR
+int 
 md5_vector(size_t num_elem, const u8 *addr[], const size_t *len, u8 *mac)
 {
 	MD5_CTX ctx;
@@ -88,7 +88,7 @@ static void byteReverse(unsigned char *buf, unsigned longs)
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
-void ICACHE_FLASH_ATTR
+void 
 MD5Init(struct MD5Context *ctx)
 {
     ctx->buf[0] = 0x67452301;
@@ -104,7 +104,7 @@ MD5Init(struct MD5Context *ctx)
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-void ICACHE_FLASH_ATTR
+void 
 MD5Update(struct MD5Context *ctx, unsigned char const *buf, unsigned len)
 {
     u32 t;
@@ -153,7 +153,7 @@ MD5Update(struct MD5Context *ctx, unsigned char const *buf, unsigned len)
  * Final wrapup - pad to 64-byte boundary with the bit pattern
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
-void ICACHE_FLASH_ATTR
+void 
 MD5Final(unsigned char digest[16], struct MD5Context *ctx)
 {
     unsigned count;
@@ -192,7 +192,7 @@ MD5Final(unsigned char digest[16], struct MD5Context *ctx)
     MD5Transform(ctx->buf, (u32 *) ctx->in);
     byteReverse((unsigned char *) ctx->buf, 4);
     os_memcpy(digest, ctx->buf, 16);
-    os_memset(ctx, 0, sizeof(ctx));	/* In case it's sensitive */
+    os_memset(ctx, 0, sizeof(struct MD5Context));	/* In case it's sensitive */
 }
 
 /* The four core functions - F1 is optimized somewhat */
@@ -212,7 +212,7 @@ MD5Final(unsigned char digest[16], struct MD5Context *ctx)
  * reflect the addition of 16 longwords of new data.  MD5Update blocks
  * the data and converts bytes into longwords for this routine.
  */
-static void ICACHE_FLASH_ATTR
+static void 
 MD5Transform(u32 buf[4], u32 const in[16])
 {
     register u32 a, b, c, d;

@@ -26,15 +26,11 @@
 #include "crypto/crypto.h"
 #include "crypto/aes_i.h"
 
-#ifdef MEMLEAK_DEBUG
-static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
-#endif
 #include "os.h"
 
-void ICACHE_FLASH_ATTR rijndaelEncrypt(const u32 rk[/*44*/], const u8 pt[16], u8 ct[16])
+void  rijndaelEncrypt(const u32 rk[], int Nr, const u8 pt[16], u8 ct[16])
 {
 	u32 s0, s1, s2, s3, t0, t1, t2, t3;
-	const int Nr = 10;
 #ifndef FULL_UNROLL
 	int r;
 #endif /* ?FULL_UNROLL */
@@ -65,6 +61,14 @@ d##3 = TE0(s##3) ^ TE1(s##0) ^ TE2(s##1) ^ TE3(s##2) ^ rk[4 * i + 3]
 	ROUND(7,t,s);
 	ROUND(8,s,t);
 	ROUND(9,t,s);
+	if (Nr > 10) {
+		ROUND(10,s,t);
+		ROUND(11,t,s);
+		if (Nr > 12) {
+			ROUND(12,s,t);
+			ROUND(13,t,s);
+		}
+	}
 
 	rk += Nr << 2;
 
@@ -99,26 +103,31 @@ d##3 = TE0(s##3) ^ TE1(s##0) ^ TE2(s##1) ^ TE3(s##2) ^ rk[4 * i + 3]
 }
 
 
-void * ICACHE_FLASH_ATTR aes_encrypt_init(const u8 *key, size_t len)
+void *  aes_encrypt_init(const u8 *key, size_t len)
 {
 	u32 *rk;
-	if (len != 16)
-		return NULL;
-	rk = (u32 *)os_malloc(AES_PRIV_SIZE);
+	int res;
+	rk = os_malloc(AES_PRIV_SIZE);
 	if (rk == NULL)
 		return NULL;
-	rijndaelKeySetupEnc(rk, key);
+	res = rijndaelKeySetupEnc(rk, key, len * 8);
+	if (res < 0) {
+		os_free(rk);
+		return NULL;
+	}
+	rk[AES_PRIV_NR_POS] = res;
 	return rk;
 }
 
 
-void ICACHE_FLASH_ATTR aes_encrypt(void *ctx, const u8 *plain, u8 *crypt)
+void  aes_encrypt(void *ctx, const u8 *plain, u8 *crypt)
 {
-	rijndaelEncrypt(ctx, plain, crypt);
+	u32 *rk = ctx;
+	rijndaelEncrypt(ctx, rk[AES_PRIV_NR_POS], plain, crypt);
 }
 
 
-void ICACHE_FLASH_ATTR aes_encrypt_deinit(void *ctx)
+void  aes_encrypt_deinit(void *ctx)
 {
 	os_memset(ctx, 0, AES_PRIV_SIZE);
 	os_free(ctx);

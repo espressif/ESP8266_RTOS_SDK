@@ -27,9 +27,6 @@
 #include "crypto/crypto.h"
 #include "crypto/aes_i.h"
 
-#ifdef MEMLEAK_DEBUG
-static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
-#endif
 
 
 //static unsigned char aes_priv_buf[AES_PRIV_SIZE];
@@ -39,14 +36,15 @@ static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
  *
  * @return	the number of rounds for the given cipher key size.
  */
-void ICACHE_FLASH_ATTR
-rijndaelKeySetupDec(u32 rk[/*44*/], const u8 cipherKey[])
+static int  rijndaelKeySetupDec(u32 rk[], const u8 cipherKey[], int keyBits)
 {
-	int Nr = 10, i, j;
+	int Nr, i, j;
 	u32 temp;
 
 	/* expand the cipher key: */
-	rijndaelKeySetupEnc(rk, cipherKey);
+	Nr = rijndaelKeySetupEnc(rk, cipherKey, keyBits);
+	if (Nr < 0)
+		return Nr;
 	/* invert the order of the round keys: */
 	for (i = 0, j = 4*Nr; i < j; i += 4, j -= 4) {
 		temp = rk[i    ]; rk[i    ] = rk[j    ]; rk[j    ] = temp;
@@ -65,28 +63,30 @@ rijndaelKeySetupDec(u32 rk[/*44*/], const u8 cipherKey[])
 				TD3_(TE4((rk[j]      ) & 0xff));
 		}
 	}
+
+	return Nr;
 }
 
-void * ICACHE_FLASH_ATTR
-aes_decrypt_init(const u8 *key, size_t len)
+void *  aes_decrypt_init(const u8 *key, size_t len)
 {
 	u32 *rk;
-	if (len != 16)
-		return NULL;
-
+	int res;
 	rk = os_malloc(AES_PRIV_SIZE);
 	if (rk == NULL)
 		return NULL;
-
-	rijndaelKeySetupDec(rk, key);
+	res = rijndaelKeySetupDec(rk, key, len * 8);
+	if (res < 0) {
+		os_free(rk);
+		return NULL;
+	}
+	rk[AES_PRIV_NR_POS] = res;
 	return rk;
 }
 
-static void ICACHE_FLASH_ATTR
-rijndaelDecrypt(const u32 rk[/*44*/], const u8 ct[16], u8 pt[16])
+static void  rijndaelDecrypt(const u32 rk[/*44*/], int Nr, const u8 ct[16],
+			    u8 pt[16])
 {
 	u32 s0, s1, s2, s3, t0, t1, t2, t3;
-	const int Nr = 10;
 #ifndef FULL_UNROLL
 	int r;
 #endif /* ?FULL_UNROLL */
@@ -117,6 +117,14 @@ d##3 = TD0(s##3) ^ TD1(s##2) ^ TD2(s##1) ^ TD3(s##0) ^ rk[4 * i + 3]
 	ROUND(7,t,s);
 	ROUND(8,s,t);
 	ROUND(9,t,s);
+	if (Nr > 10) {
+		ROUND(10,s,t);
+		ROUND(11,t,s);
+		if (Nr > 12) {
+			ROUND(12,s,t);
+			ROUND(13,t,s);
+		}
+	}
 
 	rk += Nr << 2;
 
@@ -136,9 +144,6 @@ d##3 = TD0(s##3) ^ TD1(s##2) ^ TD2(s##1) ^ TD3(s##0) ^ rk[4 * i + 3]
 
 #undef ROUND
 
-	u8 *Td4s;
-	Td4s = (u8 *)os_malloc(256);
-	os_memcpy(Td4s, Td4s_rom, 256);
 	/*
 	 * apply last round and
 	 * map cipher state to byte array block:
@@ -151,19 +156,16 @@ d##3 = TD0(s##3) ^ TD1(s##2) ^ TD2(s##1) ^ TD3(s##0) ^ rk[4 * i + 3]
 	PUTU32(pt +  8, s2);
 	s3 = TD41(t3) ^ TD42(t2) ^ TD43(t1) ^ TD44(t0) ^ rk[3];
 	PUTU32(pt + 12, s3);
-
-	os_free(Td4s);
 }
 
-void ICACHE_FLASH_ATTR
-aes_decrypt(void *ctx, const u8 *crypt, u8 *plain)
+void  aes_decrypt(void *ctx, const u8 *crypt, u8 *plain)
 {
-	rijndaelDecrypt(ctx, crypt, plain);
+	u32 *rk = ctx;
+	rijndaelDecrypt(ctx, rk[AES_PRIV_NR_POS], crypt, plain);
 }
 
 
-void ICACHE_FLASH_ATTR
-aes_decrypt_deinit(void *ctx)
+void  aes_decrypt_deinit(void *ctx)
 {
 	os_memset(ctx, 0, AES_PRIV_SIZE);
 	os_free(ctx);

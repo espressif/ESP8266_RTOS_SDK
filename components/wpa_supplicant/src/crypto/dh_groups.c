@@ -13,11 +13,11 @@
  */
 
 #include "crypto/includes.h"
+
 #include "crypto/common.h"
 #include "crypto/crypto.h"
 #include "crypto/random.h"
 #include "crypto/dh_groups.h"
-
 #include "wpa/wpabuf.h"
 #include "wpa/wpa_debug.h"
 
@@ -540,7 +540,7 @@ static struct dh_group dh_groups[] = {
 #define NUM_DH_GROUPS (sizeof(dh_groups) / sizeof(dh_groups[0]))
 
 
-const struct dh_group * ICACHE_FLASH_ATTR
+const struct dh_group * 
 dh_groups_get(int id)
 {
 	size_t i;
@@ -558,7 +558,7 @@ dh_groups_get(int id)
  * @priv: Pointer for returning Diffie-Hellman private key
  * Returns: Diffie-Hellman public value
  */
-struct wpabuf * ICACHE_FLASH_ATTR
+struct wpabuf * 
 dh_init(const struct dh_group *dh, struct wpabuf **priv)
 {
 	struct wpabuf *pv;
@@ -611,7 +611,7 @@ dh_init(const struct dh_group *dh, struct wpabuf **priv)
  * @dh: Selected Diffie-Hellman group
  * Returns: Diffie-Hellman shared key
  */
-struct wpabuf * ICACHE_FLASH_ATTR
+struct wpabuf * 
 dh_derive_shared(const struct wpabuf *peer_public,
 				 const struct wpabuf *own_private,
 				 const struct dh_group *dh)

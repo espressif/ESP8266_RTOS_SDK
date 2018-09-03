@@ -159,12 +159,9 @@ typedef TUint8 u8;
 #ifdef CONFIG_USE_INTTYPES_H
 #include <inttypes.h>
 #else
-#ifndef __ets__
 #include <stdint.h>
-#endif //!__ets__
 #endif
 
-#ifndef __ets__
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef uint16_t u16;
@@ -173,7 +170,6 @@ typedef int64_t s64;
 typedef int32_t s32;
 typedef int16_t s16;
 typedef int8_t s8;
-#endif //!__ets__
 #define WPA_TYPES_DEFINED
 #endif /* !WPA_TYPES_DEFINED */
 

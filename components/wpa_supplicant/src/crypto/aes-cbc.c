@@ -27,7 +27,7 @@
  * @data_len: Length of data in bytes (must be divisible by 16)
  * Returns: 0 on success, -1 on failure
  */
-int ICACHE_FLASH_ATTR
+int 
 aes_128_cbc_encrypt(const u8 *key, const u8 *iv, u8 *data, size_t data_len)
 {
 	void *ctx;
@@ -61,7 +61,7 @@ aes_128_cbc_encrypt(const u8 *key, const u8 *iv, u8 *data, size_t data_len)
  * @data_len: Length of data in bytes (must be divisible by 16)
  * Returns: 0 on success, -1 on failure
  */
-int ICACHE_FLASH_ATTR
+int 
 aes_128_cbc_decrypt(const u8 *key, const u8 *iv, u8 *data, size_t data_len)
 {
 	void *ctx;

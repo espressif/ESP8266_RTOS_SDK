@@ -22,7 +22,7 @@
  * @cipher: Wrapped key, (n + 1) * 64 bits
  * Returns: 0 on success, -1 on failure
  */
-int ICACHE_FLASH_ATTR aes_wrap(const u8 *kek, int n, const u8 *plain, u8 *cipher)
+int  aes_wrap(const u8 *kek, int n, const u8 *plain, u8 *cipher)
 {
 	u8 *a, *r, b[16];
 	int i, j;

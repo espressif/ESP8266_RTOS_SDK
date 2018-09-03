@@ -23,6 +23,7 @@
 
 #include "crypto/includes.h"
 
+//#include "wpa/common.h"
 #include "crypto/common.h"
 #include "crypto/crypto.h"
 #include "crypto/aes_i.h"
@@ -53,6 +54,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define AES_SMALL_TABLES
 
 /*
 Te0[x] = S [x].[02, 01, 01, 03];
@@ -68,7 +70,7 @@ Td3[x] = Si[x].[09, 0d, 0b, 0e];
 Td4[x] = Si[x].[01, 01, 01, 01];
 */
 
-const u32 Te0[256] ICACHE_RODATA_ATTR = {
+const u32 Te0[256] /* ICACHE_RODATA_ATTR */ = {
     0xc66363a5U, 0xf87c7c84U, 0xee777799U, 0xf67b7b8dU,
     0xfff2f20dU, 0xd66b6bbdU, 0xde6f6fb1U, 0x91c5c554U,
     0x60303050U, 0x02010103U, 0xce6767a9U, 0x562b2b7dU,
@@ -135,7 +137,7 @@ const u32 Te0[256] ICACHE_RODATA_ATTR = {
     0x7bb0b0cbU, 0xa85454fcU, 0x6dbbbbd6U, 0x2c16163aU,
 };
 #ifndef AES_SMALL_TABLES
-const u32 Te1[256] = {
+const u32 Te1[256] /* ICACHE_RODATA_ATTR */ = {
     0xa5c66363U, 0x84f87c7cU, 0x99ee7777U, 0x8df67b7bU,
     0x0dfff2f2U, 0xbdd66b6bU, 0xb1de6f6fU, 0x5491c5c5U,
     0x50603030U, 0x03020101U, 0xa9ce6767U, 0x7d562b2bU,
@@ -201,7 +203,7 @@ const u32 Te1[256] = {
     0xc3824141U, 0xb0299999U, 0x775a2d2dU, 0x111e0f0fU,
     0xcb7bb0b0U, 0xfca85454U, 0xd66dbbbbU, 0x3a2c1616U,
 };
-const u32 Te2[256] = {
+const u32 Te2[256] /* ICACHE_RODATA_ATTR */ = {
     0x63a5c663U, 0x7c84f87cU, 0x7799ee77U, 0x7b8df67bU,
     0xf20dfff2U, 0x6bbdd66bU, 0x6fb1de6fU, 0xc55491c5U,
     0x30506030U, 0x01030201U, 0x67a9ce67U, 0x2b7d562bU,
@@ -267,7 +269,7 @@ const u32 Te2[256] = {
     0x41c38241U, 0x99b02999U, 0x2d775a2dU, 0x0f111e0fU,
     0xb0cb7bb0U, 0x54fca854U, 0xbbd66dbbU, 0x163a2c16U,
 };
-const u32 Te3[256] = {
+const u32 Te3[256] /* ICACHE_RODATA_ATTR */ = {
 
     0x6363a5c6U, 0x7c7c84f8U, 0x777799eeU, 0x7b7b8df6U,
     0xf2f20dffU, 0x6b6bbdd6U, 0x6f6fb1deU, 0xc5c55491U,
@@ -334,7 +336,7 @@ const u32 Te3[256] = {
     0x4141c382U, 0x9999b029U, 0x2d2d775aU, 0x0f0f111eU,
     0xb0b0cb7bU, 0x5454fca8U, 0xbbbbd66dU, 0x16163a2cU,
 };
-const u32 Te4[256] = {
+const u32 Te4[256] /* ICACHE_RODATA_ATTR */ = {
     0x63636363U, 0x7c7c7c7cU, 0x77777777U, 0x7b7b7b7bU,
     0xf2f2f2f2U, 0x6b6b6b6bU, 0x6f6f6f6fU, 0xc5c5c5c5U,
     0x30303030U, 0x01010101U, 0x67676767U, 0x2b2b2b2bU,
@@ -401,7 +403,7 @@ const u32 Te4[256] = {
     0xb0b0b0b0U, 0x54545454U, 0xbbbbbbbbU, 0x16161616U,
 };
 #endif /* AES_SMALL_TABLES */
-const u32 Td0[256] ICACHE_RODATA_ATTR = {
+const u32 Td0[256] /* ICACHE_RODATA_ATTR */ = {
     0x51f4a750U, 0x7e416553U, 0x1a17a4c3U, 0x3a275e96U,
     0x3bab6bcbU, 0x1f9d45f1U, 0xacfa58abU, 0x4be30393U,
     0x2030fa55U, 0xad766df6U, 0x88cc7691U, 0xf5024c25U,
@@ -468,7 +470,7 @@ const u32 Td0[256] ICACHE_RODATA_ATTR = {
     0x7bcb8461U, 0xd532b670U, 0x486c5c74U, 0xd0b85742U,
 };
 #ifndef AES_SMALL_TABLES
-const u32 Td1[256] = {
+const u32 Td1[256] /* ICACHE_RODATA_ATTR */ = {
     0x5051f4a7U, 0x537e4165U, 0xc31a17a4U, 0x963a275eU,
     0xcb3bab6bU, 0xf11f9d45U, 0xabacfa58U, 0x934be303U,
     0x552030faU, 0xf6ad766dU, 0x9188cc76U, 0x25f5024cU,
@@ -534,7 +536,7 @@ const u32 Td1[256] = {
     0x7139a801U, 0xde080cb3U, 0x9cd8b4e4U, 0x906456c1U,
     0x617bcb84U, 0x70d532b6U, 0x74486c5cU, 0x42d0b857U,
 };
-const u32 Td2[256] = {
+const u32 Td2[256] /* ICACHE_RODATA_ATTR */ = {
     0xa75051f4U, 0x65537e41U, 0xa4c31a17U, 0x5e963a27U,
     0x6bcb3babU, 0x45f11f9dU, 0x58abacfaU, 0x03934be3U,
     0xfa552030U, 0x6df6ad76U, 0x769188ccU, 0x4c25f502U,
@@ -601,7 +603,7 @@ const u32 Td2[256] = {
     0x017139a8U, 0xb3de080cU, 0xe49cd8b4U, 0xc1906456U,
     0x84617bcbU, 0xb670d532U, 0x5c74486cU, 0x5742d0b8U,
 };
-const u32 Td3[256] = {
+const u32 Td3[256] /* ICACHE_RODATA_ATTR */ = {
     0xf4a75051U, 0x4165537eU, 0x17a4c31aU, 0x275e963aU,
     0xab6bcb3bU, 0x9d45f11fU, 0xfa58abacU, 0xe303934bU,
     0x30fa5520U, 0x766df6adU, 0xcc769188U, 0x024c25f5U,
@@ -667,7 +669,7 @@ const u32 Td3[256] = {
     0xa8017139U, 0x0cb3de08U, 0xb4e49cd8U, 0x56c19064U,
     0xcb84617bU, 0x32b670d5U, 0x6c5c7448U, 0xb85742d0U,
 };
-const u32 Td4[256] = {
+const u32 Td4[256] /* ICACHE_RODATA_ATTR */ = {
     0x52525252U, 0x09090909U, 0x6a6a6a6aU, 0xd5d5d5d5U,
     0x30303030U, 0x36363636U, 0xa5a5a5a5U, 0x38383838U,
     0xbfbfbfbfU, 0x40404040U, 0xa3a3a3a3U, 0x9e9e9e9eU,
@@ -733,13 +735,13 @@ const u32 Td4[256] = {
     0xe1e1e1e1U, 0x69696969U, 0x14141414U, 0x63636363U,
     0x55555555U, 0x21212121U, 0x0c0c0c0cU, 0x7d7d7d7dU,
 };
-const u32 rcon[] = {
+const u32 rcon[] /* ICACHE_RODATA_ATTR */ = {
 	0x01000000, 0x02000000, 0x04000000, 0x08000000,
 	0x10000000, 0x20000000, 0x40000000, 0x80000000,
 	0x1B000000, 0x36000000, /* for 128-bit blocks, Rijndael never uses more than 10 rcon values */
 };
 #else /* AES_SMALL_TABLES */
-const u8 Td4s_rom[256] ICACHE_RODATA_ATTR = {
+const u8 Td4s[256] /* ICACHE_RODATA_ATTR */ = {
     0x52U, 0x09U, 0x6aU, 0xd5U, 0x30U, 0x36U, 0xa5U, 0x38U,
     0xbfU, 0x40U, 0xa3U, 0x9eU, 0x81U, 0xf3U, 0xd7U, 0xfbU,
     0x7cU, 0xe3U, 0x39U, 0x82U, 0x9bU, 0x2fU, 0xffU, 0x87U,
@@ -773,7 +775,7 @@ const u8 Td4s_rom[256] ICACHE_RODATA_ATTR = {
     0x17U, 0x2bU, 0x04U, 0x7eU, 0xbaU, 0x77U, 0xd6U, 0x26U,
     0xe1U, 0x69U, 0x14U, 0x63U, 0x55U, 0x21U, 0x0cU, 0x7dU,
 };
-const u8 rcons[] ICACHE_RODATA_ATTR = {
+const u8 rcons[] /* ICACHE_RODATA_ATTR */ = {
 	0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
 	/* for 128-bit blocks, Rijndael never uses more than 10 rcon values */
 };
@@ -783,8 +785,7 @@ const u8 rcons[] ICACHE_RODATA_ATTR = {
  *
  * @return	the number of rounds for the given cipher key size.
  */
-void ICACHE_FLASH_ATTR
-rijndaelKeySetupEnc(u32 rk[/*44*/], const u8 cipherKey[])
+int rijndaelKeySetupEnc(u32 rk[], const u8 cipherKey[], int keyBits)
 {
 	int i;
 	u32 temp;
@@ -793,14 +794,61 @@ rijndaelKeySetupEnc(u32 rk[/*44*/], const u8 cipherKey[])
 	rk[1] = GETU32(cipherKey +  4);
 	rk[2] = GETU32(cipherKey +  8);
 	rk[3] = GETU32(cipherKey + 12);
-	for (i = 0; i < 10; i++) {
-		temp  = rk[3];
-		rk[4] = rk[0] ^
-			TE421(temp) ^ TE432(temp) ^ TE443(temp) ^ TE414(temp) ^
-			RCON(i);
-		rk[5] = rk[1] ^ rk[4];
-		rk[6] = rk[2] ^ rk[5];
-		rk[7] = rk[3] ^ rk[6];
-		rk += 4;
+
+	if (keyBits == 128) {
+		for (i = 0; i < 10; i++) {
+			temp  = rk[3];
+			rk[4] = rk[0] ^ TE421(temp) ^ TE432(temp) ^
+				TE443(temp) ^ TE414(temp) ^ RCON(i);
+			rk[5] = rk[1] ^ rk[4];
+			rk[6] = rk[2] ^ rk[5];
+			rk[7] = rk[3] ^ rk[6];
+			rk += 4;
+		}
+		return 10;
 	}
+
+	rk[4] = GETU32(cipherKey + 16);
+	rk[5] = GETU32(cipherKey + 20);
+
+	if (keyBits == 192) {
+		for (i = 0; i < 8; i++) {
+			temp  = rk[5];
+			rk[6] = rk[0] ^ TE421(temp) ^ TE432(temp) ^
+				TE443(temp) ^ TE414(temp) ^ RCON(i);
+			rk[7] = rk[1] ^ rk[6];
+			rk[8] = rk[2] ^ rk[7];
+			rk[9] = rk[3] ^ rk[8];
+			if (i == 7)
+				return 12;
+			rk[10] = rk[4] ^ rk[9];
+			rk[11] = rk[5] ^ rk[10];
+			rk += 6;
+		}
+	}
+
+	rk[6] = GETU32(cipherKey + 24);
+	rk[7] = GETU32(cipherKey + 28);
+
+	if (keyBits == 256) {
+		for (i = 0; i < 7; i++) {
+			temp  = rk[7];
+			rk[8] = rk[0] ^ TE421(temp) ^ TE432(temp) ^
+				TE443(temp) ^ TE414(temp) ^ RCON(i);
+			rk[9] = rk[1] ^ rk[8];
+			rk[10] = rk[2] ^ rk[9];
+			rk[11] = rk[3] ^ rk[10];
+			if (i == 6)
+				return 14;
+			temp  = rk[11];
+			rk[12] = rk[4] ^ TE411(temp) ^ TE422(temp) ^
+				TE433(temp) ^ TE444(temp);
+			rk[13] = rk[5] ^ rk[12];
+			rk[14] = rk[6] ^ rk[13];
+			rk[15] = rk[7] ^ rk[14];
+			rk += 8;
+		}
+	}
+
+	return -1;
 }

@@ -19,7 +19,7 @@
 #include "crypto/crypto.h"
 
 
-int ICACHE_FLASH_ATTR
+int 
 crypto_mod_exp(const u8 *base, size_t base_len,
 		   const u8 *power, size_t power_len,
 		   const u8 *modulus, size_t modulus_len,

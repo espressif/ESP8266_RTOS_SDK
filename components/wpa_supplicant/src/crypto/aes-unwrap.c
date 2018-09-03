@@ -28,7 +28,7 @@
  * @plain: Plaintext key, n * 64 bits
  * Returns: 0 on success, -1 on failure (e.g., integrity verification failed)
  */
-int ICACHE_FLASH_ATTR
+int 
 aes_unwrap(const u8 *kek, int n, const u8 *cipher, u8 *plain)
 {
 	u8 a[8], *r, b[16];
