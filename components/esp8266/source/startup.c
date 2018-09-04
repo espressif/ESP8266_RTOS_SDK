@@ -60,7 +60,6 @@ static void user_init_entry(void *param)
     assert(watchdog_init() == 0);
     assert(wifi_timer_init() == 0);
 
-    tcpip_adapter_init();
     esp_wifi_set_rx_pbuf_mem_type(WIFI_RX_PBUF_DRAM);
 
     app_main();
