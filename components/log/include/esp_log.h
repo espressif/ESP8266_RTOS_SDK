@@ -41,6 +41,30 @@ typedef enum {
 
 typedef int (*putchar_like_t)(int ch);
 
+#ifdef CONFIG_LOG_SET_LEVEL
+/**
+ * @brief Set log level for given tag
+ *
+ * If logging for given component has already been enabled, changes previous setting.
+ *
+ * Note that this function can not raise log level above the level set using
+ * CONFIG_LOG_DEFAULT_LEVEL setting in menuconfig.
+ *
+ * To raise log level above the default one for a given file, define
+ * LOG_LOCAL_LEVEL to one of the ESP_LOG_* values, before including
+ * esp_log.h in this file.
+ *
+ * @param tag Tag of the log entries to enable. Must be a non-NULL zero terminated string.
+ *            Value "*" resets log level for all tags to the given value.
+ *
+ * @param level  Selects log level to enable. Only logs at this and lower verbosity
+ * levels will be shown.
+ */
+void esp_log_level_set(const char* tag, esp_log_level_t level);
+#else
+#define esp_log_level_set(tag, level)
+#endif /* CONFIG_LOG_SET_LEVEL */
+
 /**
  * @brief Set function used to output log entries
  *
