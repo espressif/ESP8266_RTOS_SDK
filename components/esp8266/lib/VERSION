@@ -1,7 +1,7 @@
 gwen:
     crypto:     8943c89
     core:       782e796
-    net80211:   ac9e664
+    net80211:   5319ba0
     pp:         830c0c8
     smartconfig:68bd9c5
     wpa:        e28c056
