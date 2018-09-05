@@ -161,7 +161,7 @@ typedef struct
     uint8_t     dataLen;        ///< Data byte length.
 } SpiData;
 
-#pragma upack (1)
+#pragma pack ()
 
 #define SHOWREG() __ShowRegValue(__func__, __LINE__);
 
