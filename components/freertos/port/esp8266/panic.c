@@ -57,17 +57,55 @@ typedef struct task_info
     StackType_t		*pxEndOfStack;
 } task_info_t;
 
-static void IRAM_ATTR panic_stack(StackType_t *start_stk, StackType_t *end_stk)
+static void panic_data32(uint32_t data, int hex)
+{
+    char buf[12];
+    size_t off = 0;
+
+    if (!data)
+        buf[off++] = '0';
+    else {
+        while (data) {
+            char tmp = data % hex;
+
+            if (tmp >= 10)
+                tmp = tmp - 10 + 'a';
+            else
+                tmp = tmp + '0';
+
+            data = data / hex;
+
+            buf[off++] = tmp;
+        }
+    }
+
+    if (hex == 16) {
+        while (off < 8)
+            buf[off++] = '0';
+    }
+
+    while (off)
+        ets_putc(buf[--off]);
+}
+
+static void panic_str(const char *s)
+{
+    while (*s)
+        ets_putc(*s++);
+}
+
+static void panic_stack(StackType_t *start_stk, StackType_t *end_stk)
 {
     uint32_t *start = (uint32_t *)start_stk, *end = (uint32_t *)end_stk;
     size_t i, j;
     size_t size = end - start + 1;
 
-    ets_printf("%10s", " ");
+    panic_str("          ");
     for (i = 0; i < STACK_VOL_NUM; i++) {
-        ets_printf("%-8x ", i * sizeof(StackType_t));
+        panic_data32(i * sizeof(StackType_t), 16);
+        panic_str(" ");
     }
-    ets_printf("\n\n");
+    panic_str("\r\n\r\n");
 
     for (i = 0; i < size; i += STACK_VOL_NUM) {
         size_t len = size > i ? size - i : STACK_VOL_NUM - (i - size);
@@ -75,12 +113,14 @@ static void IRAM_ATTR panic_stack(StackType_t *start_stk, StackType_t *end_stk)
         if (len > STACK_VOL_NUM)
             len = STACK_VOL_NUM;
 
-        ets_printf("%-10x", &start[i]);
+        panic_data32((uint32_t)&start[i], 16);
+        panic_str("  ");
 
         for (j = 0; j < len; j++) {
-            ets_printf("%08x ",start[i + j]);
+            panic_data32((uint32_t)start[i + j], 16);
+            panic_str(" ");
         }
-        ets_printf("\n");
+        panic_str("\r\n");
     }
 }
 
@@ -91,54 +131,59 @@ static void IRAM_ATTR panic_stack(StackType_t *start_stk, StackType_t *end_stk)
  * 
  * @return none
  */
-void IRAM_ATTR panicHandler(void *frame)
+void panic_info(void *frame)
 {
-    // for panic the function that disable cache
-    Cache_Read_Enable_New();
-
     task_info_t *task;
     int *regs = (int *)frame;
     int x, y;
     const char *sdesc[] = {
-        "PC",   "PS",   "A0",   "A1",
-        "A2",   "A3",   "A4",   "A5",
-        "A6",   "A7",   "A8",   "A9",
-        "A10",  "A11",  "A12",  "A13",
-        "A14",  "A15",  "SAR",  "EXCCAUSE"
+        "      PC",   "      PS",   "      A0",   "      A1",
+        "      A2",   "      A3",   "      A4",   "      A5",
+        "      A6",   "      A7",   "      A8",   "      A9",
+        "     A10",   "     A11",   "     A12",   "     A13",
+        "     A14",   "     A15",   "     SAR",   "EXCCAUSE"
     };
 
     extern int _Pri_3_NMICount;
 
-    /* NMI can interrupt exception. */
-    ETS_INTR_LOCK();
-
-    ets_printf("\r\n\r\n");
+    panic_str("\r\n\r\n");
 
     if (_Pri_3_NMICount == -1) {
-        ets_printf("Soft watch dog triggle:\r\n\r\n");
+        panic_str("Soft watch dog triggle:\r\n\r\n");
         show_critical_info();
     } else if (xPortInIsrContext())
-        ets_printf("Core 0 was running in ISR context:\r\n\r\n");
+        panic_str("Core 0 was running in ISR context:\r\n\r\n");
 
     if ((task = (task_info_t *)xTaskGetCurrentTaskHandle())) {
         StackType_t *pdata = task->pxStack;
         StackType_t *end = task->pxEndOfStack + 4;
 
-        ets_printf("Task stack [%s] stack from [%p] to [%p], total [%d] size\r\n\r\n",
-                    task->pcTaskName, pdata, end, end - pdata + 4);
+        // "Task stack [%s] stack from [%p] to [%p], total [%d] size\r\n\r\n"
+        panic_str("Task stack [");
+        panic_str(task->pcTaskName);
+        panic_str("] stack from [");
+        panic_data32((uint32_t)pdata, 16);
+        panic_str("] to [");
+        panic_data32((uint32_t)end, 16);
+        panic_str("], total [");
+        panic_data32((uint32_t)(end - pdata + 4), 10);
+        panic_str("] size\r\n\r\n");
 
         panic_stack(pdata, end);
 
-        ets_printf("\r\n\r\n");
+        panic_str("\r\n\r\n");
     } else {
-        ets_printf("No task\r\n\r\n");
+        panic_str("No task\r\n\r\n");
     }
 
     for (x = 0; x < 20; x += 4) {
         for (y = 0; y < 4; y++) {
-            ets_printf("%8s: 0x%08x  ", sdesc[x + y], regs[x + y + 1]);
+            panic_str(sdesc[x + y]);
+            panic_str(": 0x");
+            panic_data32((uint32_t)regs[x + y + 1], 16);
+            panic_str(" ");
         }
-        ets_printf("\r\n");
+        panic_str("\r\n");
     }
 
     /*
@@ -148,6 +193,22 @@ void IRAM_ATTR panicHandler(void *frame)
      *     3. GBD break
      */
     while (1);
+}
+
+void IRAM_ATTR panicHandler(void *frame)
+{
+    int cnt = 10;
+
+    /* NMI can interrupt exception. */
+    vPortEnterCritical();
+    while (cnt--) {
+        REG_WRITE(INT_ENA_WDEV, 0);
+    }
+
+    // for panic the function that disable cache
+    Cache_Read_Enable_New();
+
+    panic_info(frame);
 }
 
 void _esp_error_check_failed(esp_err_t rc, const char *file, int line, const char *function, const char *expression)
