@@ -1,7 +1,7 @@
 gwen:
     core:       b9f2d3e
     net80211:   eca7811
-    pp:         82269d9
+    pp:         b9f2d3e
     smartconfig:eca7811
     wpa:        b9f2d3e
     espnow:     95a55d0
