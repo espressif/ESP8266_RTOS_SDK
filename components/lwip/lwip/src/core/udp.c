@@ -516,6 +516,19 @@ udp_sendto_chksum(struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *dst_ip,
   struct netif *netif;
   const ip_addr_t *dst_ip_route = dst_ip;
 
+  /**
+   * UDP max payload = MTU(1500 now) - IP head(20) - UDP head(8) = 1472
+   *
+   * We test that LWIP send 1473 bytes data, linux can cacth these but windows can't.
+   *
+   * If enable IP_FRAG option, these data should be fragmented at IP layer..
+   */
+#if ESP_LWIP && !IP_FRAG
+  if (p && p->tot_len > 1472) {
+    return ERR_VAL;
+  }
+#endif
+
   if ((pcb == NULL) || (dst_ip == NULL) || !IP_ADDR_PCB_VERSION_MATCH(pcb, dst_ip)) {
     return ERR_VAL;
   }
