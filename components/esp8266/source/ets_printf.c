@@ -14,26 +14,24 @@
 
 #include <stdint.h>
 
+#include "sdkconfig.h"
+
 #include "esp_attr.h"
 
 #include "esp8266/eagle_soc.h"
 #include "esp8266/uart_register.h"
 #include "esp8266/rom_functions.h"
 
-#ifndef CONFIG_ETS_PUTC_UART
-#define CONFIG_ETS_PUTC_UART 0
-#endif
-
 int IRAM_ATTR ets_putc(int c)
 {
     while (1) {
-        uint32_t fifo_cnt = READ_PERI_REG(UART_STATUS(CONFIG_ETS_PUTC_UART)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S);
+        uint32_t fifo_cnt = READ_PERI_REG(UART_STATUS(CONFIG_CONSOLE_UART_NUM)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S);
 
         if ((fifo_cnt >> UART_TXFIFO_CNT_S & UART_TXFIFO_CNT) < 126)
             break;
     }
 
-    WRITE_PERI_REG(UART_FIFO(CONFIG_ETS_PUTC_UART) , c);
+    WRITE_PERI_REG(UART_FIFO(CONFIG_CONSOLE_UART_NUM) , c);
 
     return c;
 }
