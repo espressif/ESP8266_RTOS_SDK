@@ -11,7 +11,7 @@ register_component()
 
 target_link_libraries(${COMPONENT_NAME} "-L ${CMAKE_CURRENT_SOURCE_DIR}/lib")
 if(NOT CONFIG_NO_BLOBS)
-    target_link_libraries(${COMPONENT_NAME} crypto gcc hal core
+    target_link_libraries(${COMPONENT_NAME} gcc hal core
                                             net80211 phy pp smartconfig ssc wpa)
 endif()
 

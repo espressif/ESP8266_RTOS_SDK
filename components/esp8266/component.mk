@@ -11,7 +11,7 @@ COMPONENT_SRCDIRS := driver source
 
 LIBS ?=
 ifndef CONFIG_NO_BLOBS
-LIBS += crypto gcc hal core net80211 \
+LIBS += gcc hal core net80211 \
         phy pp smartconfig ssc wpa
 endif
 
