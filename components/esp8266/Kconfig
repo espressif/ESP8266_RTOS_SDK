@@ -52,6 +52,11 @@ config CONSOLE_UART_NUM
     default 0 if CONSOLE_UART_CUSTOM_NUM_0
     default 1 if CONSOLE_UART_CUSTOM_NUM_1
 
+config CONSOLE_UART_BAUDRATE
+    int "UART console baud rate"
+    default 74880
+    range 1200 4000000
+
 endmenu
 
 menu WIFI
