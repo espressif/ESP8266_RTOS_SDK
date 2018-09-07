@@ -568,6 +568,16 @@ static void update_flash_config(const esp_image_header_t* pfhdr);
 
 static void uart_console_configure(void)
 {
+#if CONFIG_CONSOLE_UART_SWAP_IO
+    while (READ_PERI_REG(UART_STATUS(0)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S));
+
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_UART0_CTS);
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDO_U, FUNC_UART0_RTS);
+
+    // UART0: TXD <-> RTS and RXD <-> CTS
+    SET_PERI_REG_MASK(UART_SWAP_REG, 0x4);
+#endif
+
 #if CONFIG_CONSOLE_UART_NUM == 1
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_U1TXD_BK);
 
