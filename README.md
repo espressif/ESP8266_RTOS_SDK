@@ -1,14 +1,4 @@
 # ** IMPORTANT NOTICE **
-## New release features
-### v2.0.0
-1. Optimized memory distribution and usage, with an increased available memory of **70 KB**, up by approximately **20 KB** compared to the previous SDK;
-2. Optimized protocol libraries, including the lwIP, ESPCONN, mbedTLS, OpenSSL and MQTT;
-3. Optimized Wi-Fi functionality with enhanced reliability, and added support for active/passive scanning;
-4. Updated boot loader to version 1.7 with increased stability;
-5. Added support for the 64-Mbit and 128-Mbit SPI flash;
-6. Added 5 new demos, i.e. websocket demo, Wi-Fi station machine demo, openssl server demo, openssl client demo and mqtt demo.
-
-For detail, you can refer to [v2.0.0](https://github.com/espressif/ESP8266_RTOS_SDK/releases/tag/v2.0.0) release notes.
 
 ## About this repository
 A new branching model is applied to this repository, which consists of a master branch and release branches.
