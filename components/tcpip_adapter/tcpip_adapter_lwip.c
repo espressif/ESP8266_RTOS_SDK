@@ -241,7 +241,7 @@ esp_err_t tcpip_adapter_start(tcpip_adapter_if_t tcpip_if, uint8_t *mac, tcpip_a
         }
 
         if (esp_netif[tcpip_if] == NULL) {
-            ESP_LOGE(TAG, "TCPIP adapter has no menory\n");
+            ESP_LOGE(TAG, "TCPIP adapter has no memory\n");
             return ESP_ERR_NO_MEM;
         }
         memcpy(esp_netif[tcpip_if]->hwaddr, mac, NETIF_MAX_HWADDR_LEN);

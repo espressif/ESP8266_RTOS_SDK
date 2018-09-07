@@ -48,11 +48,13 @@ static int low_level_send_cb(esp_aio_t* aio);
 
 static inline bool check_pbuf_to_insert(struct pbuf* p)
 {
-    uint8_t* buf = (uint8_t *)p->payload;
+    uint8_t* buf = (uint8_t*)p->payload;
+
     /*Check if pbuf is tcp ip*/
     if (buf[12] == 0x08 && buf[13] == 0x00 && buf[23] == 0x06) {
-      return true;
+        return true;
     }
+
     return false;
 }
 
@@ -69,20 +71,23 @@ static void insert_to_list(int fd, struct pbuf* p)
         return;
     }
 
-    LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Insert %p,%d\n",p,pbuf_send_list_num));
-    if (pbuf_list_head == NULL) {
-        pbuf_list_head = (pbuf_send_list_t* )malloc(sizeof(pbuf_send_list_t));
-        pbuf_send_list_num++;
+    LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Insert %p,%d\n", p, pbuf_send_list_num));
 
-        if (!pbuf_list_head) {
-            LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no menory malloc pbuf list error\n"));
+    if (pbuf_list_head == NULL) {
+        tmp_pbuf_list1 = (pbuf_send_list_t*)malloc(sizeof(pbuf_send_list_t));
+
+        if (!tmp_pbuf_list1) {
+            LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no memory malloc pbuf list error\n"));
             return;
         }
+
         pbuf_ref(p);
-        pbuf_list_head->aiofd = fd;
-        pbuf_list_head->p = p;
-        pbuf_list_head->next = NULL;
-        pbuf_list_head->err_cnt = 0;
+        tmp_pbuf_list1->aiofd = fd;
+        tmp_pbuf_list1->p = p;
+        tmp_pbuf_list1->next = NULL;
+        tmp_pbuf_list1->err_cnt = 0;
+        pbuf_list_head = tmp_pbuf_list1;
+        pbuf_send_list_num++;
         return;
     }
 
@@ -94,16 +99,15 @@ static void insert_to_list(int fd, struct pbuf* p)
             tmp_pbuf_list1->err_cnt ++;
             return;
         }
+
         tmp_pbuf_list2 = tmp_pbuf_list1;
         tmp_pbuf_list1 = tmp_pbuf_list2->next;
     }
 
-    tmp_pbuf_list2->next = (pbuf_send_list_t*)malloc(sizeof(pbuf_send_list_t));
-    pbuf_send_list_num++;
-    tmp_pbuf_list1 = tmp_pbuf_list2->next;
+    tmp_pbuf_list1 = (pbuf_send_list_t*)malloc(sizeof(pbuf_send_list_t));
 
     if (!tmp_pbuf_list1) {
-        LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no menory malloc pbuf list error\n"));
+        LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("no memory malloc pbuf list error\n"));
         return;
     }
 
@@ -112,6 +116,8 @@ static void insert_to_list(int fd, struct pbuf* p)
     tmp_pbuf_list1->p = p;
     tmp_pbuf_list1->next = NULL;
     tmp_pbuf_list1->err_cnt = 0;
+    tmp_pbuf_list2->next = tmp_pbuf_list1;
+    pbuf_send_list_num++;
 }
 
 void send_from_list()
@@ -121,7 +127,7 @@ void send_from_list()
     while (pbuf_list_head != NULL) {
         if (pbuf_list_head->p->ref == 1) {
             tmp_pbuf_list1 = pbuf_list_head->next;
-            LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n",pbuf_list_head->p,pbuf_send_list_num));
+            LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n", pbuf_list_head->p, pbuf_send_list_num));
             pbuf_free(pbuf_list_head->p);
             free(pbuf_list_head);
             pbuf_send_list_num--;
@@ -141,21 +147,23 @@ void send_from_list()
 
             if (err == ERR_MEM) {
                 pbuf_list_head->err_cnt++;
+
                 if (pbuf_list_head->err_cnt >= 3) {
-                    LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n",pbuf_list_head->p,pbuf_send_list_num));
+                    LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n", pbuf_list_head->p, pbuf_send_list_num));
                     pbuf_free(pbuf_list_head->p);
                     free(pbuf_list_head);
                     pbuf_send_list_num--;
                     pbuf_list_head = tmp_pbuf_list1;
                 }
+
                 return;
-            } else if (err == ERR_OK){
-                LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n",pbuf_list_head->p,pbuf_send_list_num));
+            } else if (err == ERR_OK) {
+                LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n", pbuf_list_head->p, pbuf_send_list_num));
                 free(pbuf_list_head);
                 pbuf_send_list_num--;
                 pbuf_list_head = tmp_pbuf_list1;
             } else {
-                LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n",pbuf_list_head->p,pbuf_send_list_num));
+                LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Delete %p,%d\n", pbuf_list_head->p, pbuf_send_list_num));
                 pbuf_free(pbuf_list_head->p);
                 free(pbuf_list_head);
                 pbuf_send_list_num--;
@@ -202,9 +210,31 @@ static void low_level_init(struct netif* netif)
  *
  * @return 0 meaning successs
  */
-static int low_level_send_cb(esp_aio_t *aio)
+static int low_level_send_cb(esp_aio_t* aio)
 {
-    struct pbuf *pbuf = aio->arg;
+    struct pbuf* pbuf = aio->arg;
+    wifi_tx_status_t* status = (wifi_tx_status_t*) & (aio->ret);
+
+    if ((TX_STATUS_SUCCESS != status->wifi_tx_result) && check_pbuf_to_insert(pbuf)) {
+        uint8_t* buf = (uint8_t*)pbuf->payload;
+        struct eth_hdr ethhdr;
+
+        if (*(buf - 17) & 0x01) { //From DS
+            memcpy(&ethhdr.dest, buf - 2, ETH_HWADDR_LEN);
+            memcpy(&ethhdr.src, buf - 2 - ETH_HWADDR_LEN, ETH_HWADDR_LEN);
+        } else if (*(buf - 17) & 0x02) { //To DS
+            memcpy(&ethhdr.dest, buf - 2 - ETH_HWADDR_LEN - ETH_HWADDR_LEN, ETH_HWADDR_LEN);
+            memcpy(&ethhdr.src, buf - 2, 6);
+        } else {
+            pbuf_free(pbuf);
+            return 0;
+        }
+
+        memcpy(buf, &ethhdr, (ETH_HWADDR_LEN + ETH_HWADDR_LEN));
+        LWIP_DEBUGF(PBUF_CACHE_DEBUG, ("Send packet fail: result:%d, LRC:%d, SRC:%d, RATE:%d",
+                                       status->wifi_tx_result, status->wifi_tx_lrc, status->wifi_tx_src, status->wifi_tx_rate));
+        insert_to_list(aio->fd, aio->arg);
+    }
 
     pbuf_free(pbuf);
 
@@ -219,9 +249,9 @@ static int low_level_send_cb(esp_aio_t *aio)
  *
  * @return LWIP pbuf pointer which it not "PBUF_FLAG_IS_CUSTOM" attribute
  */
-static inline struct pbuf *ethernetif_transform_pbuf(struct pbuf *pbuf)
+static inline struct pbuf* ethernetif_transform_pbuf(struct pbuf* pbuf)
 {
-    struct pbuf *p;
+    struct pbuf* p;
 
     if (!(pbuf->flags & PBUF_FLAG_IS_CUSTOM) && IS_DRAM(pbuf->payload)) {
         /*
@@ -232,8 +262,10 @@ static inline struct pbuf *ethernetif_transform_pbuf(struct pbuf *pbuf)
     }
 
     p = pbuf_alloc(PBUF_RAW, pbuf->len, PBUF_RAM);
-    if (!p)
+
+    if (!p) {
         return NULL;
+    }
 
     if (IS_IRAM(p->payload)) {
         LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: data in IRAM\n"));
@@ -246,7 +278,7 @@ static inline struct pbuf *ethernetif_transform_pbuf(struct pbuf *pbuf)
     /*
      * The input pbuf(named "pbuf") should not be freed, becasue it will be
      * freed by upper layer.
-     * 
+     *
      * The output pbuf(named "p") should not be freed either, becasue it will
      * be freed at callback function "low_level_send_cb".
      */
@@ -285,6 +317,7 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
 #endif
 
     p = ethernetif_transform_pbuf(p);
+
     if (!p) {
         LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: lack memory\n"));
         return ERR_OK;
@@ -305,8 +338,9 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
 #if ESP_UDP
     udp_sync_set_ret(netif, err);
 #endif
+
     if (err != ERR_OK) {
-        if (err == ERR_MEM){
+        if (err == ERR_MEM) {
             insert_to_list(aio.fd, p);
             err = ERR_OK;
         }
