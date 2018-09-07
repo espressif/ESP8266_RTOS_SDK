@@ -12,7 +12,7 @@ register_component()
 target_link_libraries(${COMPONENT_NAME} "-L ${CMAKE_CURRENT_SOURCE_DIR}/lib")
 if(NOT CONFIG_NO_BLOBS)
     target_link_libraries(${COMPONENT_NAME} gcc hal core
-                                            net80211 phy pp smartconfig ssc wpa espnow)
+                                            net80211 phy pp smartconfig ssc wpa espnow wps)
 endif()
 
 target_link_libraries(${COMPONENT_NAME} "-u call_user_start")
