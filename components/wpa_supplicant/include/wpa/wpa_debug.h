@@ -58,8 +58,8 @@ void wpa_debug_print_timestamp(void);
  *
  * Note: New line '\n' is added to the end of the text when printing to stdout.
  */
-#define  DEBUG_PRINT
-#define   MSG_PRINT
+//#define  DEBUG_PRINT
+//#define   MSG_PRINT
 
 /**
  * wpa_hexdump - conditional hex dump
