@@ -59,6 +59,8 @@ struct timeoutlist {
 //static u16_t nextthread = 0;
 int intlevel = 0;
 
+static xTaskHandle s_tcpip_task_handle;
+
 /*-----------------------------------------------------------------------------------*/
 // Initialize sys arch
 void
@@ -365,16 +367,25 @@ sys_now(void)
 sys_thread_t
 sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize, int prio)
 {
-    xTaskHandle CreatedTask;
     portBASE_TYPE result;
 
-    result = xTaskCreate(thread, (const char *)name, stacksize, arg, prio, &CreatedTask);
+    result = xTaskCreate(thread, (const char *)name, stacksize, arg, prio, &s_tcpip_task_handle);
 
     if (result == pdPASS) {
-        return CreatedTask;
+        return s_tcpip_task_handle;
     } else {
         return NULL;
     }
+}
+
+int sys_current_task_is_tcpip(void)
+{
+    return xTaskGetCurrentTaskHandle() == s_tcpip_task_handle ? 1 : 0;
+}
+
+char *sys_current_task_name(void)
+{
+    return pcTaskGetTaskName(xTaskGetCurrentTaskHandle());
 }
 
 /*
