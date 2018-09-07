@@ -57,6 +57,12 @@ config CONSOLE_UART_BAUDRATE
     default 74880
     range 1200 4000000
 
+config CONSOLE_UART_SWAP_IO
+    bool "Swap UART0 I/O pins"
+    default n
+    help
+        Enable this option, UART0's I/O pins are swaped: TXD <-> RTS, RTX <-> CTS.
+
 endmenu
 
 menu WIFI
