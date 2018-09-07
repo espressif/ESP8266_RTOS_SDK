@@ -547,6 +547,15 @@ void __assert_func(const char *file, int line, const char *func, const char *exp
 #include "esp_flash_partitions.h"
 #include "bootloader_flash.h"
 
+#include "esp8266/uart_register.h"
+#include "esp8266/eagle_soc.h"
+#include "esp8266/gpio_register.h"
+#include "esp8266/pin_mux_register.h"
+#include "esp8266/rom_functions.h"
+
+#define CONFIG_CONSOLE_UART_BAUDRATE 74880
+#define BOOTLOADER_CONSOLE_CLK_FREQ 52 * 1000 * 1000
+
 extern int _bss_start;
 extern int _bss_end;
 extern int _data_start;
@@ -557,6 +566,28 @@ static const char* TAG = "boot";
 static esp_err_t bootloader_main();
 static void print_flash_info(const esp_image_header_t* pfhdr);
 static void update_flash_config(const esp_image_header_t* pfhdr);
+
+static void uart_console_configure(void)
+{
+#if CONFIG_CONSOLE_UART_NUM == 1
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_U1TXD_BK);
+
+    CLEAR_PERI_REG_MASK(UART_CONF1(CONFIG_CONSOLE_UART_NUM), UART_RX_FLOW_EN);
+    CLEAR_PERI_REG_MASK(UART_CONF0(CONFIG_CONSOLE_UART_NUM), UART_TX_FLOW_EN);
+
+    uart_div_modify(CONFIG_CONSOLE_UART_NUM, BOOTLOADER_CONSOLE_CLK_FREQ / CONFIG_CONSOLE_UART_BAUDRATE);
+
+    WRITE_PERI_REG(UART_CONF0(CONFIG_CONSOLE_UART_NUM),
+                   0                // None parity
+                   | (1 << 4)       // 1-bit stop
+                   | (3 << 2)       // 8-bit data
+                   | 0              // None flow control
+                   | 0);            // None Inverse
+
+    SET_PERI_REG_MASK(UART_CONF0(CONFIG_CONSOLE_UART_NUM), UART_RXFIFO_RST | UART_TXFIFO_RST);
+    CLEAR_PERI_REG_MASK(UART_CONF0(CONFIG_CONSOLE_UART_NUM), UART_RXFIFO_RST | UART_TXFIFO_RST);
+#endif
+}
 
 esp_err_t bootloader_init()
 {
@@ -571,6 +602,8 @@ esp_err_t bootloader_init()
 
 static esp_err_t bootloader_main()
 {
+    uart_console_configure();
+
     esp_image_header_t fhdr;
     if (bootloader_flash_read(ESP_BOOTLOADER_OFFSET, &fhdr, sizeof(esp_image_header_t), true) != ESP_OK) {
         ESP_LOGE(TAG, "failed to load bootloader header!");
