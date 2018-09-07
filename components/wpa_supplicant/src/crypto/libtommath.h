@@ -77,9 +77,9 @@ typedef u64 mp_word;
 #define MP_28BIT
 
 
-#define XMALLOC  os_malloc
-#define XFREE    os_free
-#define XREALLOC os_realloc
+#define XMALLOC  _xmalloc
+#define XFREE    _xfree
+#define XREALLOC _xrealloc
 
 
 #define MP_MASK          ((((mp_digit)1)<<((mp_digit)DIGIT_BIT))-((mp_digit)1))

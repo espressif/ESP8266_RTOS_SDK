@@ -21,6 +21,9 @@
 #include "esp_err.h"
 #include "rom/ets_sys.h"
 
+#include "FreeRTOS.h"
+#include "esp_libc.h"
+
 typedef long os_time_t;
 
 /**
@@ -188,19 +191,6 @@ char * os_readfile(const char *name, size_t *len);
  * OS_NO_C_LIB_DEFINES can be defined to skip all defines here in which case
  * these functions need to be implemented in os_*.c file for the target system.
  */
- 
-#ifndef os_malloc
-#define os_malloc(s) malloc((s))
-#endif
-#ifndef os_realloc
-#define os_realloc(p, s) realloc((p), (s))
-#endif
-#ifndef os_zalloc
-#define os_zalloc(s) calloc(1, (s))
-#endif
-#ifndef os_free
-#define os_free(p) free((p))
-#endif
 
 #ifndef os_bzero
 #define os_bzero(s, n) bzero(s, n)
@@ -286,6 +276,8 @@ char * ets_strdup(const char *s);
  */
 size_t os_strlcpy(char *dest, const char *src, size_t siz);
 
-
+void *_xmalloc(size_t n);
+void _xfree(void *ptr);
+void *_xrealloc(void *ptr, size_t n);
 
 #endif /* OS_H */
