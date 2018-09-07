@@ -12,7 +12,7 @@ COMPONENT_SRCDIRS := driver source
 LIBS ?=
 ifndef CONFIG_NO_BLOBS
 LIBS += gcc hal core net80211 \
-        phy pp smartconfig ssc wpa
+        phy pp smartconfig ssc wpa espnow
 endif
 
 #Linker scripts used to link the final application.
