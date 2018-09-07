@@ -35,8 +35,6 @@ config SOC_FULL_ICACHE
         Enable this option, full 32 KB iram instead of 16 KB iram will be used as icache, so the heap use can use
         may reduce a lot.
 
-endmenu
-
 choice CONSOLE_UART_NUM
     prompt "UART peripheral to use for console output (0-1)"
     default CONSOLE_UART_CUSTOM_NUM_0
@@ -53,6 +51,13 @@ config CONSOLE_UART_NUM
     int
     default 0 if CONSOLE_UART_CUSTOM_NUM_0
     default 1 if CONSOLE_UART_CUSTOM_NUM_1
+
+config CONSOLE_UART_BAUDRATE
+    int "UART console baud rate"
+    default 74880
+    range 1200 4000000
+
+endmenu
 
 menu WIFI
 
