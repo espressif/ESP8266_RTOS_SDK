@@ -30,7 +30,7 @@ void write_data_to_rtc(uint8_t *);
 
 void get_data_from_rtc(uint8_t *);
 
-uint8_t chip_init(uint8_t* init_data, uint8_t *mac);
+uint8_t chip_init(uint8_t* init_data, uint8_t *mac, uint32_t uart_baudrate);
 
 #ifdef __cplusplus
 }

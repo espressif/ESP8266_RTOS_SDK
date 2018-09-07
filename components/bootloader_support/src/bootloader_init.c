@@ -553,7 +553,6 @@ void __assert_func(const char *file, int line, const char *func, const char *exp
 #include "esp8266/pin_mux_register.h"
 #include "esp8266/rom_functions.h"
 
-#define CONFIG_CONSOLE_UART_BAUDRATE 74880
 #define BOOTLOADER_CONSOLE_CLK_FREQ 52 * 1000 * 1000
 
 extern int _bss_start;
@@ -575,8 +574,6 @@ static void uart_console_configure(void)
     CLEAR_PERI_REG_MASK(UART_CONF1(CONFIG_CONSOLE_UART_NUM), UART_RX_FLOW_EN);
     CLEAR_PERI_REG_MASK(UART_CONF0(CONFIG_CONSOLE_UART_NUM), UART_TX_FLOW_EN);
 
-    uart_div_modify(CONFIG_CONSOLE_UART_NUM, BOOTLOADER_CONSOLE_CLK_FREQ / CONFIG_CONSOLE_UART_BAUDRATE);
-
     WRITE_PERI_REG(UART_CONF0(CONFIG_CONSOLE_UART_NUM),
                    0                // None parity
                    | (1 << 4)       // 1-bit stop
@@ -587,6 +584,8 @@ static void uart_console_configure(void)
     SET_PERI_REG_MASK(UART_CONF0(CONFIG_CONSOLE_UART_NUM), UART_RXFIFO_RST | UART_TXFIFO_RST);
     CLEAR_PERI_REG_MASK(UART_CONF0(CONFIG_CONSOLE_UART_NUM), UART_RXFIFO_RST | UART_TXFIFO_RST);
 #endif
+
+    uart_div_modify(CONFIG_CONSOLE_UART_NUM, BOOTLOADER_CONSOLE_CLK_FREQ / CONFIG_CONSOLE_UART_BAUDRATE);
 }
 
 esp_err_t bootloader_init()
