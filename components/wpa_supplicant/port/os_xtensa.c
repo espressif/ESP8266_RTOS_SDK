@@ -21,44 +21,32 @@
  * this file to work correctly. Note that these implementations are only
  * examples and are not optimized for speed.
  */
+#include <string.h>
+#include "FreeRTOS.h"
 
-#include "crypto/common.h"
-#include "os.h"
-#include <stdlib.h>
-#include <time.h>
-#include <sys/time.h>
-#include "esp_system.h"
-
-int os_get_time(struct os_time *t)
+void *_xmalloc(size_t n)
 {
-    return gettimeofday((struct timeval*) t, NULL);
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    return pvPortMalloc_trace(n, return_addr, (unsigned)-1, false);
 }
 
-unsigned long os_random(void)
+void _xfree(void *ptr)
 {
-    return esp_random();
+    void *return_addr = (void *)__builtin_return_address(0);
+
+    vPortFree_trace(ptr, return_addr, (unsigned)-1);
 }
 
-unsigned long r_rand(void) __attribute__((alias("os_random")));
-
-
-int os_get_random(unsigned char *buf, size_t len)
+void *_xrealloc(void *ptr, size_t n)
 {
-    int i, j;
-    unsigned long tmp;
-
-    for (i = 0; i < ((len + 3) & ~3) / 4; i++) {
-        tmp = r_rand();
-
-        for (j = 0; j < 4; j++) {
-            if ((i * 4 + j) < len) {
-                buf[i * 4 + j] = (uint8_t)(tmp >> (j * 8));
-            } else {
-                break;
-            }
-        }
+    void *return_addr = (void *)__builtin_return_address(0);
+    void *p = pvPortMalloc_trace(n, return_addr, (unsigned)-1, false);
+    if (p && ptr) {
+        // n ?
+        memcpy(p, ptr, n);
+        vPortFree_trace(ptr, return_addr, (unsigned)-1);
     }
 
-    return 0;
+    return p;
 }
-
