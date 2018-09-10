@@ -20,6 +20,7 @@
 #include "esp_wifi_osi.h"
 #include "esp_system.h"
 #include "esp_log.h"
+#include "esp_task_wdt.h"
 #include "esp8266/eagle_soc.h"
 #include "esp8266/rom_functions.h"
 #include "esp8266/pin_mux_register.h"
@@ -136,7 +137,6 @@ bool special_flash_write_status(uint8_t command, uint32_t status, int len, bool 
 esp_err_t spi_flash_read(size_t src_addr, void *dest, size_t size);
 uint8_t en25q16x_read_sfdp();
 
-extern void pp_soft_wdt_feed(void);
 extern void pp_soft_wdt_stop(void);
 extern void pp_soft_wdt_restart(void);
 
@@ -494,7 +494,7 @@ esp_err_t IRAM_ATTR spi_flash_write(size_t dest_addr, const void *src, size_t si
 #define FLASH_WRITE(dest, src, size)                \
 {                                                   \
     ret = spi_flash_write_raw(dest, src, size);     \
-    pp_soft_wdt_feed();                             \
+    esp_task_wdt_reset();                            \
     if (ret) {                                      \
         return ret;                                 \
     }                                               \
@@ -607,7 +607,7 @@ esp_err_t IRAM_ATTR spi_flash_read(size_t src_addr, void *dest, size_t size)
 #define FLASH_READ(addr, dest, size)                        \
 {                                                           \
     ret = spi_flash_read_raw(addr, dest, size);             \
-    pp_soft_wdt_feed();                                     \
+    esp_task_wdt_reset();                                    \
     if (ret)                                                \
         return ret;                                         \
 }
@@ -1028,7 +1028,7 @@ esp_err_t IRAM_ATTR spi_flash_erase_range(size_t start_address, size_t size)
     do {
         ret = spi_flash_erase_sector(sec++);
 
-        pp_soft_wdt_feed();
+        esp_task_wdt_reset();
     } while (ret == ESP_OK && --num);
 
     return ret;

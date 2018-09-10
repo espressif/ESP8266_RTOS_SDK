@@ -149,6 +149,8 @@ extern wifi_osi_funcs_t s_wifi_osi_funcs;
 #define wifi_rand() \
     s_wifi_osi_funcs.rand()
 
+void *osi_task_top_sp(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -131,7 +131,7 @@ static void panic_stack(StackType_t *start_stk, StackType_t *end_stk)
  * 
  * @return none
  */
-void panic_info(void *frame)
+static void panic_info(void *frame, int wdt)
 {
     task_info_t *task;
     int *regs = (int *)frame;
@@ -144,14 +144,14 @@ void panic_info(void *frame)
         "     A14",   "     A15",   "     SAR",   "EXCCAUSE"
     };
 
-    extern int _Pri_3_NMICount;
-
     panic_str("\r\n\r\n");
 
-    if (_Pri_3_NMICount == -1) {
-        panic_str("Soft watch dog triggle:\r\n\r\n");
+    if (wdt) {
+        panic_str("Task watchdog got triggered.\r\n\r\n");
         show_critical_info();
-    } else if (xPortInIsrContext())
+    }
+    
+    if (xPortInIsrContext())
         panic_str("Core 0 was running in ISR context:\r\n\r\n");
 
     if ((task = (task_info_t *)xTaskGetCurrentTaskHandle())) {
@@ -195,7 +195,7 @@ void panic_info(void *frame)
     while (1);
 }
 
-void IRAM_ATTR panicHandler(void *frame)
+void IRAM_ATTR panicHandler(void *frame, int wdt)
 {
     int cnt = 10;
 
@@ -208,7 +208,7 @@ void IRAM_ATTR panicHandler(void *frame)
     // for panic the function that disable cache
     Cache_Read_Enable_New();
 
-    panic_info(frame);
+    panic_info(frame, wdt);
 }
 
 void _esp_error_check_failed(esp_err_t rc, const char *file, int line, const char *function, const char *expression)

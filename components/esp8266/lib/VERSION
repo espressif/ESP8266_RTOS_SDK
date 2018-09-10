@@ -1,9 +1,9 @@
 gwen:
-    core:       b9f2d3e
-    net80211:   48cd36b
-    pp:         82269d9
-    smartconfig:eca7811
-    wpa:        b9f2d3e
-    espnow:     95a55d0
-    wps:        48cd36b
+    core:       103fbb8
+    net80211:   103fbb8
+    pp:         103fbb8
+    smartconfig:103fbb8
+    wpa:        103fbb8
+    espnow:     103fbb8
+    wps:        103fbb8
     phy:	1055_8

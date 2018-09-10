@@ -27,6 +27,7 @@
 #include "esp_phy_init.h"
 #include "esp_wifi_osi.h"
 #include "esp_heap_caps_init.h"
+#include "esp_task_wdt.h"
 #include "internal/esp_wifi_internal.h"
 
 #define FLASH_MAP_ADDR 0x40200000
@@ -58,10 +59,13 @@ static void user_init_entry(void *param)
     assert(mac_init() == 0);
     assert(base_gpio_init() == 0);
     esp_phy_load_cal_and_init(0);
-    assert(watchdog_init() == 0);
     assert(wifi_timer_init() == 0);
 
     esp_wifi_set_rx_pbuf_mem_type(WIFI_RX_PBUF_DRAM);
+
+#ifdef CONFIG_TASK_WDT
+    esp_task_wdt_init();
+#endif
 
     app_main();
 
