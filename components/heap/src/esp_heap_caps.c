@@ -238,7 +238,7 @@ void _heap_caps_free(void *ptr, const char *file, size_t line)
     }
 
     mem_blk = ptr2blk(ptr, ptr_is_traced(ptr));
-#ifndef MEMLEAK_DEBUG
+#ifdef CONFIG_ESP_HEAP_CHECK_FREED
     if (mem_blk->prev) {
         ESP_EARLY_LOGE("%p already freed\n", ptr);
         return;
