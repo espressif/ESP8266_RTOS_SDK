@@ -189,6 +189,9 @@ udp_input(struct pbuf *p, struct netif *inp)
   struct udp_pcb *uncon_pcb;
   u16_t src, dest;
   u8_t broadcast;
+#if ESP_LWIP
+  u8_t multicast;
+#endif
   u8_t for_us = 0;
 
   LWIP_UNUSED_ARG(inp);
@@ -213,6 +216,11 @@ udp_input(struct pbuf *p, struct netif *inp)
 
   /* is broadcast packet ? */
   broadcast = ip_addr_isbroadcast(ip_current_dest_addr(), ip_current_netif());
+
+#if ESP_LWIP
+  /* is multicast packet ? */
+  multicast = ip_addr_ismulticast(ip_current_dest_addr());
+#endif
 
   LWIP_DEBUGF(UDP_DEBUG, ("udp_input: received datagram of length %"U16_F"\n", p->tot_len));
 
@@ -246,7 +254,11 @@ udp_input(struct pbuf *p, struct netif *inp)
 
     /* compare PCB local addr+port to UDP destination addr+port */
     if ((pcb->local_port == dest) &&
-        (udp_input_local_match(pcb, inp, broadcast) != 0)) {
+        (udp_input_local_match(pcb, inp, broadcast) != 0
+#if ESP_LWIP
+         || multicast
+#endif
+        )) {
       if (((pcb->flags & UDP_FLAGS_CONNECTED) == 0) &&
           ((uncon_pcb == NULL)
 #if SO_REUSE
@@ -261,7 +273,11 @@ udp_input(struct pbuf *p, struct netif *inp)
       /* compare PCB remote addr+port to UDP source addr+port */
       if ((pcb->remote_port == src) &&
           (ip_addr_isany_val(pcb->remote_ip) ||
-          ip_addr_cmp(&pcb->remote_ip, ip_current_src_addr()))) {
+          ip_addr_cmp(&pcb->remote_ip, ip_current_src_addr()) 
+#if ESP_LWIP
+          || multicast
+#endif
+          )) {
         /* the first fully matching PCB */
         if (prev != NULL) {
           /* move the pcb to the front of udp_pcbs so that is
