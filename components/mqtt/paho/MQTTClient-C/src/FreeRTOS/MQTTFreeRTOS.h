@@ -89,6 +89,18 @@ void NetworkInit(Network*);
  */
 int NetworkConnect(Network* n, char* addr, int port);
 
+/**
+ * @brief connect with mqtt broker using ip address 
+ *
+ * @param n           - mqtt network struct
+ * @param addr        - mqtt broker address
+ * @param port        - mqtt broker port
+ *
+ * @return connect status
+ */
+int NetworkConnectIP(Network* n, char* addr, int port);
+
+
 #ifdef CONFIG_SSL_USING_MBEDTLS
 typedef struct ssl_ca_crt_key {
     unsigned char* cacrt;
