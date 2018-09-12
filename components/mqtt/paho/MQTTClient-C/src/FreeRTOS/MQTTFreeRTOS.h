@@ -68,6 +68,7 @@ typedef struct Thread
 } Thread;
 
 int ThreadStart(Thread*, void (*fn)(void*), void* arg);
+void ThreadStop(Thread* thread);
 
 /**
  * @brief Initialize the network structure
@@ -100,6 +101,15 @@ int NetworkConnect(Network* n, char* addr, int port);
  */
 int NetworkConnectIP(Network* n, char* addr, int port);
 
+/**
+ * @brief Disconnect from mqtt broker
+ *
+ * @param n           - mqtt network struct
+ *
+ * @return void
+ */
+
+void NetworkDisconnect(Network* n);
 
 #ifdef CONFIG_SSL_USING_MBEDTLS
 typedef struct ssl_ca_crt_key {

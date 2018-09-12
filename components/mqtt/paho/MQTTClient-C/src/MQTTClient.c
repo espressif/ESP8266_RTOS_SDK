@@ -384,6 +384,13 @@ int MQTTStartTask(MQTTClient* client)
 {
     return ThreadStart(&client->thread, &MQTTRun, client);
 }
+
+void MQTTStopTask(MQTTClient* client)
+{
+    ThreadStop(&client->thread);
+
+    return;
+}
 #endif
 
 

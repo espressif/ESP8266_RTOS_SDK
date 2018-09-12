@@ -38,6 +38,10 @@ int ThreadStart(Thread* thread, void (*fn)(void*), void* arg)
     return rc;
 }
 
+void ThreadStop(Thread* thread)
+{
+    vTaskDelete(thread->task);
+}
 
 void MutexInit(Mutex* mutex)
 {
@@ -229,6 +233,11 @@ int NetworkConnectIP(Network* n, char* addr, int port)
 
 exit:
     return retVal;
+}
+
+void NetworkDisconnect(Network* n)
+{
+   close(n->my_socket);
 }
 
 
