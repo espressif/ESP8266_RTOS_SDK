@@ -13,4 +13,12 @@ config IP_LOST_TIMER_INTERVAL
         the timer expires. The IP lost timer is stopped if the station get the IP again before
         the timer expires.
 
+config TCPIP_ADAPTER_GLOBAL_DATA_LINK_IRAM
+    bool "Link TCPIP adapter global data to IRAM"
+    default y
+    depends on !LWIP_HIGH_THROUGHPUT
+    depends on !SOC_FULL_ICACHE
+    help
+        Link TCPIP adapter global data(.bss .data COMMON) from DRAM to IRAM.
+
 endmenu

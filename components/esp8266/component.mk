@@ -18,12 +18,13 @@ endif
 #Linker scripts used to link the final application.
 #Warning: These linker scripts are only used when the normal app is compiled; the bootloader
 #specifies its own scripts.
-LINKER_SCRIPTS += esp8266.common.ld esp8266.rom.ld esp8266.peripherals.ld
+LINKER_SCRIPTS += esp8266.rom.ld esp8266.peripherals.ld
 
 COMPONENT_ADD_LDFLAGS += -L$(COMPONENT_PATH)/lib \
                          $(addprefix -l,$(LIBS)) \
                          -L $(COMPONENT_PATH)/ld \
                          -T esp8266_out.ld       \
+                         -T esp8266_common_out.ld \
                          -Wl,--no-check-sections \
                          -u call_user_start      \
                          $(addprefix -T ,$(LINKER_SCRIPTS))
@@ -38,9 +39,12 @@ COMPONENT_ADD_LINKER_DEPS := $(ALL_LIB_FILES) $(addprefix ld/,$(LINKER_SCRIPTS))
 #
 # The library doesn't really depend on esp8266_out.ld, but it
 # saves us from having to add the target to a Makefile.projbuild
-$(COMPONENT_LIBRARY): esp8266_out.ld
+$(COMPONENT_LIBRARY): esp8266_out.ld esp8266_common_out.ld
 
 esp8266_out.ld: $(COMPONENT_PATH)/ld/esp8266.ld ../include/sdkconfig.h
+	$(CC) -I ../include -C -P -x c -E $< -o $@
+
+esp8266_common_out.ld: $(COMPONENT_PATH)/ld/esp8266.common.ld ../include/sdkconfig.h
 	$(CC) -I ../include -C -P -x c -E $< -o $@
 
 COMPONENT_EXTRA_CLEAN := esp8266_out.ld

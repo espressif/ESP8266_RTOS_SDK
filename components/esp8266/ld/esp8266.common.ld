@@ -1,6 +1,8 @@
 /* This linker script generated from xt-genldscripts.tpp for LSP . */
 /* Linker Script for ld -N */
 
+#include "sdkconfig.h"
+
 PHDRS
 {
   dport0_0_phdr PT_LOAD;
@@ -108,6 +110,25 @@ SECTIONS
     *(.fini.literal)
     *(.fini)
     *(.gnu.version)
+
+#ifdef CONFIG_LWIP_GLOBAL_DATA_LINK_IRAM
+    *liblwip.a:(.bss .data .bss.* .data.* COMMON)
+#endif
+
+#ifdef CONFIG_TCPIP_ADAPTER_GLOBAL_DATA_LINK_IRAM
+    *libtcpip_adapter.a:(.bss .data .bss.* .data.* COMMON)
+#endif
+
+#ifdef CONFIG_ESP8266_CORE_GLOBAL_DATA_LINK_IRAM
+    *libcore.a:(.bss .data .bss.* .data.* COMMON)
+#endif
+
+#ifdef CONFIG_FREERTOS_GLOBAL_DATA_LINK_IRAM
+    *libfreertos.a:tasks.o(.bss .data .bss.* .data.* COMMON)
+    *libfreertos.a:timers.o(.bss .data .bss.* .data.* COMMON)
+    *libfreertos.a:freertos_hooks.o(.bss .data .bss.* .data.* COMMON)
+#endif
+
     _text_end = ABSOLUTE(.);
     _etext = .;
   } >iram1_0_seg :iram1_0_phdr

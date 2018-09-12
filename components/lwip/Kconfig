@@ -17,6 +17,14 @@ config LWIP_HIGH_THROUGHPUT
         chip should full 32 KB IRAM as icache. For these 2 reasons, the global heap user can used
         may reduce a lot.
 
+config LWIP_GLOBAL_DATA_LINK_IRAM
+    bool "Link LWIP global data to IRAM"
+    default y
+    depends on !LWIP_HIGH_THROUGHPUT
+    depends on !SOC_FULL_ICACHE
+    help
+        Link LWIP global data(.bss .data COMMON) from DRAM to IRAM.
+
 menu "ARP"
 
 config LWIP_ARP_TABLE_SIZE
