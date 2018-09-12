@@ -29,6 +29,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdarg.h>
+#ifndef BOOTLOADER_BUILD
+#include "esp_heap_caps.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -73,82 +76,24 @@ int ets_printf(const char *fmt, ...);
 #define os_printf   printf
 #endif
 
-/* Note: check_memleak_debug_enable is a weak function inside SDK.
- * please copy following codes to user_main.c.
-#include "esp_libc.h"
-
-bool check_memleak_debug_enable(void)
-{
-    return MEMLEAK_DEBUG_ENABLE;
-}
-*/
-
-#ifndef MEMLEAK_DEBUG
-#define MEMLEAK_DEBUG_ENABLE    0
 #ifndef os_free
-#define os_free(s)        free(s)
+#define os_free(s)        heap_caps_free(s)
 #endif
 
 #ifndef os_malloc
-#define os_malloc(s)      malloc(s)
+#define os_malloc(s)      heap_caps_malloc(s, MALLOC_CAP_32BIT)
 #endif
 
 #ifndef os_calloc
-#define os_calloc(p, s)   calloc(p, s)
+#define os_calloc(p, s)   heap_caps_calloc(p, s, MALLOC_CAP_32BIT)
 #endif
 
 #ifndef os_realloc
-#define os_realloc(p, s)  realloc(p, s)
+#define os_realloc(p, s)  heap_caps_realloc(p, s, MALLOC_CAP_32BIT)
 #endif
 
 #ifndef os_zalloc
-#define os_zalloc(s)      zalloc(s)
-#endif
-#else
-#define MEMLEAK_DEBUG_ENABLE    1
-
-#ifndef os_free
-#define os_free(s) \
-do{\
-    vPortFree_trace(s, __FILE__, __LINE__);\
-}while(0)
-#endif
-
-#ifndef os_malloc
-#define os_malloc(s)    \
-    ({  \
-        pvPortMalloc_trace(s, __FILE__, __LINE__, false);  \
-    })
-#endif
-
-#ifndef os_malloc_iram
-#define os_malloc_iram(s)    \
-    ({  \
-        pvPortMalloc_trace(s, __FILE__, __LINE__, true);  \
-    })
-#endif
-
-#ifndef os_calloc
-#define os_calloc(p, s)    \
-    ({  \
-        pvPortCalloc_trace(p, s, __FILE__, __LINE__);  \
-    })
-#endif
-
-#ifndef os_realloc
-#define os_realloc(p, s)    \
-    ({  \
-        pvPortRealloc_trace(p, s, __FILE__, __LINE__);  \
-    })
-#endif
-
-#ifndef os_zalloc
-#define os_zalloc(s)    \
-    ({  \
-        pvPortZalloc_trace(s, __FILE__, __LINE__);  \
-    })
-#endif
-
+#define os_zalloc(s)      heap_caps_zalloc(s, MALLOC_CAP_32BIT)
 #endif
 
 #ifdef __cplusplus

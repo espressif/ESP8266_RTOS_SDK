@@ -26,6 +26,7 @@
 #include "esp_image_format.h"
 #include "esp_phy_init.h"
 #include "esp_wifi_osi.h"
+#include "esp_heap_caps_init.h"
 #include "internal/esp_wifi_internal.h"
 
 #define FLASH_MAP_ADDR 0x40200000
@@ -108,6 +109,8 @@ void call_user_start(size_t start_addr)
         "movi       a1, _chip_interrupt_tmp\n"
         "movi       a2, 0xffffff00\n"
         "and        a1, a1, a2\n");
+
+    heap_caps_init();
 
     wifi_os_init();
 

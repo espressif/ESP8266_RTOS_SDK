@@ -5,4 +5,4 @@ set(COMPONENT_PRIV_REQUIRES lwip)
 
 register_component()
 
-component_compile_options(-DLWIP_OPEN_SRC -DMEMLEAK_DEBUG)
+component_compile_options(-DLWIP_OPEN_SRC)

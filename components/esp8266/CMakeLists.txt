@@ -54,4 +54,4 @@ target_compile_options(${COMPONENT_NAME} PUBLIC -Wno-error=char-subscripts -Wno-
                                                 -Wno-error=unused-value -Wno-error=address -Wno-error=return-type -Wno-error=format-extra-args
                                                 -Wno-error=format-zero-length -Wno-error=unused-label -Wno-error=sizeof-pointer-memaccess)
 
-target_compile_options(${COMPONENT_NAME} PUBLIC -DMEMLEAK_DEBUG -DICACHE_FLASH)
+target_compile_options(${COMPONENT_NAME} PUBLIC -DICACHE_FLASH)

@@ -98,19 +98,11 @@ static __inline__ uint64_t be64toh(uint64_t __x) {return (((uint64_t)be32toh(__x
 #define htobe64(x) be64toh(x)
 #endif
 
-#ifdef MEMLEAK_DEBUG
 #define SSL_MALLOC(size)          os_malloc(size)
 #define SSL_REALLOC(mem_ref,size) os_realloc(mem_ref, size)
 #define SSL_CALLOC(element, size) os_calloc(element, size)
 #define SSL_ZALLOC(size)          os_zalloc(size)
 #define SSL_FREE(mem_ref)         os_free(mem_ref)
-#else
-#define SSL_MALLOC(size) 		  malloc(size)
-#define SSL_REALLOC(mem_ref,size) realloc(mem_ref, size)
-#define SSL_CALLOC(element, size) calloc(element, size)
-#define SSL_ZALLOC(size) 		  zalloc(size)
-#define SSL_FREE(mem_ref)         free(mem_ref)
-#endif
 
 #if 0
 #define  FILE_NAME_LENGTH 		   25
