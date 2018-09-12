@@ -281,12 +281,9 @@ exit:
     return ret;
 }
 
-static int lwip_enter_mt_select(int s, void *arg)
+static int lwip_enter_mt_select(int s, fd_set *read_set, fd_set *write_set)
 {
     int i;
-    int *fdset = arg;
-    fd_set *read_set = (fd_set *)fdset[0];
-    fd_set *write_set = (fd_set *)fdset[1];
 
     if (s > NUM_SOCKETS || s < 0)
         return -1;
@@ -343,27 +340,21 @@ failed1:
     return -1;
 }
 
-static int lwip_exit_mt_select(int s, void *arg)
+static void lwip_exit_mt_select(int s, fd_set *read_set, fd_set *write_set)
 {
     int i;
-    int ret = 0;
-    int *fdset = arg;
-    fd_set *read_set = (fd_set *)fdset[0];
-    fd_set *write_set = (fd_set *)fdset[1];
 
     for (i = 0; i < s; i++) {
         if (FD_ISSET(i, read_set)) {
-            ret |= _sock_unlock(i, SOCK_MT_LOCK_RECV);
+            _sock_unlock(i, SOCK_MT_LOCK_RECV);
             _sock_reset_select(i, SOCK_MT_SELECT_RECV);
         }
 
         if (FD_ISSET(i, write_set)) {
-            ret |= _sock_unlock(i, SOCK_MT_LOCK_SEND);
-            _sock_reset_select(i, SOCK_MT_LOCK_SEND);
+            _sock_unlock(i, SOCK_MT_LOCK_SEND);
+            _sock_reset_select(i, SOCK_MT_SELECT_SEND);
         }
     }
-
-    return ret;
 }
 
 static void lwip_do_sync_send(void *arg)
@@ -755,26 +746,24 @@ int lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset,
 {
     int ret;
     fd_set read_set, write_set;
-    int pset[2] = {(int)&read_set, (int)&write_set};
-
-    FD_ZERO(&read_set);
-    FD_ZERO(&write_set);
 
     if (readset)
         MEMCPY(&read_set, readset, sizeof(fd_set));
+    else
+        FD_ZERO(&read_set);
 
     if (writeset)
         MEMCPY(&write_set, writeset, sizeof(fd_set));
+    else
+        FD_ZERO(&write_set);
 
-    ret = lwip_enter_mt_select(maxfdp1, pset);
+    ret = lwip_enter_mt_select(maxfdp1, &read_set, &write_set);
     if (ret)
         return ret;
 
     ret = lwip_select_esp(maxfdp1, readset, writeset, exceptset, timeout);
 
-    ret = lwip_exit_mt_select(maxfdp1, pset);
-    if (ret)
-        return ret;
+    lwip_exit_mt_select(maxfdp1, &read_set, &write_set);
 
     return ret;
 }
