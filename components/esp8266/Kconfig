@@ -110,6 +110,15 @@ config TASK_WDT_TIMEOUT_S
     default 14 if TASK_WDT_TIMEOUT_14N
     default 15 if TASK_WDT_TIMEOUT_15N
 
+config WIFI_PPT_TASKSTACK_SIZE
+    int "ppT task stack size"
+    default 2048
+    range 2048 8192
+    help
+        Configure the "ppT task" stack size. This is the stack of the task
+        which calls promiscuous callback function. So if user's function is
+        complex, the stack must be set larger.
+
 endmenu
 
 menu WIFI

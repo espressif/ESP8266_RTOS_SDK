@@ -1,7 +1,7 @@
 gwen:
     core:       103fbb8
     net80211:   103fbb8
-    pp:         103fbb8
+    pp:         760166c
     smartconfig:103fbb8
     wpa:        103fbb8
     espnow:     103fbb8
