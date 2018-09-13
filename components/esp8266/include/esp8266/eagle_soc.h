@@ -117,8 +117,29 @@
 
 //Interrupt remap control registers define{{
 #define EDGE_INT_ENABLE_REG         (PERIPHS_DPORT_BASEADDR + 0x04)
+#define WDT_EDGE_INT_ENABLE()       SET_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT0)
 #define TM1_EDGE_INT_ENABLE()       SET_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT1)
 #define TM1_EDGE_INT_DISABLE()      CLEAR_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT1)
+//}}
+
+
+//Watch dog reg {{
+#define PERIPHS_WDT_BASEADDR        0x60000900
+
+#define WDT_CTL_ADDRESS             0
+#define WDT_OP_ADDRESS              0x4
+#define WDT_OP_ND_ADDRESS           0x8
+#define WDT_RST_ADDRESS             0x14
+
+#define WDT_CTL_RSTLEN_MASK         0x38
+#define WDT_CTL_RSPMOD_MASK         0x6
+#define WDT_CTL_EN_MASK             0x1
+
+#define WDT_CTL_RSTLEN_LSB          0x3
+#define WDT_CTL_RSPMOD_LSB          0x1
+#define WDT_CTL_EN_LSB              0
+
+#define WDT_FEED_VALUE              0x73
 //}}
 
 //RTC reg {{

@@ -386,3 +386,12 @@ BaseType_t xQueueGenericReceive(QueueHandle_t xQueue, void * const pvBuffer,
     configASSERT(xJustPeeking == 0);
     return xQueueReceive(xQueue, pvBuffer, xTicksToWait);
 }
+
+void vApplicationIdleHook(void)
+{
+    extern void pmIdleHook(void);
+    extern void esp_task_wdt_reset(void);
+
+    pmIdleHook();
+    esp_task_wdt_reset();
+}

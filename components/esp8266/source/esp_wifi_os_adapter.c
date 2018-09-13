@@ -341,6 +341,13 @@ static int32_t rand_wrapper(void)
     return (int32_t)esp_random();
 }
 
+void *osi_task_top_sp(void)
+{
+    extern uint32_t **pxCurrentTCB;
+
+    return pxCurrentTCB[0];
+}
+
 const wifi_osi_funcs_t s_wifi_osi_funcs = {
     .version = ESP_WIFI_OS_ADAPTER_VERSION,
     

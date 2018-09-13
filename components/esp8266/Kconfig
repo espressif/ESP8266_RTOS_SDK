@@ -71,6 +71,45 @@ config MAIN_TASK_STACK_SIZE
         which calls app_main(). If app_main() returns then this task is deleted
         and its stack memory is freed.
 
+config TASK_WDT
+    bool "Initialize Task Watchdog Timer on startup"
+    default y
+    help
+        The Task Watchdog Timer can be used to make sure individual tasks are still
+        running. Enabling this option will cause the Task Watchdog Timer to be
+        initialized automatically at startup. The Task Watchdog timer can be 
+        initialized after startup as well.
+
+config TASK_WDT_PANIC
+    bool "Invoke panic handler on Task Watchdog timeout"
+    depends on TASK_WDT
+    default n
+    help
+        If this option is enabled, the Task Watchdog Timer will be configured to
+        trigger the panic handler when it times out. And it may cost some time.
+
+choice TASK_WDT_TIMEOUT_S
+    prompt "Task Watchdog timeout period (seconds)"
+    depends on TASK_WDT
+    default TASK_WDT_TIMEOUT_13N
+    help
+        Timeout period configuration for the Task Watchdog Timer in seconds.
+        This is also configurable at run time.
+
+config TASK_WDT_TIMEOUT_13N
+    bool "6.5536s"
+config TASK_WDT_TIMEOUT_14N
+    bool "13.1072s"
+config TASK_WDT_TIMEOUT_15N
+    bool "26.2144s"
+endchoice
+
+config TASK_WDT_TIMEOUT_S
+    int
+    default 13 if TASK_WDT_TIMEOUT_13N
+    default 14 if TASK_WDT_TIMEOUT_14N
+    default 15 if TASK_WDT_TIMEOUT_15N
+
 endmenu
 
 menu WIFI
