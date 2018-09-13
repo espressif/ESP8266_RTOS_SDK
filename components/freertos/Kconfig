@@ -22,5 +22,12 @@ config FREERTOS_MAX_HOOK
     default 2
     help
         configurate the max number of FreeRTOS hook function.
+
+config FREERTOS_ISR_STACKSIZE
+    int "ISR stack size"
+    range 512 8192
+    default 512
+    help
+        The interrupt handlers have their own stack. The size of the stack can be defined here.
         
 endmenu

@@ -124,9 +124,6 @@ STRUCT_END(HighPriFrame)
 
 #define PANIC_STK_FRMSZ      0x60
 
-
-#define CHIP_INTERRUPT_STK_MAX 1024
-
     .global panicHandler
 
     //  Allocate save area and stack:
@@ -166,7 +163,7 @@ LABEL(_Pri_,_NMICount):   .space 4
     .global     _chip_interrupt_stk, _chip_interrupt_tmp
     .align      16
 _chip_interrupt_stk:
-    .space       CHIP_INTERRUPT_STK_MAX
+    .space       CONFIG_FREERTOS_ISR_STACKSIZE
 _chip_interrupt_tmp:
     .word        0
 
