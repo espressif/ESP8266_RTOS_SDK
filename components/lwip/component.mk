@@ -5,7 +5,8 @@ COMPONENT_ADD_INCLUDEDIRS += include/lwip/apps \
                              include/lwip \
                              lwip/src/include \
                              lwip/src/include/posix \
-                             port/esp8266/include
+                             port/esp8266/include \
+                             port/esp8266/include/port
 
 COMPONENT_SRCDIRS += apps/dhcpserver \
                      apps/multi-threads \
