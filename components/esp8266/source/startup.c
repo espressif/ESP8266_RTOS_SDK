@@ -114,7 +114,7 @@ void call_user_start(size_t start_addr)
 
     wifi_os_init();
 
-    assert(wifi_task_create(user_init_entry, "uiT", 2048, NULL, wifi_task_get_max_priority()) != NULL);
+    assert(wifi_task_create(user_init_entry, "uiT", CONFIG_MAIN_TASK_STACK_SIZE, NULL, wifi_task_get_max_priority()) != NULL);
 
     wifi_os_start();
 }
