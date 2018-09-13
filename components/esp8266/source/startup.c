@@ -39,6 +39,7 @@ extern int base_gpio_init(void);
 extern int watchdog_init(void);
 extern int wifi_timer_init(void);
 extern int wifi_nvs_init(void);
+extern esp_err_t esp_pthread_init(void);
 
 static void user_init_entry(void *param)
 {
@@ -65,6 +66,10 @@ static void user_init_entry(void *param)
 
 #ifdef CONFIG_TASK_WDT
     esp_task_wdt_init();
+#endif
+
+#ifdef CONFIG_ENABLE_PTHREAD
+    assert(esp_pthread_init() == 0);
 #endif
 
     app_main();

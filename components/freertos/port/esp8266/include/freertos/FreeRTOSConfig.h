@@ -152,7 +152,11 @@ NVIC value of 255. */
 #define configUSE_NEWLIB_REENTRANT  1
 #endif
 
+#ifdef CONFIG_ENABLE_PTHREAD
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 2
+#else
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
+#endif
 #define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
 
 /* add this to dump task stack information */
