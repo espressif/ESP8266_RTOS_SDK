@@ -7,7 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#error "<dirent.h> not supported"
+//#error "<dirent.h> not supported"
 #ifdef __cplusplus
 }
 #endif
