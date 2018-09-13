@@ -20,6 +20,8 @@
 #include "net/sockio.h"
 #include "phy.h"
 
+const size_t _g_esp_wifi_ppt_task_stk_size = CONFIG_WIFI_PPT_TASKSTACK_SIZE;
+
 esp_err_t esp_wifi_init_internal(const wifi_init_config_t *config);
 
 /**
