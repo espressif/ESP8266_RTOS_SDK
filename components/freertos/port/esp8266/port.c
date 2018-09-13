@@ -395,3 +395,8 @@ void vApplicationIdleHook(void)
     pmIdleHook();
     esp_task_wdt_reset();
 }
+
+uint32_t xPortGetTickRateHz(void)
+{
+    return (uint32_t)configTICK_RATE_HZ;
+}

@@ -233,6 +233,9 @@ void esp_mem_trace(const void *ptr, const char *trace, int no);
  */
 bool interrupt_is_disable(void);
 
+/* Get tick rate per second */
+uint32_t xPortGetTickRateHz(void);
+
 #ifdef __cplusplus
 }
 #endif
