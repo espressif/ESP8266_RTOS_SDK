@@ -2024,7 +2024,9 @@
  *             See dhm.h for more details.
  *
  */
-//#define MBEDTLS_DHM_C
+#ifdef CONFIG_MBEDTLS_DHM_C
+#define MBEDTLS_DHM_C
+#endif
 
 /**
  * \def MBEDTLS_ECDH_C

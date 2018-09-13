@@ -381,6 +381,12 @@ config MBEDTLS_ECDH_C
     help
         Enable ECDH. Needed to use ECDHE-xxx TLS ciphersuites.
 
+config MBEDTLS_DHM_C
+    bool "Diffie-Hellman-Merkle(DHM)"
+    default y
+    help
+        Enable the Diffie-Hellman-Merkle module.
+
 config MBEDTLS_ECDSA_C
     bool "Elliptic Curve DSA"
     depends on MBEDTLS_ECDH_C
