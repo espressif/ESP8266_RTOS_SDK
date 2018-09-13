@@ -38,7 +38,7 @@ static portMUX_TYPE hooks_spinlock = portMUX_INITIALIZER_UNLOCKED;
 static esp_freertos_idle_cb_t idle_cb[portNUM_PROCESSORS][MAX_HOOKS];
 static esp_freertos_tick_cb_t tick_cb[portNUM_PROCESSORS][MAX_HOOKS];
 
-void IRAM_ATTR esp_vApplicationTickHook() 
+void esp_vApplicationTickHook() 
 {
     int n;
     int core = xPortGetCoreID();
