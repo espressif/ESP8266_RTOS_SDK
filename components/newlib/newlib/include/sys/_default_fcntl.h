@@ -41,7 +41,9 @@ extern "C" {
 #define O_SYNC		_FSYNC
 /*	O_NDELAY	_FNDELAY 	set in include/fcntl.h */
 /*	O_NDELAY	_FNBIO 		set in include/fcntl.h */
+#ifndef O_NONBLOCK
 #define	O_NONBLOCK	_FNONBLOCK
+#endif
 #define	O_NOCTTY	_FNOCTTY
 /* For machines which care - */
 #if defined (__CYGWIN__)
