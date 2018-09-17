@@ -64,6 +64,13 @@ esp_err_t esp_event_loop_init(system_event_cb_t cb, void *ctx);
 system_event_cb_t esp_event_loop_set_cb(system_event_cb_t cb, void *ctx);
 
 /**
+  * @brief  Get the ctx parameters you have set by the esp_event_loop_init or esp_event_loop_set_cb function
+  *
+  * @return void * : parameters you set before
+  */
+void *esp_event_loop_get_ctx(void);
+
+/**
   * @brief  Get the queue used by event loop
   *
   * @attention : currently this API is used to initialize "q" parameter

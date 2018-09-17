@@ -64,6 +64,11 @@ system_event_cb_t esp_event_loop_set_cb(system_event_cb_t cb, void *ctx)
     return old_cb;
 }
 
+void *esp_event_loop_get_ctx(void)
+{
+    return s_event_ctx;
+}
+
 esp_err_t esp_event_send(system_event_t *event)
 {
     if (s_event_queue == NULL) {
