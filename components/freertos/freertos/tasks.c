@@ -2873,7 +2873,7 @@ BaseType_t xSwitchRequired = pdFALSE;
 #endif /* configUSE_APPLICATION_TASK_TAG */
 /*-----------------------------------------------------------*/
 
-void IRAM_ATTR vTaskSwitchContext( void )
+void vTaskSwitchContext( void )
 {
 	if( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )
 	{

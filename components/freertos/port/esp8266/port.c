@@ -158,7 +158,7 @@ void IRAM_ATTR HDL_MAC_SIG_IN_LV1_ISR(void)
 
 extern portBASE_TYPE MacIsrSigPostDefHdl(void);
 
-void IRAM_ATTR SoftIsrHdl(void* arg)
+void SoftIsrHdl(void* arg)
 {
     ETS_NMI_LOCK();
 
@@ -177,7 +177,7 @@ void IRAM_ATTR SoftIsrHdl(void* arg)
     ETS_NMI_UNLOCK();
 }
 
-void IRAM_ATTR xPortSysTickHandle(void)
+void xPortSysTickHandle(void)
 {
     if (xTaskIncrementTick() != pdFALSE) {
         vTaskSwitchContext();
@@ -275,7 +275,7 @@ void IRAM_ATTR vPortETSIntrUnlock(void)
     ETS_INTR_UNLOCK();
 }
 
-void IRAM_ATTR PortDisableInt_NoNest(void)
+void PortDisableInt_NoNest(void)
 {
     if (NMIIrqIsOn == 0) {
         if (ClosedLv1Isr != 1) {
@@ -285,7 +285,7 @@ void IRAM_ATTR PortDisableInt_NoNest(void)
     }
 }
 
-void IRAM_ATTR PortEnableInt_NoNest(void)
+void PortEnableInt_NoNest(void)
 {
     if (NMIIrqIsOn == 0) {
         if (ClosedLv1Isr == 1) {
@@ -324,7 +324,7 @@ void _xt_isr_attach(uint8_t i, _xt_isr func, void* arg)
     isr[i].arg = arg;
 }
 
-uint16_t IRAM_ATTR _xt_isr_handler(uint16_t i)
+uint16_t _xt_isr_handler(uint16_t i)
 {
     uint8_t index;
 
@@ -350,7 +350,7 @@ uint16_t IRAM_ATTR _xt_isr_handler(uint16_t i)
     return i & ~(1 << index);
 }
 
-int IRAM_ATTR xPortInIsrContext(void)
+int xPortInIsrContext(void)
 {
     return _xt_isr_status != 0;
 }
