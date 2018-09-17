@@ -211,4 +211,49 @@
 #define SPI_EXT3(i)                         (REG_SPI_BASE(i)  + 0xFC)
 #define SPI_INT_HOLD_ENA 0x00000003
 #define SPI_INT_HOLD_ENA_S 0
+
+#define SPI_EXT2(i)                             (REG_SPI_BASE(i) + 0xF8)
+#define SPI_EXT3(i)                             (REG_SPI_BASE(i) + 0xFC)
+
+#define SPI_ENABLE_AHB                          BIT17
+
+#define SPI_FLASH_CLK_EQU_SYSCLK                BIT12
+
+//SPI flash command
+#define SPI_FLASH_READ                          BIT31
+#define SPI_FLASH_WREN                          BIT30
+#define SPI_FLASH_WRDI                          BIT29
+#define SPI_FLASH_RDID                          BIT28
+#define SPI_FLASH_RDSR                          BIT27
+#define SPI_FLASH_WRSR                          BIT26
+#define SPI_FLASH_PP                            BIT25
+#define SPI_FLASH_SE                            BIT24
+#define SPI_FLASH_BE                            BIT23
+#define SPI_FLASH_CE                            BIT22
+#define SPI_FLASH_RES                           BIT20
+#define SPI_FLASH_DPD                           BIT21
+#define SPI_FLASH_HPM                           BIT19
+
+//SPI address register
+#define SPI_FLASH_BYTES_LEN                     24
+#define SPI_BUFF_BYTE_NUM                       32
+#define IODATA_START_ADDR                       BIT0
+
+//SPI status register
+#define  SPI_FLASH_BUSY_FLAG                    BIT0
+#define  SPI_FLASH_WRENABLE_FLAG                BIT1
+#define  SPI_FLASH_BP0                          BIT2
+#define  SPI_FLASH_BP1                          BIT3
+#define  SPI_FLASH_BP2                          BIT4
+#define  SPI_FLASH_TOP_BOT_PRO_FLAG             BIT5
+#define  SPI_FLASH_STATUS_PRO_FLAG              BIT7
+
+#define  FLASH_WR_PROTECT                       (SPI_FLASH_BP0|SPI_FLASH_BP1|SPI_FLASH_BP2)
+
+#define SPI 0
+
+#define PERIPHS_SPI_FLASH_C0                    SPI_W0(SPI)
+#define PERIPHS_SPI_FLASH_CTRL                  SPI_CTRL(SPI)
+#define PERIPHS_SPI_FLASH_CMD                   SPI_CMD(SPI)
+
 #endif // SPI_REGISTER_H_INCLUDED
