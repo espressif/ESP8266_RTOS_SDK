@@ -118,7 +118,7 @@ void heap_trace_dump(void)
             if (mem_blk_is_used(p) && mem_blk_is_traced(p)) {
                 mem2_blk_t *mem2_blk = (mem2_blk_t *)p;
 
-                if (mem2_blk->line == (size_t)-1) {
+                if (!mem2_blk->line) {
                     ESP_EARLY_LOGI(TAG, HEAP_INFO " caller func %p", HEAP_INFO_PARAM(p), mem2_blk->file);
                 } else {
                     const char *file = rindex(mem2_blk->file, '/');

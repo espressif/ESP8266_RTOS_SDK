@@ -28,7 +28,7 @@
 
 #define _heap_caps_feed_wdt(_num)           \
 {                                           \
-    extern void pp_soft_wdt_feed(void);     \
-    pp_soft_wdt_feed();                     \
+    extern void esp_task_wdt_reset(void);   \
+    esp_task_wdt_reset();                   \
 }
 
