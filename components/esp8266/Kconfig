@@ -148,7 +148,7 @@ config SCAN_AP_MAX
 
 config WIFI_TX_RATE_SEQUENCE_FROM_HIGH
     bool "Set wifi tx rate from 54M to 1M"
-    default n
+    default y
     help
         If this option is enabled, Wifi will try to send packets first from high rate(54M). If it fails, it will 
         try at low rate until the transmission is successful.
