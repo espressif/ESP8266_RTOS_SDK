@@ -35,6 +35,11 @@ config SOC_FULL_ICACHE
         Enable this option, full 32 KB iram instead of 16 KB iram will be used as icache, so the heap use can use
         may reduce a lot.
 
+config SOC_IRAM_SIZE
+    hex
+    default 0x8000 if SOC_FULL_ICACHE
+    default 0xC000 if !SOC_FULL_ICACHE
+
 choice CONSOLE_UART_NUM
     prompt "UART peripheral to use for console output (0-1)"
     default CONSOLE_UART_CUSTOM_NUM_0
@@ -118,6 +123,14 @@ config WIFI_PPT_TASKSTACK_SIZE
         Configure the "ppT task" stack size. This is the stack of the task
         which calls promiscuous callback function. So if user's function is
         complex, the stack must be set larger.
+
+config ESP8266_CORE_GLOBAL_DATA_LINK_IRAM
+    bool "Link libcore.a internal global data to IRAM"
+    default y
+    depends on !LWIP_HIGH_THROUGHPUT
+    depends on !SOC_FULL_ICACHE
+    help
+        Link libcore.a internal global data(.bss .data COMMON) from DRAM to IRAM.
 
 endmenu
 
