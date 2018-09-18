@@ -1,9 +1,9 @@
 gwen:
-    core:       b55a74f
-    net80211:   b55a74f
-    pp:         b55a74f
-    smartconfig:103fbb8
-    wpa:        103fbb8
-    espnow:     103fbb8
-    wps:        103fbb8
+    core:       01980e2
+    net80211:   01980e2
+    pp:         01980e2
+    smartconfig:01980e2
+    wpa:        01980e2
+    espnow:     01980e2
+    wps:        01980e2
     phy:	1055_8
