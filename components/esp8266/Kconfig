@@ -87,7 +87,6 @@ config TASK_WDT
 
 config TASK_WDT_PANIC
     bool "Invoke panic handler on Task Watchdog timeout"
-    depends on TASK_WDT
     default n
     help
         If this option is enabled, the Task Watchdog Timer will be configured to
@@ -95,7 +94,6 @@ config TASK_WDT_PANIC
 
 choice TASK_WDT_TIMEOUT_S
     prompt "Task Watchdog timeout period (seconds)"
-    depends on TASK_WDT
     default TASK_WDT_TIMEOUT_13N
     help
         Timeout period configuration for the Task Watchdog Timer in seconds.
