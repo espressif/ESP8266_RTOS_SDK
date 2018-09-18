@@ -272,63 +272,57 @@ static bool timer_delete_wrapper(void *timer, uint32_t ticks)
     return xTimerDelete(timer, ticks);
 }
 
-static void *malloc_wrapper(uint32_t s, uint32_t cap)
+static void *malloc_wrapper(uint32_t s, uint32_t cap, const char *file, size_t line)
 {
     uint32_t os_caps;
-    void *return_addr = (void *)__builtin_return_address(0);
 
     if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
         os_caps = MALLOC_CAP_8BIT | MALLOC_CAP_DMA;
     else
         os_caps = MALLOC_CAP_32BIT;
 
-    return _heap_caps_malloc(s, os_caps, return_addr, 0);
+    return _heap_caps_malloc(s, os_caps, file, line);
 }
 
-static void *zalloc_wrapper(uint32_t s, uint32_t cap)
+static void *zalloc_wrapper(uint32_t s, uint32_t cap, const char *file, size_t line)
 {
     uint32_t os_caps;
-    void *return_addr = (void *)__builtin_return_address(0);
 
     if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
         os_caps = MALLOC_CAP_8BIT | MALLOC_CAP_DMA;
     else
         os_caps = MALLOC_CAP_32BIT;
 
-    return _heap_caps_zalloc(s, os_caps, return_addr, 0);
+    return _heap_caps_zalloc(s, os_caps, file, line);
 }
 
-static void *realloc_wrapper(void *ptr, uint32_t s, uint32_t cap)
+static void *realloc_wrapper(void *ptr, uint32_t s, uint32_t cap, const char *file, size_t line)
 {
     uint32_t os_caps;
-    void *return_addr = (void *)__builtin_return_address(0);
 
     if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
         os_caps = MALLOC_CAP_8BIT | MALLOC_CAP_DMA;
     else
         os_caps = MALLOC_CAP_32BIT;
 
-    return _heap_caps_realloc(ptr, s, os_caps, return_addr, 0);
+    return _heap_caps_realloc(ptr, s, os_caps, file, line);
 }
 
-static void *calloc_wrapper(uint32_t cnt, uint32_t s, uint32_t cap)
+static void *calloc_wrapper(uint32_t cnt, uint32_t s, uint32_t cap, const char *file, size_t line)
 {
     uint32_t os_caps;
-    void *return_addr = (void *)__builtin_return_address(0);
 
     if (cap & (OSI_MALLOC_CAP_8BIT | OSI_MALLOC_CAP_DMA))
         os_caps = MALLOC_CAP_8BIT | MALLOC_CAP_DMA;
     else
         os_caps = MALLOC_CAP_32BIT;
 
-    return _heap_caps_calloc(cnt , s, os_caps, return_addr, 0);
+    return _heap_caps_calloc(cnt , s, os_caps, file, line);
 }
 
-static void free_wrapper(void *ptr)
+static void free_wrapper(void *ptr, const char *file, size_t line)
 {
-    void *return_addr = (void *)__builtin_return_address(0);
-
-    _heap_caps_free(ptr, return_addr, 0);
+    _heap_caps_free(ptr, file, line);
 }
 
 static void srand_wrapper(uint32_t seed)

@@ -80,11 +80,11 @@ typedef struct {
     bool (*timer_stop)(void *timer, uint32_t ticks);
     bool (*timer_delete)(void *timer, uint32_t ticks);
 
-    void *(*malloc)(uint32_t size, uint32_t cap);
-    void *(*zalloc)(uint32_t size, uint32_t cap);
-    void *(*realloc)(void *ptr, uint32_t size, uint32_t cap);
-    void *(*calloc)(uint32_t cnt, uint32_t size, uint32_t cap);
-    void (*free)(void *p);
+    void *(*malloc)(uint32_t size, uint32_t cap, const char *file, size_t line);
+    void *(*zalloc)(uint32_t size, uint32_t cap, const char *file, size_t line);
+    void *(*realloc)(void *ptr, uint32_t size, uint32_t cap, const char *file, size_t line);
+    void *(*calloc)(uint32_t cnt, uint32_t size, uint32_t cap, const char *file, size_t line);
+    void (*free)(void *p, const char *file, size_t line);
     uint32_t (*get_free_heap_size)(void);
 
     void (*srand)(uint32_t seed);

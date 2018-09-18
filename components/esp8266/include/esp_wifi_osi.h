@@ -126,19 +126,19 @@ extern wifi_osi_funcs_t s_wifi_osi_funcs;
     s_wifi_osi_funcs.timer_delete(t, tk)
 
 #define wifi_malloc(s, c) \
-    s_wifi_osi_funcs.malloc(s, c)
+    s_wifi_osi_funcs.malloc(s, c, __FILE__, __LINE__)
 
 #define wifi_zalloc(s, c) \
-    s_wifi_osi_funcs.zalloc(s, c)
+    s_wifi_osi_funcs.zalloc(s, c, __FILE__, __LINE__)
 
 #define wifi_calloc(cnt, s, c) \
-    s_wifi_osi_funcs.calloc(cnt, s, c)
+    s_wifi_osi_funcs.calloc(cnt, s, c, __FILE__, __LINE__)
 
 #define wifi_realloc(ptr, s, c) \
-    s_wifi_osi_funcs.realloc(ptr, s, c)
+    s_wifi_osi_funcs.realloc(ptr, s, c, __FILE__, __LINE__)
 
 #define wifi_free(p) \
-    s_wifi_osi_funcs.free(p)
+    s_wifi_osi_funcs.free(p, __FILE__, __LINE__)
 
 #define wifi_get_free_heap_size() \
     s_wifi_osi_funcs.get_free_heap_size()
