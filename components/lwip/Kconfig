@@ -230,6 +230,25 @@ config DNS_MAX_SERVERS
     range 1 5
     default 2
 
+menuconfig LWIP_NETIF_CLIENT_DATA
+    bool "Enable per-interface client data"
+    default n
+    help
+        Enabling this pre-allocates extra space for each netif
+        for your own app to store data in
+
+config LWIP_NUM_NETIF_CLIENT_DATA
+    int "Enable client data array in netif"
+    default 1
+    range 1 8
+    depends on LWIP_NETIF_CLIENT_DATA
+    help
+        Number of slots available to associate your own app data
+        to a particular netif
+
+        From LWIP header: "Number of clients that may store data in 
+        client_data member array of struct netif."
+
 menuconfig LWIP_NETIF_LOOPBACK
     bool "Enable per-interface loopback"
     default n
@@ -237,6 +256,14 @@ menuconfig LWIP_NETIF_LOOPBACK
         Enabling this option means that if a packet is sent with a destination
         address equal to the interface's own IP address, it will "loop back" and
         be received by this interface.
+
+config LWIP_MDNS_RESPONDER
+    bool "Enable mDNS responder"
+    default n
+    depends on LWIP_NETIF_CLIENT_DATA
+    help
+        This requires an LWIP_NUM_NETIF_CLIENT_DATA slot, so that option
+        must be >= 1
 
 config LWIP_LOOPBACK_MAX_PBUFS
     int "Max queued loopback packets per interface"

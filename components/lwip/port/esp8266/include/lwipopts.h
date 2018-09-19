@@ -1150,10 +1150,19 @@ void *memp_malloc_ll(size_t type);
  * LWIP_NUM_NETIF_CLIENT_DATA: Number of clients that may store
  * data in client_data member array of struct netif.
  */
+#ifdef CONFIG_LWIP_NETIF_CLIENT_DATA
+#define LWIP_NUM_NETIF_CLIENT_DATA            CONFIG_LWIP_NUM_NETIF_CLIENT_DATA
+#else
 #define LWIP_NUM_NETIF_CLIENT_DATA            0
+#endif
 /**
  * @}
  */
+
+
+ #ifdef CONFIG_LWIP_MDNS_RESPONDER
+ #define LWIP_MDNS_RESPONDER                  1
+ #endif
 
 /*
    ------------------------------------
