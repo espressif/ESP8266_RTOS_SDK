@@ -208,7 +208,9 @@ static int low_level_send_cb(esp_aio_t *aio)
 
     pbuf_free(pbuf);
 
+#if ESP_UDP
     udp_sync_trigger();
+#endif
 
     return 0;
 }
