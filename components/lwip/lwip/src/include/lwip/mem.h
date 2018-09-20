@@ -69,11 +69,24 @@ typedef u16_t mem_size_t;
 #endif /* MEM_SIZE > 64000 */
 #endif
 
+#if ESP_LWIP_MEM_DBG
+#define mem_init()
+#define mem_trim(p, s) os_realloc(p, s)
+#define mem_malloc(s) os_malloc(s)
+#define mem_calloc(c, s) os_calloc(c, s)
+#define mem_free(p) os_free(p)
+
+#define mem_trim_fn(p, s, f, l)     _heap_caps_realloc(p, s, MALLOC_CAP_32BIT, f, l)
+#define mem_malloc_fn(s, f, l)      _heap_caps_malloc(s, MALLOC_CAP_32BIT, f, l)
+#define mem_calloc_fn(c, s, f, l)   _heap_caps_calloc(c, s, MALLOC_CAP_32BIT, f, l)
+#define mem_free_fn(p, f, l)        _heap_caps_free(p, f, l)
+#else
 void  mem_init(void);
 void *mem_trim(void *mem, mem_size_t size);
 void *mem_malloc(mem_size_t size);
 void *mem_calloc(mem_size_t count, mem_size_t size);
 void  mem_free(void *mem);
+#endif
 
 #ifdef __cplusplus
 }

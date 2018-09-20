@@ -62,6 +62,8 @@
 
 #include <string.h>
 
+#ifndef ESP_LWIP_MEM_DBG
+
 #if MEM_LIBC_MALLOC
 #include <stdlib.h> /* for malloc()/free() */
 #endif
@@ -775,3 +777,5 @@ mem_calloc(mem_size_t count, mem_size_t size)
   return p;
 }
 #endif /* MEM_LIBC_MALLOC && (!LWIP_STATS || !MEM_STATS) */
+
+#endif /* ESP_LWIP_MEM_DBG */

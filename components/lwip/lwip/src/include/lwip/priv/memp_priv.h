@@ -168,7 +168,10 @@ struct memp_desc {
 
 void memp_init_pool(const struct memp_desc *desc);
 
-#if MEMP_OVERFLOW_CHECK
+#if MEMP_OVERFLOW_CHECK || ESP_LWIP_MEM_DBG
+#if MEMP_OVERFLOW_CHECK && ESP_LWIP_MEM_DBG
+#error "MEMP_OVERFLOW_CHECK && ESP_LWIP_MEM_DBG cannot used"
+#endif
 void *memp_malloc_pool_fn(const struct memp_desc* desc, const char* file, const int line);
 #define memp_malloc_pool(d) memp_malloc_pool_fn((d), __FILE__, __LINE__)
 #else
