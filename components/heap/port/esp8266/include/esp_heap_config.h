@@ -18,6 +18,10 @@
 
 #define HEAP_ALIGN_SIZE 4
 
+#ifdef CONFIG_SOC_FULL_ICACHE
+#define HEAP_REGIONS_MAX 1
+#else
 #define HEAP_REGIONS_MAX 2
+#endif
 
 #define MEM_BLK_MIN 1
