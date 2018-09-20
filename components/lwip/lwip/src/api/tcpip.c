@@ -512,7 +512,12 @@ pbuf_free_callback(struct pbuf *p)
 err_t
 mem_free_callback(void *m)
 {
+#ifdef ESP_LWIP_MEM_DBG
+  mem_free(m);
+  return ERR_OK;
+#else
   return tcpip_callback_with_block(mem_free, m, 0);
+#endif
 }
 
 #endif /* !NO_SYS */
