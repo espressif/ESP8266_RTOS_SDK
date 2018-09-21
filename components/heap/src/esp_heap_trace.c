@@ -124,6 +124,8 @@ void heap_trace_dump(void)
                     const char *file = rindex(mem2_blk->file, '/');
                     if (file)
                         file++;
+                    else
+                        file = mem2_blk->file;
 
                     ESP_EARLY_LOGI(TAG, HEAP_INFO " caller file %s line %d", HEAP_INFO_PARAM(p), file, mem2_blk->line);
                 }
