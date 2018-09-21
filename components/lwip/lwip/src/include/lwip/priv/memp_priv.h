@@ -173,7 +173,7 @@ void memp_init_pool(const struct memp_desc *desc);
 #error "MEMP_OVERFLOW_CHECK && ESP_LWIP_MEM_DBG cannot used"
 #endif
 void *memp_malloc_pool_fn(const struct memp_desc* desc, const char* file, const int line);
-#define memp_malloc_pool(d) memp_malloc_pool_fn((d), __FILE__, __LINE__)
+#define memp_malloc_pool(d) memp_malloc_pool_fn((d), __ESP_FILE__, __LINE__)
 #else
 void *memp_malloc_pool(const struct memp_desc *desc);
 #endif
