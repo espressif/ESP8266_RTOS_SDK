@@ -75,6 +75,11 @@ void nd6_cleanup_netif(struct netif *netif);
 void nd6_adjust_mld_membership(struct netif *netif, s8_t addr_idx, u8_t new_state);
 #endif /* LWIP_IPV6_MLD */
 
+#if ESP_LWIP
+/** set nd6 callback when ipv6 addr state pref*/
+void nd6_set_cb(struct netif *netif, void (*cb)(struct netif *netif, u8_t ip_index));
+#endif
+
 #ifdef __cplusplus
 }
 #endif
