@@ -164,16 +164,17 @@ typedef struct _sock_mt {
 
 #define SOCK_MT_EXIT_CHECK(s, l, st)            \
 {                                               \
+    if (st != SOCK_MT_STATE_ILL)                \
+        _sock_set_state(s, SOCK_MT_STATE_SOCK); \
     if (_sock_unlock(s, l) != ERR_OK)           \
         return -1;                              \
-    _sock_set_state(s, SOCK_MT_STATE_SOCK);     \
 }
 
-static sock_mt_t DRAM_ATTR sockets_mt[NUM_SOCKETS];
+static volatile sock_mt_t DRAM_ATTR sockets_mt[NUM_SOCKETS];
 
 static inline void _sock_mt_init(int s)
 {
-    memset(&sockets_mt[s], 0, sizeof(sock_mt_t));
+    memset((void *)&sockets_mt[s], 0, sizeof(sock_mt_t));
 }
 
 static inline int _sock_is_opened(int s)
@@ -463,11 +464,11 @@ static void lwip_sync_mt(int s, int how)
     int lock = SOCK_MT_LOCK_MIN;
     struct lwip_sock *sock;
 
-    while (lock < SOCK_MT_LOCK_MAX) {
-        int need_wait = 0;
-        extern void sys_arch_msleep(int ms);
-
+    do {
         if (_sock_is_lock(s, lock)) {
+            int need_wait = 0;
+            extern void sys_arch_msleep(int ms);
+
             if (!_sock_get_select(s, SOCK_MT_SELECT_RECV | SOCK_MT_SELECT_SEND)) {
                 switch (lock) {
                     case SOCK_MT_LOCK_SEND:
@@ -485,13 +486,12 @@ static void lwip_sync_mt(int s, int how)
                 lwip_sync_select_mt(s);
                 need_wait = 1;
             }
-        }
 
-        if (need_wait)
-            sys_arch_msleep(LWIP_SYNC_MT_SLEEP_MS);
-
-        lock = _sock_next_lock(lock);
-    }
+            if (need_wait)
+                sys_arch_msleep(LWIP_SYNC_MT_SLEEP_MS);
+        } else
+            lock = _sock_next_lock(lock);
+    }  while (lock < SOCK_MT_LOCK_MAX);
 
     sock = tryget_socket(s);
     if (sock) {
