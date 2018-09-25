@@ -66,3 +66,18 @@ endif
 
 # global CFLAGS for ESP8266
 CFLAGS += -DICACHE_FLASH
+
+ifdef CONFIG_ESP_FILENAME_MACRO_NO_PATH
+CFLAGS += -D__ESP_FILE__='"$$(subst $$(dir $$<),,$$<)"'
+CXXFLAGS +=  -D__ESP_FILE__='"$$(subst $$(dir $$<),,$$<)"'
+endif
+
+ifdef CONFIG_ESP_FILENAME_MACRO_RAW
+CFLAGS += -D__ESP_FILE__=__FILE__
+CXXFLAGS += -D__ESP_FILE__=__FILE__
+endif
+
+ifdef CONFIG_ESP_FILENAME_MACRO_NULL
+CFLAGS += -D__ESP_FILE__='"null"'
+CXXFLAGS += -D__ESP_FILE__='"null"'
+endif

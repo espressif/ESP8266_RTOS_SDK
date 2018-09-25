@@ -105,7 +105,7 @@ void _esp_error_check_failed(esp_err_t rc, const char *file, int line, const cha
 #define ESP_ERROR_CHECK(x) do {                                         \
         esp_err_t __err_rc = (x);                                       \
         if (__err_rc != ESP_OK) {                                       \
-            _esp_error_check_failed(__err_rc, __FILE__, __LINE__,       \
+            _esp_error_check_failed(__err_rc, __ESP_FILE__, __LINE__,   \
                                     __ASSERT_FUNC, #x);                 \
         }                                                               \
     } while(0);

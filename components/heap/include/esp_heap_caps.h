@@ -121,7 +121,7 @@ void esp_heap_caps_init_region(heap_region_t *region, size_t max_num);
  *
  * @return A pointer to the memory allocated on success, NULL on failure
  */
-#define heap_caps_malloc(size, caps) _heap_caps_malloc(size, caps, __FILE__, __LINE__)
+#define heap_caps_malloc(size, caps) _heap_caps_malloc(size, caps, __ESP_FILE__, __LINE__)
 
 void *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, size_t line);
 
@@ -134,7 +134,7 @@ void *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, size_t lin
  *
  * @param ptr Pointer to memory previously returned from heap_caps_(m/c/re/z)alloc(). Can be NULL.
  */
-#define heap_caps_free(p) _heap_caps_free(p, __FILE__, __LINE__)
+#define heap_caps_free(p) _heap_caps_free(p, __ESP_FILE__, __LINE__)
 
 void _heap_caps_free(void *ptr, const char *file, size_t line);
 
@@ -151,7 +151,7 @@ void _heap_caps_free(void *ptr, const char *file, size_t line);
  *
  * @return A pointer to the memory allocated on success, NULL on failure
  */
-#define heap_caps_calloc(n, size, caps) _heap_caps_calloc(n, size, caps, __FILE__, __LINE__)
+#define heap_caps_calloc(n, size, caps) _heap_caps_calloc(n, size, caps, __ESP_FILE__, __LINE__)
 
 void *_heap_caps_calloc(size_t count, size_t size, uint32_t caps, const char *file, size_t line);
 
@@ -171,7 +171,7 @@ void *_heap_caps_calloc(size_t count, size_t size, uint32_t caps, const char *fi
  *
  * @return Pointer to a new buffer of size 'size' with capabilities 'caps', or NULL if allocation failed.
  */
-#define heap_caps_realloc(ptr, size, caps) _heap_caps_realloc(ptr, size, caps, __FILE__, __LINE__)
+#define heap_caps_realloc(ptr, size, caps) _heap_caps_realloc(ptr, size, caps, __ESP_FILE__, __LINE__)
 
 void *_heap_caps_realloc(void *mem, size_t newsize, uint32_t caps, const char *file, size_t line);
 
@@ -188,7 +188,7 @@ void *_heap_caps_realloc(void *mem, size_t newsize, uint32_t caps, const char *f
  *
  * @return A pointer to the memory allocated on success, NULL on failure
  */
-#define heap_caps_zalloc(size, caps) _heap_caps_zalloc(size, caps, __FILE__, __LINE__)
+#define heap_caps_zalloc(size, caps) _heap_caps_zalloc(size, caps, __ESP_FILE__, __LINE__)
 
 void *_heap_caps_zalloc(size_t size, uint32_t caps, const char *file, size_t line);
 
