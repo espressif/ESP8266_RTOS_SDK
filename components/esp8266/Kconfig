@@ -115,7 +115,7 @@ config TASK_WDT_PANIC
 
 choice TASK_WDT_TIMEOUT_S
     prompt "Task Watchdog timeout period (seconds)"
-    default TASK_WDT_TIMEOUT_13N
+    default TASK_WDT_TIMEOUT_15N
     help
         Timeout period configuration for the Task Watchdog Timer in seconds.
         This is also configurable at run time.
