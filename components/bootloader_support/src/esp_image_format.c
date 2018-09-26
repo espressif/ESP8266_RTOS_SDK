@@ -601,6 +601,8 @@ static const char *TAG = "esp_image";
 
 #define HASH_LEN 32 /* SHA-256 digest length */
 
+#define SHA_CHUNK 1024
+
 #define MAX_CHECKSUM_READ_SIZE SPI_FLASH_SEC_SIZE
 
 #define SIXTEEN_MB 0x1000000
@@ -647,9 +649,11 @@ static esp_err_t verify_segment_header(int index, const esp_image_segment_header
 
 static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t checksum_word, esp_image_metadata_t *data);
 
-#if defined(CONFIG_SECURE_BOOT_ENABLED) && defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+#if defined(CONFIG_SECURE_BOOT_ENABLED)
 static esp_err_t __attribute__((unused)) verify_secure_boot_signature(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data);
-static esp_err_t __attribute__((unused)) verify_simple_hash(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data);
+#endif
+#if defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+static esp_err_t  __attribute__((unused)) verify_simple_hash(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data);
 #endif
 
 esp_err_t esp_image_load(esp_image_load_mode_t mode, const esp_partition_pos_t *part, esp_image_metadata_t *data)
@@ -688,7 +692,10 @@ esp_err_t esp_image_load(esp_image_load_mode_t mode, const esp_partition_pos_t *
     if (1) {
 #else
 #ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
-    if (data->image.hash_appended) {
+#ifdef CONFIG_TARGET_PLATFORM_ESP32
+    if (data->image.hash_appended)
+#endif
+    {
         sha_handle = bootloader_sha256_start();
         if (sha_handle == NULL) {
             return ESP_ERR_NO_MEM;
@@ -926,98 +933,53 @@ err:
 
 static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, uint32_t data_len, bool do_load, bootloader_sha256_handle_t sha_handle, uint32_t *checksum)
 {
-#ifdef BOOTLOADER_BUILD
-    const uint32_t *data = (const uint32_t *)bootloader_mmap(data_addr, data_len);
-    if(!data) {
-        ESP_LOGE(TAG, "bootloader_mmap(0x%x, 0x%x) failed",
-                 data_addr, data_len);
+    esp_err_t ret = ESP_OK;
+#if defined(CONFIG_ENABLE_BOOT_CHECK_SUM) || defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+    const char *src = (const char *)data_addr;
+#ifndef BOOTLOADER_BUILD
+    uint32_t *pbuf;
+
+    pbuf = (uint32_t*)malloc(SHA_CHUNK);
+    if(pbuf == NULL) {
         return ESP_FAIL;
     }
-
-#if defined(BOOTLOADER_BUILD) && defined(BOOTLOADER_UNPACK_APP)
-    // Set up the obfuscation value to use for loading
-    while (ram_obfs_value[0] == 0 || ram_obfs_value[1] == 0) {
-        bootloader_fill_random(ram_obfs_value, sizeof(ram_obfs_value));
-    }
-    ram_obfs_value[0] = 0x55;
-    ram_obfs_value[1] = 0xaa;
-    uint32_t *dest = (uint32_t *)load_addr;
+#else
+    static char pbuf[SHA_CHUNK];
 #endif
 
-    const uint32_t *src = data;
-
-    for (int i = 0; i < data_len; i += 4) {
-        int w_i = i/4; // Word index
-        uint32_t w = src[w_i];
-        *checksum ^= w;
-#ifdef BOOTLOADER_BUILD
-        if (do_load) {
-//            dest[w_i] = w ^ ((w_i & 1) ? ram_obfs_value[0] : ram_obfs_value[1]);
-        }
-#endif
+    for (int i = 0; i < data_len; i += SHA_CHUNK) {
         // SHA_CHUNK determined experimentally as the optimum size
         // to call bootloader_sha256_data() with. This is a bit
         // counter-intuitive, but it's ~3ms better than using the
         // SHA256 block size.
-        const size_t SHA_CHUNK = 1024;
-        if (sha_handle != NULL && i % SHA_CHUNK == 0) {
-//            bootloader_sha256_data(sha_handle, &src[w_i],
-//                                   MIN(SHA_CHUNK, data_len - i));
-        }
-    }
+        
+        size_t bytes = MIN(SHA_CHUNK, data_len - i);
 
-    bootloader_munmap(data);
-
-    return ESP_OK;
-#endif
-
-#ifndef BOOTLOADER_BUILD
-    uint32_t had_read_size = 0, to_read_size = 0;
-    uint32_t* data = 0;
-
-    data = (uint32_t*)malloc(MAX_CHECKSUM_READ_SIZE);
-    if(data == NULL) {
-        return ESP_FAIL;
-    }
-
-    const uint32_t *src = data;
-    for (; had_read_size != data_len; ) {
-        to_read_size = ((data_len - had_read_size) < MAX_CHECKSUM_READ_SIZE) ? (data_len - had_read_size) : MAX_CHECKSUM_READ_SIZE;
-        int ret = ESP_OK;
-        ret = spi_flash_read(data_addr + had_read_size, data, to_read_size);
+        ret = bootloader_flash_read((size_t)&src[i], pbuf, bytes, false);
         if (ret) {
-            ESP_LOGE(TAG, "SPI flash read result %d\n", ret);
-            free(data);
-            return ESP_FAIL;
+            ESP_LOGE(TAG, "bootloader read flash @ %p %d error %d", &src[i], bytes, ret);
+            goto exit;
         }
 
-        had_read_size += to_read_size;
+#if defined(CONFIG_ENABLE_BOOT_CHECK_SUM)
+        uint32_t *psum = (uint32_t *)pbuf;
 
-        for (int i = 0; i < to_read_size; i += 4) {
-            int w_i = i/4; // Word index
-            uint32_t w = src[w_i];
-            *checksum ^= w;
-    #ifdef BOOTLOADER_BUILD
-            if (do_load) {
-    //            dest[w_i] = w ^ ((w_i & 1) ? ram_obfs_value[0] : ram_obfs_value[1]);
-            }
-    #endif
-            // SHA_CHUNK determined experimentally as the optimum size
-            // to call bootloader_sha256_data() with. This is a bit
-            // counter-intuitive, but it's ~3ms better than using the
-            // SHA256 block size.
-            const size_t SHA_CHUNK = 1024;
-            if (sha_handle != NULL && i % SHA_CHUNK == 0) {
-    //            bootloader_sha256_data(sha_handle, &src[w_i],
-    //                                   MIN(SHA_CHUNK, data_len - i));
-            }
-        }
-
-
-    }   // end for
-    free(data);
-    return ESP_OK;
+        for (int i = 0; i < bytes / sizeof(uint32_t); i++)
+            *checksum ^= psum[i];
 #endif
+
+#if defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+        if (sha_handle != NULL)
+            bootloader_sha256_data(sha_handle, pbuf, bytes);
+#endif
+    }
+
+exit:
+#ifndef BOOTLOADER_BUILD
+    free(pbuf);
+#endif
+#endif
+    return ret;
 }
 
 static esp_err_t verify_segment_header(int index, const esp_image_segment_header_t *segment, uint32_t segment_data_offs, bool silent)
@@ -1082,49 +1044,68 @@ esp_err_t esp_image_verify_bootloader(uint32_t *length)
 
 static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t checksum_word, esp_image_metadata_t *data)
 {
+    esp_err_t err = ESP_OK;
+#if defined(CONFIG_ENABLE_BOOT_CHECK_SUM) || defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
     uint32_t unpadded_length = data->image_len;
     uint32_t length = unpadded_length + 1; // Add a byte for the checksum
     length = (length + 15) & ~15; // Pad to next full 16 byte block
 
     // Verify checksum
     uint8_t buf[16];
-    esp_err_t err = bootloader_flash_read(data->start_addr + unpadded_length, buf, length - unpadded_length, true);
+    err = bootloader_flash_read(data->start_addr + unpadded_length, buf, length - unpadded_length, true);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "bootloader read flash @ 0x%x %d error %d", data->start_addr + unpadded_length, length - unpadded_length, err);
+        return ESP_ERR_IMAGE_INVALID;
+    }
+
+#if defined(CONFIG_ENABLE_BOOT_CHECK_SUM)
     uint8_t calc = buf[length - unpadded_length - 1];
     uint8_t checksum = (checksum_word >> 24)
         ^ (checksum_word >> 16)
         ^ (checksum_word >> 8)
         ^ (checksum_word >> 0);
-    if (err != ESP_OK || checksum != calc) {
+
+    if (checksum != calc) {
         ESP_LOGE(TAG, "Checksum failed. Calculated 0x%x read 0x%x", checksum, calc);
         return ESP_ERR_IMAGE_INVALID;
     }
+#endif
+
 #ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
     if (sha_handle != NULL) {
         bootloader_sha256_data(sha_handle, buf, length - unpadded_length);
     }
 
-    if (data->image.hash_appended) {
+#if CONFIG_TARGET_PLATFORM_ESP32
+    if (data->image.hash_appended)
+#endif
+    {
         // Account for the hash in the total image length
         length += HASH_LEN;
     }
 #endif
 
     data->image_len = length;
+#endif
 
-    return ESP_OK;
+    return err;
 }
 
-#if defined(CONFIG_SECURE_BOOT_ENABLED) && defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
-
+#if defined(CONFIG_SECURE_BOOT_ENABLED) || defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
 static void debug_log_hash(const uint8_t *image_hash, const char *caption);
+#endif
 
+#if defined(CONFIG_SECURE_BOOT_ENABLED)
 static esp_err_t verify_secure_boot_signature(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data)
 {
     uint8_t image_hash[HASH_LEN] = { 0 };
 
     // For secure boot, we calculate the signature hash over the whole file, which includes any "simple" hash
     // appended to the image for corruption detection
-    if (data->image.hash_appended) {
+#if CONFIG_TARGET_PLATFORM_ESP32
+    if (data->image.hash_appended)
+#endif
+    {
         const void *simple_hash = bootloader_mmap(data->start_addr + data->image_len - HASH_LEN, HASH_LEN);
         bootloader_sha256_data(sha_handle, simple_hash, HASH_LEN);
         bootloader_munmap(simple_hash);
@@ -1160,27 +1141,37 @@ static esp_err_t verify_secure_boot_signature(bootloader_sha256_handle_t sha_han
 
     return ESP_OK;
 }
+#endif
 
+#if defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
 static esp_err_t verify_simple_hash(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data)
 {
-    uint8_t image_hash[HASH_LEN] = { 0 };
+    uint8_t image_hash[HASH_LEN];
+    uint8_t image_hash_flash[HASH_LEN];
+
+    // Simple hash for verification only
+    esp_err_t err = bootloader_flash_read(data->start_addr + data->image_len - HASH_LEN, image_hash_flash, HASH_LEN, false);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "bootloader read flash @ 0x%x %d error %d", data->start_addr + data->image_len - HASH_LEN, HASH_LEN, err);
+        return ESP_ERR_IMAGE_INVALID;
+    }
+
     bootloader_sha256_finish(sha_handle, image_hash);
 
     // Log the hash for debugging
     debug_log_hash(image_hash, "Calculated hash");
 
-    // Simple hash for verification only
-    const void *hash = bootloader_mmap(data->start_addr + data->image_len - HASH_LEN, HASH_LEN);
-    if (memcmp(hash, image_hash, HASH_LEN) != 0) {
+    if (memcmp(image_hash_flash, image_hash, HASH_LEN) != 0) {
         ESP_LOGE(TAG, "Image hash failed - image is corrupt");
-        debug_log_hash(hash, "Expected hash");
-        bootloader_munmap(hash);
+        debug_log_hash(image_hash_flash, "Expected hash");
         return ESP_ERR_IMAGE_INVALID;
     }
 
-    bootloader_munmap(hash);
     return ESP_OK;
 }
+#endif
+
+#if defined(CONFIG_SECURE_BOOT_ENABLED) || defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
 
 // Log a hash as a hex string
 static void debug_log_hash(const uint8_t *image_hash, const char *label)
