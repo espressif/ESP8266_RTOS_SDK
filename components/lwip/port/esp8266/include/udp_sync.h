@@ -57,6 +57,11 @@ void udp_sync_proc(void);
  */
 void udp_sync_trigger(void);
 
+/**
+ * @brief close the udp sync before close the socket
+ */
+void udp_sync_close(int s);
+
 #ifdef __cplusplus
 }
 #endif

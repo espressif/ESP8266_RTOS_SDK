@@ -195,7 +195,31 @@ void udp_sync_trigger(void)
     if (!s_udp_sync_num)
         return ;
 
-    tcpip_callback_with_block((tcpip_callback_fn)udp_sync_trigger_null, NULL, 0);
+    tcpip_callback_with_block(udp_sync_trigger_null, NULL, 0);
+}
+
+/*
+ * @brief close and clear the udp sync
+ */
+static void udp_sync_do_close(void *p)
+{
+    int s = (int)p;
+
+    if (s_udp_sync[s].msg) {
+        ESP_LOGD(TAG, "UDP sync close socket %d", s);
+        s_udp_sync[s].msg = NULL;
+        s_udp_sync[s].retry = 0;
+        s_udp_sync[s].ret = ERR_OK;
+        s_udp_sync_num--;
+    }
+}
+
+/**
+ * @brief close the udp sync before close the socket
+ */ 
+void udp_sync_close(int s)
+{
+    tcpip_callback_with_block(udp_sync_do_close, (void *)s, 1);
 }
 
 #endif /* ESP_UDP */
