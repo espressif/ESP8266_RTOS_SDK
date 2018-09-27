@@ -629,6 +629,12 @@ lwip_close(int s)
   lwip_socket_drop_registered_memberships(s);
 #endif /* LWIP_IGMP */
 
+#ifndef SOCKETS_MT
+#if ESP_UDP && LWIP_NETIF_TX_SINGLE_PBUF
+  udp_sync_close(s);
+#endif
+#endif
+
   err = netconn_delete(sock->conn);
   if (err != ERR_OK) {
     sock_set_errno(sock, err_to_errno(err));
