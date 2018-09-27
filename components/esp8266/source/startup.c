@@ -116,8 +116,7 @@ void call_user_start(size_t start_addr)
     __asm__ __volatile__(
         "rsil       a2, 2\n"
         "movi       a1, _chip_interrupt_tmp\n"
-        "movi       a2, 0xffffff00\n"
-        "and        a1, a1, a2\n");
+        : : :"memory");
 
     heap_caps_init();
 
