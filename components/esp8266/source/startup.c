@@ -84,7 +84,7 @@ void call_user_start(size_t start_addr)
 
     extern int _bss_start, _bss_end;
 
-    esp_image_header_t *head = (esp_image_header_t *)(FLASH_MAP_ADDR + start_addr);
+    esp_image_header_t *head = (esp_image_header_t *)(FLASH_MAP_ADDR + CONFIG_PARTITION_TABLE_CUSTOM_APP_BIN_OFFSET);
     esp_image_segment_header_t *segment = (esp_image_segment_header_t *)((uintptr_t)head + sizeof(esp_image_header_t));
 
     for (i = 0; i < 3; i++) {
