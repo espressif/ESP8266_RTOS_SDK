@@ -210,7 +210,7 @@ portBASE_TYPE xPortStartScheduler(void)
     vTaskSwitchContext();
 
     /* Restore the context of the first task that is going to run. */
-    XT_RTOS_INT_EXIT();
+    _xt_enter_first_task();
 
     /* Should not get here as the tasks are now running! */
     return pdTRUE;

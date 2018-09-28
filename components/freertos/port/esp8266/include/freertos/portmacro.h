@@ -236,6 +236,8 @@ bool interrupt_is_disable(void);
 /* Get tick rate per second */
 uint32_t xPortGetTickRateHz(void);
 
+void _xt_enter_first_task(void);
+
 #ifdef __cplusplus
 }
 #endif
