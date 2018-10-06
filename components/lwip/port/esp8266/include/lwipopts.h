@@ -2224,8 +2224,8 @@ void *memp_malloc_ll(size_t type);
  */
 
 #if ESP_UDP
-#if !LWIP_UDP || !LWIP_SOCKET || !ESP_LWIP
-#error "LWIP_UDP & LWIP_SOCKET & ESP_LWIP must be enable"
+#if !LWIP_UDP || !LWIP_SOCKET || !ESP_LWIP || !LWIP_NETIF_TX_SINGLE_PBUF
+#error "LWIP_UDP & LWIP_SOCKET & ESP_LWIP & LWIP_NETIF_TX_SINGLE_PBUF must be enable"
 #else
 #include "udp_sync.h"
 #endif

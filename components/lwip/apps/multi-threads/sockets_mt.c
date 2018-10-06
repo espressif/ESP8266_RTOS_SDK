@@ -757,8 +757,10 @@ int lwip_close(int s)
 {
     int ret;
 
-#if ESP_UDP && LWIP_NETIF_TX_SINGLE_PBUF
-    udp_sync_close(s);
+#if ESP_UDP
+    struct lwip_sock *sock = get_socket(s);
+    if (sock)
+        udp_sync_close_netconn(sock->conn);
 #endif
 
     _sock_set_open(s, 0);

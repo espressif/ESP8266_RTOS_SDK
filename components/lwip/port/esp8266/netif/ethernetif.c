@@ -345,7 +345,7 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
      */
     err = esp_aio_sendto(&aio, NULL, 0);
 #if ESP_UDP
-    udp_sync_set_ret(netif, err);
+    udp_sync_set_ret(netif, p, err);
 #endif
 
     if (err != ERR_OK) {

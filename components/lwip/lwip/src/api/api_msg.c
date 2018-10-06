@@ -1416,7 +1416,7 @@ lwip_netconn_do_send(void *m)
 #if LWIP_UDP
       case NETCONN_UDP:
 #if ESP_UDP
-        udp_sync_regitser(msg);
+        udp_sync_regitser_sock(msg);
 #endif /* ESP_UDP */
 #if LWIP_CHECKSUM_ON_COPY
         if (ip_addr_isany(&msg->msg.b->addr) || IP_IS_ANY_TYPE_VAL(msg->msg.b->addr)) {
@@ -1442,7 +1442,7 @@ lwip_netconn_do_send(void *m)
     }
   }
 #if ESP_UDP
-  udp_sync_ack(msg);
+  udp_sync_ack_sock(msg);
 #else
   TCPIP_APIMSG_ACK(msg);
 #endif /* ESP_UDP */
