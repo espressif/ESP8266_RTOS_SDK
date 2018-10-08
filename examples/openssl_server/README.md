@@ -1,4 +1,4 @@
-1. Run ./gencrt.sh or if you have your own certificate, move to the openssl_server directory, the name is ca.crt,server.crt, server.key, client.crt and client.key.
+1. Run `./gencrt.sh` or if you have your own certificates, move them to the openssl_server directory, the names are ca.crt,server.crt, server.key, client.crt and client.key.
 
     The server.crt and client.crt was generate by the same ca.crt in ./gencrt.sh.
 
@@ -12,11 +12,11 @@
 
     Server side needs ca1.crt, server2.crt, server2.key.
 
-    Rename ca1.crt server2.crt server2.key to ca.crt server.crt server.key and run ./genheader.sh.
+    Rename ca1.crt server2.crt server2.key to ca.crt server.crt server.key and run `./genheader.sh`.
 
     Use ca2.crt in openssl s_client -CAfile option.
 
-2. Run ./genheader.sh.
+2. Run `./genheader.sh`.
 
 3. Modify thease two lines in file user_config.h to your local Wi-Fi SSID and Password.
 
@@ -26,13 +26,13 @@
 
 4. Make sure that the computer and ESP8266 are in the same local area network.
 
-5. Run ./gen_misc.sh.
+5. Run `./gen_misc.sh`.
 
 6. Download bin file to ESP8266.
 
     Find server ip address in ESP8266 UART log: ip:192.168.3.6,mask:255.255.255.0,gw:192.168.3.1.
 
-7. Run openssl s_client -CAfile ca.crt -cert client.crt -key client.key -verify 1 -tls1_1 -host 192.168.3.6 -port 443.
+7. Run `openssl s_client -CAfile ca.crt -cert client.crt -key client.key -verify 1 -tls1_1 -host 192.168.3.6 -port 443`.
 
 
 **ATTENTION**

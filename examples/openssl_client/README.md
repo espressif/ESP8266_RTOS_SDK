@@ -1,4 +1,4 @@
-1. Run ./gencrt.sh or if you have your own certificate, move to the openssl_client directory, the name is ca.crt,server.crt, server.key, client.crt and client.key.
+1. Run `./gencrt.sh` or if you have your own certificates, move them to the openssl_client directory, the names are ca.crt, server.crt, server.key, client.crt and client.key.
 
     The server.crt and client.crt was generate by the same ca.crt in ./gencrt.sh.
 
@@ -12,11 +12,11 @@
 
     Server side needs ca1.crt, server2.crt, server2.key.
 
-    Rename ca2.crt client1.crt client1.key to ca.crt client.crt client.key and run ./genheader.sh.
+    Rename ca2.crt client1.crt client1.key to ca.crt client.crt client.key and run `./genheader.sh`.
 
     Use ca1.crt in openssl s_server -CAfile option.
 
-2. Run ./genheader.sh.
+2. Run `./genheader.sh`.
 
 3. Modify this two lines in file openssl_demo.c to your computer server ip and port.
 
@@ -33,9 +33,9 @@
 
 5. Make sure that the computer and ESP8266 are in the same local area network.
 
-6. Run ./gen_misc.sh.
+6. Run `./gen_misc.sh`.
 
-7. Run openssl s_server -CAfile ca.crt -cert server.crt -key server.key -verify 1 -tls1_1 -accept 443.
+7. Run `openssl s_server -CAfile ca.crt -cert server.crt -key server.key -verify 1 -tls1_1 -accept 443`.
 
 8. Download bin file to ESP8266.
 
