@@ -62,7 +62,9 @@ typedef struct coap_address_t {
     struct sockaddr         sa;
     struct sockaddr_storage st;
     struct sockaddr_in      sin;
+#if COAP_IPV6
     struct sockaddr_in6     sin6;
+#endif
   } addr;
 } coap_address_t;
 
@@ -79,10 +81,12 @@ _coap_address_isany_impl(const coap_address_t *a) {
   switch (a->addr.sa.sa_family) {
   case AF_INET:
     return a->addr.sin.sin_addr.s_addr == INADDR_ANY;
+#if COAP_IPV6
   case AF_INET6:
     return memcmp(&in6addr_any,
                   &a->addr.sin6.sin6_addr,
                   sizeof(in6addr_any)) == 0;
+#endif
   default:
     ;
   }

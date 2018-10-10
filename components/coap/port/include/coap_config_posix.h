@@ -36,6 +36,8 @@
 #define CUSTOM_COAP_NETWORK_SEND
 #define CUSTOM_COAP_NETWORK_READ
 
+#define COAP_IPV6 LWIP_IPV6
+
 #endif
 
 #endif /* COAP_CONFIG_POSIX_H_ */

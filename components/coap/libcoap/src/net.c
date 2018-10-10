@@ -508,12 +508,14 @@ coap_transaction_id(const coap_address_t *peer, const coap_pdu_t *pdu,
     coap_hash((const unsigned char *)&peer->addr.sin.sin_addr,
 	      sizeof(peer->addr.sin.sin_addr), h);
     break;
+#if COAP_IPV6
   case AF_INET6:
     coap_hash((const unsigned char *)&peer->addr.sin6.sin6_port,
 	      sizeof(peer->addr.sin6.sin6_port), h);
     coap_hash((const unsigned char *)&peer->addr.sin6.sin6_addr,
 	      sizeof(peer->addr.sin6.sin6_addr), h);
     break;
+#endif
   default:
     return;
   }
