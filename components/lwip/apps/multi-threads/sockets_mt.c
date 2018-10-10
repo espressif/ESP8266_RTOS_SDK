@@ -133,6 +133,9 @@ typedef int (*lwip_io_mt_fn)(int, int );
 #define SOCK_MT_LOCK_RECV       (1 << 1)
 #define SOCK_MT_LOCK_IOCTL     (1 << 2)
 
+#define SOCK_MT_LOCK_MIN       SOCK_MT_LOCK_SEND
+#define SOCK_MT_LOCK_MAX       SOCK_MT_LOCK_IOCTL
+
 #define SOCK_MT_SELECT_RECV     (1 << 0)
 #define SOCK_MT_SELECT_SEND    (1 << 1)
 
@@ -161,12 +164,18 @@ typedef struct _sock_mt {
 
 #define SOCK_MT_EXIT_CHECK(s, l, st)            \
 {                                               \
+    if (st != SOCK_MT_STATE_ILL)                \
+        _sock_set_state(s, SOCK_MT_STATE_SOCK); \
     if (_sock_unlock(s, l) != ERR_OK)           \
         return -1;                              \
-    _sock_set_state(s, SOCK_MT_STATE_SOCK);     \
 }
 
-static sock_mt_t sockets_mt[NUM_SOCKETS];
+static volatile sock_mt_t DRAM_ATTR sockets_mt[NUM_SOCKETS];
+
+static inline void _sock_mt_init(int s)
+{
+    memset((void *)&sockets_mt[s], 0, sizeof(sock_mt_t));
+}
 
 static inline int _sock_is_opened(int s)
 {
@@ -175,12 +184,20 @@ static inline int _sock_is_opened(int s)
 
 static inline void _sock_set_open(int s, int opened)
 {
+    SYS_ARCH_DECL_PROTECT(lev);
+
+    SYS_ARCH_PROTECT(lev);
     sockets_mt[s].opened = opened;
+    SYS_ARCH_UNPROTECT(lev);
 }
 
 static inline void _sock_set_state(int s, int state)
 {
+    SYS_ARCH_DECL_PROTECT(lev);
+
+    SYS_ARCH_PROTECT(lev);
     sockets_mt[s].state = state;
+    SYS_ARCH_UNPROTECT(lev);
 }
 
 static inline int _sock_get_state(int s)
@@ -193,7 +210,17 @@ static inline int _sock_get_select(int s, int select)
     return sockets_mt[s].select & select;
 }
 
-static void _sock_set_select(int s, int select)
+static int inline _sock_is_lock(int s, int l)
+{
+    return sockets_mt[s].lock & l;
+}
+
+static int inline _sock_next_lock(int lock)
+{
+    return lock << 1;
+}
+
+static void inline _sock_set_select(int s, int select)
 {
     SYS_ARCH_DECL_PROTECT(lev);
 
@@ -202,7 +229,7 @@ static void _sock_set_select(int s, int select)
     SYS_ARCH_UNPROTECT(lev);
 }
 
-static void _sock_reset_select(int s, int select)
+static void inline _sock_reset_select(int s, int select)
 {
     SYS_ARCH_DECL_PROTECT(lev);
 
@@ -216,7 +243,6 @@ static int _sock_try_lock(int s, int l)
     int ret = ERR_OK;
     SYS_ARCH_DECL_PROTECT(lev);
 
-    SYS_ARCH_PROTECT(lev);
     if (!_sock_is_opened(s)) {
         ret = ERR_CLSD;
         goto exit;
@@ -227,11 +253,11 @@ static int _sock_try_lock(int s, int l)
         goto exit;
     }
 
+    SYS_ARCH_PROTECT(lev);
     sockets_mt[s].lock |= l;
-
-exit:
     SYS_ARCH_UNPROTECT(lev);
 
+exit:
     return ret;
 }
 
@@ -265,8 +291,8 @@ static int _sock_unlock(int s, int l)
     SOCK_MT_DEBUG(1, "s %d l %d exit ", s, l);
 
     SYS_ARCH_PROTECT(lev);
-
     sockets_mt[s].lock &= ~l;
+    SYS_ARCH_UNPROTECT(lev);
 
     if (!_sock_is_opened(s)) {
         ret = ERR_CLSD;
@@ -274,8 +300,6 @@ static int _sock_unlock(int s, int l)
     }
 
 exit:
-    SYS_ARCH_UNPROTECT(lev);
-
     SOCK_MT_DEBUG(1, "OK %d\n", ret);
 
     return ret;
@@ -437,14 +461,14 @@ static void lwip_sync_select_mt(int s)
 
 static void lwip_sync_mt(int s, int how)
 {
-    int lock = SOCK_MT_LOCK_SEND;
+    int lock = SOCK_MT_LOCK_MIN;
     struct lwip_sock *sock;
 
-    while (lock < SOCK_MT_LOCK_IOCTL) {
-        int need_wait = 0;
-        extern void sys_arch_msleep(int ms);
+    do {
+        if (_sock_is_lock(s, lock)) {
+            int need_wait = 0;
+            extern void sys_arch_msleep(int ms);
 
-        if (_sock_try_lock(s, lock) == ERR_INPROGRESS) {
             if (!_sock_get_select(s, SOCK_MT_SELECT_RECV | SOCK_MT_SELECT_SEND)) {
                 switch (lock) {
                     case SOCK_MT_LOCK_SEND:
@@ -462,13 +486,12 @@ static void lwip_sync_mt(int s, int how)
                 lwip_sync_select_mt(s);
                 need_wait = 1;
             }
-        }
 
-        if (need_wait)
-            sys_arch_msleep(LWIP_SYNC_MT_SLEEP_MS);
-
-        lock++;
-    }
+            if (need_wait)
+                sys_arch_msleep(LWIP_SYNC_MT_SLEEP_MS);
+        } else
+            lock = _sock_next_lock(lock);
+    }  while (lock < SOCK_MT_LOCK_MAX);
 
     sock = tryget_socket(s);
     if (sock) {
@@ -510,6 +533,7 @@ int lwip_socket(int domain, int type, int protocol)
         return -1;
 
     lwip_socket_set_so_link(s, 0);
+    _sock_mt_init(s);
     _sock_set_open(s, 1);
 
     return s;
@@ -572,6 +596,7 @@ int lwip_accept(int s, struct sockaddr *addr, socklen_t *addrlen)
         return -1;
 
     lwip_socket_set_so_link(ret, 0);
+    _sock_mt_init(ret);
     _sock_set_open(ret, 1);
 
     return ret;
@@ -731,6 +756,10 @@ int lwip_shutdown(int s, int how)
 int lwip_close(int s)
 {
     int ret;
+
+#if ESP_UDP && LWIP_NETIF_TX_SINGLE_PBUF
+    udp_sync_close(s);
+#endif
 
     _sock_set_open(s, 0);
 

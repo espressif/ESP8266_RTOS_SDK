@@ -140,9 +140,12 @@ struct memp_malloc_helper
 
 void  memp_init(void);
 
-#if MEMP_OVERFLOW_CHECK
+#if MEMP_OVERFLOW_CHECK || ESP_LWIP_MEM_DBG
+#if MEMP_OVERFLOW_CHECK && ESP_LWIP_MEM_DBG
+#error "MEMP_OVERFLOW_CHECK && ESP_LWIP_MEM_DBG cannot used"
+#endif
 void *memp_malloc_fn(memp_t type, const char* file, const int line);
-#define memp_malloc(t) memp_malloc_fn((t), __FILE__, __LINE__)
+#define memp_malloc(t) memp_malloc_fn((t), __ESP_FILE__, __LINE__)
 #else
 void *memp_malloc(memp_t type);
 #endif

@@ -22,6 +22,9 @@
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
 #include "lwip/dhcp.h"
+#include "lwip/ip_addr.h"
+#include "lwip/ip6_addr.h"
+#include "lwip/nd6.h"
 #include "lwip/dns.h"
 #include "lwip/errno.h"
 #include "lwip/timeouts.h"
@@ -55,7 +58,7 @@ struct tcpip_adapter_api_call_data {
 static struct netif *esp_netif[TCPIP_ADAPTER_IF_MAX];
 static tcpip_adapter_ip_info_t esp_ip[TCPIP_ADAPTER_IF_MAX];
 static tcpip_adapter_ip_info_t esp_ip_old[TCPIP_ADAPTER_IF_MAX];
-#if 0
+#if TCPIP_ADAPTER_IPV6
 /*TODO need add ip6*/
 static tcpip_adapter_ip6_info_t esp_ip6[TCPIP_ADAPTER_IF_MAX];
 #endif
@@ -561,7 +564,7 @@ esp_err_t tcpip_adapter_set_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_i
     return ESP_OK;
 }
 
-#if 0
+#if TCPIP_ADAPTER_IPV6
 static void tcpip_adapter_nd6_cb(struct netif *p_netif, uint8_t ip_idex)
 {
     tcpip_adapter_ip6_info_t *ip6_info;
@@ -609,7 +612,7 @@ esp_err_t tcpip_adapter_create_ip6_linklocal(tcpip_adapter_if_t tcpip_if)
     if (p_netif != NULL && netif_is_up(p_netif)) {
         netif_create_ip6_linklocal_address(p_netif, 1);
         /*TODO need add ipv6 address cb*/
-        //nd6_set_cb(p_netif, tcpip_adapter_nd6_cb);
+        nd6_set_cb(p_netif, tcpip_adapter_nd6_cb);
 
         return ESP_OK;
     } else {

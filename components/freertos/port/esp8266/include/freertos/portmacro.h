@@ -214,7 +214,7 @@ void show_critical_info(void);
  * @brief add trace information to allocated memory
  * 
  * @param ptr memory pointer allocated by "os_maloc", "malloc" and so on
- * @param trace trace information, file name(__FILE__) or "__builtin_return_address(0)" is OK
+ * @param trace trace information, file name(__ESP_FILE__) or "__builtin_return_address(0)" is OK
  * @param no number of trace information, file line(__LINE__) or -1(using "__builtin_return_address(0)")
  */
 void esp_mem_trace(const void *ptr, const char *trace, int no);
@@ -224,7 +224,7 @@ void esp_mem_trace(const void *ptr, const char *trace, int no);
  * 
  * @param ptr memory pointer allocated by "os_maloc", "malloc" and so on
  */
-#define esp_mem_mark_file(ptr) esp_mem_trace((ptr), __FILE__, LINE__)
+#define esp_mem_mark_file(ptr) esp_mem_trace((ptr), __ESP_FILE__, LINE__)
 
 /*
  * @brief check if CPU core interrupt is disable
@@ -235,6 +235,8 @@ bool interrupt_is_disable(void);
 
 /* Get tick rate per second */
 uint32_t xPortGetTickRateHz(void);
+
+void _xt_enter_first_task(void);
 
 #ifdef __cplusplus
 }

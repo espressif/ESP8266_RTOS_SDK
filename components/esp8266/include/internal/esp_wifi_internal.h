@@ -38,6 +38,8 @@ void esp_wifi_set_rx_pbuf_mem_type(wifi_rx_pbuf_mem_type_t type);
   */
 wifi_rx_pbuf_mem_type_t esp_wifi_get_rx_pbuf_mem_type(void);
 
+int8_t esp_wifi_get_ap_rssi(void);
+
 #ifdef __cplusplus
 }
 #endif

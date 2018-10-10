@@ -474,6 +474,15 @@ config LWIP_STATS
     bool "Enable statistics collection in lwip_stats"
     default n
 
+config ESP_LWIP_MEM_DBG
+    bool "Enable LWIP memory debug"
+    default n
+    help
+        Enable this option, LWIP allocated memory information can be traced by "heap" components.
+
+        User can call "heap_trace_start(HEAP_TRACE_LEAKS)" to start tracing and call "heap_trace_dump()"
+        to list the memory map. 
+
 menuconfig LWIP_DEBUG
     bool "Enable lwip Debug"
     default n

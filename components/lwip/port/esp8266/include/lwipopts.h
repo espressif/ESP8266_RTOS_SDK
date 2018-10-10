@@ -202,6 +202,11 @@
 #define MEM_LIBC_MALLOC                 1
 
 #ifdef ESP_LWIP
+
+#ifdef CONFIG_ESP_LWIP_MEM_DBG
+#define ESP_LWIP_MEM_DBG                    1
+#endif
+
 /*
  * @brief allocate an only DRAM memory block for LWIP pbuf
  * 

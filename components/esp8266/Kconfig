@@ -28,6 +28,27 @@ config NEWLIB_STDOUT_LINE_ENDING_CR
     bool "CR"
 endchoice
 
+choice ESP_FILENAME_MACRO
+    prompt "File name macro text"
+    default ESP_FILENAME_MACRO_NO_PATH
+    help
+        This option allows configuring the macro __ESP_FILE__ text.
+        Three options are possible:
+
+        no PATH: strip the path of macro __FILE__, for example: __FILE__="a/b/c/d.h", then __ESP_FILE__="d.h"
+
+        raw: same as macro __FILE__
+
+        null: text is string "null"
+
+config ESP_FILENAME_MACRO_NO_PATH
+    bool "no PATH"
+config ESP_FILENAME_MACRO_RAW
+    bool "raw"
+config ESP_FILENAME_MACRO_NULL
+    bool "null"
+endchoice
+
 config SOC_FULL_ICACHE
     bool "Enable full cache mode"
     default n
@@ -87,7 +108,6 @@ config TASK_WDT
 
 config TASK_WDT_PANIC
     bool "Invoke panic handler on Task Watchdog timeout"
-    depends on TASK_WDT
     default n
     help
         If this option is enabled, the Task Watchdog Timer will be configured to
@@ -95,8 +115,7 @@ config TASK_WDT_PANIC
 
 choice TASK_WDT_TIMEOUT_S
     prompt "Task Watchdog timeout period (seconds)"
-    depends on TASK_WDT
-    default TASK_WDT_TIMEOUT_13N
+    default TASK_WDT_TIMEOUT_15N
     help
         Timeout period configuration for the Task Watchdog Timer in seconds.
         This is also configurable at run time.

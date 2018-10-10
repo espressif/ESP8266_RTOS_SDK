@@ -123,7 +123,7 @@ static inline bool ptr_is_traced(void *ptr)
 {
     uint32_t *p = (uint32_t *)ptr - 1;
 
-    return p[0] & 0xf0000000 ? (p[0] == 0xffffffff ? true : false) : true;
+    return p[0] & 0xf0000000 ? false : true;
 }
 
 static inline mem_blk_t *ptr2blk(void *ptr, bool trace)

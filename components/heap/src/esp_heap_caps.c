@@ -181,6 +181,7 @@ void *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, size_t lin
             ESP_EARLY_LOGV(TAG, "free_blk is %p", g_heap_region[num].free_blk);
         }
 
+        mem_blk_size = blk_link_size(mem_blk);
         g_heap_region[num].free_bytes -= mem_blk_size;
 
         if (g_heap_region[num].min_free_bytes > g_heap_region[num].free_bytes)
@@ -191,7 +192,7 @@ void *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, size_t lin
         ESP_EARLY_LOGV(TAG, "next_mem_blk %p, next_mem_blk->prev %p(%p), next_mem_blk->next %p(%p)", next_mem_blk,
                             mem_blk_prev(next_mem_blk), next_mem_blk->prev, mem_blk_next(next_mem_blk), next_mem_blk->next);
         ESP_EARLY_LOGV(TAG, "last_mem_blk %p, last_mem_blk->prev %p(%p), last_mem_blk->next %p(%p)", mem_blk_next(next_mem_blk),
-                            mem_blk_next(next_mem_blk)->prev, mem_blk_prev(mem_blk_next(next_mem_blk)), mem_blk_next(mem_blk_next(next_mem_blk)), mem_blk_next(next_mem_blk)->next);
+                            mem_blk_prev(mem_blk_next(next_mem_blk)), mem_blk_next(next_mem_blk)->prev, mem_blk_next(mem_blk_next(next_mem_blk)), mem_blk_next(next_mem_blk)->next);
 
 next_region:
         _heap_caps_unlock(num);
@@ -238,12 +239,10 @@ void _heap_caps_free(void *ptr, const char *file, size_t line)
     }
 
     mem_blk = ptr2blk(ptr, ptr_is_traced(ptr));
-#ifdef CONFIG_ESP_HEAP_CHECK_FREED
-    if (mem_blk->prev) {
-        ESP_EARLY_LOGE("%p already freed\n", ptr);
+    if (!mem_blk_is_used(mem_blk)) {
+        ESP_EARLY_LOGE(TAG, "%p already freed\n", ptr);
         return;
     }
-#endif
 
     ESP_EARLY_LOGV(TAG, "Free(ptr=%p, mem_blk=%p, region=%d)", ptr, mem_blk, num);
 

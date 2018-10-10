@@ -288,7 +288,7 @@ memp_init(void)
 }
 
 static void*
-#if !MEMP_OVERFLOW_CHECK
+#if !MEMP_OVERFLOW_CHECK && !defined(ESP_LWIP_MEM_DBG)
 do_memp_malloc_pool(const struct memp_desc *desc)
 #else
 do_memp_malloc_pool_fn(const struct memp_desc *desc, const char* file, const int line)
@@ -298,7 +298,11 @@ do_memp_malloc_pool_fn(const struct memp_desc *desc, const char* file, const int
   SYS_ARCH_DECL_PROTECT(old_level);
 
 #if MEMP_MEM_MALLOC
+#ifdef ESP_LWIP_MEM_DBG
+  memp = (struct memp *)mem_malloc_fn(MEMP_SIZE + MEMP_ALIGN_SIZE(desc->size), file, line);
+#else
   memp = (struct memp *)mem_malloc(MEMP_SIZE + MEMP_ALIGN_SIZE(desc->size));
+#endif
   SYS_ARCH_PROTECT(old_level);
 #else /* MEMP_MEM_MALLOC */
   SYS_ARCH_PROTECT(old_level);
@@ -355,7 +359,7 @@ do_memp_malloc_pool_fn(const struct memp_desc *desc, const char* file, const int
  * @return a pointer to the allocated memory or a NULL pointer on error
  */
 void *
-#if !MEMP_OVERFLOW_CHECK
+#if !MEMP_OVERFLOW_CHECK && !defined(ESP_LWIP_MEM_DBG)
 memp_malloc_pool(const struct memp_desc *desc)
 #else
 memp_malloc_pool_fn(const struct memp_desc *desc, const char* file, const int line)
@@ -366,7 +370,7 @@ memp_malloc_pool_fn(const struct memp_desc *desc, const char* file, const int li
     return NULL;
   }
 
-#if !MEMP_OVERFLOW_CHECK
+#if !MEMP_OVERFLOW_CHECK && !defined(ESP_LWIP_MEM_DBG)
   return do_memp_malloc_pool(desc);
 #else
   return do_memp_malloc_pool_fn(desc, file, line);
@@ -381,7 +385,7 @@ memp_malloc_pool_fn(const struct memp_desc *desc, const char* file, const int li
  * @return a pointer to the allocated memory or a NULL pointer on error
  */
 void *
-#if !MEMP_OVERFLOW_CHECK
+#if !MEMP_OVERFLOW_CHECK && !defined(ESP_LWIP_MEM_DBG)
 memp_malloc(memp_t type)
 #else
 memp_malloc_fn(memp_t type, const char* file, const int line)
@@ -394,7 +398,7 @@ memp_malloc_fn(memp_t type, const char* file, const int line)
   memp_overflow_check_all();
 #endif /* MEMP_OVERFLOW_CHECK >= 2 */
 
-#if !MEMP_OVERFLOW_CHECK
+#if !MEMP_OVERFLOW_CHECK && !defined(ESP_LWIP_MEM_DBG)
   memp = do_memp_malloc_pool(memp_pools[type]);
 #else
   memp = do_memp_malloc_pool_fn(memp_pools[type], file, line);
