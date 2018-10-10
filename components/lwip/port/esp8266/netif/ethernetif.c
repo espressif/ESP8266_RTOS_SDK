@@ -316,6 +316,11 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
         return ERR_ARG;
     }
 
+    if (!netif_is_up(netif)) {
+        LWIP_DEBUGF(NETIF_DEBUG, ("low_level_output: netif is not up\n"));
+        return ERR_RTE;
+    }
+
 #if ETH_PAD_SIZE
     pbuf_header(p, -ETH_PAD_SIZE); /* drop the padding word */
 #endif
