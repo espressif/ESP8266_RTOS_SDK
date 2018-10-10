@@ -192,7 +192,7 @@ void *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, size_t lin
         ESP_EARLY_LOGV(TAG, "next_mem_blk %p, next_mem_blk->prev %p(%p), next_mem_blk->next %p(%p)", next_mem_blk,
                             mem_blk_prev(next_mem_blk), next_mem_blk->prev, mem_blk_next(next_mem_blk), next_mem_blk->next);
         ESP_EARLY_LOGV(TAG, "last_mem_blk %p, last_mem_blk->prev %p(%p), last_mem_blk->next %p(%p)", mem_blk_next(next_mem_blk),
-                            mem_blk_next(next_mem_blk)->prev, mem_blk_prev(mem_blk_next(next_mem_blk)), mem_blk_next(mem_blk_next(next_mem_blk)), mem_blk_next(next_mem_blk)->next);
+                            mem_blk_prev(mem_blk_next(next_mem_blk)), mem_blk_next(next_mem_blk)->prev, mem_blk_next(mem_blk_next(next_mem_blk)), mem_blk_next(next_mem_blk)->next);
 
 next_region:
         _heap_caps_unlock(num);
