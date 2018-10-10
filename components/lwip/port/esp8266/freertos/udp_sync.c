@@ -79,7 +79,8 @@ typedef struct udp_sync_sock {
 } udp_sync_sock_t;
 
 typedef struct udp_sync_netconn {
-    sys_sem_t       *sem;
+    struct tcpip_api_call_data call;
+
     struct netconn  *conn;
 } udp_sync_netconn_t;
 
@@ -224,15 +225,15 @@ static void udp_sync_trigger_null(void *p)
 
 }
 
-static void udp_sync_do_close_netconn(void *p)
+static err_t udp_sync_do_close_netconn(struct tcpip_api_call_data *call)
 {
-    udp_sync_netconn_t *sync = (udp_sync_netconn_t *)p;
+    udp_sync_netconn_t *sync = (udp_sync_netconn_t *)call;
     struct netconn *conn = sync->conn;
-    sys_sem_t *sem = sync->sem;
     struct udp_pcb *pcb = conn->pcb.udp;
 
     udp_sync_close_udp(pcb);
-    sys_sem_signal(sem);
+
+    return ERR_OK;
 }
 
 /*
@@ -427,10 +428,8 @@ void udp_sync_close_netconn(void *netconn)
         return ;
 
     sync.conn = netconn;
-    sync.sem = sys_thread_sem_get();
 
-    tcpip_callback(udp_sync_do_close_netconn, &sync);
-    sys_arch_sem_wait(sync.sem, 0);
+    tcpip_api_call(udp_sync_do_close_netconn, &sync.call);
 }
 
 /*
