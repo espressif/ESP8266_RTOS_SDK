@@ -1,0 +1,61 @@
+This is a simple file for all kinds of stuff related on devlopment for
+libcoap. Please append (and remove) any issue you think its worthy.
+
+Classification of issues:
+ Critical -> Break the library in some kind or a missing feature, maybe not 
+             directly but later
+ Serious  -> No regression on the user side, more likly on the libcoap
+             development
+ Minor    -> Things that are nice to have, but they are not time critical
+
+=================
+* CRITICAL ISSUES
+=================
+-> Remove the #include "coap_config.h" directive from the public header files.
+-> Remove #ifdef HAVE_ASSERT_H and so on from the public headers.
+-> Use coap.h as the only header to include from the public view.
+-> DTLS functionality
+ -> Adding DTLS functions based on openssl
+  -> Bill Benett has starting some improvements here, please contact him 
+     first before starting something
+-> Proxy functionality
+ -> A coap-server should be able to act as proxy server
+
+================
+* SERIOUS ISSUES
+================
+-> Create some development rules like:
+    --> How to submit patches? What about pull requests?
+	--> How to implement/change platform related code?
+-> Adding some documentation for classical users on how to use the libcoap
+-> Clean up the various inclusion for #ifdef __cplusplus #extern "C" {}
+-> Adding additional config options (like --with-pdu-size)
+-> Split of the platform related code into [foo]_platform.c files
+-> In general, improving the online doxygen documentation like creating some 
+   additional information for doxygen (startpage, development information, 
+   ...)
+-> In special, improving ...
+  Adding prams and return explanation in:
+   include/coap/coap_io.h
+   include/coap/option.h
+   include/coap/net.h
+   include/coap/resource.h
+   include/coap/str.h
+   include/coap/subscribe.h
+   include/coap/uri.h
+  Adding @brief directive
+   include/coap/block.h
+   include/coap/coap_io.h
+   include/coap/debug.h
+   include/coap/encode.h
+   include/coap/net.h
+   include/coap/str.h
+   include/coap/subscribe.h
+   include/coap/uri.h
+
+==============
+* MINOR ISSUES
+==============
+-> Remove the not needed Makefile.in.old files
+-> Adding a logo for libcoap
+

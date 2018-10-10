@@ -1,0 +1,34 @@
+sudo: required
+dist: trusty
+
+language: c
+compiler:
+  - gcc
+  - clang
+
+env:
+  - PLATFORM=posix TESTS=yes
+  - PLATFORM=contiki
+  - PLATFORM=lwip
+
+addons:
+  apt_packages:
+    - pkg-config
+    - graphviz
+    - libcunit1-dev
+    - doxygen
+    - libxml2-utils
+    - xsltproc
+    - docbook-xml
+    - docbook-xsl
+    - asciidoc
+
+branches:
+  only:
+     - master
+     - develop
+     - /^release-.*$/
+
+before_script: ./autogen.sh --clean && ./autogen.sh
+
+script: scripts/build.sh

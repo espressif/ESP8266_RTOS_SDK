@@ -1,0 +1,27 @@
+Example of libcoap running on lwIP
+==================================
+
+To run the example, do
+
+    $ make
+    $ sudo ./server
+
+(and in a second terminal)
+
+    $ sudo ip a a dev tap0 192.168.0.1/24
+
+and query `coap://192.168.0.2/` with any coap tool.
+
+This will
+
+* download lwip and lwip-contrib from the upstream git sources
+* apply a required patch to lwip
+* build the server application
+* run the server application, creating a virtual network device tap0 (unless
+  that exists)
+* configure your network interface to make the server accessible.
+
+The server does not create any resources (it exposes an empty
+`.well-known/core`), but the work flow for adding more resources does not
+differ from regular libcoap usage. If you seem to run out of memory creating
+the resources, tweak the number of pre-allocated resources in `lwippools.h`.

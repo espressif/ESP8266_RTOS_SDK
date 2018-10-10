@@ -1,0 +1,7 @@
+libcoap_src = pdu.c net.c debug.c encode.c uri.c subscribe.c resource.c hashkey.c str.c option.c async.c block.c mem.c coap_io.c
+
+libcoap_dir := $(filter %libcoap,$(APPDS))
+vpath %c $(libcoap_dir)/src
+
+# set include path for coap sources
+CFLAGS += -I$(libcoap_dir)/include/coap -DCOAP_RESOURCES_NOHASH
