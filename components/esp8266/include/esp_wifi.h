@@ -857,6 +857,29 @@ esp_err_t esp_wifi_set_event_mask(uint32_t mask);
   */
 esp_err_t esp_wifi_get_event_mask(uint32_t *mask);
 
+/**
+  * @brief     Send user-define 802.11 packets.
+  *
+  * @attention 1. Packet has to be the whole 802.11 packet, does not include the FCS.
+  *               The length of the packet has to be longer than the minimum length
+  *               of the header of 802.11 packet which is 24 bytes, and less than 1400 bytes.
+  * @attention 2. Duration area is invalid for user, it will be filled in SDK.
+  * @attention 3. The rate of sending packet is same as the management packet which
+  *               is the same as the system rate of sending packets.
+  * @attention 4. Only after the previous packet was sent, entered the sent callback,
+  *               the next packet is allowed to send. Otherwise, wifi_send_pkt_freedom
+  *               will return fail.
+  *
+  * @param     uint8 *buf : pointer of packet
+  * @param     uint16 len : packet length
+  * @param     bool sys_seq : follow the system's 802.11 packets sequence number or not,
+  *                           if it is true, the sequence number will be increased 1 every
+  *                           time a packet sent.
+  *
+  * @return    ESP_OK, succeed;
+  * @return    ESP_FAIL, fail.
+  */
+esp_err_t esp_wifi_send_pkt_freedom(uint8_t *buf, int32_t len, bool sys_seq); 
 
 #ifdef __cplusplus
 }
