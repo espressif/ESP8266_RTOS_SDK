@@ -11,7 +11,7 @@ config NEWLIB_ENABLE
 
 choice NEWLIB_LIBRARY_LEVEL
     prompt "newlib level"
-    default NEWLIB_LIBRARY_LEVEL_NORMAL
+    default NEWLIB_LIBRARY_LEVEL_NANO
     depends on NEWLIB_ENABLE
     help
         Choose newlib library level.
