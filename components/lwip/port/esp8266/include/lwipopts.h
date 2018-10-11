@@ -1889,7 +1889,7 @@ void *memp_malloc_ll(size_t type);
  * DNS Server Option (as per RFC 6106) to copy a defined maximum number of DNS
  * servers to the DNS module.
  */
-#define LWIP_ND6_RDNSS_MAX_DNS_SERVERS  0
+#define LWIP_ND6_RDNSS_MAX_DNS_SERVERS  CONFIG_LWIP_ND6_RDNSS_MAX_DNS_SERVERS
 /**
  * @}
  */
