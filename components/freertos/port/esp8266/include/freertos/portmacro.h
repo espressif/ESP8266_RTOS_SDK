@@ -238,6 +238,10 @@ uint32_t xPortGetTickRateHz(void);
 
 void _xt_enter_first_task(void);
 
+/* API compatible with esp-idf  */
+#define xTaskCreatePinnedToCore(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask, tskNO_AFFINITY) \
+        xTaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
+
 #ifdef __cplusplus
 }
 #endif
