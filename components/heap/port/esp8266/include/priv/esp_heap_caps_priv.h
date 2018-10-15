@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+#define MEM_BLK_TAG             0x80000000  ///< Mark the memory block used
+#define MEM_BLK_TRACE           0x80000000  ///< Mark the memory block traced
+
 #define _mem_blk_get_ptr(_mem_blk, _offset, _mask)                          \
     ((mem_blk_t *)((((uint32_t *)(_mem_blk))[_offset]) & (~_mask)))
 
@@ -49,7 +52,7 @@ static inline void mem_blk_set_traced(mem2_blk_t *mem_blk, const char *file, siz
     *val |= MEM_BLK_TRACE;
 
     mem_blk->file = file;
-    mem_blk->line = line;
+    mem_blk->line = line | MEM_BLK_TRACE;
 }
 
 static inline void mem_blk_set_untraced(mem2_blk_t *mem_blk)
@@ -123,7 +126,7 @@ static inline bool ptr_is_traced(void *ptr)
 {
     uint32_t *p = (uint32_t *)ptr - 1;
 
-    return p[0] & 0xf0000000 ? false : true;
+    return p[0] & MEM_BLK_TRACE ? true : false;
 }
 
 static inline mem_blk_t *ptr2blk(void *ptr, bool trace)
@@ -147,6 +150,11 @@ static inline size_t ptr_size(void *ptr)
     size_t size = blk_link_size(blk_mem) - mem_blk_head_size(trancd);
 
     return size;
+}
+
+static inline size_t mem2_blk_line(mem2_blk_t *mem2_blk)
+{
+    return mem2_blk->line & ~MEM_BLK_TRACE;
 }
 
 #ifdef __cplusplus
