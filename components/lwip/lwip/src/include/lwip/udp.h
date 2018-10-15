@@ -77,6 +77,8 @@ struct udp_pcb;
 typedef void (*udp_recv_fn)(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     const ip_addr_t *addr, u16_t port);
 
+typedef int (*udp_cb_fn)(void *arg, int free);
+
 /** the UDP protocol control block */
 struct udp_pcb {
 /** Common members of all PCB types */
@@ -106,6 +108,15 @@ struct udp_pcb {
   udp_recv_fn recv;
   /** user-supplied argument for the recv callback */
   void *recv_arg;
+
+#if ESP_UDP
+  /* UDP PCB will be clear to "0" when call udp_new() */
+
+  /* UDP sync callback function mainly used for resend or active up level task */
+  udp_cb_fn cb;
+  /* UDP sync callback function private data */
+  void *arg;
+#endif
 };
 /* udp_pcbs export for external reference (e.g. SNMP agent) */
 extern struct udp_pcb *udp_pcbs;

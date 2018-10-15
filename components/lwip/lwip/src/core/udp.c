@@ -865,6 +865,10 @@ udp_sendto_if_src_chksum(struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *d
   ttl = pcb->ttl;
 #endif /* LWIP_MULTICAST_TX_OPTIONS */
 
+#if ESP_UDP
+  udp_sync_cache_udp(pcb);
+#endif
+
   LWIP_DEBUGF(UDP_DEBUG, ("udp_send: UDP checksum 0x%04"X16_F"\n", udphdr->chksum));
   LWIP_DEBUGF(UDP_DEBUG, ("udp_send: ip_output_if (,,,,0x%02"X16_F",)\n", (u16_t)ip_proto));
   /* output to IP */
@@ -874,6 +878,10 @@ udp_sendto_if_src_chksum(struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *d
 
   /* @todo: must this be increased even if error occurred? */
   MIB2_STATS_INC(mib2.udpoutdatagrams);
+
+#if ESP_UDP
+  udp_sync_clear_udp();
+#endif
 
   /* did we chain a separate header pbuf earlier? */
   if (q != p) {
@@ -1116,6 +1124,11 @@ udp_remove(struct udp_pcb *pcb)
       }
     }
   }
+
+#if ESP_UDP
+  udp_sync_close_udp(pcb);
+#endif
+
   memp_free(MEMP_UDP_PCB, pcb);
 }
 
