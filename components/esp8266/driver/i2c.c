@@ -500,7 +500,7 @@ static void i2c_master_cmd_begin_static(i2c_port_t i2c_num)
                     i2c_master_set_dc(i2c_num, i2c_last_state[i2c_num]->sda, 0);
 
                     for (i = 7; i >= 0; i--) {
-                        if (cmd->byte_num == 1) {
+                        if (cmd->byte_num == 1 && cmd->data == NULL) {
                             dat = (cmd->byte_cmd) >> i;
                         } else {
                             dat = ((uint8_t) * (cmd->data + len)) >> i;
