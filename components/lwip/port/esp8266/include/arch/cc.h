@@ -46,12 +46,12 @@
 
 typedef int sys_prot_t;
 
-#define S16_F "d"
-#define U16_F "d"
-#define X16_F "x"
+#define S16_F "hd"
+#define U16_F "hu"
+#define X16_F "hx"
 
 #define S32_F "d"
-#define U32_F "d"
+#define U32_F "u"
 #define X32_F "x"
 
 //#define PACK_STRUCT_FIELD(x) x __attribute__((packed))
