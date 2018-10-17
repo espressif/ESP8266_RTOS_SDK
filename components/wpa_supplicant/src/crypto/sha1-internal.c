@@ -187,12 +187,8 @@ SHA1Transform(u32 state[5], const unsigned char buffer[64])
 	CHAR64LONG16* block;
 #ifdef SHA1HANDSOFF
 	CHAR64LONG16 workspace;
-	if ((size_t)buffer & 0x3) {
-		block = &workspace;
-		os_memcpy(block, buffer, 64);
-	} else {
-		block = (CHAR64LONG16 *) buffer;
-	}
+	block = &workspace;
+	os_memcpy(block, buffer, 64);
 #else
 	block = (CHAR64LONG16 *) buffer;
 #endif
