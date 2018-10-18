@@ -480,7 +480,10 @@
  *
  * Enable Counter Block Cipher mode (CTR) for symmetric ciphers.
  */
-//#define MBEDTLS_CIPHER_MODE_CTR
+
+#ifdef CONFIG_MBEDTLS_CIPHER_MODE_CTR
+#define MBEDTLS_CIPHER_MODE_CTR
+#endif
 
 /**
  * \def MBEDTLS_CIPHER_NULL_CIPHER
