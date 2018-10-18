@@ -248,6 +248,13 @@ config MBEDTLS_SSL_ALPN
    help
        Disabling this option will save some code size if it is not needed.
 
+config MBEDTLS_CIPHER_MODE_CTR
+    bool "Support CTR mode"
+    depends on MBEDTLS_TLS_ENABLED
+    default n
+    help
+        Enable Counter Block Cipher mode (CTR) for symmetric ciphers. Required for AES CTR
+
 config MBEDTLS_SSL_SESSION_TICKETS
    bool "TLS: Support RFC 5077 SSL session tickets"
    default n
