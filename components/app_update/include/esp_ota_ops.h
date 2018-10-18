@@ -69,6 +69,9 @@ typedef uint32_t esp_ota_handle_t;
  */
 esp_err_t esp_ota_begin(const esp_partition_t* partition, size_t image_size, esp_ota_handle_t* out_handle);
 
+
+uint8_t get_ota_partition_count(void);
+
 /**
  * @brief   Write OTA update data to partition
  *

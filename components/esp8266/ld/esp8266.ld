@@ -27,7 +27,7 @@ MEMORY
   iram1_0_seg  :    org = 0x40100000, len = CONFIG_SOC_IRAM_SIZE
 
   /* It is actually mapped to flash. */
-  irom0_0_seg  :    org = 0x40200010 + CONFIG_PARTITION_TABLE_CUSTOM_APP_BIN_OFFSET, len = 0x100000 - 0x10 - CONFIG_PARTITION_TABLE_CUSTOM_APP_BIN_OFFSET
+  irom0_0_seg  :    org = 0x40200010 + APP_OFFSET, len = APP_SIZE - 0x10 - APP_OFFSET
 
   /* RTC memory, persists over deep sleep. */
   rtc_seg      :    org = 0x60001200, len = 0x200
