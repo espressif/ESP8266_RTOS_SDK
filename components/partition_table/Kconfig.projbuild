@@ -53,7 +53,8 @@ config PARTITION_TABLE_FILENAME
        string
        default partitions_singleapp.csv if PARTITION_TABLE_SINGLE_APP && !ESP32_ENABLE_COREDUMP_TO_FLASH
        default partitions_singleapp_coredump.csv if PARTITION_TABLE_SINGLE_APP && ESP32_ENABLE_COREDUMP_TO_FLASH
-       default partitions_two_ota.csv if PARTITION_TABLE_TWO_OTA && !ESP32_ENABLE_COREDUMP_TO_FLASH
+       default partitions_two_ota.csv if PARTITION_TABLE_TWO_OTA && !ESP32_ENABLE_COREDUMP_TO_FLASH && !ESPTOOLPY_FLASHSIZE_1MB
+       default partitions_two_ota.1MB.csv if PARTITION_TABLE_TWO_OTA && !ESP32_ENABLE_COREDUMP_TO_FLASH && ESPTOOLPY_FLASHSIZE_1MB
        default partitions_two_ota_coredump.csv if PARTITION_TABLE_TWO_OTA && ESP32_ENABLE_COREDUMP_TO_FLASH
        default PARTITION_TABLE_CUSTOM_FILENAME if PARTITION_TABLE_CUSTOM
 

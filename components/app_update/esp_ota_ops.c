@@ -286,7 +286,7 @@ static esp_err_t rewrite_ota_seq(uint32_t seq, uint8_t sec_id, const esp_partiti
     }
 }
 
-static uint8_t get_ota_partition_count(void)
+uint8_t get_ota_partition_count(void)
 {
     uint16_t ota_app_count = 0;
     while (esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_MIN + ota_app_count, NULL) != NULL) {

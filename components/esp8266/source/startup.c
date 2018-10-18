@@ -31,6 +31,7 @@
 #include "internal/esp_wifi_internal.h"
 
 #define FLASH_MAP_ADDR 0x40200000
+#define FLASH_MAP_SIZE 0x00100000
 
 extern void chip_boot(size_t start_addr);
 extern int rtc_init(void);
@@ -84,7 +85,7 @@ void call_user_start(size_t start_addr)
 
     extern int _bss_start, _bss_end;
 
-    esp_image_header_t *head = (esp_image_header_t *)(FLASH_MAP_ADDR + CONFIG_PARTITION_TABLE_CUSTOM_APP_BIN_OFFSET);
+    esp_image_header_t *head = (esp_image_header_t *)(FLASH_MAP_ADDR + (start_addr & (FLASH_MAP_SIZE - 1)));
     esp_image_segment_header_t *segment = (esp_image_segment_header_t *)((uintptr_t)head + sizeof(esp_image_header_t));
 
     for (i = 0; i < 3; i++) {
