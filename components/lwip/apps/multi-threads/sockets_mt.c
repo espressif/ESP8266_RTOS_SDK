@@ -116,7 +116,7 @@
 #define SOCK_MT_DEBUG_LEVEL 255
 
 typedef struct socket_conn_sync {
-    sys_sem_t       *sem;
+    struct tcpip_api_call_data call;
     struct netconn  *conn;
 } socket_conn_sync_t;
 
@@ -381,62 +381,88 @@ static void lwip_exit_mt_select(int s, fd_set *read_set, fd_set *write_set)
     }
 }
 
-static void lwip_do_sync_send(void *arg)
+static err_t lwip_do_sync_accept(struct tcpip_api_call_data *call)
 {
-    socket_conn_sync_t *sync = (socket_conn_sync_t *)arg;
+    socket_conn_sync_t *sync = (socket_conn_sync_t *)call;
+    struct netconn *conn = sync->conn;
+
+    SYS_ARCH_DECL_PROTECT(lev);
+    SYS_ARCH_PROTECT(lev);
+    if (sys_mbox_valid(&conn->acceptmbox))
+        sys_mbox_trypost(&conn->acceptmbox, NULL);
+    conn->state = NETCONN_NONE;
+    SYS_ARCH_UNPROTECT(lev);
+
+    return ERR_OK;
+}
+
+static err_t lwip_do_sync_send(struct tcpip_api_call_data *call)
+{
+    socket_conn_sync_t *sync = (socket_conn_sync_t *)call;
     struct netconn *conn = sync->conn;
 
     SYS_ARCH_DECL_PROTECT(lev);
     SYS_ARCH_PROTECT(lev);
     if (conn->current_msg) {
         conn->current_msg->err = ERR_OK;
-        if (conn->current_msg && sys_sem_valid(conn->current_msg->op_completed_sem))
+        if (sys_sem_valid(conn->current_msg->op_completed_sem))
             sys_sem_signal(conn->current_msg->op_completed_sem);
         conn->current_msg = NULL;
     }
     conn->state = NETCONN_NONE;
     SYS_ARCH_UNPROTECT(lev);
 
-    sys_sem_signal(sync->sem);
+    return ERR_OK;
 }
 
-static void lwip_do_sync_rst_state(void *arg)
+static err_t lwip_do_sync_recv_state(struct tcpip_api_call_data *call)
 {
-    socket_conn_sync_t *sync = (socket_conn_sync_t *)arg;
+    socket_conn_sync_t *sync = (socket_conn_sync_t *)call;
     struct netconn *conn = sync->conn;
 
     SYS_ARCH_DECL_PROTECT(lev);
     SYS_ARCH_PROTECT(lev);
+    SOCK_MT_DEBUG(1, "sync recv %d\n", conn->socket);
+    if (sys_mbox_valid(&conn->recvmbox))
+        sys_mbox_trypost(&conn->recvmbox, NULL);
     conn->state = NETCONN_NONE;
     SYS_ARCH_UNPROTECT(lev);
 
-    sys_sem_signal(sync->sem);
+    return ERR_OK;
+}
+
+static err_t lwip_do_sync_select_state(struct tcpip_api_call_data *call)
+{
+    socket_conn_sync_t *sync = (socket_conn_sync_t *)call;
+    struct netconn *conn = sync->conn;
+
+    SYS_ARCH_DECL_PROTECT(lev);
+    SYS_ARCH_PROTECT(lev);
+    event_callback(conn, NETCONN_EVT_ERROR, 0);
+    conn->state = NETCONN_NONE;
+    SYS_ARCH_UNPROTECT(lev);
+
+    return ERR_OK;
 }
 
 static void lwip_sync_state_mt(int s)
 {
     struct lwip_sock *sock = tryget_socket(s);
     int state = _sock_get_state(s);
+    socket_conn_sync_t sync = {
+        .conn = sock->conn,
+    };
 
     SOCK_MT_DEBUG(1, "sync state %d\n", state);
 
     switch (state) {
         case SOCK_MT_STATE_ACCEPT :
-            if (sys_mbox_valid(&sock->conn->acceptmbox))
-                sys_mbox_trypost(&sock->conn->acceptmbox, NULL);
+            tcpip_api_call(lwip_do_sync_accept, &sync.call);
             break;
         case SOCK_MT_STATE_CONNECT:
         case SOCK_MT_STATE_SEND :
-        {
-            socket_conn_sync_t sync;
-
-            sync.conn = sock->conn;
-            sync.sem = sys_thread_sem_get();
-
-            tcpip_callback(lwip_do_sync_send, &sync);
-            sys_arch_sem_wait(sync.sem, 0);
+            tcpip_api_call(lwip_do_sync_send, &sync.call);
             break;
-        }
         default :
             break;
     }
@@ -445,24 +471,26 @@ static void lwip_sync_state_mt(int s)
 static void lwip_sync_recv_mt(int s)
 {
     struct lwip_sock *sock = tryget_socket(s);
+    socket_conn_sync_t sync = {
+        .conn = sock->conn,
+    };
 
-    SOCK_MT_DEBUG(1, "sync recv %d\n", sock->conn->socket);
-    if (sys_mbox_valid(&sock->conn->recvmbox))
-        sys_mbox_trypost(&sock->conn->recvmbox, NULL);
+    tcpip_api_call(lwip_do_sync_recv_state, &sync.call);
 }
 
 static void lwip_sync_select_mt(int s)
 {
     struct lwip_sock *sock = tryget_socket(s);
+    socket_conn_sync_t sync = {
+        .conn = sock->conn,
+    };
 
-    SOCK_MT_DEBUG(1, "sync select %d\n", sock->conn->socket);
-    event_callback(sock->conn, NETCONN_EVT_ERROR, 0);
+    tcpip_api_call(lwip_do_sync_select_state, &sync.call);
 }
 
 static void lwip_sync_mt(int s, int how)
 {
     int lock = SOCK_MT_LOCK_MIN;
-    struct lwip_sock *sock;
 
     do {
         if (_sock_is_lock(s, lock)) {
@@ -492,17 +520,6 @@ static void lwip_sync_mt(int s, int how)
         } else
             lock = _sock_next_lock(lock);
     }  while (lock < SOCK_MT_LOCK_MAX);
-
-    sock = tryget_socket(s);
-    if (sock) {
-        socket_conn_sync_t sync;
-
-        sync.conn = sock->conn;
-        sync.sem = sys_thread_sem_get();
-
-        tcpip_callback(lwip_do_sync_rst_state, &sync);
-        sys_arch_sem_wait(sync.sem, 0);
-    }
 }
 
 #if LWIP_SO_LINGER
@@ -757,8 +774,10 @@ int lwip_close(int s)
 {
     int ret;
 
-#if ESP_UDP && LWIP_NETIF_TX_SINGLE_PBUF
-    udp_sync_close(s);
+#if ESP_UDP
+    struct lwip_sock *sock = get_socket(s);
+    if (sock)
+        udp_sync_close_netconn(sock->conn);
 #endif
 
     _sock_set_open(s, 0);

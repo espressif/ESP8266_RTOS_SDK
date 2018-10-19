@@ -353,7 +353,7 @@ void *memp_malloc_ll(size_t type);
  * MEMP_NUM_NETCONN: the number of struct netconns.
  * (only needed if you use the sequential API, like api_lib.c)
  */
-#define MEMP_NUM_NETCONN                10
+#define MEMP_NUM_NETCONN                CONFIG_LWIP_MAX_SOCKETS
 
 
 /**
@@ -1889,7 +1889,7 @@ void *memp_malloc_ll(size_t type);
  * DNS Server Option (as per RFC 6106) to copy a defined maximum number of DNS
  * servers to the DNS module.
  */
-#define LWIP_ND6_RDNSS_MAX_DNS_SERVERS  0
+#define LWIP_ND6_RDNSS_MAX_DNS_SERVERS  CONFIG_LWIP_ND6_RDNSS_MAX_DNS_SERVERS
 /**
  * @}
  */
@@ -2224,8 +2224,8 @@ void *memp_malloc_ll(size_t type);
  */
 
 #if ESP_UDP
-#if !LWIP_UDP || !LWIP_SOCKET || !ESP_LWIP
-#error "LWIP_UDP & LWIP_SOCKET & ESP_LWIP must be enable"
+#if !LWIP_UDP || !LWIP_SOCKET || !ESP_LWIP || !LWIP_NETIF_TX_SINGLE_PBUF
+#error "LWIP_UDP & LWIP_SOCKET & ESP_LWIP & LWIP_NETIF_TX_SINGLE_PBUF must be enable"
 #else
 #include "udp_sync.h"
 #endif

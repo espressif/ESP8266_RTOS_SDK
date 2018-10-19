@@ -1,7 +1,7 @@
 gwen:
-    core:       4bc4c59
-    net80211:   ea312e8
-    pp:         01980e2
+    core:       27e282b
+    net80211:   27e282b
+    pp:         3110b52
     smartconfig:01980e2
     wpa:        01980e2
     espnow:     01980e2

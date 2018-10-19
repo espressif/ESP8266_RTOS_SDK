@@ -16,6 +16,8 @@ config FREERTOS_HZ
     help
         Select the tick rate at which FreeRTOS does pre-emptive context switching.
 
+        The value must be the divisor of 1000, otherwise it may cause time mistake.
+
 config FREERTOS_MAX_HOOK
     int "FreeRTOS hook max number"
     range 1 16

@@ -29,26 +29,30 @@ void udp_sync_init(void);
  * 
  * @param in_msg message pointer
  */
-void udp_sync_regitser(void *in_msg);
+void udp_sync_regitser_sock(void *in_msg);
 
 /*
  * @brief ack the message
  * 
  * @param in_msg message pointer
  */
-void udp_sync_ack(void *in_msg);
+void udp_sync_ack_sock(void *in_msg);
 
 /*
  * @brief set the current message send result
- * 
+ *
+ * @param netif LwIP netif pointer
+ * @param pbuf low-level netif output pbuf pointer
  * @param ret current message send result
  */
-void udp_sync_set_ret(void *netif, int ret);
+void udp_sync_set_ret(void *netif, void *pbuf, int ret);
+
+void udp_sync_cache_udp(void *pcb);
+
+void udp_sync_clear_udp(void);
 
 /*
  * @brief process the sync
- * 
- * @param ret current message send result
  */
 void udp_sync_proc(void);
 
@@ -58,9 +62,18 @@ void udp_sync_proc(void);
 void udp_sync_trigger(void);
 
 /**
- * @brief close the udp sync before close the socket
+ * @brief close the udp pcb
+ * 
+ * @param udp_pcb LwIP raw UDP pcb pointer
  */
-void udp_sync_close(int s);
+void udp_sync_close_udp(void *udp_pcb);
+
+/**
+ * @brief close the udp sync netconn before close the socket
+ * 
+ * @param netconn LwIP raw netconn pointer
+ */ 
+void udp_sync_close_netconn(void *netconn);
 
 #ifdef __cplusplus
 }

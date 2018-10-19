@@ -630,8 +630,8 @@ lwip_close(int s)
 #endif /* LWIP_IGMP */
 
 #ifndef SOCKETS_MT
-#if ESP_UDP && LWIP_NETIF_TX_SINGLE_PBUF
-  udp_sync_close(s);
+#if ESP_UDP
+  udp_sync_close_netconn(sock->conn);
 #endif
 #endif
 

@@ -127,6 +127,7 @@ A million repetitions of "a"
   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
 
+/* Disable the option, and reduce memory copying */
 #define SHA1HANDSOFF
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
@@ -224,10 +225,12 @@ SHA1Transform(u32 state[5], const unsigned char buffer[64])
 	state[2] += c;
 	state[3] += d;
 	state[4] += e;
+
 	/* Wipe variables */
-	a = b = c = d = e = 0;
+	/* Disable to reduce memory copying */
+	//a = b = c = d = e = 0;
 #ifdef SHA1HANDSOFF
-	os_memset(block, 0, 64);
+	//os_memset(block, 0, 64);
 #endif
 }
 
@@ -284,6 +287,7 @@ void
 SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 {
 	u32 i;
+	unsigned long index;
 	unsigned char finalcount[8];
 
 	for (i = 0; i < 8; i++) {
@@ -291,9 +295,13 @@ SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 			((context->count[(i >= 4 ? 0 : 1)] >>
 			  ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
 	}
-	SHA1Update(context, (unsigned char *) "\200", 1);
+
+	index = 0x80;
+	SHA1Update(context, (unsigned char *)&index, 1);
+
 	while ((context->count[0] & 504) != 448) {
-		SHA1Update(context, (unsigned char *) "\0", 1);
+		index = 0;
+		SHA1Update(context, (unsigned char *)&index, 1);
 	}
 	SHA1Update(context, finalcount, 8);  /* Should cause a SHA1Transform()
 					      */
@@ -303,11 +311,12 @@ SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 			 255);
 	}
 	/* Wipe variables */
-	i = 0;
-	os_memset(context->buffer, 0, 64);
-	os_memset(context->state, 0, 20);
-	os_memset(context->count, 0, 8);
-	os_memset(finalcount, 0, 8);
+	/* Disable here to reduce memory copying */
+	// i = 0;
+	// os_memset(context->buffer, 0, 64);
+	// os_memset(context->state, 0, 20);
+	// os_memset(context->count, 0, 8);
+	// os_memset(finalcount, 0, 8);
 }
 
 /* ===== end - public domain SHA1 implementation ===== */

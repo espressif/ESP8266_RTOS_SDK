@@ -108,18 +108,19 @@ void heap_trace_dump(void)
 
         _heap_caps_lock(num);
 
-        ESP_EARLY_LOGI(TAG, "\r\n\r\n");
-        ESP_EARLY_LOGD(TAG, "start %p end %p", mem_start, mem_end);
-        ESP_EARLY_LOGD(TAG, "free blk %p", g_heap_region[num].free_blk);
-        ESP_EARLY_LOGD(TAG, "size %d mini size %d", g_heap_region[num].free_bytes, g_heap_region[num].min_free_bytes);
+        ESP_LOGI(TAG, "\r\n\r\n");
+        ESP_LOGD(TAG, "start %p end %p", mem_start, mem_end);
+        ESP_LOGD(TAG, "free blk %p", g_heap_region[num].free_blk);
+        ESP_LOGD(TAG, "size %d mini size %d", g_heap_region[num].free_bytes, g_heap_region[num].min_free_bytes);
 
         p = mem_start;
         while (p != mem_end) {
             if (mem_blk_is_used(p) && mem_blk_is_traced(p)) {
                 mem2_blk_t *mem2_blk = (mem2_blk_t *)p;
+                size_t line = mem2_blk_line(mem2_blk);
 
-                if (!mem2_blk->line) {
-                    ESP_EARLY_LOGI(TAG, HEAP_INFO " caller func %p", HEAP_INFO_PARAM(p), mem2_blk->file);
+                if (!line) {
+                    ESP_LOGI(TAG, HEAP_INFO " caller func %p", HEAP_INFO_PARAM(p), mem2_blk->file);
                 } else {
                     const char *file = rindex(mem2_blk->file, '/');
                     if (file)
@@ -127,7 +128,7 @@ void heap_trace_dump(void)
                     else
                         file = mem2_blk->file;
 
-                    ESP_EARLY_LOGI(TAG, HEAP_INFO " caller file %s line %d", HEAP_INFO_PARAM(p), file, mem2_blk->line);
+                    ESP_LOGI(TAG, HEAP_INFO " caller file %s line %d", HEAP_INFO_PARAM(p), file, line);
                 }
             }
 #ifdef CONFIG_TRACE_ALL

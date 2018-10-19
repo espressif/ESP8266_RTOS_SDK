@@ -1,0 +1,168 @@
+// -*- mode:doc; -*-
+// vim: set syntax=asciidoc,tw=0:
+
+coap-client(5)
+==============
+:doctype: manpage
+:man source:   coap-client
+:man version:  @PACKAGE_VERSION@
+:man manual:   coap-client Manual
+
+NAME
+-----
+coap-client - CoAP Client based on libcoap
+
+SYNOPSIS
+--------
+*coap-client* [*-A* type1, _type2_ ,...] [*-t* type] [*-b* [num,]size]
+              [*-B* seconds] [*-e* text] [*-f* file] [*-m* method] [*-N*]
+              [*-o* file] [*-P* addr[:port]] [*-p* port] [*-s* duration]
+              [*-O* num,text] [*-T* token] [*-v* num] [*-a* addr] [*-U*] URI
+
+DESCRIPTION
+-----------
+*coap-client* is a CoAP client to communicate with 6LoWPAN devices via
+the protocol CoAP (RFC 7252) using the URI given as argument on the
+command line. The URI must have the scheme 'coap' (or 'coaps' when
+coap-client was built with support for secure communication). The URI's
+host part may be a DNS name or a literal IP address. Note that, for
+IPv6 address references, angle brackets are required (c.f. EXAMPLES).
+
+
+OPTIONS
+-------
+*-a* addr::
+   The local address of the interface that has to be used.
+
+*-b* [num,]size::
+   The block size to be used in GET/PUT/POST requests (value must be a
+   multiple of 16 not larger than 1024 as libcoap uses a fixed maximum
+   PDU size of 1400 bytes). If 'num' is present, the request
+   chain will start at block 'num'. When the server includes a Block2
+   option in its response to a GET request, coap-client will automatically
+   retrieve the subsequent block from the server until there are no more
+   outstanding blocks for the requested content.
+
+*-e* text::
+   Include text as payload (use percent-encoding for non-ASCII characters).
+
+*-f* file::
+   File to send with PUT/POST (use '-' for STDIN).
+
+*-m* method::
+   The request method for action (get|put|post|delete), default is 'get'.
+   (Note that the string passed to *-m* is compared case-insensitive.)
+
+*-o* file::
+   A filename to store data retrieved with GET.
+
+*-p* port::
+   The port to listen on.
+
+*-s* duration::
+   Subscribe to the resource specified by URI for the given 'duration' in
+   seconds.
+
+*-t* type::
+   Content format for given resource for PUT/POST. 'type' must be either
+   a numeric value reflecting a valid CoAP content format or a string
+   describing a registered format. The following registered content format
+   descriptors are supported, with alternative shortcuts given in
+   parentheses:
+
+     text/plain (plain)
+     application/link-format (link, link-format)
+     application/xml (xml)
+     application/octet-stream (binary, octet-stream)
+     application/exi (exi)
+     application/json (json)
+     application/cbor (cbor)
+
+*-v* num::
+   The verbosity level to use (default: 3, maximum is 9).
+
+*-A* type::
+   Accepted media types as comma-separated list of symbolic or numeric
+   values, there are multiple arguments as comma separated list
+   possible. 'type' must be either a numeric value reflecting a valid
+   CoAP content format or a string that specifies a registered format as
+   described for option *-t*.
+
+*-B* seconds::
+   Break operation after waiting given seconds (default is 90).
+
+*-N* ::
+   Send NON-confirmable message. If option *-N* is not specified, a
+   confirmable message will be sent.
+
+*-O* num,text::
+   Add option 'num' with contents of 'text' to the request.
+
+*-P* addr[:port]::
+   Address (and port) for proxy to use (automatically adds Proxy-Uri option
+   to request).
+
+*-T* token::
+   Include the 'token' to the request.
+
+*-U* ::
+   Never include Uri-Host or Uri-Port options.
+
+EXAMPLES
+--------
+* Example
+----
+coap-client coap://coap.me
+----
+Query resource '/' from server 'coap.me' (via the GET method).
+
+* Example
+----
+coap-client -m get coap://[::1]/
+----
+Query on localhost via the 'GET' method.
+
+* Example
+----
+coap-client -m get coap://[::1]/.well-known/core
+----
+Quite the same, except on the resource '.well-known/core' on localhost.
+
+* Example
+----
+echo -n "mode=on" | coap-client -m put \
+coap://[2001:db8:c001:f00d:221:2eff:ff00:2704]:5683/actuators/leds?color=r -f-
+----
+Send text 'mode=on' to resource 'actuators/leds?color=r' on the endpoint with
+address '2001:db8:c001:f00d:221:2eff:ff00:2704' and port '5683'. Note that the
+port '5683' is the default port and isn't really needed to append.
+
+* Example
+----
+coap-client -m put coap://[fec0::3]/ck -T 3a -t binary -f to_upload
+----
+Put the contents of file 'to_upload' with content type 'binary' (i.e.
+application/octet-stream) into resource 'ck' on 'fec0::3' by usage of a token
+'3a' via the 'PUT' method.
+
+FILES
+------
+There are no configuration files.
+
+EXIT STATUS
+-----------
+*0*::
+   Success
+
+*1*::
+   Failure (syntax or usage error; configuration error; document
+   processing failure; unexpected error)
+
+BUGS
+-----
+Please report bugs on the mailing list for libcoap:
+libcoap-developers@lists.sourceforge.net
+
+AUTHORS
+-------
+The libcoap project <libcoap-developers@lists.sourceforge.net>
