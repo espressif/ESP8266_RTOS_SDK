@@ -128,10 +128,12 @@ STRUCT_END(HighPriFrame)
 
     //  Allocate save area and stack:
     //  (must use .bss, not .comm, because the subsequent .set does not work otherwise)
+    .global _chip_nmi_stk
     .section .bss, "aw"
     .align  16
-LABEL(_Pri_,_Stack):    .space  PRI_N_STACK_SIZE + HESF_TOTALSIZE + PRI_N_STACK_SIZE2 + HESF_TOTALSIZE
+_chip_nmi_stk:    .space  PRI_N_STACK_SIZE + HESF_TOTALSIZE + PRI_N_STACK_SIZE2 + HESF_TOTALSIZE
 
+    .global LoadStoreErrorHandlerStack
     .balign 16
 LoadStoreErrorHandlerStack:
     .word   0       # a0
@@ -155,8 +157,8 @@ LoadStoreErrorHandlerStack_reentry:
     .data
     .global LABEL(_Pri_,_HandlerAddress)
 LABEL(_Pri_,_HandlerAddress):   .space 4
-    .global LABEL(_Pri_, _NMICount)
-LABEL(_Pri_,_NMICount):   .space 4
+    .global _chip_nmi_cnt
+_chip_nmi_cnt:   .space 4
 #endif
 
     .section    .data, "aw"
@@ -189,7 +191,7 @@ LoadStoreErrorHandler:
         rsr     a0, excsave1    # restore a0 saved by UserExceptionVector
         wsr     a1, excsave1    # save a1 to excsave1, a1 can be used as varalbe
 
-        movi    a1, LABEL(_Pri_,_NMICount)
+        movi    a1, _chip_nmi_cnt
         l32i    a1, a1, 0
 
         bnez    a1, LoadStoreErrorHandler_reentry
@@ -1080,14 +1082,14 @@ _xt_nmi:
     ADD HIGH PRIORITY NON-MASKABLE INTERRUPT (NMI) HANDLER CODE HERE.
     */
 
-    movi    a0, LABEL(_Pri_,_NMICount)
+    movi    a0, _chip_nmi_cnt
     l32i    a0, a0, 0
 
     bnez    a0, nmi_reentry
-    movi    a0, LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE  // get ptr to save area
+    movi    a0, _chip_nmi_stk + PRI_N_STACK_SIZE  // get ptr to save area
     j       nmi_common
 nmi_reentry:
-    movi    a0, LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE + HESF_TOTALSIZE + PRI_N_STACK_SIZE2// get ptr to save area
+    movi    a0, _chip_nmi_stk + PRI_N_STACK_SIZE + HESF_TOTALSIZE + PRI_N_STACK_SIZE2// get ptr to save area
 nmi_common:
 
     // interlock
@@ -1186,7 +1188,7 @@ nmi_reentried:
 
 #endif /* __XTENSA_WINDOWED_ABI__ */
 
-    //movi    a1, LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE  // get ptr to save area (is also initial stack ptr)
+    //movi    a1, _chip_nmi_stk + PRI_N_STACK_SIZE  // get ptr to save area (is also initial stack ptr)
     mov     a1, a0
     movi    a0, 0       // mark start of call frames in stack
 
@@ -1247,7 +1249,7 @@ nmi_reentried:
 #endif
 
     //save NMI Count
-    movi    a2, LABEL(_Pri_,_NMICount)
+    movi    a2, _chip_nmi_cnt
     l32i    a3, a2, 0
     addi    a3, a3, 1
     s32i    a3, a2, 0
@@ -1262,16 +1264,16 @@ nmi_reentried:
 #endif
 
     //Restore NMI level
-    movi    a2, LABEL(_Pri_,_NMICount)
+    movi    a2, _chip_nmi_cnt
     l32i    a3, a2, 0
     addi    a3, a3, -1
     s32i    a3, a2, 0
     
     beqi    a3, 1, nmi_reentry2
-    movi    a1, LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE  // get ptr to save area
+    movi    a1, _chip_nmi_stk + PRI_N_STACK_SIZE  // get ptr to save area
     j       nmi_common2
 nmi_reentry2:
-    movi    a1, LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE + HESF_TOTALSIZE + PRI_N_STACK_SIZE2// get ptr to save area
+    movi    a1, _chip_nmi_stk + PRI_N_STACK_SIZE + HESF_TOTALSIZE + PRI_N_STACK_SIZE2// get ptr to save area
 nmi_common2:
 
 
@@ -1331,7 +1333,7 @@ nmi_common2:
     //  Note:  register window has rotated, ie. a0..a15 clobbered.
 
     //  Reload initial stack pointer:
-    movi    a1, LABEL(_Pri_,_Stack) + PRI_N_STACK_SIZE  // - 16
+    movi    a1, _chip_nmi_stk + PRI_N_STACK_SIZE  // - 16
     movi    a6, XCHAL_NUM_AREGS - 8     // how many saved so far
     addi    a7, a1, -8*4
 
@@ -1438,9 +1440,20 @@ _xt_ext_panic:
     movi    a0, PS_INTLEVEL(5) | PS_UM
     wsr     a0, PS
 
-    /* Allocate exception frame and save minimal context. */
     mov     a0, sp
+
+    movi    sp, _chip_nmi_cnt
+    l32i    sp, sp, 0
+
+    beqz    sp, _panic_add_nmi_stk
+    /* Allocate exception frame and save minimal context. */
     movi    sp, _chip_interrupt_tmp
+    j       _panic_dump_reg
+
+_panic_add_nmi_stk:
+    movi    sp, LoadStoreErrorHandlerStack
+
+_panic_dump_reg:
     addi    sp, sp, -XT_STK_FRMSZ
     s32i    a0, sp, XT_STK_A1
 
