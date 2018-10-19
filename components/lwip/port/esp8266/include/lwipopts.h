@@ -353,7 +353,7 @@ void *memp_malloc_ll(size_t type);
  * MEMP_NUM_NETCONN: the number of struct netconns.
  * (only needed if you use the sequential API, like api_lib.c)
  */
-#define MEMP_NUM_NETCONN                10
+#define MEMP_NUM_NETCONN                CONFIG_LWIP_MAX_SOCKETS
 
 
 /**
