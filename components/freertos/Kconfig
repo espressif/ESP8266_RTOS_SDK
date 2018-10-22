@@ -39,5 +39,11 @@ config FREERTOS_GLOBAL_DATA_LINK_IRAM
     depends on !SOC_FULL_ICACHE
     help
         Link FreeRTOS global data(.bss .data COMMON) from DRAM to IRAM.
+
+config FREERTOS_TIMER_STACKSIZE
+    int "Timer stack size"
+    default 2048
+    help
+        The size of the stack used by the timer in FreeRTOS.
         
 endmenu
