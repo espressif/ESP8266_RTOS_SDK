@@ -17,5 +17,14 @@ config MDNS_MAX_SERVICES
         services to be open at the same time conserves memory. Specify
         the maximum amount of services here. The valid value is from 1
         to 64.
+
+config MDNS_STACKSIZE
+    int "Max stack size of MDNS"
+    range 2048 4096
+    default 4096
+    depends on ENABLE_MDNS
+    help
+        The stacksize of the MDNS task that will be responsible for transmitting
+        and receiving MDNS packets.
         
 endmenu
