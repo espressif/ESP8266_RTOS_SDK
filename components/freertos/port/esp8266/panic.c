@@ -150,7 +150,6 @@ static void panic_info(void *frame, int wdt)
 
     if (wdt) {
         panic_str("Task watchdog got triggered.\r\n\r\n");
-        show_critical_info();
     }
     
     if (_chip_nmi_cnt) {
