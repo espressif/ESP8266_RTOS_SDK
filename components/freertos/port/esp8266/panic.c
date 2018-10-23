@@ -160,7 +160,7 @@ static void panic_info(void *frame, int wdt)
 
         panic_stack(&_chip_nmi_stk, &LoadStoreErrorHandlerStack);
     } else {
-        if (xPortInIsrContext()) {
+        if (xPortInIsrContext() && !wdt) {
             extern StackType_t _chip_interrupt_stk, _chip_interrupt_tmp;
 
             panic_str("Core 0 was running in ISR context:\r\n\r\n");
