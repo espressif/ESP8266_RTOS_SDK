@@ -19,6 +19,7 @@
 
 #include "esp_system.h"
 #include "esp_timer.h"
+#include "rom/ets_sys.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -138,6 +139,29 @@ clock_t _times_r(struct _reent *r, struct tms *tms)
     tms->tms_stime = 0;
     tms->tms_cutime = 0;
     tms->tms_cstime = 0;
+
+    return 0;
+}
+
+int usleep(useconds_t us)
+{
+    const int us_per_tick = portTICK_PERIOD_MS * 1000;
+
+    if (us < us_per_tick) {
+        ets_delay_us((uint32_t) us);
+    } else {
+        /* since vTaskDelay(1) blocks for anywhere between 0 and portTICK_PERIOD_MS,
+         * round up to compensate.
+         */
+        vTaskDelay((us + us_per_tick - 1) / us_per_tick);
+    }
+
+    return 0;
+}
+
+unsigned int sleep(unsigned int seconds)
+{
+    vTaskDelay(seconds * (1000 / portTICK_PERIOD_MS));
 
     return 0;
 }

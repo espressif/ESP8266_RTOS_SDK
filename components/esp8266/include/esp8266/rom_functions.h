@@ -17,7 +17,6 @@ uint32_t Wait_SPI_Idle();
 
 void uart_div_modify(uint32_t uart_no, uint32_t baud_div);
 
-void ets_delay_us(uint32_t us);
 int ets_io_vprintf(int (*putc)(int), const char* fmt, va_list ap);
 
 void system_soft_wdt_feed();
