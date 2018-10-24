@@ -1246,7 +1246,7 @@ void *memp_malloc_ll(size_t type);
  * The queue size value itself is platform-dependent, but is passed to
  * sys_mbox_new() when tcpip_init is called.
  */
-#define TCPIP_MBOX_SIZE                 16
+#define TCPIP_MBOX_SIZE                 CONFIG_TCPIP_RECVMBOX_SIZE
 
 /**
  * Define this to something that triggers a watchdog. This is called from
