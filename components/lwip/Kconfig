@@ -325,7 +325,7 @@ config TCP_SND_BUF_DEFAULT
 config TCP_WND_DEFAULT
     int "Default receive window size"
     default 5840 # 4 * default MSS
-    range 2920 11680
+    range 2920 14600
     help
         Set default TCP receive window size for new TCP sockets.
 
