@@ -3823,12 +3823,14 @@ static void _mdns_scheduler_run()
  */
 static void _mdns_search_run()
 {
+    MDNS_SERVICE_LOCK();
     mdns_search_once_t * s = _mdns_server->search_once;
     uint32_t now = xTaskGetTickCount() * portTICK_PERIOD_MS;
+
     if (!s) {
+        MDNS_SERVICE_UNLOCK();
         return;
     }
-    MDNS_SERVICE_LOCK();
     while (s) {
         if (s->state != SEARCH_OFF) {
             if (now > (s->started_at + s->timeout)) {
