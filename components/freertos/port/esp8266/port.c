@@ -315,7 +315,7 @@ int xPortInIsrContext(void)
     return _xt_isr_status != 0;
 }
 
-void __attribute__((weak)) vApplicationStackOverflowHook(xTaskHandle xTask, const char *pcTaskName)
+void __attribute__((weak, noreturn)) vApplicationStackOverflowHook(xTaskHandle xTask, const char *pcTaskName)
 {
     int *p = NULL;
 
