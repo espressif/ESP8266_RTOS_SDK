@@ -1421,6 +1421,7 @@ nmi_rfi:
 #endif
 #endif  /* NMI */
 
+    .global     Cache_Read_Enable_New
     .global     _xt_ext_panic
     .type       _xt_ext_panic, @function
     .align      4
@@ -1477,7 +1478,10 @@ _panic_dump_reg:
 
     s32i    a0, sp, XT_STK_A0
 
+    call0   Cache_Read_Enable_New
+
     //Call panic handler
     mov     a2, sp
     movi    a3, 0
-    call0   panicHandler
+    movi    a0, panicHandler
+    callx0  a0
