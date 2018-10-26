@@ -1,6 +1,6 @@
 gwen:
     core:       ab8ff83
-    net80211:   27e282b
+    net80211:   0b37e27
     pp:         3110b52
     smartconfig:01980e2
     wpa:        01980e2
