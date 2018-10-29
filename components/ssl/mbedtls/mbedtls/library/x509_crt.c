@@ -96,7 +96,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_default =
     MBEDTLS_X509_ID_FLAG( MBEDTLS_MD_SHA512 ),
     0xFFFFFFF, /* Any PK alg    */
     0xFFFFFFF, /* Any curve     */
-    2048,
+    MBEDTLS_RSA_BITLEN_MIN,
 };
 
 /*
@@ -121,7 +121,7 @@ const mbedtls_x509_crt_profile mbedtls_x509_crt_profile_next =
 #else
     0,
 #endif
-    2048,
+    MBEDTLS_RSA_BITLEN_MIN,
 };
 
 /*
@@ -184,6 +184,9 @@ static int x509_profile_check_key( const mbedtls_x509_crt_profile *profile,
     {
         if( mbedtls_pk_get_bitlen( pk ) >= profile->rsa_min_bitlen )
             return( 0 );
+
+        MBEDTLS_DEBUGF("ERROR: Certification RSA bit length is %d and should be >= %d",
+                mbedtls_pk_get_bitlen(pk), MBEDTLS_RSA_BITLEN_MIN);
 
         return( -1 );
     }
