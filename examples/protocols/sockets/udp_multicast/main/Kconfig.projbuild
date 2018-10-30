@@ -38,6 +38,7 @@ config EXAMPLE_IPV4
     bool
 config EXAMPLE_IPV6
     bool
+    select LWIP_IPV6
 
 config EXAMPLE_MULTICAST_IPV4_ADDR
     string "Multicast IPV4 Address (send & receive)"

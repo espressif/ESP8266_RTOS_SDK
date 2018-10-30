@@ -22,6 +22,7 @@ config EXAMPLE_IPV4
     bool "IPV4"
 
 config EXAMPLE_IPV6
+   select LWIP_IPV6
    bool "IPV6"
 
 endchoice
