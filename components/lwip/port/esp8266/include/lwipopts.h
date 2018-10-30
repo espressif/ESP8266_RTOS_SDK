@@ -2231,4 +2231,6 @@ void *memp_malloc_ll(size_t type);
 #endif
 #endif
 
+#define ESP_PING                        1
+
 #endif /* __LWIP_HDR_LWIPOPTS_H__ */
