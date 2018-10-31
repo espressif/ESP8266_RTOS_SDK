@@ -52,6 +52,12 @@
 
 #define ESP_LWIP 1
 
+#ifdef CONFIG_LWIP_IPV6_MLD_SOCK
+#define ESP_LWIP_IPV6_MLD 1
+#else
+#define ESP_LWIP_IPV6_MLD 0
+#endif
+
 #ifdef CONFIG_ESP_UDP_SYNC_SEND
 #define ESP_UDP  1
 #endif
