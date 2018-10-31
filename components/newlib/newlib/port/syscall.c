@@ -125,5 +125,9 @@ void _exit(int status)
 void abort(void)
 {
     ESP_LOGE("ABORT","Error found and abort!");
-    while(1);
+
+    /* cause a exception to jump into panic function */
+    while (1) {
+        *((int *)NULL) = 0;
+    }
 }
