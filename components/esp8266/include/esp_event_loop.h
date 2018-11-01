@@ -23,6 +23,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
+#define EVENT_LOOP_STACKSIZE CONFIG_EVENT_LOOP_STACK_SIZE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
