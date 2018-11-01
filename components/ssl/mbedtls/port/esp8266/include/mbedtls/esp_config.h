@@ -2967,6 +2967,14 @@
 #include MBEDTLS_USER_CONFIG_FILE
 #endif
 
+#ifdef CONFIG_MBEDTLS_RSA_BITLEN_MIN
+#define MBEDTLS_RSA_BITLEN_MIN CONFIG_MBEDTLS_RSA_BITLEN_MIN
+#else
+#define MBEDTLS_RSA_BITLEN_MIN 2048
+#endif
+
+#define MBEDTLS_DEBUGF(_fmt, ...)   printf(_fmt "\r\n", ##__VA_ARGS__)
+
 #include "mbedtls/check_config.h"
 
 #endif /* MBEDTLS_CONFIG_H */

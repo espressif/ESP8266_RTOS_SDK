@@ -39,6 +39,25 @@ config MBEDTLS_SSL_MAX_CONTENT_LEN
         handshake or a return value of MBEDTLS_ERR_SSL_INVALID_RECORD
         (-0x7200).
 
+choice MBEDTLS_RSA_BITLEN_MIN
+    prompt "RSA minimum bit length"
+    default MBEDTLS_RSA_BITLEN_2048
+    help
+        mbedTLS's minimum bit length is 2048, but some customers's key RSA bits is 1024.
+
+        With the option users can configurate the value to make mbedTLS support 1024 bits RSA key.
+
+config MBEDTLS_RSA_BITLEN_1024
+    bool "1024(not safe)"
+config MBEDTLS_RSA_BITLEN_2048
+    bool "2048"
+endchoice
+
+config MBEDTLS_RSA_BITLEN_MIN
+    int
+    default 1024 if MBEDTLS_RSA_BITLEN_1024
+    default 2048 if MBEDTLS_RSA_BITLEN_2048
+
 config MBEDTLS_DEBUG
    bool "Enable mbedTLS debugging"
    default n
