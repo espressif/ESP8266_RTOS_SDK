@@ -68,6 +68,16 @@ void sc_ack_send(sc_ack_t *param);
   */
 void sc_ack_send_stop(void);
 
+/**
+  * @brief  Fill smartconfig ACK information to cellphone.
+  *
+  * @attention The API is only used in libsmartconfig.a.
+  *
+  * @param  buffer: Transmits the data in the buffer;
+  * @param  size:   The size argument specifies the number of bytes to be transmitted.
+  */
+bool sc_ack_send_info(void *buffer, size_t size);
+
 #ifdef __cplusplus
 }
 #endif

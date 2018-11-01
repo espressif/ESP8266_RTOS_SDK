@@ -32,6 +32,8 @@ static const char *TAG = "smartconfig";
 
 /* Flag to indicate sending smartconfig ACK or not. */
 static bool s_sc_ack_send = false;
+static void *s_sc_ack_info = NULL;
+static size_t s_sc_ack_info_size = 0;
 
 static int sc_ack_send_get_errno(int fd)
 {
@@ -91,7 +93,12 @@ static void sc_ack_send_task(void *pvParameters)
                 /* Send smartconfig ACK every 100ms. */
                 vTaskDelay(100 / portTICK_RATE_MS);
 
-                sendlen = sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
+                if (s_sc_ack_info) {
+                    sendlen = sendto(send_sock, s_sc_ack_info, s_sc_ack_info_size, 0, (struct sockaddr*) &server_addr, sin_size);
+                } else {
+                    sendlen = sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
+                }
+
                 if (sendlen > 0) {
                     /* Totally send 30 smartconfig ACKs. Then smartconfig is successful. */
                     if (packet_count++ >= SC_ACK_MAX_COUNT) {
@@ -124,6 +131,11 @@ _end:
     if ((send_sock >= LWIP_SOCKET_OFFSET) && (send_sock <= (FD_SETSIZE - 1))) {
         close(send_sock);
     }
+    if (s_sc_ack_info) {
+        free(s_sc_ack_info);
+        s_sc_ack_info = NULL;
+        s_sc_ack_info_size = 0;
+    }
     free(ack);
     vTaskDelete(NULL);
 }
@@ -155,4 +167,20 @@ void sc_ack_send(sc_ack_t *param)
 void sc_ack_send_stop(void)
 {
     s_sc_ack_send = false;
+}
+
+bool sc_ack_send_info(void *buffer, size_t size)
+{
+    if (!buffer || !size)
+        return false;
+
+    s_sc_ack_info = s_sc_ack_info ? realloc(s_sc_ack_info, size + 1) : malloc(size + 1);
+    if (!s_sc_ack_info)
+        return false;
+
+    s_sc_ack_info_size = size;
+    memset(s_sc_ack_info, 0, size + 1);
+    memcpy(s_sc_ack_info, buffer, size);
+
+    return true;
 }
