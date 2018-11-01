@@ -941,7 +941,7 @@
  * Maximum number of AutoIP IP conflicts before rate limiting is enabled.
  */
 #ifndef LWIP_AUTOIP_MAX_CONFLICTS
-#define LWIP_AUTOIP_MAX_CONFLICTS            10
+#define LWIP_AUTOIP_MAX_CONFLICTS            CONFIG_LWIP_AUTOIP_MAX_CONFLICTS
 #endif
 
 /**
@@ -949,7 +949,7 @@
  * Rate limited request interval, in seconds.
  */
 #ifndef LWIP_AUTOIP_RATE_LIMIT_INTERVAL
-#define LWIP_AUTOIP_RATE_LIMIT_INTERVAL      60
+#define LWIP_AUTOIP_RATE_LIMIT_INTERVAL      CONFIG_LWIP_AUTOIP_RATE_LIMIT_INTERVAL
 #endif
 
 /**
