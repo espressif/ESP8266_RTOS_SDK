@@ -33,7 +33,7 @@
 #define FLASH_MAP_ADDR 0x40200000
 #define FLASH_MAP_SIZE 0x00100000
 
-extern void chip_boot(size_t start_addr);
+extern void chip_boot(void);
 extern int rtc_init(void);
 extern int mac_init(void);
 extern int base_gpio_init(void);
@@ -41,6 +41,7 @@ extern int watchdog_init(void);
 extern int wifi_timer_init(void);
 extern int wifi_nvs_init(void);
 extern esp_err_t esp_pthread_init(void);
+extern void phy_get_bb_evm(void);
 
 static void user_init_entry(void *param)
 {
@@ -54,6 +55,8 @@ static void user_init_entry(void *param)
     /* initialize C++ construture function */
     for (func = &__init_array_start; func < &__init_array_end; func++)
         func[0]();
+
+    phy_get_bb_evm();
 
     assert(nvs_flash_init() == 0);
     assert(wifi_nvs_init() == 0);
@@ -108,7 +111,9 @@ void call_user_start(size_t start_addr)
         "wsr        a0, vecbase\n"
         : : :"memory");
 
-    chip_boot(start_addr);
+#ifndef CONFIG_BOOTLOADER_INIT_SPI_FLASH
+    chip_boot();
+#endif
 
     /* clear bss data */
     for (p = &_bss_start; p < &_bss_end; p++)

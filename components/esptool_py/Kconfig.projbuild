@@ -63,6 +63,14 @@ config FLASHMODE_DOUT
 	bool "DOUT"
 endchoice
 
+config FLASHMODE_SWITCH_TO_QIO
+	bool "Try to switch to QIO mode at startup"
+	default y
+	depends on FLASHMODE_DIO
+	help
+        If users use SPI flash DIO mode to download firmware, bootloader or application 
+        can switch to QIO mode by enable this option.
+
 # Note: we use esptool.py to flash bootloader in
 # dio mode for QIO/QOUT, bootloader then upgrades
 # itself to quad mode during initialisation
@@ -72,6 +80,13 @@ config ESPTOOLPY_FLASHMODE
 	default "qout" if FLASHMODE_QOUT
 	default "dio" if FLASHMODE_DIO
 	default "dout" if FLASHMODE_DOUT
+
+config SPI_FLASH_MODE
+	hex
+	default 0x0 if FLASHMODE_QIO
+	default 0x1 if FLASHMODE_QOUT
+	default 0x2 if FLASHMODE_DIO
+	default 0x3 if FLASHMODE_DOUT	
 
 choice ESPTOOLPY_FLASHFREQ
 	prompt "Flash SPI speed"
@@ -96,6 +111,12 @@ config ESPTOOLPY_FLASHFREQ
 	default "26m" if ESPTOOLPY_FLASHFREQ_26M
 	default "20m" if ESPTOOLPY_FLASHFREQ_20M
 
+config SPI_FLASH_FREQ
+	hex
+	default 0xf if ESPTOOLPY_FLASHFREQ_80M
+	default 0x0 if ESPTOOLPY_FLASHFREQ_40M
+	default 0x1 if ESPTOOLPY_FLASHFREQ_26M
+	default 0x2 if ESPTOOLPY_FLASHFREQ_20M
 
 choice ESPTOOLPY_FLASHSIZE
 	prompt "Flash size"
@@ -121,6 +142,14 @@ config ESPTOOLPY_FLASHSIZE
 	default "4MB" if ESPTOOLPY_FLASHSIZE_4MB
 	default "8MB" if ESPTOOLPY_FLASHSIZE_8MB
 	default "16MB" if ESPTOOLPY_FLASHSIZE_16MB
+
+config SPI_FLASH_SIZE
+	hex
+	default 0x100000 if ESPTOOLPY_FLASHSIZE_1MB
+	default 0x200000 if ESPTOOLPY_FLASHSIZE_2MB
+	default 0x400000 if ESPTOOLPY_FLASHSIZE_4MB
+	default 0x800000 if ESPTOOLPY_FLASHSIZE_8MB
+	default 0x1000000 if ESPTOOLPY_FLASHSIZE_16MB
 
 choice ESPTOOLPY_BEFORE
     prompt "Before flashing"

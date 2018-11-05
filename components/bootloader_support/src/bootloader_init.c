@@ -619,46 +619,26 @@ static esp_err_t bootloader_main()
         return ESP_FAIL;
     }
 
+    update_flash_config(&fhdr);
+
     ESP_LOGI(TAG, "ESP-IDF %s 2nd stage bootloader", IDF_VER);
 
     ESP_LOGI(TAG, "compile time " __TIME__ );
 
     print_flash_info(&fhdr);
 
-    update_flash_config(&fhdr);
-
     return ESP_OK;
 }
 
 static void update_flash_config(const esp_image_header_t* pfhdr)
 {
-    // uint32_t size;
-    // switch(pfhdr->spi_size) {
-    //     case ESP_IMAGE_FLASH_SIZE_1MB:
-    //         size = 1;
-    //         break;
-    //     case ESP_IMAGE_FLASH_SIZE_2MB:
-    //     case ESP_IMAGE_FLASH_SIZE_2MB_C1:
-    //         size = 2;
-    //         break;
-    //     case ESP_IMAGE_FLASH_SIZE_4MB:
-    //     case ESP_IMAGE_FLASH_SIZE_4MB_C1:
-    //         size = 4;
-    //         break;
-    //     case ESP_IMAGE_FLASH_SIZE_8MB:
-    //         size = 8;
-    //         break;
-    //     case ESP_IMAGE_FLASH_SIZE_16MB:
-    //         size = 16;
-    //         break;
-    //     default:
-    //         size = 2;
-    // }
+#ifdef CONFIG_BOOTLOADER_INIT_SPI_FLASH
+    extern void esp_spi_flash_init(uint32_t spi_speed, uint32_t spi_mode);
 
-    // Set flash chip size
-//    esp_rom_spiflash_config_param(g_rom_flashchip.device_id, size * 0x100000, 0x10000, 0x1000, 0x100, 0xffff);
-    // TODO: set mode
-    // TODO: set frequency
+    esp_spi_flash_init(pfhdr->spi_speed, pfhdr->spi_mode);
+
+    ESP_LOGD(TAG, "bootloader initialize SPI flash clock and I/O");
+#endif /* CONFIG_BOOTLOADER_INIT_SPI_FLASH */
 }
 
 static void print_flash_info(const esp_image_header_t* phdr)

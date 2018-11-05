@@ -256,4 +256,8 @@
 #define PERIPHS_SPI_FLASH_CTRL                  SPI_CTRL(SPI)
 #define PERIPHS_SPI_FLASH_CMD                   SPI_CMD(SPI)
 
+#define SPI0_CLK_EQU_SYSCLK                     BIT8
+
+#define PERIPHS_SPI_FLASH_USRREG                (0x60000200 + 0x1c)
+
 #endif // SPI_REGISTER_H_INCLUDED
