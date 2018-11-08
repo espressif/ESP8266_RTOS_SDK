@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include "crc.h"
+#include "ibus_data.h"
 
 static const uint32_t crc32_le_table[256] = {
     0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L, 0x706af48fL, 0xe963a535L, 0x9e6495a3L,
@@ -113,7 +114,7 @@ uint16_t crc16_le(uint16_t crc, const uint8_t* buf, uint32_t len)
     crc = ~crc;
 
     for (i = 0; i < len; i++) {
-        crc = crc16_le_table[(crc ^ buf[i]) & 0xff] ^ (crc >> 8);
+        crc = ESP_IBUS_GET_U16_DATA((crc ^ buf[i]) & 0xff, crc16_le_table) ^ (crc >> 8);
     }
 
     return ~crc;
@@ -137,7 +138,7 @@ uint8_t esp_crc8(uint8_t const* p, uint32_t len)
     uint8_t  crc = 0x00;
 
     while (len--) {
-        crc = crc8_le_table[crc ^ *p++];
+        crc = ESP_IBUS_GET_U8_DATA(crc ^ *p++, crc8_le_table);
     }
 
     return crc;
