@@ -48,6 +48,24 @@ typedef xTaskHandle sys_thread_t;
 #define sys_sem_valid( x ) ( ( ( *x ) == NULL) ? pdFALSE : pdTRUE )
 #define sys_sem_set_invalid( x ) ( ( *x ) = NULL )
 
+/**
+ * Get thread priority througth thread_handle
+ *
+ * @param task_handle
+ *
+ * @return thread priority
+ */
+u8_t sys_thread_priority_get(sys_thread_t thread_handle);
+
+/**
+ * Set thread priority througth thread_handle
+ *
+ * @param task_handle
+ *
+ * @param priority
+ */
+void sys_thread_priority_set(sys_thread_t thread_handle, u8_t priority);
+
 #define LWIP_COMPAT_MUTEX 0
 
 #if LWIP_NETCONN_SEM_PER_THREAD
