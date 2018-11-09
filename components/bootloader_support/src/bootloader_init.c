@@ -648,6 +648,8 @@ static void update_flash_config(const esp_image_header_t* pfhdr)
 
     ESP_LOGD(TAG, "bootloader initialize SPI flash clock and I/O");
 #endif /* CONFIG_BOOTLOADER_INIT_SPI_FLASH */
+
+    Cache_Read_Disable();
 }
 
 static void print_flash_info(const esp_image_header_t* phdr)

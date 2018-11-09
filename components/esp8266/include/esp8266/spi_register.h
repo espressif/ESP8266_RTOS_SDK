@@ -263,6 +263,14 @@ extern "C" {
 
 #define PERIPHS_SPI_FLASH_USRREG                (0x60000200 + 0x1c)
 
+#define CACHE_MAP_1M_HIGH                       BIT25
+#define CACHE_MAP_2M                            BIT24
+#define CACHE_MAP_SEGMENT_S                     16
+#define CACHE_MAP_SEGMENT_MASK                  0x3
+#define CACHE_BASE_ADDR                         0x40200000
+#define CACHE_2M_SIZE                           0x00200000
+#define CACHE_1M_SIZE                           0x00100000
+
 #ifdef __cplusplus
 }
 #endif

@@ -751,3 +751,29 @@ void esp_spi_flash_init(uint32_t spi_speed, uint32_t spi_mode)
         ESP_EARLY_LOGI("qio_mode", "Enabling default flash chip QIO");
     }
 }
+
+uintptr_t spi_flash_cache2phys(const void *cached)
+{
+    uint32_t map_size;
+    uintptr_t addr_offset;
+    uintptr_t addr = (uintptr_t)cached;
+
+    const uint32_t reg = REG_READ(CACHE_FLASH_CTRL_REG);
+    const uint32_t segment = (reg >> CACHE_MAP_SEGMENT_S) & CACHE_MAP_SEGMENT_MASK;
+
+    if (reg & CACHE_MAP_2M) {
+        map_size = CACHE_2M_SIZE;
+        addr_offset = 0;
+    } else {
+        map_size = CACHE_1M_SIZE;
+        if (reg & CACHE_MAP_1M_HIGH)
+            addr_offset = CACHE_1M_SIZE;
+        else
+            addr_offset = 0;
+    }
+
+    if (addr <= CACHE_BASE_ADDR || addr >= CACHE_BASE_ADDR + map_size)
+        return SPI_FLASH_CACHE2PHYS_FAIL;
+    
+    return segment * CACHE_2M_SIZE + (addr + addr_offset - CACHE_BASE_ADDR);
+}

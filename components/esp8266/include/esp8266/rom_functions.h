@@ -33,6 +33,10 @@ int SPI_write_status(esp_spi_flash_chip_t *chip, uint32_t status);
 int SPI_read_status(esp_spi_flash_chip_t *chip, uint32_t *status);
 int Enable_QMode(esp_spi_flash_chip_t *chip);
 
+int SPIWrite(uint32_t addr, const uint8_t *src, uint32_t size);
+int SPIRead(uint32_t addr, void *dst, uint32_t size);
+int SPIEraseSector(uint32_t sector_num);
+
 void Cache_Read_Disable();
 void Cache_Read_Enable(uint8_t map, uint8_t p, uint8_t v);
 
