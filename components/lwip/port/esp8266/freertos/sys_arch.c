@@ -438,6 +438,16 @@ sys_arch_msleep(int ms)
 	vTaskDelay(ms / portTICK_RATE_MS);
 }
 
+u8_t sys_thread_priority_get(sys_thread_t thread_handle)
+{
+    return (u8_t)uxTaskPriorityGet(thread_handle);
+}
+
+void sys_thread_priority_set(sys_thread_t thread_handle, u8_t priority)
+{
+    vTaskPrioritySet(thread_handle, (UBaseType_t)priority);
+}
+
 #if LWIP_NETCONN_SEM_PER_THREAD
 
 static void sys_thread_sem_free(int index, void *data) // destructor for TLS semaphore

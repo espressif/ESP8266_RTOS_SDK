@@ -344,8 +344,17 @@ tcpip_send_msg_wait_sem(tcpip_callback_fn fn, void *apimsg, sys_sem_t* sem)
   TCPIP_MSG_VAR_REF(msg).type = TCPIP_MSG_API;
   TCPIP_MSG_VAR_REF(msg).msg.api_msg.function = fn;
   TCPIP_MSG_VAR_REF(msg).msg.api_msg.msg = apimsg;
+#if ESP_LWIP
+  u8_t prio = sys_thread_priority_get(NULL); 	  // add to prevent switch to tcpip thread between mbox post and sem wait
+  if((TCPIP_THREAD_PRIO + 1) > prio) {
+    sys_thread_priority_set(NULL, TCPIP_THREAD_PRIO + 1);  // set priority higher than tcpip thread
+  }
+#endif
   sys_mbox_post(&mbox, &TCPIP_MSG_VAR_REF(msg));
   sys_arch_sem_wait(sem, 0);
+#if ESP_LWIP
+  sys_thread_priority_set(NULL, prio);  
+#endif
   TCPIP_MSG_VAR_FREE(msg);
   return ERR_OK;
 #endif /* LWIP_TCPIP_CORE_LOCKING */
