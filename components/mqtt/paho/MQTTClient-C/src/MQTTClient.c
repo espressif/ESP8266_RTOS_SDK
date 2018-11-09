@@ -251,6 +251,7 @@ void MQTTCloseSession(MQTTClient* c)
     c->isconnected = 0;
     if (c->cleansession)
         MQTTCleanSession(c);
+    c->ipstack->disconnect(c->ipstack);
 }
 
 
@@ -346,6 +347,10 @@ int MQTTYield(MQTTClient* c, int timeout_ms)
     TimerInit(&timer);
     TimerCountdownMS(&timer, timeout_ms);
 
+#if defined(MQTT_TASK)
+    MutexLock(&c->mutex);
+#endif
+
     do
     {
         if (cycle(c, &timer) < 0)
@@ -355,6 +360,9 @@ int MQTTYield(MQTTClient* c, int timeout_ms)
         }
     } while (!TimerIsExpired(&timer));
 
+#if defined(MQTT_TASK)
+    MutexUnlock(&c->mutex);
+#endif
     return rc;
 }
 
