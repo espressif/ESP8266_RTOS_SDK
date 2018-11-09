@@ -1,6 +1,8 @@
 # Enable AWS IoT SDK support
 CONFIG_AWS_IOT_SDK=y
 
+CONFIG_SSL_USING_MBEDTLS=y
+
 CONFIG_MBEDTLS_SSL_ALPN=y
 
 # Enable FATFS read only with long filename support

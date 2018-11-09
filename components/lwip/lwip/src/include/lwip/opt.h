@@ -935,6 +935,23 @@
 #if !defined LWIP_DHCP_AUTOIP_COOP_TRIES || defined __DOXYGEN__
 #define LWIP_DHCP_AUTOIP_COOP_TRIES     9
 #endif
+
+/**
+ * LWIP_AUTOIP_MAX_CONFLICTS:
+ * Maximum number of AutoIP IP conflicts before rate limiting is enabled.
+ */
+#ifndef LWIP_AUTOIP_MAX_CONFLICTS
+#define LWIP_AUTOIP_MAX_CONFLICTS            CONFIG_LWIP_AUTOIP_MAX_CONFLICTS
+#endif
+
+/**
+ * LWIP_AUTOIP_RATE_LIMIT_INTERVAL:
+ * Rate limited request interval, in seconds.
+ */
+#ifndef LWIP_AUTOIP_RATE_LIMIT_INTERVAL
+#define LWIP_AUTOIP_RATE_LIMIT_INTERVAL      CONFIG_LWIP_AUTOIP_RATE_LIMIT_INTERVAL
+#endif
+
 /**
  * @}
  */

@@ -196,6 +196,18 @@ recv_udp(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     return;
   }
 
+#if LWIP_IPV6
+#if ESP_LWIP_IPV6_MLD
+  /* This should be eventually moved to a flag on the UDP PCB, and this drop can happen
+     more correctly in udp_input(). This will also allow icmp_dest_unreach() to be called. */
+  if (conn->flags & NETCONN_FLAG_IPV6_V6ONLY && !ip_current_is_v6()) {
+    LWIP_DEBUGF(API_MSG_DEBUG, ("recv_udp: Dropping IPv4 UDP packet (IPv6-only socket)"));
+    pbuf_free(p);
+    return;
+  }
+#endif /* ESP_LWIP_IPV6_MLD */
+#endif /* LWIP_IPV6 */
+
   buf = (struct netbuf *)memp_malloc(MEMP_NETBUF);
   if (buf == NULL) {
     pbuf_free(p);
@@ -611,6 +623,17 @@ pcb_new(struct api_msg *msg)
   if (msg->conn->pcb.ip == NULL) {
     msg->err = ERR_MEM;
   }
+#if LWIP_IPV4 && LWIP_IPV6
+#if ESP_LWIP_IPV6_MLD
+  else {
+    if (NETCONNTYPE_ISIPV6(msg->conn->type)) {
+      /* Convert IPv4 PCB manually to an IPv6 PCB */
+      IP_SET_TYPE_VAL(msg->conn->pcb.ip->local_ip,  IPADDR_TYPE_V6);
+      IP_SET_TYPE_VAL(msg->conn->pcb.ip->remote_ip, IPADDR_TYPE_V6);
+    }
+  }
+#endif /* ESP_LWIP_IPV6_MLD*/
+#endif /* LWIP_IPV4 && LWIP_IPV6 */
 }
 
 /**
@@ -1132,6 +1155,24 @@ lwip_netconn_do_bind(void *m)
     msg->err = msg->conn->last_err;
   } else {
     msg->err = ERR_VAL;
+
+#if LWIP_IPV4 && LWIP_IPV6
+#if ESP_LWIP_IPV6_MLD
+      /* "Socket API like" dual-stack support: If IP to bind to is IP6_ADDR_ANY,
+       * and NETCONN_FLAG_IPV6_V6ONLY is NOT set, use IP_ANY_TYPE to bind
+       */
+      if (ip_addr_cmp(API_EXPR_REF(msg->msg.bc.ipaddr), IP6_ADDR_ANY) &&
+          (netconn_get_ipv6only(msg->conn) == 0)) {
+        /* change PCB type to IPADDR_TYPE_ANY */
+        IP_SET_TYPE_VAL(msg->conn->pcb.ip->local_ip,  IPADDR_TYPE_ANY);
+        IP_SET_TYPE_VAL(msg->conn->pcb.ip->remote_ip, IPADDR_TYPE_ANY);
+
+        /* bind to IPADDR_TYPE_ANY */
+        API_EXPR_REF(msg->msg.bc.ipaddr) = IP_ANY_TYPE;
+      }
+#endif /* ESP_LWIP_IPV6_MLD */
+#endif /* LWIP_IPV4 && LWIP_IPV6 */
+
     if (msg->conn->pcb.tcp != NULL) {
       switch (NETCONNTYPE_GROUP(msg->conn->type)) {
 #if LWIP_RAW
@@ -1400,6 +1441,14 @@ lwip_netconn_do_send(void *m)
 
   if (ERR_IS_FATAL(msg->conn->last_err)) {
     msg->err = msg->conn->last_err;
+#if ESP_LWIP_IPV6_MLD
+#if LWIP_IPV4 && LWIP_IPV6
+  } else if ((msg->conn->flags & NETCONN_FLAG_IPV6_V6ONLY) &&
+             IP_IS_V4MAPPEDV6(&msg->msg.b->addr)) {
+    LWIP_DEBUGF(API_MSG_DEBUG, ("lwip_netconn_do_send: Dropping IPv4 packet on IPv6-only socket"));
+    msg->err = ERR_VAL;
+#endif /* LWIP_IPV4 && LWIP_IPV6 */
+#endif /* ESP_LWIP_IPV6_MLD */
   } else {
     msg->err = ERR_CONN;
     if (msg->conn->pcb.tcp != NULL) {

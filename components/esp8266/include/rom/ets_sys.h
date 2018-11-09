@@ -98,6 +98,16 @@ extern uint32_t WDEV_INTEREST_EVENT;
 void os_delay_us(uint16_t us);
 
 /**
+  * @brief  CPU do while loop for some time.
+  *         In FreeRTOS task, please call FreeRTOS apis.
+  *
+  * @param  uint32_t us : Delay time in us.
+  *
+  * @return None
+  */
+void ets_delay_us(uint32_t us);
+
+/**
   * @brief     Register the print output function.
   *
   * @attention os_install_putc1((void *)uart1_write_char) in uart_init will set

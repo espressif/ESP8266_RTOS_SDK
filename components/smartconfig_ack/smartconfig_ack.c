@@ -19,9 +19,13 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
+
+#include <sys/socket.h>
+#include <netdb.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "lwip/sockets.h"
 #include "tcpip_adapter.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
@@ -32,6 +36,8 @@ static const char *TAG = "smartconfig";
 
 /* Flag to indicate sending smartconfig ACK or not. */
 static bool s_sc_ack_send = false;
+static void *s_sc_ack_info = NULL;
+static size_t s_sc_ack_info_size = 0;
 
 static int sc_ack_send_get_errno(int fd)
 {
@@ -87,11 +93,46 @@ static void sc_ack_send_task(void *pvParameters)
 
             setsockopt(send_sock, SOL_SOCKET, SO_BROADCAST | SO_REUSEADDR, &optval, sizeof(int));
 
+            if (ack->type == SC_ACK_TYPE_AIRKISS) {
+                char data = 0;
+                struct sockaddr_in local_addr, from;
+                socklen_t sockadd_len = sizeof(struct sockaddr);
+                struct timeval timeout = {
+                    SC_ACK_AIRKISS_TIMEOUT / 1000,
+                    SC_ACK_AIRKISS_TIMEOUT % 1000 * 1000
+                };
+
+                bzero(&local_addr, sizeof(struct sockaddr_in));
+                bzero(&from, sizeof(struct sockaddr_in));
+                local_addr.sin_family = AF_INET;
+                local_addr.sin_addr.s_addr = INADDR_ANY;
+                local_addr.sin_port = htons(SC_ACK_AIRKISS_DEVICE_PORT);
+
+                bind(send_sock, (struct sockaddr *)&local_addr, sockadd_len);
+                setsockopt(send_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+                recvfrom(send_sock, &data, 1, 0, (struct sockaddr *)&from, &sockadd_len);
+                if (from.sin_addr.s_addr != INADDR_ANY) {
+                    memcpy(remote_ip, &from.sin_addr, 4);
+                    server_addr.sin_addr.s_addr = from.sin_addr.s_addr;
+                } else {
+                    if (ack->cb) {
+                        ack->cb(SC_STATUS_LINK_OVER, remote_ip);
+                    }
+                    goto _end;
+                }
+            }
+
             while (s_sc_ack_send) {
                 /* Send smartconfig ACK every 100ms. */
                 vTaskDelay(100 / portTICK_RATE_MS);
 
-                sendlen = sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
+                if (s_sc_ack_info) {
+                    sendlen = sendto(send_sock, s_sc_ack_info, s_sc_ack_info_size, 0, (struct sockaddr*) &server_addr, sin_size);
+                } else {
+                    sendlen = sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
+                }
+
                 if (sendlen > 0) {
                     /* Totally send 30 smartconfig ACKs. Then smartconfig is successful. */
                     if (packet_count++ >= SC_ACK_MAX_COUNT) {
@@ -124,6 +165,11 @@ _end:
     if ((send_sock >= LWIP_SOCKET_OFFSET) && (send_sock <= (FD_SETSIZE - 1))) {
         close(send_sock);
     }
+    if (s_sc_ack_info) {
+        free(s_sc_ack_info);
+        s_sc_ack_info = NULL;
+        s_sc_ack_info_size = 0;
+    }
     free(ack);
     vTaskDelete(NULL);
 }
@@ -155,4 +201,20 @@ void sc_ack_send(sc_ack_t *param)
 void sc_ack_send_stop(void)
 {
     s_sc_ack_send = false;
+}
+
+bool sc_ack_send_info(void *buffer, size_t size)
+{
+    if (!buffer || !size)
+        return false;
+
+    s_sc_ack_info = s_sc_ack_info ? realloc(s_sc_ack_info, size + 1) : malloc(size + 1);
+    if (!s_sc_ack_info)
+        return false;
+
+    s_sc_ack_info_size = size;
+    memset(s_sc_ack_info, 0, size + 1);
+    memcpy(s_sc_ack_info, buffer, size);
+
+    return true;
 }

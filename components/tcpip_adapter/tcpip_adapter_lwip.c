@@ -1210,4 +1210,13 @@ struct netif* ip4_route_src_hook(const ip4_addr_t* dest, const ip4_addr_t* src)
     return netif;
 }
 
+bool tcpip_adapter_is_netif_up(tcpip_adapter_if_t tcpip_if)
+{
+    if (esp_netif[tcpip_if] != NULL && netif_is_up(esp_netif[tcpip_if])) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 #endif /* CONFIG_TCPIP_LWIP */

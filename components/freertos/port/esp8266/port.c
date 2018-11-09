@@ -315,14 +315,11 @@ int xPortInIsrContext(void)
     return _xt_isr_status != 0;
 }
 
-void __attribute__((weak)) vApplicationStackOverflowHook(xTaskHandle xTask, const char *pcTaskName)
+void __attribute__((weak, noreturn)) vApplicationStackOverflowHook(xTaskHandle xTask, const char *pcTaskName)
 {
-    int *p = NULL;
-
     ets_printf("***ERROR*** A stack overflow in task %s has been detected.\r\n", pcTaskName);
-    
-    /* cause a exception to jump into panic function */
-    *p = 0;
+
+    abort();
 }
 
 signed portBASE_TYPE xTaskGenericCreate(TaskFunction_t pxTaskCode,

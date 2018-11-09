@@ -2,7 +2,7 @@ menu "SSL"
 
 choice SSL_LIBRARY_CHOOSE
     prompt "Choose SSL/TLS library"
-    default SSL_USING_MBEDTLS
+    default SSL_USING_WOLFSSL
     help
         Choose the SSL/TLS library which you want to use.
 
@@ -38,6 +38,25 @@ config MBEDTLS_SSL_MAX_CONTENT_LEN
         If the value is set too low, symptoms are a failed TLS
         handshake or a return value of MBEDTLS_ERR_SSL_INVALID_RECORD
         (-0x7200).
+
+choice MBEDTLS_RSA_BITLEN_MIN
+    prompt "RSA minimum bit length"
+    default MBEDTLS_RSA_BITLEN_2048
+    help
+        mbedTLS's minimum bit length is 2048, but some customers's key RSA bits is 1024.
+
+        With the option users can configurate the value to make mbedTLS support 1024 bits RSA key.
+
+config MBEDTLS_RSA_BITLEN_1024
+    bool "1024(not safe)"
+config MBEDTLS_RSA_BITLEN_2048
+    bool "2048"
+endchoice
+
+config MBEDTLS_RSA_BITLEN_MIN
+    int
+    default 1024 if MBEDTLS_RSA_BITLEN_1024
+    default 2048 if MBEDTLS_RSA_BITLEN_2048
 
 config MBEDTLS_DEBUG
    bool "Enable mbedTLS debugging"

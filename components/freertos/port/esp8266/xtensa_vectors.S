@@ -122,7 +122,7 @@ STRUCT_END(HighPriFrame)
 #define PRI_N_STACK_SIZE     512    /* default to 1 kB stack for each level-N handling */
 #define PRI_N_STACK_SIZE2    256    /* default to 1 kB stack for each level-N handling */
 
-#define PANIC_STK_FRMSZ      0x60
+#define PANIC_STK_FRMSZ      (XT_STK_FRMSZ + 0x10)
 
     .global panicHandler
 
@@ -1421,6 +1421,7 @@ nmi_rfi:
 #endif
 #endif  /* NMI */
 
+    .global     Cache_Read_Enable_New
     .global     _xt_ext_panic
     .type       _xt_ext_panic, @function
     .align      4
@@ -1454,7 +1455,7 @@ _panic_add_nmi_stk:
     movi    sp, LoadStoreErrorHandlerStack
 
 _panic_dump_reg:
-    addi    sp, sp, -XT_STK_FRMSZ
+    addi    sp, sp, -PANIC_STK_FRMSZ
     s32i    a0, sp, XT_STK_A1
 
     rsr     a0, EXCSAVE_2                   /* save interruptee's PS */
@@ -1477,7 +1478,10 @@ _panic_dump_reg:
 
     s32i    a0, sp, XT_STK_A0
 
+    call0   Cache_Read_Enable_New
+
     //Call panic handler
     mov     a2, sp
     movi    a3, 0
-    call0   panicHandler
+    movi    a0, panicHandler
+    callx0  a0

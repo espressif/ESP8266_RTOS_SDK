@@ -143,6 +143,12 @@ config WIFI_PPT_TASKSTACK_SIZE
         which calls promiscuous callback function. So if user's function is
         complex, the stack must be set larger.
 
+config EVENT_LOOP_STACK_SIZE
+    int "Event loop stack size"
+    default 2048
+    help
+        Configure the Event loop task stack size per application.
+
 config ESP8266_CORE_GLOBAL_DATA_LINK_IRAM
     bool "Link libcore.a internal global data to IRAM"
     default y

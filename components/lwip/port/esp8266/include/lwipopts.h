@@ -52,6 +52,12 @@
 
 #define ESP_LWIP 1
 
+#ifdef CONFIG_LWIP_IPV6_MLD_SOCK
+#define ESP_LWIP_IPV6_MLD 1
+#else
+#define ESP_LWIP_IPV6_MLD 0
+#endif
+
 #ifdef CONFIG_ESP_UDP_SYNC_SEND
 #define ESP_UDP  1
 #endif
@@ -713,7 +719,7 @@ void *memp_malloc_ll(size_t type);
  * LWIP_DHCP_AUTOIP_COOP==1: Allow DHCP and AUTOIP to be both enabled on
  * the same interface at the same time.
  */
-#define LWIP_DHCP_AUTOIP_COOP           0
+#define LWIP_DHCP_AUTOIP_COOP           CONFIG_LWIP_AUTOIP
 
 /**
  * LWIP_DHCP_AUTOIP_COOP_TRIES: Set to the number of DHCP DISCOVER probes
@@ -2230,5 +2236,7 @@ void *memp_malloc_ll(size_t type);
 #include "udp_sync.h"
 #endif
 #endif
+
+#define ESP_PING                        1
 
 #endif /* __LWIP_HDR_LWIPOPTS_H__ */

@@ -41,6 +41,13 @@ endmenu # LWIP ARP
 
 menu "SOCKET"
 
+config LWIP_IPV6_MLD_SOCK
+    bool "LWIP socket supports IPv6 multicast configuration"
+    default y
+    depends on LWIP_IPV6
+    help
+        Enable the option can enable LWIP socket IPv6 multicast configuration.
+
 config LWIP_SOCKET_MULTITHREAD
     bool "LWIP socket supports multithread"
     default y
@@ -221,6 +228,24 @@ config LWIP_DHCP_AUTOIP_COOP_TRIES
         address very quickly, but you should be prepared to handle a
         changing IP address when DHCP overrides AutoIP."
 
+config LWIP_AUTOIP_MAX_CONFLICTS
+    int "Max IP conflicts before rate limiting"
+    range 1 100
+    default 9
+    depends on LWIP_AUTOIP
+    help
+        If the AUTOIP functionality detects this many IP conflicts while
+        self-assigning an address, it will go into a rate limited mode.
+
+config LWIP_AUTOIP_RATE_LIMIT_INTERVAL
+    int "Rate limited interval (seconds)"
+    range 5 120
+    default 20
+    depends on LWIP_AUTOIP
+    help
+        If rate limiting self-assignment requests, wait this long between
+        each request.
+
 config LWIP_IGMP
     bool "Enable IGMP module"
     default y
@@ -325,7 +350,7 @@ config TCP_SND_BUF_DEFAULT
 config TCP_WND_DEFAULT
     int "Default receive window size"
     default 5840 # 4 * default MSS
-    range 2920 11680
+    range 2920 14600
     help
         Set default TCP receive window size for new TCP sockets.
 
