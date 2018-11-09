@@ -15,6 +15,8 @@
 #include <string.h>
 
 #include "spi_flash.h"
+#include "driver/spi_register.h"
+#include "esp8266/pin_mux_register.h"
 #include "priv/esp_spi_flash_raw.h"
 
 #include "esp_attr.h"
@@ -43,9 +45,15 @@
 #define SPI_FLASH_RDSR2      0x35
 #define SPI_FLASH_PROTECT_STATUS                (BIT(2)|BIT(3)|BIT(4)|BIT(5)|BIT(6)|BIT(14))
 
+#ifndef BOOTLOADER_BUILD
 #define FLASH_INTR_DECLARE(t)
 #define FLASH_INTR_LOCK(t)                      vPortEnterCritical()
 #define FLASH_INTR_UNLOCK(t)                    vPortExitCritical()
+#else
+#define FLASH_INTR_DECLARE(t)
+#define FLASH_INTR_LOCK(t)
+#define FLASH_INTR_UNLOCK(t)
+#endif
 
 #define FLASH_ALIGN_BYTES                       4
 #define FLASH_ALIGN(addr)                       ((((size_t)addr) + (FLASH_ALIGN_BYTES - 1)) & (~(FLASH_ALIGN_BYTES - 1)))
@@ -61,7 +69,7 @@ extern void vPortExitCritical(void);
 
 esp_spi_flash_chip_t flashchip = {
     0x1640ef,
-    (32 / 8) * 1024 * 1024,
+    CONFIG_SPI_FLASH_SIZE,
     64 * 1024,
     4 * 1024,
     256,
@@ -719,4 +727,34 @@ esp_err_t spi_flash_erase_range(size_t start_address, size_t size)
     } while (ret == ESP_OK && --num);
 
     return ret;
+}
+
+void esp_spi_flash_init(uint32_t spi_speed, uint32_t spi_mode)
+{
+    uint32_t freqdiv, freqbits;
+
+    SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_USRREG, BIT5);
+
+    if (spi_speed < 3)
+        freqdiv = spi_speed + 2;
+    else if (0x0F == spi_speed)
+        freqdiv = 1;
+    else
+        freqdiv = 2;
+
+    if (1 >= freqdiv) {
+        freqbits = SPI_FLASH_CLK_EQU_SYSCLK;
+        SET_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL, SPI_FLASH_CLK_EQU_SYSCLK);
+        SET_PERI_REG_MASK(PERIPHS_IO_MUX_CONF_U, SPI0_CLK_EQU_SYSCLK);
+    } else {
+        freqbits = ((freqdiv - 1) << 8) + ((freqdiv / 2 - 1) << 4) + (freqdiv - 1);
+        CLEAR_PERI_REG_MASK(PERIPHS_SPI_FLASH_CTRL, SPI_FLASH_CLK_EQU_SYSCLK);
+        CLEAR_PERI_REG_MASK(PERIPHS_IO_MUX_CONF_U, SPI0_CLK_EQU_SYSCLK);
+    }
+    SET_PERI_REG_BITS(PERIPHS_SPI_FLASH_CTRL, 0xfff, freqbits, 0);      
+
+#ifndef CONFIG_FLASHMODE_SWITCH_TO_QIO
+    if (spi_mode == 0)
+#endif
+        user_spi_flash_dio_to_qio_pre_init();
 }

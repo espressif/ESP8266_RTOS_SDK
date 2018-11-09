@@ -1,4 +1,15 @@
 menu "Bootloader config"
+
+config BOOTLOADER_INIT_SPI_FLASH
+    bool "Bootloader init SPI flash"
+    default y
+    help
+        Enable this option, software will initialize SPI flash clock and I/O mode at bootloader instead of at APP.
+        So it will speed up system starting and reduce the time cost at loading firmware.
+
+        If your system bootloader is based on v3.0, the option must not be enable, because the v3.0 bootloader don't support
+        this function.
+
 choice LOG_BOOTLOADER_LEVEL
    bool "Bootloader log verbosity"
    default LOG_BOOTLOADER_LEVEL_INFO
