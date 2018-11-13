@@ -61,9 +61,6 @@
 #define NOT_ALIGN(addr)                         (((size_t)addr) & (FLASH_ALIGN_BYTES - 1))
 #define IS_ALIGN(addr)                          (NOT_ALIGN(addr) == 0)
 
-extern void pp_soft_wdt_stop(void);
-extern void pp_soft_wdt_restart(void);
-
 extern void vPortEnterCritical(void);
 extern void vPortExitCritical(void);
 
@@ -464,13 +461,11 @@ esp_err_t spi_flash_erase_sector(size_t sec)
     }
 
     FLASH_INTR_LOCK(c_tmp);
-    pp_soft_wdt_stop();
     FlashIsOnGoing = 1;
     
     ret = spi_flash_erase_sector_raw(&flashchip, sec, flashchip.sector_size);
 
     FlashIsOnGoing = 0;
-    pp_soft_wdt_restart();
     FLASH_INTR_UNLOCK(c_tmp);
 
     return ret;
@@ -520,13 +515,11 @@ static esp_err_t __spi_flash_write(size_t dest_addr, const void *src, size_t siz
     FLASH_INTR_DECLARE(c_tmp);
 
     FLASH_INTR_LOCK(c_tmp);
-    pp_soft_wdt_stop();
     FlashIsOnGoing = 1;
 
     ret = spi_flash_program(dest_addr, (uint32_t *)src, size);
 
     FlashIsOnGoing = 0;
-    pp_soft_wdt_restart();
     FLASH_INTR_UNLOCK(c_tmp);
 
     return ret;
@@ -624,13 +617,11 @@ static esp_err_t __spi_flash_read(size_t src_addr, void *dest, size_t size)
     FLASH_INTR_DECLARE(c_tmp);
 
     FLASH_INTR_LOCK(c_tmp);
-    pp_soft_wdt_stop();
     FlashIsOnGoing = 1;
 
     ret = spi_flash_read_raw(&flashchip, src_addr, dest, size);
 
     FlashIsOnGoing = 0;
-    pp_soft_wdt_restart();
     FLASH_INTR_UNLOCK(c_tmp);
 
     return ret == 0 ? ESP_OK : ESP_ERR_FLASH_OP_FAIL;
