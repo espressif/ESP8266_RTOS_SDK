@@ -1,22 +1,23 @@
 Build System
 ************
 
-This document explains the Espressif IoT Development Framework build system and the
+This document explains the Espressif IoT Development Framework (ESP-IDF) build system and the
 concept of "components"
 
-Read this document if you want to know how to organise a new ESP-IDF project.
+Read this document if you want to know how to organise a new ESP8266\_RTOS\
+-SDK (ESP-IDF Style) project.
 
 We recommend using the project_template project at directory of examples/get-started as a starting point for your project.
 
 Using the Build System
 ======================
 
-The esp-idf README file contains a description of how to use the build system to build your project.
+The ESP8266_RTOS_SDK README file contains a description of how to use the build system to build your project.
 
 Overview
 ========
 
-An ESP-IDF project can be seen as an amalgamation of a number of components.
+An ESP8266_RTOS_SDK project can be seen as an amalgamation of a number of components.
 For example, for a http request example that shows the current humidity, there could be:
 
 - The SoC base libraries (libc, rom bindings etc)
@@ -25,11 +26,11 @@ For example, for a http request example that shows the current humidity, there c
 - The FreeRTOS operating system
 - Main code tying it all together
 
-ESP-IDF makes these components explicit and configurable. To do that,
+ESP8266_RTOS_SDK makes these components explicit and configurable. To do that,
 when a project is compiled, the build environment will look up all the
 components in the SDK directories, the project directories and
 (optionally) in additional custom component directories. It then
-allows the user to configure the ESP-IDF project using a a text-based
+allows the user to configure the ESP8266_RTOS_SDK project using a a text-based
 menu system to customize each component. After the components in the
 project are configured, the build process will compile the project.
 
@@ -40,13 +41,13 @@ Concepts
 
 - "Project configuration" is held in a single file called sdkconfig in the root directory of the project. This configuration file is modified via ``make menuconfig`` to customise the configuration of the project. A single project contains exactly one project configuration.
 
-- An "app" is an executable which is built by esp-idf. A single project will usually build two apps - a "project app" (the main executable, ie your custom firmware) and a "bootloader app" (the initial bootloader program which launches the project app).
+- An "app" is an executable which is built by ESP8266_RTOS_SDK. A single project will usually build two apps - a "project app" (the main executable, ie your custom firmware) and a "bootloader app" (the initial bootloader program which launches the project app).
 
-- "components" are modular pieces of standalone code which are compiled into static libraries (.a files) and linked into an app. Some are provided by esp-idf itself, others may be sourced from other places.
+- "components" are modular pieces of standalone code which are compiled into static libraries (.a files) and linked into an app. Some are provided by ESP8266_RTOS_SDK itself, others may be sourced from other places.
 
 Some things are not part of the project:
 
-- "ESP-IDF" is not part of the project. Instead it is standalone, and linked to the project via the ``IDF_PATH`` environment variable which holds the path of the ``esp-idf`` directory. This allows the IDF framework to be decoupled from your project.
+- "ESP8266_RTOS_SDK" is not part of the project. Instead it is standalone, and linked to the project via the ``IDF_PATH`` environment variable which holds the path of the ``ESP8266_RTOS_SDK`` directory. This allows the IDF framework to be decoupled from your project.
 
 - The toolchain for compilation is not part of the project. The toolchain should be installed in the system command line PATH, or the path to the toolchain can be set as part of the compiler prefix in the project configuration.
 
@@ -76,11 +77,11 @@ This example "myProject" contains the following elements:
 
 - A top-level project Makefile. This Makefile set the ``PROJECT_NAME`` variable and (optionally) defines
   other project-wide make variables. It includes the core ``$(IDF_PATH)/make/project.mk`` makefile which
-  implements the rest of the ESP-IDF build system.
+  implements the rest of the ESP8266_RTOS_SDK build system.
 
-- "sdkconfig" project configuration file. This file is created/updated when "make menuconfig" runs, and holds configuration for all of the components in the project (including esp-idf itself). The "sdkconfig" file may or may not be added to the source control system of the project.
+- "sdkconfig" project configuration file. This file is created/updated when "make menuconfig" runs, and holds configuration for all of the components in the project (including ESP8266_RTOS_SDK itself). The "sdkconfig" file may or may not be added to the source control system of the project.
 
-- Optional "components" directory contains components that are part of the project. A project does not have to contain custom components of this kind, but it can be useful for structuring reusable code or including third party components that aren't part of ESP-IDF.
+- Optional "components" directory contains components that are part of the project. A project does not have to contain custom components of this kind, but it can be useful for structuring reusable code or including third party components that aren't part of ESP8266_RTOS_SDK.
 
 - "main" directory is a special "pseudo-component" that contains source code for the project itself. "main" is a default name, the Makefile variable ``COMPONENT_DIRS`` includes this component but you can modify this variable (or set ``EXTRA_COMPONENT_DIRS``) to look for components in other places.
 
@@ -130,7 +131,7 @@ These variables should all be set before the line ``include $(IDF_PATH)/make/pro
 Component Makefiles
 -------------------
 
-Each project contains one or more components, which can either be part of esp-idf or added from other component directories.
+Each project contains one or more components, which can either be part of ESP8266_RTOS_SDK or added from other component directories.
 
 A component is any directory that contains a ``component.mk`` file.
 
@@ -144,11 +145,11 @@ Running the ``make list-components`` target dumps many of these variables and ca
 Multiple components with the same name
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When esp-idf is collecting all the components to compile, it will do this in the order specified by ``COMPONENT_DIRS``; by default, this means the 
+When ESP8266_RTOS_SDK is collecting all the components to compile, it will do this in the order specified by ``COMPONENT_DIRS``; by default, this means the 
 idf components first, the project components second and optionally the components in ``EXTRA_COMPONENT_DIRS`` last. If two or more of these directories
-contain component subdirectories with the same name, the component in the last place searched is used. This allows, for example, overriding esp-idf components 
-with a modified version by simply copying the component from the esp-idf component directory to the project component tree and then modifying it there. 
-If used in this way, the esp-idf directory itself can remain untouched.
+contain component subdirectories with the same name, the component in the last place searched is used. This allows, for example, overriding ESP8266_RTOS_SDK components 
+with a modified version by simply copying the component from the ESP8266_RTOS_SDK component directory to the project component tree and then modifying it there. 
+If used in this way, the ESP8266_RTOS_SDK directory itself can remain untouched.
 
 Minimal Component Makefile
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -183,7 +184,7 @@ The following variables are set at the project level, but exported for use in th
 - ``CONFIG_*``: Each value in the project configuration has a corresponding variable available in make. All names begin with ``CONFIG_``.
 - ``CC``, ``LD``, ``AR``, ``OBJCOPY``: Full paths to each tool from the gcc xtensa cross-toolchain.
 - ``HOSTCC``, ``HOSTLD``, ``HOSTAR``: Full names of each tool from the host native toolchain.
-- ``IDF_VER``: ESP-IDF version, retrieved from either ``$(IDF_PATH)/version.txt`` file (if present) else using git command ``git describe``. Recommended format here is single liner that specifies major IDF release version, e.g. ``v2.0`` for a tagged release or ``v2.0-275-g0efaa4f`` for an arbitrary commit. Application can make use of this by calling :cpp:func:`esp_get_idf_version`.
+- ``IDF_VER``: ESP8266_RTOS_SDK version, retrieved from either ``$(IDF_PATH)/version.txt`` file (if present) else using git command ``git describe``. Recommended format here is single liner that specifies major IDF release version, e.g. ``v2.0`` for a tagged release or ``v2.0-275-g0efaa4f`` for an arbitrary commit. Application can make use of this by calling :cpp:func:`esp_get_idf_version`.
 
 If you modify any of these variables inside ``component.mk`` then this will not prevent other components from building but it may make your component hard to build and/or debug.
 
@@ -211,7 +212,7 @@ The following variables can be set inside ``component.mk`` to control build sett
   Typically used for linker script files and binary libraries. Most components do
   not need to set this variable.
 
-The following variable only works for components that are part of esp-idf itself:
+The following variable only works for components that are part of ESP8266_RTOS_SDK itself:
 
 - ``COMPONENT_SUBMODULES``: Optional list of git submodule paths
   (relative to COMPONENT_PATH) used by the component. These will be
@@ -286,17 +287,17 @@ configuration settings to add to the "make menuconfig" for this component.
 
 These settings are found under the "Component Settings" menu when menuconfig is run.
 
-To create a component KConfig file, it is easiest to start with one of the KConfig files distributed with esp-idf.
+To create a component KConfig file, it is easiest to start with one of the KConfig files distributed with ESP8266_RTOS_SDK.
 
 For an example, see `Adding conditional configuration`_.
 
 Preprocessor Definitions
 ------------------------
 
-ESP-IDF build systems adds the following C preprocessor definitions on the command line:
+ESP8266_RTOS_SDK build systems adds the following C preprocessor definitions on the command line:
 
-- ``ESP_PLATFORM`` — Can be used to detect that build happens within ESP-IDF.
-- ``IDF_VER`` — ESP-IDF version, see `Preset Component Variables`_ for more details.
+- ``ESP_PLATFORM`` — Can be used to detect that build happens within ESP8266_RTOS_SDK.
+- ``IDF_VER`` — ESP8266_RTOS_SDK version, see `Preset Component Variables`_ for more details.
 
 Build Process Internals
 -----------------------
@@ -326,7 +327,7 @@ Second Level: Component Makefiles
 - If ``COMPONENT_OWNBUILDTARGET`` and ``COMPONENT_OWNCLEANTARGET`` are not defined, default build and clean targets are created for the component's source files and the prerequisite ``COMPONENT_LIBRARY`` static library file.
 - The ``component_project_vars.mk`` file has its own target in ``component_wrapper.mk``, which is evaluated from ``project.mk`` if this file needs to be rebuilt due to changes in the component makefile or the project configuration.
 
-To better understand the component make process, have a read through the ``component_wrapper.mk`` file and some of the ``component.mk`` files included with esp-idf.
+To better understand the component make process, have a read through the ``component_wrapper.mk`` file and some of the ``component.mk`` files included with ESP8266_RTOS_SDK.
 
 Running Make Non-Interactively
 ------------------------------
@@ -336,13 +337,13 @@ When running ``make`` in a situation where you don't want interactive prompts (f
 Setting ``BATCH_BUILD`` implies the following:
 
 - Verbose output (same as ``V=1``, see below). If you don't want verbose output, also set ``V=0``.
-- If the project configuration is missing new configuration items (from new components or esp-idf updates) then the project use the default values, instead of prompting the user for each item.
+- If the project configuration is missing new configuration items (from new components or ESP8266_RTOS_SDK updates) then the project use the default values, instead of prompting the user for each item.
 - If the build system needs to invoke ``menuconfig``, an error is printed and the build fails.
 
 Debugging The Make Process
 --------------------------
 
-Some tips for debugging the esp-idf build system:
+Some tips for debugging the ESP8266_RTOS_SDK build system:
 
 - Appending ``V=1`` to the make arguments (or setting it as an environment variable) will cause make to echo all commands executed, and also each directory as it is entered for a sub-make.
 - Running ``make -w`` will cause make to echo each directory as it is entered for a sub-make - same as ``V=1`` but without also echoing all commands.
@@ -376,7 +377,7 @@ For example, if your component needs to add to CFLAGS for the entire
 project (not just for its own source files) then you can set
 ``CFLAGS +=`` in Makefile.projbuild.
 
-``Makefile.projbuild`` files are used heavily inside esp-idf, for defining project-wide build features such as ``esptool.py`` command line arguments and the ``bootloader`` "special app".
+``Makefile.projbuild`` files are used heavily inside ESP8266_RTOS_SDK, for defining project-wide build features such as ``esptool.py`` command line arguments and the ``bootloader`` "special app".
 
 Note that ``Makefile.projbuild`` isn't necessary for the most common component uses - such as adding include directories to the project, or LDFLAGS to the final linking step. These values can be customised via the ``component.mk`` file itself. See `Optional Project-Wide Component Variables`_ for details.
 
@@ -443,7 +444,7 @@ Adding conditional configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The configuration system can be used to conditionally compile some files
-depending on the options selected in ``make menuconfig``. For this, ESP-IDF
+depending on the options selected in ``make menuconfig``. For this, ESP8266_RTOS_SDK
 has the compile_only_if and compile_only_if_not macros:
 
 ``Kconfig``::
@@ -498,7 +499,7 @@ This can also be used to select or stub out an implementation, as such:
 
 Note the use of the Make 'or' function to include the font file. Other substitution functions,
 like 'and' and 'if' will also work here. Variables that do not come from menuconfig can also 
-be used: ESP-IDF uses the default Make policy of judging a variable which is empty or contains 
+be used: ESP8266_RTOS_SDK uses the default Make policy of judging a variable which is empty or contains 
 only whitespace to be false while a variable with any non-whitespace in it is true.
 
 (Note: Older versions of this document advised conditionally adding object file names to
@@ -575,7 +576,7 @@ Obviously, there are cases where all these recipes are insufficient for a
 certain component, for example when the component is basically a wrapper
 around another third-party component not originally intended to be
 compiled under this build system. In that case, it's possible to forego
-the esp-idf build system entirely by setting COMPONENT_OWNBUILDTARGET and
+the ESP8266_RTOS_SDK build system entirely by setting COMPONENT_OWNBUILDTARGET and
 possibly  COMPONENT_OWNCLEANTARGET and defining your own targets named ``build`` and ``clean`` in ``component.mk``
 target. The build target can do anything as long as it creates
 $(COMPONENT_LIBRARY) for the project make process to link into the app binary.
@@ -592,7 +593,7 @@ is overridden then the component can instruct the linker to link other binaries 
 Custom sdkconfig defaults
 -------------------------
 
-For example projects or other projects where you don't want to specify a full sdkconfig configuration, but you do want to override some key values from the esp-idf defaults, it is possible to create a file ``sdkconfig.defaults`` in the project directory. This file will be used when running ``make defconfig``, or creating a new config from scratch.
+For example projects or other projects where you don't want to specify a full sdkconfig configuration, but you do want to override some key values from the ESP8266_RTOS_SDK defaults, it is possible to create a file ``sdkconfig.defaults`` in the project directory. This file will be used when running ``make defconfig``, or creating a new config from scratch.
 
 To override the name of this file, set the ``SDKCONFIG_DEFAULTS`` environment variable.
 

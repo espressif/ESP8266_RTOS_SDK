@@ -60,7 +60,7 @@ def main():
             unpack_cmd = p[2]
             unpack_code = p[3]
 
-            archive_name = 'xtensa-esp32-elf-{}-{}-{}.{}'.format(
+            archive_name = 'xtensa-lx106-elf-{}-{}-{}.{}'.format(
                     platform_name, toolchain_desc, gcc_version, extension)
             
             print('.. |download_link_{}| replace:: {}{}'.format(

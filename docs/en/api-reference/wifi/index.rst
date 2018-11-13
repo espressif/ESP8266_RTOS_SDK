@@ -6,7 +6,6 @@ Wi-Fi API
 
    Wi-Fi <esp_wifi>
    Smart Config <esp_smartconfig>
-   ESPNOW <esp_now>
 
 
-Example code for this API section is provided in :example:`wifi` directory of ESP-IDF examples.
+Example code for this API section is provided in :example:`wifi` directory of SDK examples.

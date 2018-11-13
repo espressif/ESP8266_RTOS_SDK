@@ -1,18 +1,17 @@
 ********************************
 Build and Flash with Eclipse IDE
 ********************************
-:link_to_translation:`zh_CN:[中文]`
 
 .. _eclipse-install-steps:
 
 Installing Eclipse IDE
 ======================
 
-The Eclipse IDE gives you a graphical integrated development environment for writing, compiling and debugging ESP-IDF projects.
+The Eclipse IDE gives you a graphical integrated development environment for writing, compiling and debugging ESP8266_RTOS_SDK projects.
 
-* Start by installing the esp-idf for your platform (see files in this directory with steps for Windows, OS X, Linux).
+* Start by installing the ESP8266_RTOS_SDK for your platform (see files in this directory with steps for Windows, OS X, Linux).
 
-* We suggest building a project from the command line first, to get a feel for how that process works. You also need to use the command line to configure your esp-idf project (via ``make menuconfig``), this is not currently supported inside Eclipse.
+* We suggest building a project from the command line first, to get a feel for how that process works. You also need to use the command line to configure your ESP8266_RTOS_SDK project (via ``make menuconfig``), this is not currently supported inside Eclipse.
 
 * Download the Eclipse Installer for your platform from eclipse.org_.
 
@@ -21,7 +20,7 @@ The Eclipse IDE gives you a graphical integrated development environment for wri
 Windows Users
 =============
 
-Using ESP-IDF with Eclipse on Windows requires different configuration steps. :ref:`See the Eclipse IDE on Windows guide <eclipse-windows-setup>`.
+Using ESP8266_RTOS_SDK with Eclipse on Windows requires different configuration steps. :ref:`See the Eclipse IDE on Windows guide <eclipse-windows-setup>`.
 
 Setting up Eclipse
 ==================
@@ -31,13 +30,13 @@ Once your new Eclipse installation launches, follow these steps:
 Import New Project
 ------------------
 
-* Eclipse makes use of the Makefile support in ESP-IDF. This means you need to start by creating an ESP-IDF project. You can use the idf-template project from github, or open one of the examples in the esp-idf examples subdirectory.
+* Eclipse makes use of the Makefile support in ESP8266_RTOS_SDK. This means you need to start by creating an ESP8266_RTOS_SDK project. You can use the idf-template project from github, or open one of the examples in the ESP8266_RTOS_SDK examples subdirectory.
 
 * Once Eclipse is running, choose File -> Import...
 
 * In the dialog that pops up, choose "C/C++" -> "Existing Code as Makefile Project" and click Next.
 
-* On the next page, enter "Existing Code Location" to be the directory of your IDF project. Don't specify the path to the ESP-IDF directory itself (that comes later). The directory you specify should contain a file named "Makefile" (the project Makefile).
+* On the next page, enter "Existing Code Location" to be the directory of your ESP8266_RTOS_SDK project. Don't specify the path to the ESP8266_RTOS_SDK directory itself (that comes later). The directory you specify should contain a file named "Makefile" (the project Makefile).
 
 * On the same page, under "Toolchain for Indexer Settings" choose "Cross GCC". Then click Finish.
 
@@ -49,9 +48,9 @@ Project Properties
 
 * Click on the "Environment" properties page under "C/C++ Build". Click "Add..." and enter name ``BATCH_BUILD`` and value ``1``.
 
-* Click "Add..." again, and enter name ``IDF_PATH``. The value should be the full path where ESP-IDF is installed.
+* Click "Add..." again, and enter name ``IDF_PATH``. The value should be the full path where ESP8266_RTOS_SDK is installed.
 
-* Edit the ``PATH`` environment variable. Keep the current value, and append the path to the Xtensa toolchain installed as part of IDF setup, if this is not already listed on the PATH. A typical path to the toolchain looks like ``/home/user-name/esp/xtensa-esp32-elf/bin``. Note that you need to add a colon ``:`` before the appended path.
+* Edit the ``PATH`` environment variable. Keep the current value, and append the path to the Xtensa toolchain installed as part of ESP8266_RTOS_SDK setup, if this is not already listed on the PATH. A typical path to the toolchain looks like ``/home/user-name/esp/xtensa-lx106-elf/bin``. Note that you need to add a colon ``:`` before the appended path.
 
 * On macOS, add a ``PYTHONPATH`` environment variable and set it to ``/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages``. This is so that the system Python, which has pyserial installed as part of the setup steps, overrides any built-in Eclipse Python.
 
@@ -59,9 +58,9 @@ Navigate to "C/C++ General" -> "Preprocessor Include Paths" property page:
 
 * Click the "Providers" tab
 
-* In the list of providers, click "CDT Cross GCC Built-in Compiler Settings". Change "Command to get compiler specs" to ``xtensa-esp32-elf-gcc ${FLAGS} -std=c++11 -E -P -v -dD "${INPUTS}"``.
+* In the list of providers, click "CDT Cross GCC Built-in Compiler Settings". Change "Command to get compiler specs" to ``xtensa-lx106-elf-gcc ${FLAGS} -E -P -v -dD "${INPUTS}"``.
 
-* In the list of providers, click "CDT GCC Build Output Parser" and change the "Compiler command pattern" to ``xtensa-esp32-elf-(gcc|g\+\+|c\+\+|cc|cpp|clang)``
+* In the list of providers, click "CDT GCC Build Output Parser" and change the "Compiler command pattern" to ``xtensa-lx106-elf-(gcc|g\+\+|c\+\+|cc|cpp|clang)``
 
 Navigate to "C/C++ General" -> "Indexer" property page:
 
@@ -78,13 +77,13 @@ Navigate to "C/C++ Build" -> "Behavior" property page:
 Building in Eclipse
 -------------------
 
-Before your project is first built, Eclipse may show a lot of errors and warnings about undefined values. This is because some source files are automatically generated as part of the esp-idf build process. These errors and warnings will go away after you build the project.
+Before your project is first built, Eclipse may show a lot of errors and warnings about undefined values. This is because some source files are automatically generated as part of the ESP8266_RTOS_SDK build process. These errors and warnings will go away after you build the project.
 
 * Click OK to close the Properties dialog in Eclipse.
 
-* Outside Eclipse, open a command line prompt. Navigate to your project directory, and run ``make menuconfig`` to configure your project's esp-idf settings. This step currently has to be run outside Eclipse.
+* Outside Eclipse, open a command line prompt. Navigate to your project directory, and run ``make menuconfig`` to configure your project's ESP8266_RTOS_SDK settings. This step currently has to be run outside Eclipse.
 
-*If you try to build without running a configuration step first, esp-idf will prompt for configuration on the command line - but Eclipse is not able to deal with this, so the build will hang or fail.*
+*If you try to build without running a configuration step first, ESP8266_RTOS_SDKf will prompt for configuration on the command line - but Eclipse is not able to deal with this, so the build will hang or fail.*
 
 * Back in Eclipse, choose Project -> Build to build your project.
 

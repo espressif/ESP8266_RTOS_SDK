@@ -142,8 +142,8 @@ seqdiag_antialias = True
 # Doxygen regenerates files in 'xml/' directory every time,
 # but we copy files to 'xml_in/' only when they change, to speed up
 # incremental builds.
-breathe_projects = { "esp32-idf": "xml_in/" }
-breathe_default_project = "esp32-idf"
+breathe_projects = { "ESP8266_RTOS_SDK": "xml_in/" }
+breathe_default_project = "ESP8266_RTOS_SDK"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -316,8 +316,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'ReadtheDocsTemplate.tex', u'Read the Docs Template Documentation',
-   u'Read the Docs', 'manual'),
+  ('index', 'ReadtheDocsTemplate.tex', u'ESP8266 RTOS SDK User Manual',
+   u'', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -346,8 +346,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'readthedocstemplate', u'Read the Docs Template Documentation',
-     [u'Read the Docs'], 1)
+    ('index', 'readthedocstemplate', u'ESP8266 RTOS SDK User Manual',
+     [u''], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -360,8 +360,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'ReadtheDocsTemplate', u'Read the Docs Template Documentation',
-   u'Read the Docs', 'ReadtheDocsTemplate', 'One line description of project.',
+  ('index', 'ReadtheDocsTemplate', u'ESP8266 RTOS SDK User Manual',
+   u'', 'ReadtheDocsTemplate', 'One line description of project.',
    'Miscellaneous'),
 ]
 

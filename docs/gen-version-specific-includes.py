@@ -16,12 +16,12 @@ TEMPLATES = {
     "en" : {
         "git-clone" : {
             "template" : """
-To obtain a local copy: open terminal, navigate to the directory you want to put ESP-IDF, and clone the repository using ``git clone`` command::
+To obtain a local copy: open terminal, navigate to the directory you want to put ESP8266_RTOS_SDK, and clone the repository using ``git clone`` command::
 
     cd ~/esp
-    git clone %(clone_args)s--recursive https://github.com/espressif/esp-idf.git
+    git clone %(clone_args)s--recursive https://github.com/espressif/ESP8266_RTOS_SDK.git
 
-ESP-IDF will be downloaded into ``~/esp/esp-idf``.
+ESP8266_RTOS_SDK will be downloaded into ``~/esp/ESP8266_RTOS_SDK``.
 
 .. note::
 
@@ -31,37 +31,37 @@ ESP-IDF will be downloaded into ``~/esp/esp-idf``.
 
     %(zipfile_note)s
 """
-            ,"master" : 'This command will clone the master branch, which has the latest development ("bleeding edge") version of ESP-IDF. It is fully functional and updated on weekly basis with the most recent features and bugfixes.'
-            ,"branch" : 'The ``git clone`` option ``-b %(clone_arg)s`` tells git to clone the %(ver_type)s in the ESP-IDF repository corresponding to this version of the documentation.'
+            ,"master" : 'This command will clone the master branch, which has the latest development ("bleeding edge") version of ESP8266_RTOS_SDK. It is fully functional and updated on weekly basis with the most recent features and bugfixes.'
+            ,"branch" : 'The ``git clone`` option ``-b %(clone_arg)s`` tells git to clone the %(ver_type)s in the ESP8266_RTOS_SDK repository corresponding to this version of the documentation.'
             ,"zipfile" : {
-                "stable" : 'As a fallback, it is also possible to download a zip file of this stable release from the `Releases page`_. Do not download the "Source code" zip file(s) generated automatically by GitHub, they do not work with ESP-IDF.'
-                ,"unstable" : 'GitHub\'s "Download zip file" feature does not work with ESP-IDF, a ``git clone`` is required. As a fallback, `Stable version`_ can be installed without Git.'
+                "stable" : 'As a fallback, it is also possible to download a zip file of this stable release from the `Releases page`_. Do not download the "Source code" zip file(s) generated automatically by GitHub, they do not work with ESP8266_RTOS_SDK.'
+                ,"unstable" : 'GitHub\'s "Download zip file" feature does not work with ESP8266_RTOS_SDK, a ``git clone`` is required. As a fallback, `Stable version`_ can be installed without Git.'
                 },  # zipfile
             },  # git-clone
         "version-note" : {
             "master" : """
 .. note::
-     This is documentation for the master branch (latest version) of ESP-IDF. This version is under continual development. `Stable version`_ documentation is available, as well as other :doc:`/versions`.
+     This is documentation for the master branch (latest version) of ESP8266_RTOS_SDK. This version is under continual development. `Stable version`_ documentation is available, as well as other :doc:`/versions`.
 """
             ,"stable" : """
 .. note::
-     This is documentation for stable version %s of ESP-IDF. Other :doc:`/versions` are also available.
+     This is documentation for stable version %s of ESP8266_RTOS_SDK. Other :doc:`/versions` are also available.
 """
             ,"branch" : """
 .. note::
-     This is documentation for %s ``%s`` of ESP-IDF. Other :doc:`/versions` are also available.
+     This is documentation for %s ``%s`` of ESP8266_RTOS_SDK. Other :doc:`/versions` are also available.
 """
             },  # version-note
     }, # en
     "zh_CN" : {
         "git-clone" : {
             "template" : """
-获取本地副本：打开终端，切换到你要存放 ESP-IDF 的工作目录，使用 ``git clone`` 命令克隆远程仓库::
+获取本地副本：打开终端，切换到你要存放 ESP8266_RTOS_SDK 的工作目录，使用 ``git clone`` 命令克隆远程仓库::
 
     cd ~/esp
-    git clone %(clone_args)s--recursive https://github.com/espressif/esp-idf.git
+    git clone %(clone_args)s--recursive https://github.com/espressif/ESP8266_RTOS_SDK.git
 
-ESP-IDF 将会被下载到 ``~/esp/esp-idf`` 目录下。
+ESP8266_RTOS_SDK 将会被下载到 ``~/esp/ESP8266_RTOS_SDK`` 目录下。
 
 .. note::
 
@@ -71,26 +71,26 @@ ESP-IDF 将会被下载到 ``~/esp/esp-idf`` 目录下。
 
     %(zipfile_note)s
 """
-            ,"master" : '此命令将克隆 master 分支，该分支保存着 ESP-IDF 的最新版本，它功能齐全，每周都会更新一些新功能并修正一些错误。'
-            ,"branch" : '``git clone`` 命令的 ``-b %(clone_arg)s`` 选项告诉 git 从 ESP-IDF 仓库中克隆与此版本的文档对应的分支。'
+            ,"master" : '此命令将克隆 master 分支，该分支保存着 ESP8266_RTOS_SDK 的最新版本，它功能齐全，每周都会更新一些新功能并修正一些错误。'
+            ,"branch" : '``git clone`` 命令的 ``-b %(clone_arg)s`` 选项告诉 git 从 ESP8266_RTOS_SDK 仓库中克隆与此版本的文档对应的分支。'
             ,"zipfile" : {
-                "stable" : '作为备份，还可以从 `Releases page`_ 下载此稳定版本的 zip 文件。不要下载由 GitHub 自动生成的"源代码"的 zip 文件，它们不适用于 ESP-IDF。'
-                ,"unstable" : 'GitHub 中"下载 zip 文档"的功能不适用于 ESP-IDF，所以需要使用 ``git clone`` 命令。作为备份，可以在没有安装 Git 的环境中下载 `Stable version`_ 的 zip 归档文件。'
+                "stable" : '作为备份，还可以从 `Releases page`_ 下载此稳定版本的 zip 文件。不要下载由 GitHub 自动生成的"源代码"的 zip 文件，它们不适用于 ESP8266_RTOS_SDK。'
+                ,"unstable" : 'GitHub 中"下载 zip 文档"的功能不适用于 ESP8266_RTOS_SDK，所以需要使用 ``git clone`` 命令。作为备份，可以在没有安装 Git 的环境中下载 `Stable version`_ 的 zip 归档文件。'
                 },  # zipfile
             },  # git-clone
         "version-note" : {
             "master" : """
 .. note::
-     这是ESP-IDF master 分支（最新版本）的文档，该版本在持续开发中。还有 `Stable version`_ 的文档，以及其他版本的文档 :doc:`/versions` 供参考。
-     This is documentation for the master branch (latest version) of ESP-IDF. This version is under continual development. `Stable version`_ documentation is available, as well as other :doc:`/versions`.
+     这是ESP8266_RTOS_SDK master 分支（最新版本）的文档，该版本在持续开发中。还有 `Stable version`_ 的文档，以及其他版本的文档 :doc:`/versions` 供参考。
+     This is documentation for the master branch (latest version) of ESP8266_RTOS_SDK. This version is under continual development. `Stable version`_ documentation is available, as well as other :doc:`/versions`.
 """
             ,"stable" : """
 .. note::
-     这是ESP-IDF 稳定版本 %s 的文档，还有其他版本的文档 :doc:`/versions` 供参考。
+     这是ESP8266_RTOS_SDK 稳定版本 %s 的文档，还有其他版本的文档 :doc:`/versions` 供参考。
 """
             ,"branch" : """
 .. note::
-     这是ESP-IDF %s ``%s`` 版本的文档，还有其他版本的文档 :doc:`/versions` 供参考。
+     这是ESP8266_RTOS_SDK %s ``%s`` 版本的文档，还有其他版本的文档 :doc:`/versions` 供参考。
 """
             },  # version-note
     }# zh_CN

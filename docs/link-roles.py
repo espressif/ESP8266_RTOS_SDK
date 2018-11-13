@@ -20,7 +20,7 @@ def setup(app):
     rev = get_github_rev()
 
     # links to files or folders on the GitHub
-    baseurl = 'https://github.com/espressif/esp-idf'
+    baseurl = 'https://github.com/espressif/ESP8266_RTOS_SDK'
     app.add_role('idf', autolink('{}/tree/{}/%s'.format(baseurl, rev)))
     app.add_role('idf_file', autolink('{}/blob/{}/%s'.format(baseurl, rev)))
     app.add_role('idf_raw', autolink('{}/raw/{}/%s'.format(baseurl, rev)))
