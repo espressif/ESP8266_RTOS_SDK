@@ -28,7 +28,7 @@ before_script:
 
 .build_template: &build_template
   stage: build
-  image: $CI_DOCKER_REGISTRY/esp8266-ci-env$BOT_DOCKER_IMAGE_TAG
+  image: $CI_DOCKER_REGISTRY/esp8266-ci-env-new
   tags:
     - build
 

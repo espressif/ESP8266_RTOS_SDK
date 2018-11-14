@@ -22,6 +22,10 @@
 #include "lwip/netif.h"
 #include "lwip/tcpip.h"
 #include "lwip/dhcp.h"
+#if LWIP_IPV4 && LWIP_AUTOIP
+#include "lwip/autoip.h"
+#include "lwip/prot/autoip.h"
+#endif
 #include "lwip/ip_addr.h"
 #include "lwip/ip6_addr.h"
 #include "lwip/nd6.h"
@@ -189,10 +193,24 @@ void tcpip_adapter_init(void)
 static void tcpip_adapter_dhcpc_done(void *arg)
 {
     struct dhcp *clientdhcp = netif_dhcp_data(esp_netif[TCPIP_ADAPTER_IF_STA]) ;
+    struct netif *netif = esp_netif[TCPIP_ADAPTER_IF_STA];
+
+    if (!netif) {
+        ESP_LOGD(TAG, "null netif=%p", netif);
+        return;
+    }
+
+#if LWIP_IPV4 && LWIP_AUTOIP
+    struct autoip *autoip = netif_autoip_data(netif);
+#endif
 
     wifi_timer_stop(dhcp_check_timer, 0);
     if (netif_is_up(esp_netif[TCPIP_ADAPTER_IF_STA])) {
-        if (clientdhcp->state == DHCP_STATE_BOUND) {
+        if (clientdhcp->state == DHCP_STATE_BOUND
+#if LWIP_IPV4 && LWIP_AUTOIP
+            || (autoip && autoip->state == AUTOIP_STATE_ANNOUNCING)
+#endif
+        ) {
             /*send event here*/
             tcpip_adapter_dhcpc_cb(esp_netif[TCPIP_ADAPTER_IF_STA]);
             ESP_LOGD(TAG,"ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n", IP2STR(ip_2_ip4(&(esp_netif[0]->ip_addr))),

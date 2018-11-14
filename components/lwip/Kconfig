@@ -25,6 +25,14 @@ config LWIP_GLOBAL_DATA_LINK_IRAM
     help
         Link LWIP global data(.bss .data COMMON) from DRAM to IRAM.
 
+config TCPIP_RECVMBOX_SIZE
+    int "TCPIP task receive mail box size"
+    default 32
+    range 6 64
+    help
+        Set TCPIP task receive mail box size. Generally bigger value means higher throughput
+        but more memory. The value should be bigger than UDP/TCP mail box size.
+
 menu "ARP"
 
 config LWIP_ARP_TABLE_SIZE
