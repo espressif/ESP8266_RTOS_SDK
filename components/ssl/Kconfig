@@ -19,12 +19,29 @@ endchoice
 menu "mbedTLS"
     depends on SSL_USING_MBEDTLS
 
-config MBEDTLS_SSL_MAX_CONTENT_LEN
-    int "TLS maximum message content length"
+config MBEDTLS_SSL_OUT_CONTENT_LEN
+    int "TLS maximum OUTPUT message content length"
     default 4096
     range 512 16384
     help
-        Maximum TLS message length (in bytes) supported by mbedTLS.
+        Maximum TLS output message length (in bytes) supported by mbedTLS.
+        
+        You can set a lower value than 16384 bytes in order to save RAM. 
+        This is safe if the other end of the connection supports Maximum
+        Fragment Length Negotiation Extension (max_fragment_length,
+        see RFC6066) or you know for certain that it will never send a
+        message longer than a certain number of bytes.
+
+        If the value is set too low, symptoms are a failed TLS
+        handshake or a return value of MBEDTLS_ERR_SSL_INVALID_RECORD
+        (-0x7200).
+
+config MBEDTLS_SSL_IN_CONTENT_LEN
+    int "TLS maximum INPUT message content length"
+    default 4096
+    range 512 16384
+    help
+        Maximum TLS input message length (in bytes) supported by mbedTLS.
         
         16384 is the default and this value is required to comply
         fully with TLS standards.
