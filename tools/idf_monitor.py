@@ -83,6 +83,11 @@ MATCH_PCADDR = re.compile(r'0x4[0-9a-f]{7}', re.IGNORECASE)
 
 DEFAULT_TOOLCHAIN_PREFIX = "xtensa-esp32-elf-"
 
+def is_ascii(b):
+    if b > '\x7f':
+        return False
+    return True
+
 def get_time_stamp():
     ct = time.time()
     local_time = time.localtime(ct)
@@ -309,6 +314,8 @@ class Monitor(object):
         # this may need to be made more efficient, as it pushes out a byte
         # at a time to the console
         for b in data:
+            if is_ascii(b) == False:
+                continue
             if self.enable_time == 'y' and self.next_line == True:
                 self.console.write_bytes(get_time_stamp() + ":  ")
                 self.next_line = False
