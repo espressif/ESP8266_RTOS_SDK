@@ -7,6 +7,10 @@
  * See README for more details.
  */
 
+#include "sdkconfig.h"
+
+#ifndef CONFIG_ESP_AES
+
 #include "crypto/includes.h"
 
 #include "crypto/common.h"
@@ -68,3 +72,54 @@ int  aes_wrap(const u8 *kek, int n, const u8 *plain, u8 *cipher)
 
 	return 0;
 }
+#else
+#include <string.h>
+#include "esp_aes.h"
+
+int aes_wrap(const uint8_t *kek, int n, const uint8_t *plain, uint8_t *cipher)
+{
+	int ret;
+	uint8_t *a, *r, b[16];
+	esp_aes_t ctx;
+
+	a = cipher;
+	r = cipher + 8;
+
+	/* 1) Initialize variables. */
+	memset(a, 0xa6, 8);
+	memcpy(r, plain, 8 * n);
+
+	ret = esp_aes_set_encrypt_key(&ctx, kek, 128);
+	if (ret)
+		return ret;
+
+	/* 2) Calculate intermediate values.
+	 * For j = 0 to 5
+	 *     For i=1 to n
+	 *         B = AES(K, A | R[i])
+	 *         A = MSB(64, B) ^ t where t = (n*j)+i
+	 *         R[i] = LSB(64, B)
+	 */
+	for (int j = 0; j <= 5; j++) {
+		r = cipher + 8;
+		for (int i = 1; i <= n; i++) {
+			memcpy(b, a, 8);
+			memcpy(b + 8, r, 8);
+			esp_aes_encrypt_ecb(&ctx, b, b);
+			memcpy(a, b, 8);
+			a[7] ^= n * j + i;
+			memcpy(r, b + 8, 8);
+			r += 8;
+		}
+	}
+
+	/* 3) Output the results.
+	 *
+	 * These are already in @cipher due to the location of temporary
+	 * variables.
+	 */
+
+	return 0;
+}
+
+#endif /* CONFIG_ESP_AES */

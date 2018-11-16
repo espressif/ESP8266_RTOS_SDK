@@ -13,6 +13,10 @@
  * See README and COPYING for more details.
  */
 
+#include "sdkconfig.h"
+
+#ifndef CONFIG_ESP_AES
+
 #include "crypto/includes.h"
 
 #include "crypto/common.h"
@@ -78,3 +82,58 @@ aes_unwrap(const u8 *kek, int n, const u8 *cipher, u8 *plain)
 
 	return 0;
 }
+
+#else
+#include <string.h>
+#include "esp_aes.h"
+
+int aes_unwrap(const uint8_t *kek, int n, const uint8_t *cipher, uint8_t *plain)
+{
+	int ret;
+	uint8_t a[8], *r, b[16];
+	esp_aes_t ctx;
+
+	/* 1) Initialize variables. */
+	memcpy(a, cipher, 8);
+	r = plain;
+	memcpy(r, cipher + 8, 8 * n);
+
+	ret = esp_aes_set_decrypt_key(&ctx, kek, 128);
+	if (ret)
+		return ret;
+
+	/* 2) Compute intermediate values.
+	 * For j = 5 to 0
+	 *     For i = n to 1
+	 *         B = AES-1(K, (A ^ t) | R[i]) where t = n*j+i
+	 *         A = MSB(64, B)
+	 *         R[i] = LSB(64, B)
+	 */
+	for (int j = 5; j >= 0; j--) {
+		r = plain + (n - 1) * 8;
+		for (int i = n; i >= 1; i--) {
+			memcpy(b, a, 8);
+			b[7] ^= n * j + i;
+
+			memcpy(b + 8, r, 8);
+			esp_aes_decrypt_ecb(&ctx, b, b);
+			memcpy(a, b, 8);
+			memcpy(r, b + 8, 8);
+			r -= 8;
+		}
+	}
+
+	/* 3) Output results.
+	 *
+	 * These are already in @plain due to the location of temporary
+	 * variables. Just verify that the IV matches with the expected value.
+	 */
+	for (int i = 0; i < 8; i++) {
+		if (a[i] != 0xa6)
+			return -1;
+	}
+
+	return 0;
+}
+
+#endif /* CONFIG_ESP_AES */
