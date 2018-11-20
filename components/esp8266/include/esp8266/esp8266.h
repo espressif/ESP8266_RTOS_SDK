@@ -25,7 +25,7 @@
 #ifndef __ESP8266_H__
 #define __ESP8266_H__
 
-#include "ets_sys.h"
+#include "rom/ets_sys.h"
 #include "eagle_soc.h"
 #include "gpio_register.h"
 #include "pin_mux_register.h"
