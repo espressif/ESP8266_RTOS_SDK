@@ -49,6 +49,26 @@ config ESP_FILENAME_MACRO_NULL
     bool "null"
 endchoice
 
+config USING_NEW_ETS_VPRINTF
+    bool "Using new ets_vprintf instead of rom code"
+    default y
+    help
+        Enable this option, SDK will use new "ets_vprintf" function instead of old code "ets_vprintf" which is depend on ROM
+        code "ets_io_vprintf".
+
+        Note: Bootloader can't use this function.
+
+config LINK_ETS_PRINTF_TO_IRAM
+    bool "Link ets_printf to IRAM"
+    default n
+    help
+        Enable this option, SDK will link the old/new "ets_printf" and "ets_vprintf" to IRAM instead of flash.
+        So although flash can't be access for SoC when reading to writing, the "ets_printf" and "ets_vprintf" also can be used by user.
+
+        Using new "ets_vprintf" should cost more 1.6KB IRAM.
+
+        Note: Bootloader can't use this function.
+
 config SOC_FULL_ICACHE
     bool "Enable full cache mode"
     default n

@@ -129,6 +129,10 @@ SECTIONS
     *libfreertos.a:freertos_hooks.o(.bss .data .bss.* .data.* COMMON)
 #endif
 
+#ifdef CONFIG_LINK_ETS_PRINTF_TO_IRAM
+    *libesp8266.a:ets_printf.o(.literal .text .literal.* .text.* .rodata.* .rodata)
+#endif
+
     _text_end = ABSOLUTE(.);
     _etext = .;
   } >iram1_0_seg :iram1_0_phdr
