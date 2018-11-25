@@ -244,4 +244,12 @@ config ESPTOOLPY_ENABLE_TIME
 	help
 		Enable this option, time string will be added at the head of serial input data line.
 
+config ESPTOOLPY_ENABLE_SAVELOG
+	bool "Enable console log save"
+	default n
+	help
+		Enable this option, all console output will auto-save to current 'log' directory which same level as the 'build` directory; 
+		if 'log' directory is not exist, will create it. 
+		All console output will be saved as a log filename, named PROJECT_NAME + timestamp.log, which PROJECT_NAME defined in your demo Makefile.
+
 endmenu
