@@ -19,6 +19,13 @@ void csro_power_count(void)
 }
 
 
+void csro_uart_init(void)
+{
+
+}
+
+
+
 void csro_system_init(void)
 {
     csro_power_count();
