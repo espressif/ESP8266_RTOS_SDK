@@ -122,7 +122,9 @@ choice ESPTOOLPY_FLASHSIZE
 	prompt "Flash size"
 	default ESPTOOLPY_FLASHSIZE_2MB
 	help
-		SPI flash size, in megabytes
+		SPI flash size, in megabytes. Users must not configure a larger value than their real flash size.
+		Otherwise an unexpected result may cause if users read/write a wrong address of flash.
+
 config ESPTOOLPY_FLASHSIZE_1MB
 	bool "1 MB"
 config ESPTOOLPY_FLASHSIZE_2MB
