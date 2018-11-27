@@ -12,8 +12,11 @@
 examples/**/sdkconfig
 examples/**/sdkconfig.old
 examples/**/build
+csrosoft/**/build
+csrosoft/**/sdkconfig
 
 # Unit test app files
 tools/unit-test-app/sdkconfig
 tools/unit-test-app/sdkconfig.old
 tools/unit-test-app/build
+csrosoft/helloworld/main/user_main.c
