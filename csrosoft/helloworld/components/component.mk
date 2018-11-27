@@ -1,1 +1,1 @@
-COMPONENT_SRCDIRS := folder1 folder2
+COMPONENT_SRCDIRS := csro folder2
