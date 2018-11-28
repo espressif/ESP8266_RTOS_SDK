@@ -41,7 +41,7 @@ void csro_system_init()
     else
     {
         csro_system_set_status(SMARTCONFIG);
-
+        
     }
     
 
