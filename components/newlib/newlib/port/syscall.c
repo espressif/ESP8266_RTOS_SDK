@@ -37,22 +37,8 @@ _ssize_t _write_r(struct _reent *r, int fd, const void *buf, size_t len)
     int i;
     const char *cbuf = buf;
 
-    for (i = 0; i < len; i++) {
-#ifdef CONFIG_NEWLIB_STDOUT_LINE_ENDING_CRLF
-        if (cbuf[i] == '\n') {
-            ets_putc('\r');
-            ets_putc('\n');
-        } else
-            ets_putc(cbuf[i]);
-#elif defined(CONFIG_NEWLIB_STDOUT_LINE_ENDING_CR)
-        if (cbuf[i] == '\n')
-            ets_putc('\r');
-        else
-            ets_putc(cbuf[i]);
-#elif defined(CONFIG_NEWLIB_STDOUT_LINE_ENDING_LF)
+    for (i = 0; i < len; i++)
         ets_putc(cbuf[i]);
-#endif
-    }
 
     return len;
 }
