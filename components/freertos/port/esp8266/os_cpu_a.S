@@ -59,8 +59,12 @@ vPortYield:
     
     call0	_xt_int_enter
 	call0	vPortEnterCritical
+#ifndef CONFIG_TASK_SWITCH_FASTER
     movi	a0, vTaskSwitchContext
-    callx0	a0	
+    callx0	a0
+#else
+    call0   vTaskSwitchContext
+#endif
     call0	vPortExitCritical
     call0	_xt_int_exit
     
@@ -239,8 +243,12 @@ _xt_timer_int:
 
     /* Call the uCOS-II tick handler. */
     #ifdef __XTENSA_CALL0_ABI__         /* OSTimeTick()                       */
+#ifndef CONFIG_TASK_SWITCH_FASTER
     movi 	a0, xPortSysTickHandle
     callx0 	a0
+#else
+    call0   xPortSysTickHandle
+#endif
     #else
     call4   xTaskIncrementTick
     #endif
@@ -281,8 +289,12 @@ _xt_timer_int1:
     #endif
 
     /* Call the uCOS-II tick handler. */
+#ifndef CONFIG_TASK_SWITCH_FASTER
     movi 	a0, vTaskSwitchContext
     callx0	a0
+#else
+    call0   vTaskSwitchContext
+#endif
 
     #ifdef __XTENSA_CALL0_ABI__
     /* Restore a2 and a3. */

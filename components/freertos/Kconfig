@@ -45,5 +45,14 @@ config FREERTOS_TIMER_STACKSIZE
     default 2048
     help
         The size of the stack used by the timer in FreeRTOS.
-        
+
+config TASK_SWITCH_FASTER
+    bool "Task switch faster"
+    default y
+    help
+        Enable this option, linking task switch function and its father functions to IRAM
+        to speed up task switch. It is specific for faster I/O application and so on.
+
+        But it may cost more 1KB IRAM, so user global heap may decrease 1KB.
+
 endmenu

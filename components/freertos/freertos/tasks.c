@@ -2611,7 +2611,7 @@ implementations require configUSE_TICKLESS_IDLE to be set to a value other than
 #endif /* INCLUDE_xTaskAbortDelay */
 /*----------------------------------------------------------*/
 
-BaseType_t xTaskIncrementTick( void )
+BaseType_t TASK_SW_ATTR xTaskIncrementTick( void )
 {
 TCB_t * pxTCB;
 TickType_t xItemValue;
@@ -2873,7 +2873,7 @@ BaseType_t xSwitchRequired = pdFALSE;
 #endif /* configUSE_APPLICATION_TASK_TAG */
 /*-----------------------------------------------------------*/
 
-void vTaskSwitchContext( void )
+void TASK_SW_ATTR vTaskSwitchContext( void )
 {
 	if( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )
 	{
