@@ -13,6 +13,8 @@ typedef struct esp_spi_flash_chip {
     uint32_t  status_mask;
 } esp_spi_flash_chip_t;
 
+extern esp_spi_flash_chip_t flashchip;
+
 uint32_t Wait_SPI_Idle();
 
 void uart_div_modify(uint32_t uart_no, uint32_t baud_div);

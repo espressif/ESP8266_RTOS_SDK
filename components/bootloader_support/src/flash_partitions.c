@@ -101,6 +101,7 @@ esp_err_t esp_partition_table_basic_verify(const esp_partition_info_t *partition
 #include "esp_err.h"
 #include "esp_flash_partitions.h"
 #include "esp_log.h"
+#include "esp8266/rom_functions.h"
 
 static const char *TAG = "flash_parts";
 
@@ -108,7 +109,7 @@ esp_err_t esp_partition_table_basic_verify(const esp_partition_info_t *partition
 {
     int md5_found = 0;
     int num_parts;
-    uint32_t chip_size = 2 * 1024 * 1024;// = g_rom_flashchip.chip_size;
+    uint32_t chip_size = flashchip.chip_size;
     *num_partitions = 0;
 
     for (num_parts = 0; num_parts < ESP_PARTITION_TABLE_MAX_ENTRIES; num_parts++) {
