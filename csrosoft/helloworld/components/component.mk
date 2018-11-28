@@ -1,1 +1,1 @@
-COMPONENT_SRCDIRS := csro folder2
+COMPONENT_SRCDIRS := csro device
