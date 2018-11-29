@@ -10,7 +10,7 @@ static void uart0_event_task(void *pvParameters)
     uart_event_t event;
     while(1)
     {
-        if(xQueueReceive(uart0_queue, (void *)event), (portTickType)portMAX_DELAY)
+        if(xQueueReceive(uart0_queue, (void *)&event, (portTickType)portMAX_DELAY))
         {
             switch (event.type)
             {
