@@ -13,5 +13,5 @@ void csro_air_system_handle_message(MessageData* data)
 
 void csro_air_system_init(void)
 {
-    
+    Modbus_Master_Init();
 }
