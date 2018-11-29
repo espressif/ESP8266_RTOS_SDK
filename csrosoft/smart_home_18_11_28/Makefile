@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := helloworld
+PROJECT_NAME := smart_home_18_11_28
 
 include $(IDF_PATH)/make/project.mk
 

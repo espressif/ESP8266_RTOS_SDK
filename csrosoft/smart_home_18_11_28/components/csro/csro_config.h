@@ -45,8 +45,8 @@ typedef enum
 
 typedef struct
 {
-    char ssid[40];
-    char pass[40];
+    char ssid[50];
+    char pass[50];
     int8_t flag;
 } csro_wifi_param;
 

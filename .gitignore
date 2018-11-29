@@ -14,6 +14,7 @@ examples/**/sdkconfig.old
 examples/**/build
 csrosoft/**/build
 csrosoft/**/sdkconfig
+csrosoft/**/sdkconfig.old
 
 # Unit test app files
 tools/unit-test-app/sdkconfig
