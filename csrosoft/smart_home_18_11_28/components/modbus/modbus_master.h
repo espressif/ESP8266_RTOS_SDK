@@ -14,9 +14,9 @@ typedef struct
 	uint16_t	write_qty;
 
 	uint8_t		rx_enable;
-	uint8_t	 	rx_buf[300];
+	uint8_t	 	rx_buf[512];
 	uint16_t	rx_len;
-	uint8_t		tx_buf[300];
+	uint8_t		tx_buf[512];
 	uint16_t	tx_len;
 
 	uint8_t		(* master_send_receive)(uint16_t timeout);
@@ -25,6 +25,8 @@ typedef struct
 extern Modbus_Master	Master;
 
 void Modbus_Master_Init(void);
+void uart0_receive_one_byte(uint8_t data);
+void uart0_receive_complete(void);
 
 uint8_t Modbus_Master_Read_Coils(Modbus_Master *master, uint8_t slaveid, uint8_t startaddr, uint8_t quantity, uint8_t* result);
 uint8_t Modbus_Master_Write_Single_Coil(Modbus_Master *master, uint8_t slaveid, uint8_t address, uint8_t value);
