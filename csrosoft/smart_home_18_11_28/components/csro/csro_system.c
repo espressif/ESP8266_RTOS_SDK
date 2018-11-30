@@ -26,7 +26,7 @@ void test_fake_wifi_param(void)
     nvs_close(handle);
 }
 
-void csro_system_init()
+void csro_system_init(void)
 {
     nvs_handle handle;
     debug("==========CSRO 2018.11.28 Derek Li==========\r\n");

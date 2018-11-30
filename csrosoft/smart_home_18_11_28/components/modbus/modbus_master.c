@@ -15,7 +15,7 @@ bool modbus_master_validate_rx(Modbus_Master *master)
     if ((crc&0xFF) != master->rx_buf[master->rx_len-2]) {
         return false;
     }
-    if ((crc>>8) != master->rx_buf[master->rx_len-2]) {
+    if ((crc>>8) != master->rx_buf[master->rx_len-1]) {
         return false;
     }
     if (master->rx_buf[0] != master->slave_id) {
@@ -110,4 +110,5 @@ void modbus_master_init(void)
     uart_driver_install(UART_NUM_1, 1024, 0,    0,  NULL);
 
     xTaskCreate(uart0_event_task, "uart0_event_task", 1024, NULL, 12, NULL);
+    Master.master_command = master_send_receive;
 }

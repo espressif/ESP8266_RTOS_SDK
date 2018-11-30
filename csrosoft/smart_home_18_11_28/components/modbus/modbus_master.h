@@ -19,21 +19,22 @@ typedef struct
 	uint8_t		tx_buf[512];
 	uint16_t	tx_len;
 
-	uint8_t		(* master_send_receive)(uint16_t timeout);
+	bool		(* master_command)(uint16_t timeout);
 } Modbus_Master;
 
 extern Modbus_Master	Master;
 
 void modbus_master_init(void);
+bool modbus_master_validate_rx(Modbus_Master *master);
 void uart0_receive_one_byte(uint8_t data);
 void uart0_receive_complete(void);
 
-uint8_t Modbus_Master_Read_Coils(Modbus_Master *master, uint8_t slaveid, uint8_t startaddr, uint8_t quantity, uint8_t* result);
-uint8_t Modbus_Master_Write_Single_Coil(Modbus_Master *master, uint8_t slaveid, uint8_t address, uint8_t value);
-uint8_t Modbus_Master_Write_Multiple_Coils(Modbus_Master *master, uint8_t slaveid, uint8_t startaddr, uint8_t quantity, uint8_t* values);
+bool modbus_master_read_coils(Modbus_Master *master, uint8_t id, uint8_t start, uint8_t qty, uint8_t* result);
+bool modbus_master_write_single_coil(Modbus_Master *master, uint8_t id, uint8_t address, uint8_t value);
+bool modbus_master_write_multiple_coils(Modbus_Master *master, uint8_t id, uint8_t start, uint8_t qty, uint8_t* values);
 
-uint8_t Modbus_Master_Read_Holding_Regs(Modbus_Master *master, uint8_t slaveid, uint8_t startaddr, uint8_t quantity, uint16_t* holdingregs);
-uint8_t Modbus_Master_Write_Single_Holding_Reg(Modbus_Master *master, uint8_t slaveid, uint8_t address, uint16_t value);
-uint8_t Modbus_Master_Write_Multiple_Holding_Regs(Modbus_Master *master, uint8_t slaveid, uint8_t startaddr, uint8_t quantity, uint16_t* values);
+bool modbus_master_read_holding_regs(Modbus_Master *master, uint8_t id, uint8_t start, uint8_t qty, uint16_t* holdingregs);
+bool modbus_master_Write_single_holding_reg(Modbus_Master *master, uint8_t id, uint8_t address, uint16_t value);
+bool modbus_master_Write_multiple_holding_regs(Modbus_Master *master, uint8_t id, uint8_t start, uint8_t qty, uint16_t* values);
 
 #endif
