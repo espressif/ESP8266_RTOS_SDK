@@ -20,4 +20,3 @@ csrosoft/**/sdkconfig.old
 tools/unit-test-app/sdkconfig
 tools/unit-test-app/sdkconfig.old
 tools/unit-test-app/build
-csrosoft/helloworld/main/user_main.c
