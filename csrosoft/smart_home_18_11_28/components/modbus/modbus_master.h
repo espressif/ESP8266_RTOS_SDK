@@ -24,7 +24,7 @@ typedef struct
 
 extern Modbus_Master	Master;
 
-void Modbus_Master_Init(void);
+void modbus_master_init(void);
 void uart0_receive_one_byte(uint8_t data);
 void uart0_receive_complete(void);
 

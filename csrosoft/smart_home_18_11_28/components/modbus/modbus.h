@@ -26,6 +26,6 @@
 
 #define MODBUS_TIMEOUT						( 50)	// 50 == 0.5 second
 
-uint16_t Modbus_CRC16(uint8_t *frame, uint8_t length);
+uint16_t modbus_crc16(uint8_t *frame, uint8_t length);
 
 #endif

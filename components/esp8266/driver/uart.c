@@ -587,7 +587,6 @@ static void uart_rx_intr_handler_default(void *param)
                 {
                     uart0_receive_complete();
                 }
-
                 // Get the buffer from the FIFO
                 // After Copying the Data From FIFO ,Clear intr_status
                 uart_clear_intr_status(uart_num, UART_RXFIFO_TOUT_INT_CLR_M | UART_RXFIFO_FULL_INT_CLR_M);

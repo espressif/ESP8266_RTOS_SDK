@@ -50,7 +50,7 @@ static const uint8_t CRCLo[] = {
     0x41, 0x81, 0x80, 0x40
 };
 
-uint16_t Modbus_CRC16(uint8_t *frame, uint8_t length)
+uint16_t modbus_crc16(uint8_t *frame, uint8_t length)
 {
     uint8_t     ucCRCHi = 0xFF;
     uint8_t     ucCRCLo = 0xFF;
