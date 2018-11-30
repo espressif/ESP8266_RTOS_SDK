@@ -70,7 +70,7 @@ Name field can be any meaningful name. It is not significant to the ESP8266. Nam
 Type field
 ~~~~~~~~~~
 
-Partition type field can be specified as app (0) or data (1). Or it can be a number 0-254 (or as hex 0x00-0xFE). Types 0x00-0x3F are reserved for esp-idf core functions.
+Partition type field can be specified as app (0) or data (1). Or it can be a number 0-254 (or as hex 0x00-0xFE). Types 0x00-0x3F are reserved for ESP8266_RTOS_SDK core functions.
 
 If your application needs to store data, please add a custom partition type in the range 0x40-0xFE.
 
@@ -81,7 +81,7 @@ Subtype
 
 The 8-bit subtype field is specific to a given partition type.
 
-esp-idf currently only specifies the meaning of the subtype field for "app" and "data" partition types.
+ESP8266_RTOS_SDK currently only specifies the meaning of the subtype field for "app" and "data" partition types.
 
 App Subtypes
 ~~~~~~~~~~~~
@@ -101,7 +101,7 @@ When type is "data", the subtype field can be specified as ota (0), phy (1), nvs
 - phy (1) is for storing PHY initialisation data. This allows PHY to be configured per-device, instead of in firmware.
 
   - In the default configuration, the phy partition is not used and PHY initialisation data is compiled into the app itself. As such, this partition can be removed from the partition table to save space.
-  - To load PHY data from this partition, run ``make menuconfig`` and enable **ESP_PHY_INIT_DATA_IN_PARTITION** option. You will also need to flash your devices with phy init data as the esp-idf build system does not do this automatically.
+  - To load PHY data from this partition, run ``make menuconfig`` and enable **ESP_PHY_INIT_DATA_IN_PARTITION** option. You will also need to flash your devices with phy init data as the ESP8266_RTOS_SDK build system does not do this automatically.
 - nvs (2) is for the **Non-Volatile Storage (NVS) API**.
 
   - NVS is used to store per-device PHY calibration data (different to initialisation data).
@@ -110,7 +110,7 @@ When type is "data", the subtype field can be specified as ota (0), phy (1), nvs
   - It is strongly recommended that you include an NVS partition of at least 0x3000 bytes in your project.
   - If using NVS API to store a lot of data, increase the NVS partition size from the default 0x6000 bytes.
 
-Other data subtypes are reserved for future esp-idf uses.
+Other data subtypes are reserved for future ESP8266_RTOS_SDK uses.
 
 Offset & Size
 ~~~~~~~~~~~~~
