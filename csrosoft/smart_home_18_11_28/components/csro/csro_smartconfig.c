@@ -21,7 +21,7 @@ static void sc_callback(smartconfig_status_t status, void *pdata)
             wifi_config_t *wifi_config = pdata;
             //strcpy(wifi_param.pass, wifi_config->sta.ssid);
             //strcpy(wifi_param.pass, wifi_config->sta.password);
-            strcpy(wifi_param.pass, "Jupiter");
+            strcpy(wifi_param.ssid, "Jupiter");
             strcpy(wifi_param.pass, "150933205");
             debug("SSID:%s.\r\n", wifi_config->sta.ssid);
             debug("PASSWORD:%s.\r\n", wifi_config->sta.password);
@@ -93,9 +93,8 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 void csro_smartconfig_task(void *pvParameters)
 {
     csro_system_set_status(SMARTCONFIG);
-
-    tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
+    tcpip_adapter_init();
     esp_event_loop_init(event_handler, NULL);
     wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
     esp_wifi_init(&config);

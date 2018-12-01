@@ -20,6 +20,10 @@
 #include "FreeRTOSConfig.h"
 #include "MQTTClient.h"
 #include "FreeRTOS/MQTTFreeRTOS.h"
+#include "lwip/err.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include <lwip/netdb.h>
 
 
 #define MQTT_BUFFER_LENGTH  1000

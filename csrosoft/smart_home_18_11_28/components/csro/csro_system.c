@@ -51,7 +51,7 @@ void csro_system_init(void)
         nvs_get_str(handle, "ssid", wifi_param.ssid, &ssid_len);
         nvs_get_str(handle, "pass", NULL, &pass_len);
         nvs_get_str(handle, "pass", wifi_param.pass, &pass_len);
-        xTaskCreate(csro_mqtt_task, "csro_mqtt_task", 1024, NULL, 6, NULL);
+        xTaskCreate(csro_mqtt_task, "csro_mqtt_task", 2048, NULL, 6, NULL);
     }
     else
     {
