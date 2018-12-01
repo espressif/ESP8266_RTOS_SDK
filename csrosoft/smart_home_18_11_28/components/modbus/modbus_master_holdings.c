@@ -1,10 +1,10 @@
 #include "modbus_master.h"
 
 
-bool modbus_master_read_coils(Modbus_Master *master, uint8_t id, uint8_t start, uint8_t qty, uint8_t* result)
+bool modbus_master_read_holding_regs(Modbus_Master *master, uint8_t id, uint8_t start, uint8_t qty, uint16_t* holdingregs)
 {
     master->slave_id = id;
-    master->func_code = FUNC_READ_COILS;
+    master->func_code = FUNC_READ_HOLDING_REGISTER;
     master->read_addr = start;
     master->read_qty = qty;
 
@@ -15,15 +15,15 @@ bool modbus_master_read_coils(Modbus_Master *master, uint8_t id, uint8_t start, 
     master->tx_buf[master->tx_len++] = master->read_addr & 0xFF;
     master->tx_buf[master->tx_len++] = master->read_qty >> 8;
     master->tx_buf[master->tx_len++] = master->read_qty & 0xFF;
+ 
     if (master->master_command(MODBUS_TIMEOUT) == true) {
         if (modbus_master_validate_rx(master) == true) {
-            if (master->rx_buf[2] != (master->read_qty%8 == 0 ? master->read_qty/8 : master->read_qty/8+1)) {
+            if (master->rx_buf[2] != (master->read_qty*2)) {
                 return false;
             }
-            for(size_t i = 0; i < qty; i++)
+            for(size_t i = 0; i < master->read_qty; i++)
             {
-                uint8_t value = master->rx_buf[3 + i / 8];
-                result[i] = 0x01 & (value >> (i % 8));
+                holdingregs[i] = master->rx_buf[3 + i * 2] * 256 + master->rx_buf[4 + i * 2];
             }
             return true;
         }
@@ -32,10 +32,10 @@ bool modbus_master_read_coils(Modbus_Master *master, uint8_t id, uint8_t start, 
 }
 
 
-bool modbus_master_write_single_coil(Modbus_Master *master, uint8_t id, uint8_t address, uint8_t value)
+bool modbus_master_Write_single_holding_reg(Modbus_Master *master, uint8_t id, uint8_t address, uint16_t value)
 {
     master->slave_id = id;
-    master->func_code = FUNC_WRITE_SINGLE_COIL;
+    master->func_code = FUNC_WRITE_REGISTER;
     master->write_addr = address;
 
     master->tx_len = 0;
@@ -43,8 +43,9 @@ bool modbus_master_write_single_coil(Modbus_Master *master, uint8_t id, uint8_t 
     master->tx_buf[master->tx_len++] = master->func_code;
     master->tx_buf[master->tx_len++] = master->write_addr >> 8;
     master->tx_buf[master->tx_len++] = master->write_addr & 0xFF;
-    master->tx_buf[master->tx_len++] = (value == 1) ? 0xFF : 0x00;
-    master->tx_buf[master->tx_len++] = 0x00;
+    master->tx_buf[master->tx_len++] = value >> 8;
+    master->tx_buf[master->tx_len++] = value & 0xFF;
+
     if (master->master_command(MODBUS_TIMEOUT) == true) {
         if (modbus_master_validate_rx(master) == true) {
             if (master->rx_buf[2] != (master->write_addr>>8)) {
@@ -53,40 +54,23 @@ bool modbus_master_write_single_coil(Modbus_Master *master, uint8_t id, uint8_t 
             if (master->rx_buf[3] != (master->write_addr&0xFF)) {
                 return false;
             }
-            if (master->rx_buf[4] != ((value == 1) ? 0xFF : 0x00)) {
+            if (master->rx_buf[4] != (value>>8)) {
                 return false;
             }
-            if (master->rx_buf[5] != 0x00) {
+            if (master->rx_buf[5] != (value&0xFF)) {
                 return false;
             }
             return true;
         }
     }
-    return false;
+    return false;    
 }
 
 
-bool modbus_master_write_multiple_coils(Modbus_Master *master, uint8_t id, uint8_t start, uint8_t qty, uint8_t* values)
+bool modbus_master_Write_multiple_holding_regs(Modbus_Master *master, uint8_t id, uint8_t start, uint8_t qty, uint16_t* values)
 {
-    uint8_t byte_count = (qty % 8 == 0) ? qty / 8 : qty / 8 + 1;
-    uint8_t data[32];
-    for(size_t i = 0; i < byte_count*8; i++)
-    {
-        if (i < qty) {
-            if (values[i] == 1) {
-                data[i / 8] = data[i / 8] >> 1 | 0x80;
-            }
-            else {
-                data[i / 8] = (data[i / 8] >> 1) & 0x7F;
-            }
-        }
-        else {
-            data[i / 8] = data[i / 8] >> 1;
-        }
-    }
-    
     master->slave_id = id;
-    master->func_code = FUNC_WRITE_MULTIPLE_COILS;
+    master->func_code = FUNC_WRITE_MULTIPLE_REGISTERS;
     master->write_addr = start;
     master->write_qty = qty;
 
@@ -97,7 +81,12 @@ bool modbus_master_write_multiple_coils(Modbus_Master *master, uint8_t id, uint8
     master->tx_buf[master->tx_len++] = master->write_addr & 0xFF;
     master->tx_buf[master->tx_len++] = master->write_qty >> 8;
     master->tx_buf[master->tx_len++] = master->write_qty & 0xFF;
-    master->tx_buf[master->tx_len++] = byte_count;
+    master->tx_buf[master->tx_len++] = 2 * master->write_qty;
+    for(size_t i = 0; i < master->write_qty; i++)
+    {
+        master->tx_buf[master->tx_len++] = values[i] >> 8;
+        master->tx_buf[master->tx_len++] = values[i] & 0xFF;
+    }
 
     if (master->master_command(MODBUS_TIMEOUT) == true) {
         if (modbus_master_validate_rx(master) == true) {
@@ -116,5 +105,5 @@ bool modbus_master_write_multiple_coils(Modbus_Master *master, uint8_t id, uint8
             return true;
         }
     }
-    return false;
+    return false;    
 }

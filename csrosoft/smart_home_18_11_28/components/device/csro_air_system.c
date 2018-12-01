@@ -2,6 +2,7 @@
 #include "../modbus/modbus_master.h"
 
 uint8_t result[10];
+uint16_t holidng[10];
 
 static void modbus_master_task(void *pvParameters)
 {
@@ -11,6 +12,13 @@ static void modbus_master_task(void *pvParameters)
         for(size_t i = 0; i < 10; i++)
         {
             debug("%d ", result[i]);
+        }
+        debug("\r\n");
+
+        modbus_master_read_holding_regs(&Master, 1, 0, 8, holidng);
+        for(size_t i = 0; i < 10; i++)
+        {
+            debug("%d ", holidng[i]);
         }
         debug("\r\n");
         vTaskDelay(500 / portTICK_RATE_MS);

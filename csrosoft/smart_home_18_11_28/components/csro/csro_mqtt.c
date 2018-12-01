@@ -1,5 +1,9 @@
 #include "csro_common.h"
 
+
+
+
+
 void csro_mqtt_task(void *pvParameters)
 {
     csro_system_set_status(NORMAL_START_NOWIFI);
