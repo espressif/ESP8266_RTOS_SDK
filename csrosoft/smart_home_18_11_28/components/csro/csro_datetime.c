@@ -24,7 +24,7 @@ void csro_datetime_print(void)
 }
 void csro_datetime_set(char *timestr)
 {
-    
+
     uint32_t tim[6];
     sscanf(timestr, "%d-%d-%d %d:%d:%d", &tim[0], &tim[1], &tim[2], &tim[3], &tim[4], &tim[5]);
     if ((tim[0]<2018) || (tim[1]>12) || (tim[2]>31) || (tim[3]>23) || (tim[4]>59) || (tim[5]>59)) {

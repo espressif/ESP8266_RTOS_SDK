@@ -1,10 +1,10 @@
 #include "csro_common.h"
 #include "../device/csro_device.h"
 
-csro_system_info sys_info;
-csro_wifi_param wifi_param;
-csro_date_time date_time;
-csro_mqtt mqtt;
+csro_system_info    sys_info;
+csro_wifi_param     wifi_param;
+csro_date_time      date_time;
+csro_mqtt           mqtt;
 
 void test_clear_wifi_param(void)
 {

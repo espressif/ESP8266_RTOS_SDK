@@ -1,31 +1,23 @@
 #ifndef CSRO_CONFIG_H_
 #define CSRO_CONFIG_H_
 
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
+#include "string.h"
+#include "stdlib.h"
+#include "stdint.h"
+#include "FreeRTOS/MQTTFreeRTOS.h"
+#include "MQTTClient.h"
+#include "time.h"
+#include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-#include "freertos/queue.h"
-#include "freertos/semphr.h"
-#include "driver/uart.h"
 #include "esp_wifi.h"
-#include "esp_event_loop.h"
-#include "esp_log.h"
-#include "esp_system.h"
-#include "nvs_flash.h"
-#include "tcpip_adapter.h"
 #include "esp_smartconfig.h"
-#include "portmacro.h"
-#include "FreeRTOSConfig.h"
-#include "MQTTClient.h"
-#include "FreeRTOS/MQTTFreeRTOS.h"
-#include "lwip/err.h"
-#include "lwip/sockets.h"
-#include "lwip/sys.h"
-#include <lwip/netdb.h>
+#include "esp_event_loop.h"
 #include "cJSON.h"
+#include "lwip/sockets.h"
+#include "driver/uart.h"
+
 
 
 #define MQTT_BUFFER_LENGTH  1000
@@ -48,7 +40,6 @@ typedef enum
     NORMAL_START_OK = 5,
     RESET_PENDING = 6
 } csro_system_status;
-
 
 typedef struct
 {

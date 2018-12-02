@@ -92,8 +92,7 @@ static void udp_receive_task(void *pvParameters)
 
 bool router_is_connected(void)
 {
-    static bool flag = false;
-    if (wifi_tx_status_t)
+    return false;
 }
 
 void csro_mqtt_task(void *pvParameters)
@@ -101,6 +100,9 @@ void csro_mqtt_task(void *pvParameters)
     csro_system_set_status(NORMAL_START_NOWIFI);
     wifi_event_group = xEventGroupCreate();
     tcpip_adapter_init();
+    // esp_wifi_get_mac(ESP_IF_WIFI_STA, sys_info.)
+    // tcpip_adapter_is_netif_up
+    tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "Hello");
     esp_event_loop_init(event_handler, NULL);
 
     wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
