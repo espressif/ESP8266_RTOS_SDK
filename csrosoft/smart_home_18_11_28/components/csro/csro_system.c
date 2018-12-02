@@ -1,8 +1,10 @@
 #include "csro_common.h"
 #include "../device/csro_device.h"
 
-csro_system_info    sys_info;
-csro_wifi_param     wifi_param;
+csro_system_info sys_info;
+csro_wifi_param wifi_param;
+csro_date_time date_time;
+csro_mqtt mqtt;
 
 void test_clear_wifi_param(void)
 {
@@ -40,6 +42,7 @@ void csro_system_init(void)
     nvs_set_i32(handle, "power_on_count", sys_info.power_on_count);
     debug("power count %d.\r\n", sys_info.power_on_count);
 
+    csro_datetime_init();
     csro_device_init();
     
     nvs_get_i8(handle, "wifi_flag", &wifi_param.flag);

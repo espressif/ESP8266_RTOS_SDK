@@ -2,8 +2,8 @@
 
 static EventGroupHandle_t wifi_event_group;
 static const int CONNECTED_BIT = BIT0;
-
-static const char *TAG = "example";
+char udp_rx_buffer[512];
+int udp_sock;
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
@@ -27,66 +27,74 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 }
 
 
-static void udp_server_task(void *pvParameters)
+static bool create_udp_server(void)
 {
-    char rx_buffer[128];
-    char addr_str[128];
-    int addr_family;
-    int ip_protocol;
+    udp_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+    if (udp_sock < 0) {
+        return false;
+    }
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(5000);
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    while (1) {
-        struct sockaddr_in destAddr;
-        destAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-        destAddr.sin_family = AF_INET;
-        destAddr.sin_port = htons(6000);
-        addr_family = AF_INET;
-        ip_protocol = IPPROTO_IP;
-        inet_ntoa_r(destAddr.sin_addr, addr_str, sizeof(addr_str) - 1);
+    if (bind(udp_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        close(udp_sock);
+        return false;
+    }
+    return true;
+}
 
-        int sock = socket(addr_family, SOCK_DGRAM, ip_protocol);
-        if (sock < 0) {
-            ESP_LOGE(TAG, "Unable to create socket: errno %d", errno);
-            break;
+static void udp_receive_task(void *pvParameters)
+{
+    while(true)
+    {
+        bool sock_status = false;
+        while(sock_status == false)
+        {
+            vTaskDelay(1000 / portTICK_RATE_MS);
+            sock_status = create_udp_server();
         }
-        ESP_LOGI(TAG, "Socket created");
-
-        int err = bind(sock, (struct sockaddr *)&destAddr, sizeof(destAddr));
-        if (err < 0) {
-            ESP_LOGE(TAG, "Socket unable to bind: errno %d", errno);
-        }
-        ESP_LOGI(TAG, "Socket binded");
-
-        while (1) {
-
-            ESP_LOGI(TAG, "Waiting for data");
-            struct sockaddr_in sourceAddr; // Large enough for both IPv4 or IPv6
-            socklen_t socklen = sizeof(sourceAddr);
-            int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&sourceAddr, &socklen);
-
-            // Error occured during receiving
+        while(true)
+        {
+            struct sockaddr_in source_addr;
+            socklen_t socklen = sizeof(source_addr);
+            bzero(udp_rx_buffer, 512);
+            int len = recvfrom(udp_sock, udp_rx_buffer, sizeof(udp_rx_buffer) - 1, 0, (struct sockaddr *)&source_addr, &socklen);
             if (len < 0) {
-                ESP_LOGE(TAG, "recvfrom failed: errno %d", errno);
                 break;
             }
-            // Data received
-            else {
-                // Get the sender's ip address as string
-                inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-                rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string...
-                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
-                ESP_LOGI(TAG, "%s", rx_buffer);
+            cJSON *serv_ip, *serv_mac, *time_info;
+            cJSON *json = cJSON_Parse(udp_rx_buffer);
+            if (json != NULL) {
+                serv_ip = cJSON_GetObjectItem(json, "server");
+                serv_mac = cJSON_GetObjectItem(json, "clientid");
+                time_info = cJSON_GetObjectItem(json, "time");
+                if ((serv_ip != NULL) && (serv_mac != NULL) && (serv_ip->type == cJSON_String) && (serv_mac->type == cJSON_String)) {
+                    if (strlen(serv_ip->valuestring)>=4 && strlen(serv_mac->valuestring)>=10) {
+                        if ((strcmp((char *)serv_ip->valuestring, (char *)mqtt.broker) != 0) || (strcmp((char *)serv_mac->valuestring, (char *)mqtt.prefix) != 0)) {
+                            strcpy((char *)mqtt.broker, (char *)serv_ip->valuestring);
+                            strcpy((char *)mqtt.prefix, (char *)serv_mac->valuestring);
+                            mqtt.client.isconnected = 0;
+                        }
+                    }
+                }
+                if ((time_info != NULL) && (time_info->type == cJSON_String)) {
+                    csro_datetime_set(time_info->valuestring);
+                }
+
             }
-        }
-        if (sock != -1) {
-            ESP_LOGE(TAG, "Shutting down socket and restarting...");
-            shutdown(sock, 0);
-            close(sock);
+            cJSON_Delete(json);
         }
     }
     vTaskDelete(NULL);
 }
 
-
+bool router_is_connected(void)
+{
+    static bool flag = false;
+    if (wifi_tx_status_t)
+}
 
 void csro_mqtt_task(void *pvParameters)
 {
@@ -105,11 +113,11 @@ void csro_mqtt_task(void *pvParameters)
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
     esp_wifi_start();
 
-    xTaskCreate(udp_server_task, "udp_server_task", 2048, NULL, 5, NULL);
-
+    xTaskCreate(udp_receive_task, "udp_receive_task", 2048, NULL, 5, NULL);
     while(1)
     {
         debug("running mqtt task. free heap %d. \r\n", esp_get_free_heap_size());
+        csro_datetime_print();
         vTaskDelay(1000 / portTICK_RATE_MS);
     }
     vTaskDelete(NULL);

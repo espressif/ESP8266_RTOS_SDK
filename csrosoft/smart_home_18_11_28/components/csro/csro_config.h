@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -24,6 +25,7 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
+#include "cJSON.h"
 
 
 #define MQTT_BUFFER_LENGTH  1000
@@ -91,6 +93,13 @@ typedef struct
     MQTTMessage message;
 } csro_mqtt;
 
+typedef struct
+{
+    time_t time_now;
+    time_t time_run;
+    struct tm timeinfo;
+    char strtime[64];
+} csro_date_time;
 
 
 #endif
