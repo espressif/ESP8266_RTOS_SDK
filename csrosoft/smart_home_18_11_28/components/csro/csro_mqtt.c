@@ -1,5 +1,6 @@
 #include "csro_common.h"
 
+
 static EventGroupHandle_t wifi_event_group;
 static const int CONNECTED_BIT = BIT0;
 char udp_rx_buffer[512];

@@ -1,26 +1,26 @@
 #ifndef CSRO_CONFIG_H_
 #define CSRO_CONFIG_H_
 
-#include "string.h"
-#include "stdlib.h"
-#include "stdint.h"
-#include "FreeRTOS/MQTTFreeRTOS.h"
-#include "MQTTClient.h"
-#include "time.h"
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event_loop.h"
+#include "esp_log.h"
 #include "nvs_flash.h"
+#include "driver/uart.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-#include "esp_wifi.h"
+#include "MQTTClient.h"
+#include "FreeRTOS/MQTTFreeRTOS.h"
 #include "esp_smartconfig.h"
-#include "esp_event_loop.h"
-#include "cJSON.h"
 #include "lwip/sockets.h"
-#include "driver/uart.h"
+#include "cJSON.h"
 
 
-
-#define MQTT_BUFFER_LENGTH  1000
+#define MQTT_BUFFER_LENGTH 1000
 #define	DEBUG
 
 
@@ -41,15 +41,13 @@ typedef enum
     RESET_PENDING = 6
 } csro_system_status;
 
-typedef struct
-{
+typedef struct csro_wifi_param {
     char ssid[50];
     char pass[50];
     int8_t flag;
-} csro_wifi_param;
+}csro_wifi_param;
 
-typedef struct
-{
+typedef struct{
     uint8_t device_type[20];
     uint8_t mac[6];
     uint8_t mac_string[20];
@@ -67,8 +65,7 @@ typedef struct
     csro_system_status status;
 } csro_system_info;
 
-typedef struct
-{
+typedef struct {
     uint8_t id[50];
     uint8_t name[50];
     uint8_t password[50];
@@ -84,13 +81,13 @@ typedef struct
     MQTTMessage message;
 } csro_mqtt;
 
-typedef struct
-{
+typedef struct {
     time_t time_now;
     time_t time_run;
     struct tm timeinfo;
     char strtime[64];
 } csro_date_time;
+
 
 
 #endif
