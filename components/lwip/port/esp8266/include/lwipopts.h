@@ -213,6 +213,8 @@
 #define ESP_LWIP_MEM_DBG                    1
 #endif
 
+size_t memp_malloc_get_size(size_t type);
+
 /*
  * @brief allocate an only DRAM memory block for LWIP pbuf
  * 
@@ -220,7 +222,7 @@
  * 
  * @return memory block pointer
  */
-void *mem_malloc_ll(size_t s);
+#define mem_malloc_ll(s)         heap_caps_malloc(s, MALLOC_CAP_8BIT)
 
 /*
  * @brief allocate an only DRAM memory pool for LWIP pbuf
@@ -229,7 +231,7 @@ void *mem_malloc_ll(size_t s);
  * 
  * @return memory pool pointer
  */
-void *memp_malloc_ll(size_t type);
+#define memp_malloc_ll(type)     heap_caps_malloc(memp_malloc_get_size(type), MALLOC_CAP_8BIT)
 #endif
 
 /**
