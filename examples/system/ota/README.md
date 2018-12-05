@@ -30,12 +30,12 @@ Connect your host PC to the same AP that you will use for the ESP8266.
 
 Python has a built-in HTTP server that can be used for example purposes.
 
-For our upgrade example OTA file, we're going to use the `get-started/hello_world` example.
+For our upgrade example OTA file, we're going to use the `get-started/project_template` example.
 
 Open a new terminal to run the HTTP server, then run these commands to build the example and start the server:
 
 ```
-cd $IDF_PATH/examples/get-started/hello_world
+cd $IDF_PATH/examples/get-started/project_template
 make
 cd build
 python -m SimpleHTTPServer 8070
@@ -45,7 +45,7 @@ While the server is running, the contents of the build directory can be browsed 
 
 NB: On some systems, the command may be `python2 -m SimpleHTTPServer`.
 
-NB: You've probably noticed there is nothing special about the "hello world" example when used for OTA updates. This is because any .bin app file which is built by esp-idf can be used as an app image for OTA. The only difference is whether it is written to a factory partition or an OTA partition.
+NB: You've probably noticed there is nothing special about the "project_template" example when used for OTA updates. This is because any .bin app file which is built by esp-idf can be used as an app image for OTA. The only difference is whether it is written to a factory partition or an OTA partition.
 
 If you have any firewall software running that will block incoming access to port 8070, configure it to allow access while running the example.
 
@@ -57,7 +57,7 @@ Change back to the OTA example directory, and type `make menuconfig` to configur
 * IP address of your host PC as "HTTP Server"
 * HTTP Port number (if using the Python HTTP server above, the default is correct)
 
-If serving the "hello world" example, you can leave the default filename as-is.
+If serving the "project_template" example, you can leave the default filename as-is.
 
 Save your changes, and type `make` to build the example.
 
@@ -84,7 +84,7 @@ When the example starts up, it will print "ota: Starting OTA example..." then:
 
 * Check your PC can ping the ESP8266 at its IP, and that the IP, AP and other configuration settings are correct in menuconfig.
 * Check if any firewall software is preventing incoming connections on the PC.
-* Check you can see the configured file (default hello-world.bin) if you browse the file listing at http://127.0.0.1/
+* Check you can see the configured file (default project_template.bin) if you browse the file listing at http://127.0.0.1/
 * If you have another PC or a phone, try viewing the file listing from the separate host.
 
 ## Error "ota_begin error err=0x104"
