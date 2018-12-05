@@ -19,32 +19,12 @@
 #include "esp8266/eagle_soc.h"
 
 #ifdef ESP_LWIP
-/*
- * @brief allocate an only DRAM memory block for LWIP pbuf
- * 
- * @param s memory size
- * 
- * @return memory block pointer
- */
-void *mem_malloc_ll(size_t s)
+#if MEMP_SIZE != 0
+#error "MEMP_SIZE must be 0"
+#else /* MEMP_SIZE != 0 */
+size_t memp_malloc_get_size(size_t type)
 {
-    void *return_addr = (void *)__builtin_return_address(0);
-
-    return _heap_caps_malloc(s, MALLOC_CAP_8BIT, return_addr, 0);
+    return memp_pools[type]->size;
 }
-
-void *memp_malloc_ll(size_t type)
-{
-    extern const struct memp_desc* const memp_pools[MEMP_MAX];
-
-    uint8_t *p;
-    const struct memp_desc *desc = memp_pools[type];
-
-    p = (uint8_t *)mem_malloc_ll(MEMP_SIZE + MEMP_ALIGN_SIZE(desc->size));
-    if (p)
-        p += MEMP_SIZE;
-
-    return p;
-}
-
-#endif
+#endif /* MEMP_SIZE != 0 */
+#endif /* ESP_LWIP */

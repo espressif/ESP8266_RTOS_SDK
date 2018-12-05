@@ -427,8 +427,10 @@ again:
     return;
   }
 
+#if ESP_TCP
   extern void send_from_list();
   send_from_list();
+#endif
 
 #if ESP_UDP
   udp_sync_proc();
