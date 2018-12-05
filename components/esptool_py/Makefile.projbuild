@@ -13,6 +13,12 @@ else
 ENABLE_TIME := n
 endif
 
+ifdef CONFIG_ESPTOOLPY_ENABLE_SAVELOG
+ENABLE_SAVELOG := y
+else
+ENABLE_SAVELOG := n
+endif
+
 CONFIG_ESPTOOLPY_COMPRESSED ?=
 
 PYTHON ?= $(call dequote,$(CONFIG_PYTHON))
@@ -99,7 +105,7 @@ endif
 simple_monitor: $(call prereq_if_explicit,%flash)
 	$(MONITOR_PYTHON) -m serial.tools.miniterm --rts 0 --dtr 0 --raw $(ESPPORT) $(MONITORBAUD)
 
-MONITOR_OPTS := --baud $(MONITORBAUD) --port $(ESPPORT) --toolchain-prefix $(CONFIG_TOOLPREFIX) --make "$(MAKE)" --enable-time $(ENABLE_TIME)
+MONITOR_OPTS := --baud $(MONITORBAUD) --port $(ESPPORT) --toolchain-prefix $(CONFIG_TOOLPREFIX) --make "$(MAKE)" --enable-time $(ENABLE_TIME) --enable-savelog $(ENABLE_SAVELOG)
 
 monitor: $(call prereq_if_explicit,%flash)
 	$(summary) MONITOR

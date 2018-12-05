@@ -38,6 +38,7 @@ try:
 except ImportError:
     import Queue as queue
 import time
+import datetime
 import sys
 import serial
 import serial.tools.miniterm as miniterm
@@ -73,6 +74,20 @@ def red_print(message):
     color_print(message, ANSI_RED)
 
 __version__ = "1.0"
+
+def mkdir(path):
+    path=path.strip()
+    path=path.rstrip("\\")
+    isExists=os.path.exists(path)
+
+    if not isExists:
+        os.makedirs(path)
+
+def esp_openlog(project_name):
+    logdir = os.getcwd() + '/esplog'
+    mkdir(logdir)
+    filename = project_name + datetime.datetime.now().strftime('%Y%m%d%H%M%S.log')
+    return open(logdir + '/' + filename, 'w+')
 
 # Tags for tuples in queues
 TAG_KEY = 0
@@ -231,7 +246,7 @@ class Monitor(object):
 
     Main difference is that all event processing happens in the main thread, not the worker threads.
     """
-    def __init__(self, serial_instance, elf_file, make="make", toolchain_prefix=DEFAULT_TOOLCHAIN_PREFIX, eol="CRLF", enable_time='n'):
+    def __init__(self, serial_instance, elf_file, make="make", toolchain_prefix=DEFAULT_TOOLCHAIN_PREFIX, eol="CRLF", enable_time='n', enable_savelog='n'):
         super(Monitor, self).__init__()
         self.event_queue = queue.Queue()
         self.console = miniterm.Console()
@@ -259,7 +274,10 @@ class Monitor(object):
         self.menu_key = CTRL_T
         self.exit_key = CTRL_RBRACKET
         self.enable_time = enable_time
+        self.enable_savelog = enable_savelog
         self.next_line = True
+        if self.enable_savelog == 'y':
+            self.log_file = esp_openlog(os.path.splitext(os.path.basename(self.elf_file))[0])
 
         self.translate_eol = {
             "CRLF": lambda c: c.replace(b"\n", b"\r\n"),
@@ -288,6 +306,8 @@ class Monitor(object):
             try:
                 self.console_reader.stop()
                 self.serial_reader.stop()
+                if self.enable_savelog == 'y':
+                    self.log_file.close()
             except:
                 pass
             sys.stderr.write(ANSI_NORMAL + "\n")
@@ -319,7 +339,14 @@ class Monitor(object):
             if self.enable_time == 'y' and self.next_line == True:
                 self.console.write_bytes(get_time_stamp() + ":  ")
                 self.next_line = False
+                if self.enable_savelog == 'y':
+                    self.log_file.write(get_time_stamp() + ":  ")
+
             self.console.write_bytes(b)
+
+            if self.enable_savelog == 'y':
+                self.log_file.write(b)
+
             if b == b'\n': # end of line
                 self.handle_serial_input_line(self._read_line.strip())
                 self._read_line = b""
@@ -489,7 +516,13 @@ def main():
 
     parser.add_argument(
         '--enable-time',
-        help='Serial port device',
+        help='enable console timestamp',
+        default=False
+    )
+
+    parser.add_argument(
+        '--enable-savelog',
+        help='enable console log',
         default=False
     )
 
@@ -518,7 +551,7 @@ def main():
     except KeyError:
         pass  # not running a make jobserver
 
-    monitor = Monitor(serial_instance, args.elf_file.name, args.make, args.toolchain_prefix, args.eol, args.enable_time)
+    monitor = Monitor(serial_instance, args.elf_file.name, args.make, args.toolchain_prefix, args.eol, args.enable_time, args.enable_savelog)
 
     yellow_print('--- idf_monitor on {p.name} {p.baudrate} ---'.format(
         p=serial_instance))
