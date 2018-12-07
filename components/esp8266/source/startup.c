@@ -29,6 +29,7 @@
 #include "esp_heap_caps_init.h"
 #include "esp_task_wdt.h"
 #include "internal/esp_wifi_internal.h"
+#include "internal/esp_system_internal.h"
 
 #define FLASH_MAP_ADDR 0x40200000
 #define FLASH_MAP_SIZE 0x00100000
@@ -67,6 +68,10 @@ static void user_init_entry(void *param)
     assert(wifi_timer_init() == 0);
 
     esp_wifi_set_rx_pbuf_mem_type(WIFI_RX_PBUF_DRAM);
+
+#if CONFIG_RESET_REASON
+    esp_reset_reason_init();
+#endif
 
 #ifdef CONFIG_TASK_WDT
     esp_task_wdt_init();
