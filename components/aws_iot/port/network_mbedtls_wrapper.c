@@ -27,6 +27,7 @@
 #include "mbedtls/esp_debug.h"
 
 #include "esp_log.h"
+#include "esp_system.h"
 
 #ifdef CONFIG_USE_VFS
 #include "esp_vfs.h"
@@ -278,8 +279,12 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 
     ESP_LOGD(TAG, "SSL state connect : %d ", tlsDataParams->ssl.state);
     ESP_LOGD(TAG, "Performing the SSL/TLS handshake...");
+
+    rtc_clk_cpu_freq_set(RTC_CPU_FREQ_160M);
+
     while((ret = mbedtls_ssl_handshake(&(tlsDataParams->ssl))) != 0) {
         if(ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+            rtc_clk_cpu_freq_set(RTC_CPU_FREQ_80M);
             ESP_LOGE(TAG, "failed! mbedtls_ssl_handshake returned -0x%x", -ret);
             if(ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
                 ESP_LOGE(TAG, "    Unable to verify the server's certificate. ");
@@ -287,6 +292,8 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
             return SSL_CONNECTION_ERROR;
         }
     }
+
+    rtc_clk_cpu_freq_set(RTC_CPU_FREQ_80M);
 
     ESP_LOGD(TAG, "ok    [ Protocol is %s ]    [ Ciphersuite is %s ]", mbedtls_ssl_get_version(&(tlsDataParams->ssl)),
           mbedtls_ssl_get_ciphersuite(&(tlsDataParams->ssl)));
