@@ -30,15 +30,6 @@
 
 #include "MQTTClient.h"
 
-/* The examples use simple WiFi configuration that you can set via
-   'make menuconfig'.
-
-   If you'd rather not, just change the below entries to strings with
-   the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
-*/
-#define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
-#define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASSWORD
-
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
 
@@ -47,33 +38,34 @@ static EventGroupHandle_t wifi_event_group;
    to the AP with an IP? */
 const int CONNECTED_BIT = BIT0;
 
-#define MQTT_BROKER  "iot.eclipse.org"  /* MQTT Broker Address*/
-#define MQTT_PORT    1883             /* MQTT Port*/
-
 #define MQTT_CLIENT_THREAD_NAME         "mqtt_client_thread"
-#define MQTT_CLIENT_THREAD_STACK_WORDS  8192
+#define MQTT_CLIENT_THREAD_STACK_WORDS  4096
 #define MQTT_CLIENT_THREAD_PRIO         8
 
 static const char *TAG = "example";
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
-    switch(event->event_id) {
+    switch (event->event_id) {
     case SYSTEM_EVENT_STA_START:
         esp_wifi_connect();
         break;
+
     case SYSTEM_EVENT_STA_GOT_IP:
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
         break;
+
     case SYSTEM_EVENT_STA_DISCONNECTED:
         /* This is a workaround as ESP32 WiFi libs don't currently
            auto-reassociate. */
         esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
         break;
+
     default:
         break;
     }
+
     return ESP_OK;
 }
 
@@ -81,110 +73,171 @@ static void initialise_wifi(void)
 {
     tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = EXAMPLE_WIFI_SSID,
-            .password = EXAMPLE_WIFI_PASS,
+            .ssid = CONFIG_WIFI_SSID,
+            .password = CONFIG_WIFI_PASSWORD,
         },
     };
     ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
-    ESP_ERROR_CHECK( esp_wifi_start() );
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
 }
 
-static void messageArrived(MessageData* data)
+static void messageArrived(MessageData *data)
 {
-    printf("Message arrived: %s\n", (char*)data->message->payload);
+    ESP_LOGI(TAG, "Message arrived[len:%u]: %.*s", \
+           data->message->payloadlen, data->message->payloadlen, (char *)data->message->payload);
 }
 
-static void mqtt_client_thread(void* pvParameters)
+static void mqtt_client_thread(void *pvParameters)
 {
+    char *payload = NULL;
     MQTTClient client;
     Network network;
-    unsigned char sendbuf[80], readbuf[80] = {0};
-    int rc = 0, count = 0;
+    int rc = 0;
+    char clientID[32] = {0};
+    uint32_t count = 0;
+
+    ESP_LOGI(TAG, "ssid:%s passwd:%s sub:%s qos:%u pub:%s qos:%u pubinterval:%u payloadsize:%u",
+             CONFIG_WIFI_SSID, CONFIG_WIFI_PASSWORD, CONFIG_MQTT_SUB_TOPIC,
+             CONFIG_DEFAULT_MQTT_SUB_QOS, CONFIG_MQTT_PUB_TOPIC, CONFIG_DEFAULT_MQTT_PUB_QOS,
+             CONFIG_MQTT_PUBLISH_INTERVAL, CONFIG_MQTT_PAYLOAD_BUFFER);
+
+    ESP_LOGI(TAG, "ver:%u clientID:%s keepalive:%d username:%s passwd:%s session:%d level:%u",
+             CONFIG_DEFAULT_MQTT_VERSION, CONFIG_MQTT_CLIENT_ID,
+             CONFIG_MQTT_KEEP_ALIVE, CONFIG_MQTT_USERNAME, CONFIG_MQTT_PASSWORD,
+             CONFIG_DEFAULT_MQTT_SESSION, CONFIG_DEFAULT_MQTT_SECURITY);
+
+    ESP_LOGI(TAG, "broker:%s port:%u", CONFIG_MQTT_BROKER, CONFIG_MQTT_PORT);
+
+    ESP_LOGI(TAG, "sendbuf:%u recvbuf:%u sendcycle:%u recvcycle:%u",
+             CONFIG_MQTT_SEND_BUFFER, CONFIG_MQTT_RECV_BUFFER,
+             CONFIG_MQTT_SEND_CYCLE, CONFIG_MQTT_RECV_CYCLE);
+
     MQTTPacket_connectData connectData = MQTTPacket_connectData_initializer;
 
-    printf("mqtt client thread starts\n");
-
-    /* Wait for the callback to set the CONNECTED_BIT in the
-       event group.
-    */
-    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
-                        false, true, portMAX_DELAY);
-    ESP_LOGI(TAG, "Connected to AP");
-
     NetworkInit(&network);
-    MQTTClientInit(&client, &network, 30000, sendbuf, sizeof(sendbuf), readbuf, sizeof(readbuf));
 
-    char* address = MQTT_BROKER;
-
-    if ((rc = NetworkConnect(&network, address, MQTT_PORT)) != 0) {
-        printf("Return code from network connect is %d\n", rc);
+    if (MQTTClientInit(&client, &network, 0, NULL, 0, NULL, 0) == false) {
+        ESP_LOGE(TAG, "mqtt init err");
+        vTaskDelete(NULL);
     }
+
+    payload = malloc(CONFIG_MQTT_PAYLOAD_BUFFER);
+
+    if (!payload) {
+        ESP_LOGE(TAG, "mqtt malloc err");
+    } else {
+        memset(payload, 0x0, CONFIG_MQTT_PAYLOAD_BUFFER);
+    }
+
+    for (;;) {
+        ESP_LOGI(TAG, "wait wifi connect...");
+        xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+
+        if ((rc = NetworkConnect(&network, CONFIG_MQTT_BROKER, CONFIG_MQTT_PORT)) != 0) {
+            ESP_LOGE(TAG, "Return code from network connect is %d", rc);
+            continue;
+        }
+
+        connectData.MQTTVersion = CONFIG_DEFAULT_MQTT_VERSION;
+
+        sprintf(clientID, "%s_%u", CONFIG_MQTT_CLIENT_ID, esp_random());
+
+        connectData.clientID.cstring = clientID;
+        connectData.keepAliveInterval = CONFIG_MQTT_KEEP_ALIVE;
+
+        connectData.username.cstring = CONFIG_MQTT_USERNAME;
+        connectData.password.cstring = CONFIG_MQTT_PASSWORD;
+
+        connectData.cleansession = CONFIG_DEFAULT_MQTT_SESSION;
+
+        ESP_LOGI(TAG, "MQTT Connecting");
+
+        if ((rc = MQTTConnect(&client, &connectData)) != 0) {
+            ESP_LOGE(TAG, "Return code from MQTT connect is %d", rc);
+            network.disconnect(&network);
+            continue;
+        }
+
+        ESP_LOGI(TAG, "MQTT Connected");
 
 #if defined(MQTT_TASK)
 
-    if ((rc = MQTTStartTask(&client)) != pdPASS) {
-        printf("Return code from start tasks is %d\n", rc);
-    } else {
-        printf("Use MQTTStartTask\n");
-    }
+        if ((rc = MQTTStartTask(&client)) != pdPASS) {
+            ESP_LOGE(TAG, "Return code from start tasks is %d", rc);
+        } else {
+            ESP_LOGI(TAG, "Use MQTTStartTask");
+        }
 
 #endif
 
-    connectData.MQTTVersion = 3;
-    connectData.clientID.cstring = "ESP8266_sample";
-
-    if ((rc = MQTTConnect(&client, &connectData)) != 0) {
-        printf("Return code from MQTT connect is %d\n", rc);
-    } else {
-        printf("MQTT Connected\n");
-    }
-
-    if ((rc = MQTTSubscribe(&client, "ESP8266/sample/sub", 2, messageArrived)) != 0) {
-        printf("Return code from MQTT subscribe is %d\n", rc);
-    } else {
-        printf("MQTT subscribe to topic \"ESP8266/sample/sub\"\n");
-    }
-
-    while (++count) {
-        MQTTMessage message;
-        char payload[30];
-
-        message.qos = QOS2;
-        message.retained = 0;
-        message.payload = payload;
-        sprintf(payload, "message number %d", count);
-        message.payloadlen = strlen(payload);
-
-        if ((rc = MQTTPublish(&client, "ESP8266/sample/pub", &message)) != 0) {
-            printf("Return code from MQTT publish is %d\n", rc);
-        } else {
-            printf("MQTT publish topic \"ESP8266/sample/pub\", message number is %d\n", count);
+        if ((rc = MQTTSubscribe(&client, CONFIG_MQTT_SUB_TOPIC, CONFIG_DEFAULT_MQTT_SUB_QOS, messageArrived)) != 0) {
+            ESP_LOGE(TAG, "Return code from MQTT subscribe is %d", rc);
+            network.disconnect(&network);
+            continue;
         }
 
-        vTaskDelay(1000 / portTICK_RATE_MS);  //send every 1 seconds
+        ESP_LOGI(TAG, "MQTT subscribe to topic %s OK", CONFIG_MQTT_PUB_TOPIC);
+
+        for (;;) {
+            MQTTMessage message;
+
+            message.qos = CONFIG_DEFAULT_MQTT_PUB_QOS;
+            message.retained = 0;
+            message.payload = payload;
+            sprintf(payload, "message number %d", ++count);
+            message.payloadlen = strlen(payload);
+
+            if ((rc = MQTTPublish(&client, CONFIG_MQTT_PUB_TOPIC, &message)) != 0) {
+                ESP_LOGE(TAG, "Return code from MQTT publish is %d", rc);
+            } else {
+                ESP_LOGI(TAG, "MQTT published topic %s, len:%u heap:%u", CONFIG_MQTT_PUB_TOPIC, message.payloadlen, esp_get_free_heap_size());
+            }
+
+            if (rc != 0) {
+                break;
+            }
+
+            vTaskDelay(CONFIG_MQTT_PUBLISH_INTERVAL / portTICK_RATE_MS);
+        }
+
+        network.disconnect(&network);
     }
 
-    printf("mqtt_client_thread going to be deleted\n");
+    ESP_LOGW(TAG, "mqtt_client_thread going to be deleted");
     vTaskDelete(NULL);
     return;
 }
 
 void app_main(void)
 {
-    ESP_ERROR_CHECK( nvs_flash_init() );
+    // Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+
+    ESP_ERROR_CHECK(ret);
+
     initialise_wifi();
-    xTaskCreate(&mqtt_client_thread,
-                MQTT_CLIENT_THREAD_NAME,
-                MQTT_CLIENT_THREAD_STACK_WORDS,
-                NULL,
-                MQTT_CLIENT_THREAD_PRIO,
-                NULL);
+
+    ret = xTaskCreate(&mqtt_client_thread,
+                      MQTT_CLIENT_THREAD_NAME,
+                      MQTT_CLIENT_THREAD_STACK_WORDS,
+                      NULL,
+                      MQTT_CLIENT_THREAD_PRIO,
+                      NULL);
+
+    if (ret != pdPASS)  {
+        ESP_LOGE(TAG, "mqtt create client thread %s failed", MQTT_CLIENT_THREAD_NAME);
+    }
 }
