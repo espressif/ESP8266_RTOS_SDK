@@ -1,0 +1,136 @@
+menu "MQTT(Paho)"
+
+choice MQTT_VERSION
+    prompt "MQTT version"
+    default V3_1
+    help
+        Current supported MQTT version.
+
+config V3_1
+    bool "V3.1"
+config V3_1_1
+    bool "V3.1.1"
+endchoice
+
+config DEFAULT_MQTT_VERSION
+    int
+    default 3 if V3_1
+    default 4 if V3_1_1
+
+config MQTT_CLIENT_ID
+    string "MQTT client ID"
+    default "espressif_sample"
+    help
+        MQTT client ID for MQTT broker to identify ESP device.
+
+config MQTT_KEEP_ALIVE
+    int "MQTT keep-alive(seconds)"
+    default 30
+    help
+        MQTT keep alive interval, Recommended value: 30s - 60s.
+        The last MQTT packet timestamp will be recorded,
+        a PING request will be sent if (current_timestamp - last_mqtt_packet_timestamp) > MQTT_KEEP_ALIVE.
+
+config MQTT_USERNAME
+    string "MQTT username"
+    default "espressif"
+    help
+        Username used for logging to MQTT broker.
+        Generally, you should use a valid MQTT_USERNAME if MQTT broker does not allow an anonymous login.
+
+config MQTT_PASSWORD
+    string "MQTT password"
+    default "admin"
+    help
+        Password used for logging to MQTT broker.
+        Generally, you should use a valid MQTT_PASSWORD if MQTT broker does not allow an anonymous login.
+
+choice MQTT_SESSION
+    prompt "MQTT Session"
+    default CLEAN_SESSION
+    help
+        Clean session to start a new session.
+        If clean-seesion is set, it will discard any previous session and start a new one. 
+        If keep-session is set, it will store session state and the communication can resume.
+
+config CLEAN_SESSION
+    bool "Clean Session"
+config KEEP_SESSION
+    bool "Keep Session"
+endchoice
+
+config DEFAULT_MQTT_SESSION
+    int
+    default 0 if KEEP_SESSION
+    default 1 if CLEAN_SESSION
+
+choice MQTT_SECURITY
+    prompt "MQTT over TCP/SSL/TLS feature"
+    default NO_TLS
+    help
+        MQTT over TCP/SSL/TLS.
+        MQTT_SECURITY=0: MQTT over TCP
+        MQTT_SECURITY=1: MQTT over TLS with no verify
+        MQTT_SECURITY=2: MQTT over TLS with verify peer
+        MQTT_SECURITY=3: MQTT over TLS with verify client
+
+config NO_TLS
+    bool "TCP"
+config TLS_VERIFY_NONE
+    bool "TLS Verify None"
+config TLS_VERIFY_PEER
+    bool "TLS Verify Peer"
+config TLS_VERIFY_CLIENT
+    bool "TLS Verify Client"
+endchoice
+
+config DEFAULT_MQTT_SECURITY
+    int
+    default 0 if NO_TLS
+    default 1 if TLS_VERIFY_NONE
+    default 2 if TLS_VERIFY_PEER
+    default 3 if TLS_VERIFY_CLIENT
+
+config MQTT_SEND_BUFFER
+    int "MQTT send buffer"
+    default 2048
+    help
+        Recommended value: 1460 - 2048.
+        Buffer used for sending MQTT messages, including MQTT header, MQTT topic, payload and etc.
+
+config MQTT_RECV_BUFFER
+    int "MQTT recv buffer"
+    default 2048
+    help
+        Recommended value: 1460 - 2048.
+        Buffer used for receiving MQTT messages, including MQTT header, MQTT topic, payload and etc.
+
+config MQTT_SEND_CYCLE
+    int "MQTT send cycle(ms)"
+    default 30000
+    help
+        Recommended value: 30000 - 60000.
+        MQTT send interval in every cycle.
+        A MQTT packet should be sent out in MQTT_SEND_CYCLE,
+        will block for MQTT_SEND_CYCLE if weak network, and return timeout.
+
+config MQTT_RECV_CYCLE
+    int "MQTT recv cycle(ms)"
+    default 0
+    help
+        Recommended value: 0ms - 500ms.
+        MQTT receive interval in every cycle.
+        a MQTT packet should be received in MQTT_RECV_CYCLE,
+        will block for MQTT_RECV_CYCLE if weak network , and return timeout.
+
+config MQTT_PING_TIMEOUT
+    int "MQTT ping timeout(ms)"
+    default 3000
+    help
+        Recommended value: 3000ms - 10000ms.
+        MQTT ping timeout.
+        When MQTT_KEEP_ALIVE expired, it will start sending ping request.
+        If the ESP device does not receive any ping response within MQTT_PING_TIMEOUT,
+        it will terminate the MQTT connection.
+
+endmenu
