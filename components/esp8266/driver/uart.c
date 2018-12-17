@@ -78,6 +78,7 @@ typedef struct {
 
     // tx parameters
     SemaphoreHandle_t tx_fifo_sem;      /*!< UART TX FIFO semaphore*/
+    SemaphoreHandle_t tx_done_sem;      /*!< UART TX done semaphore*/
     SemaphoreHandle_t tx_mux;           /*!< UART TX mutex*/
     int tx_buf_size;                    /*!< TX ring buffer size */
     RingbufHandle_t tx_ring_buf;        /*!< TX ring buffer handler*/
@@ -248,7 +249,7 @@ esp_err_t uart_get_hw_flow_ctrl(uart_port_t uart_num, uart_hw_flowcontrol_t *flo
     return ESP_OK;
 }
 
-static esp_err_t uart_wait_tx_done(uart_port_t uart_num)
+esp_err_t uart_wait_tx_done(uart_port_t uart_num)
 {
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
 
@@ -256,13 +257,16 @@ static esp_err_t uart_wait_tx_done(uart_port_t uart_num)
     uart_get_baudrate(uart_num, &byte_delay_us);
     byte_delay_us = (uint32_t)(10000000/byte_delay_us); // (1/baudrate)*10*1000_000 us
 
-    while (1) {
-        // wait for tx done.
-        if (UART[uart_num]->status.txfifo_cnt == 0) {
-            ets_delay_us(byte_delay_us); // Delay one byte time to guarantee transmission completion 
-            return ESP_OK;
+    // wait for tx done sem.
+    if (pdTRUE == xSemaphoreTake(p_uart_obj[uart_num]->tx_done_sem, (portTickType)portMAX_DELAY)) {
+        while (1) {
+            if (UART[uart_num]->status.txfifo_cnt == 0) {
+                ets_delay_us(byte_delay_us); // Delay one byte time to guarantee transmission completion 
+                break;
+            }
         }
     }
+    return ESP_OK;
 }
 
 esp_err_t uart_enable_swap(void)
@@ -558,6 +562,10 @@ static void uart_rx_intr_handler_default(void *param)
 
                         if (p_uart->tx_len_tot == 0) {
                             en_tx_flg = false;
+                            xSemaphoreGiveFromISR(p_uart->tx_done_sem, &task_woken);
+                            if (task_woken == pdTRUE) {
+                                portYIELD_FROM_ISR();
+                            }
                         } else {
                             en_tx_flg = true;
                         }
@@ -709,8 +717,8 @@ static int uart_tx_all(uart_port_t uart_num, const char *src, size_t size)
         }
 
         xSemaphoreGive(p_uart_obj[uart_num]->tx_fifo_sem);
+        xSemaphoreGive(p_uart_obj[uart_num]->tx_done_sem);
     }
-    uart_wait_tx_done(uart_num);
     xSemaphoreGive(p_uart_obj[uart_num]->tx_mux);
     return original_size;
 }
@@ -870,6 +878,7 @@ esp_err_t uart_driver_install(uart_port_t uart_num, int rx_buffer_size, int tx_b
 {
     esp_err_t r;
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
+    UART_CHECK((uart_num == UART_NUM_1) ? (tx_buffer_size == 0) : 1, "uart1 cannot use tx_buffer", ESP_ERR_INVALID_ARG);
     UART_CHECK((rx_buffer_size > UART_FIFO_LEN) || ((uart_num == UART_NUM_1) && (rx_buffer_size == 0)), "uart rx buffer length error(>128)", ESP_ERR_INVALID_ARG);
     UART_CHECK((tx_buffer_size > UART_FIFO_LEN) || (tx_buffer_size == 0), "uart tx buffer length error(>128 or 0)", ESP_ERR_INVALID_ARG);
     UART_CHECK((queue_size >= 0), "queue_size error(>=0)", ESP_ERR_INVALID_ARG);
@@ -885,6 +894,7 @@ esp_err_t uart_driver_install(uart_port_t uart_num, int rx_buffer_size, int tx_b
         p_uart_obj[uart_num]->uart_num = uart_num;
         p_uart_obj[uart_num]->uart_mode = UART_MODE_UART;
         p_uart_obj[uart_num]->tx_fifo_sem = xSemaphoreCreateBinary();
+        p_uart_obj[uart_num]->tx_done_sem = xSemaphoreCreateBinary();
         xSemaphoreGive(p_uart_obj[uart_num]->tx_fifo_sem);
         p_uart_obj[uart_num]->tx_mux = xSemaphoreCreateMutex();
         p_uart_obj[uart_num]->rx_mux = xSemaphoreCreateMutex();
@@ -968,6 +978,11 @@ esp_err_t uart_driver_delete(uart_port_t uart_num)
     if (p_uart_obj[uart_num]->tx_fifo_sem) {
         vSemaphoreDelete(p_uart_obj[uart_num]->tx_fifo_sem);
         p_uart_obj[uart_num]->tx_fifo_sem = NULL;
+    }
+
+    if (p_uart_obj[uart_num]->tx_done_sem) {
+        vSemaphoreDelete(p_uart_obj[uart_num]->tx_done_sem);
+        p_uart_obj[uart_num]->tx_done_sem = NULL;
     }
 
     if (p_uart_obj[uart_num]->tx_mux) {
