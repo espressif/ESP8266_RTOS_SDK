@@ -23,6 +23,7 @@
 #include "esp8266/uart_register.h"
 #include "esp8266/rom_functions.h"
 
+#ifndef CONFIG_CONSOLE_UART_NONE
 static void uart_putc(int c)
 {
     while (1) {
@@ -34,8 +35,11 @@ static void uart_putc(int c)
 
     WRITE_PERI_REG(UART_FIFO(CONFIG_CONSOLE_UART_NUM) , c);
 }
+#else
+#define uart_putc(_c) { }
+#endif
 
-int ets_putc(int c)
+int __attribute__ ((weak)) ets_putc(int c)
 {
 #ifdef CONFIG_NEWLIB_STDOUT_LINE_ENDING_CRLF
     if (c == '\n')

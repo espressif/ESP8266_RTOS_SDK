@@ -81,8 +81,27 @@ config SOC_IRAM_SIZE
     default 0x8000 if SOC_FULL_ICACHE
     default 0xC000 if !SOC_FULL_ICACHE
 
+choice CONSOLE_UART
+    prompt "UART for console output"
+    default CONSOLE_UART_DEFAULT
+    help
+        Select whether to use UART for console output (through stdout and stderr).
+
+        - Default is to use UART0.
+        - If "Custom" is selected, UART0 or UART1 can be chosen.
+        - If "None" is selected, there will be no console output on any UART.
+
+config CONSOLE_UART_DEFAULT
+    bool "Default: UART0"
+config CONSOLE_UART_CUSTOM
+    bool "Custom"
+config CONSOLE_UART_NONE
+    bool "None"
+endchoice
+
 choice CONSOLE_UART_NUM
     prompt "UART peripheral to use for console output (0-1)"
+    depends on CONSOLE_UART_CUSTOM
     default CONSOLE_UART_CUSTOM_NUM_0
     help
         Configrate output console UART for "ets_printf", "printf", "ESP_LOGX" and so on.
@@ -95,15 +114,17 @@ endchoice
 
 config CONSOLE_UART_NUM
     int
+    default 0 if CONSOLE_UART_DEFAULT || CONSOLE_UART_NONE
     default 0 if CONSOLE_UART_CUSTOM_NUM_0
     default 1 if CONSOLE_UART_CUSTOM_NUM_1
 
 config CONSOLE_UART_BAUDRATE
     int "UART console baud rate"
+    depends on CONSOLE_UART_DEFAULT || CONSOLE_UART_NONE
     default 74880
     range 1200 4000000
 
-config CONSOLE_UART_SWAP_IO
+config UART0_SWAP_IO
     bool "Swap UART0 I/O pins"
     default n
     help

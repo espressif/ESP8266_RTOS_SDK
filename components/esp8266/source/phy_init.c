@@ -69,6 +69,11 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t *init_data, esp_phy_calibrat
     esp_err_t status = ESP_OK;
     uint8_t sta_mac[6];
     uint8_t *local_init_data = calloc(1, 256);
+#ifdef CONFIG_CONSOLE_UART_BAUDRATE
+    const uint32_t uart_baudrate = CONFIG_CONSOLE_UART_BAUDRATE;
+#else
+    const uint32_t uart_baudrate = 74880; // ROM default baudrate
+#endif
 
     memcpy(local_init_data, init_data->params, 128);
 
@@ -84,7 +89,7 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t *init_data, esp_phy_calibrat
     }
 
     esp_efuse_mac_get_default(sta_mac);
-    chip_init(local_init_data, sta_mac, CONFIG_CONSOLE_UART_BAUDRATE);
+    chip_init(local_init_data, sta_mac, uart_baudrate);
     get_data_from_rtc((uint8_t *)calibration_data);
 
     memcpy(rx_gain_dc_table, calibration_data->rx_gain_dc_table, 4 * 125);
