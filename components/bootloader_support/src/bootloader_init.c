@@ -568,7 +568,7 @@ static void update_flash_config(const esp_image_header_t* pfhdr);
 
 static void uart_console_configure(void)
 {
-#if CONFIG_CONSOLE_UART_SWAP_IO
+#if CONFIG_UART0_SWAP_IO
     while (READ_PERI_REG(UART_STATUS(0)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S));
 
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_UART0_CTS);
@@ -595,7 +595,9 @@ static void uart_console_configure(void)
     CLEAR_PERI_REG_MASK(UART_CONF0(CONFIG_CONSOLE_UART_NUM), UART_RXFIFO_RST | UART_TXFIFO_RST);
 #endif
 
+#ifdef CONFIG_CONSOLE_UART_BAUDRATE
     uart_div_modify(CONFIG_CONSOLE_UART_NUM, BOOTLOADER_CONSOLE_CLK_FREQ / CONFIG_CONSOLE_UART_BAUDRATE);
+#endif
 }
 
 esp_err_t bootloader_init()
