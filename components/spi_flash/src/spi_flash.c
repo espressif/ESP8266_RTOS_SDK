@@ -24,6 +24,7 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_task_wdt.h"
+#include "esp_image_format.h"
 
 #define SPI_FLASH_ISSI_ENABLE_QIO_MODE          (BIT(6))
 
@@ -744,8 +745,9 @@ void esp_spi_flash_init(uint32_t spi_speed, uint32_t spi_mode)
     }
     SET_PERI_REG_BITS(PERIPHS_SPI_FLASH_CTRL, 0xfff, freqbits, 0);      
 
-#ifndef CONFIG_FLASHMODE_SWITCH_TO_QIO
-    if (spi_mode == 0)
-#endif
+    if (spi_mode == ESP_IMAGE_SPI_MODE_QIO || spi_mode == ESP_IMAGE_SPI_MODE_QOUT) {
         user_spi_flash_dio_to_qio_pre_init();
+
+        ESP_EARLY_LOGI("qio_mode", "Enabling default flash chip QIO");
+    }
 }
