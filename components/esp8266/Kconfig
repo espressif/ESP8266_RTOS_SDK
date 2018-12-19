@@ -175,6 +175,12 @@ config TASK_WDT_TIMEOUT_S
     default 14 if TASK_WDT_TIMEOUT_14N
     default 15 if TASK_WDT_TIMEOUT_15N
 
+config RESET_REASON
+    bool "Enable reset reason"
+    default y
+    help
+        Enable this option, the reset reason function can be used, or compiler will show function linking error.
+
 config WIFI_PPT_TASKSTACK_SIZE
     int "ppT task stack size"
     default 2048

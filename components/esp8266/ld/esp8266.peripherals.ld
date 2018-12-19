@@ -4,3 +4,5 @@ PROVIDE ( uart0 = 0x60000000 );
 PROVIDE ( uart1 = 0x60000f00 );
 
 PROVIDE ( frc1 = 0x60000600 );
+
+PROVIDE ( rtc_sys_info = 0x60001100 );
