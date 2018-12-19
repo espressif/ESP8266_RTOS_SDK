@@ -49,7 +49,7 @@ static const char *TAG = "pwm";
 #define AHEAD_TICKS0 0
 #define AHEAD_TICKS1 6
 #define AHEAD_TICKS2 8
-#define AHEAD_TICKS3 2
+#define AHEAD_TICKS3 20
 #define MAX_TICKS    10000000ul
 
 #define WDEVTSF0_TIME_LO     0x3ff21004
@@ -190,7 +190,7 @@ esp_err_t pwm_clear_channel_invert(uint16_t channel_mask)
 
 esp_err_t pwm_set_duty(uint8_t channel_num, uint32_t duty)
 {
-    PWM_CHECK(channel_num <= pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
+    PWM_CHECK(channel_num < pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
 
     pwm_obj->pwm_info[channel_num].duty = duty;
     return ESP_OK;
@@ -210,7 +210,7 @@ esp_err_t pwm_set_duties(uint32_t *duties)
 
 esp_err_t pwm_get_duty(uint8_t channel_num, uint32_t *duty_p)
 {
-    PWM_CHECK(channel_num <= pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
+    PWM_CHECK(channel_num < pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
     PWM_CHECK(NULL != duty_p, "Pointer is empty", ESP_ERR_INVALID_ARG);
 
     *duty_p = pwm_obj->pwm_info[channel_num].duty;
@@ -230,7 +230,7 @@ esp_err_t pwm_set_period_duties(uint32_t period, uint32_t *duties)
 
 esp_err_t pwm_set_phase(uint8_t channel_num, int16_t phase)
 {
-    PWM_CHECK(channel_num <= pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
+    PWM_CHECK(channel_num < pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
 
     pwm_obj->pwm_info[channel_num].phase = phase;
 
@@ -252,7 +252,7 @@ esp_err_t pwm_set_phases(int16_t *phases)
 
 esp_err_t pwm_get_phase(uint8_t channel_num, uint16_t *phase_p)
 {
-    PWM_CHECK(channel_num <= pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
+    PWM_CHECK(channel_num < pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
     PWM_CHECK(NULL != phase_p, "Pointer is empty", ESP_ERR_INVALID_ARG);
 
     *phase_p = pwm_obj->pwm_info[channel_num].phase;
@@ -274,7 +274,7 @@ static void pwm_timer_enable(uint8_t enable)
 static void IRAM_ATTR pwm_timer_intr_handler(void)
 {
     //process continous event
-    uint32_t mask = REG_READ(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS);
+    uint32_t mask = 0;
 
     // In the interrupt handler, first check for data updates, then switch to the updated array at the end of a cycle, start outputting new PWM waveforms, and clear the update flag.
     while (1) {
@@ -290,7 +290,7 @@ static void IRAM_ATTR pwm_timer_intr_handler(void)
                     pwm_obj->run_pwm_toggle = (pwm_obj->run_pwm_toggle ^ 0x1);
                     pwm_obj->update_done = 0;
                 }
-
+                mask = REG_READ(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS);
                 mask = mask & (~pwm_obj->single->run_pwm_param[pwm_obj->single->run_channel_num - 1].io_clr_mask);
                 mask = mask | pwm_obj->single->run_pwm_param[pwm_obj->single->run_channel_num - 1].io_set_mask;
                 REG_WRITE(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS, mask);
@@ -316,7 +316,7 @@ static void IRAM_ATTR pwm_timer_intr_handler(void)
     }
 
     REG_WRITE(WDEVTSFSW0_LO, 0);
-    //WARNING, pwm_obj->this_target - AHEAD_TICKS1 should be bigger than zero
+    //WARNING, pwm_obj->this_target - AHEAD_TICKS1 should be bigger than 20 (https problem) 
     REG_WRITE(WDEVTSF0_TIMER_LO, pwm_obj->this_target - AHEAD_TICKS1);
     REG_WRITE(WDEVTSF0TIMER_ENA, WDEV_TSF0TIMER_ENA);
 }
