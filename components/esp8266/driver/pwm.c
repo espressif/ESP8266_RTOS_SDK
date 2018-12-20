@@ -537,12 +537,12 @@ static esp_err_t pwm_obj_malloc(uint32_t channel_num)
     return ESP_OK;
 }
 
-esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint32_t channel_num, const uint32_t *pin_mum)
+esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint32_t channel_num, const uint32_t *pin_num)
 {
     PWM_CHECK(pwm_obj == NULL, "pwm has been initialized", ESP_FAIL);
     PWM_CHECK(channel_num <= MAX_PWM_CHANNEL, "Channel num out of range", ESP_ERR_INVALID_ARG);
     PWM_CHECK(NULL != duties, "duties pointer is empty", ESP_ERR_INVALID_ARG);
-    PWM_CHECK(NULL != pin_mum, "Pointer is empty", ESP_ERR_INVALID_ARG);
+    PWM_CHECK(NULL != pin_num, "Pointer is empty", ESP_ERR_INVALID_ARG);
     PWM_CHECK(period >= 10, "period setting is too short", ESP_ERR_INVALID_ARG);
 
     uint8_t i;
@@ -556,8 +556,8 @@ esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint32_t channel_num, cons
     pwm_obj->channel_num = channel_num;
 
     for (i = 0; i < channel_num; i++) {
-        pwm_obj->pwm_info[i].io_num =  pin_mum[i];
-        pwm_obj->gpio_bit_mask |= (0x1 << pin_mum[i]);
+        pwm_obj->pwm_info[i].io_num =  pin_num[i];
+        pwm_obj->gpio_bit_mask |= (0x1 << pin_num[i]);
     }
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_DISABLE;
