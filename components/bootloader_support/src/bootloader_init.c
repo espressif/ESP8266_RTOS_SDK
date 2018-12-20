@@ -621,11 +621,15 @@ static esp_err_t bootloader_main()
         return ESP_FAIL;
     }
 
-    update_flash_config(&fhdr);
-
     ESP_LOGI(TAG, "ESP-IDF %s 2nd stage bootloader", IDF_VER);
 
     ESP_LOGI(TAG, "compile time " __TIME__ );
+
+#if defined(CONFIG_FLASHMODE_QIO) || defined(CONFIG_FLASHMODE_QOUT)
+    fhdr.spi_mode = CONFIG_SPI_FLASH_MODE;
+#endif
+
+    update_flash_config(&fhdr);
 
     print_flash_info(&fhdr);
 

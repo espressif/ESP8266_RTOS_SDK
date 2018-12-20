@@ -53,6 +53,8 @@ choice FLASHMODE
 		Mode the flash chip is flashed in, as well as the default mode for the
 		binary to run in.
 
+		The esptool.py flashes firmware at DIO mode when user select "QIO", "QOUT" or "DIO" mode.
+
 config FLASHMODE_QIO
 	bool "QIO"
 config FLASHMODE_QOUT
@@ -63,21 +65,13 @@ config FLASHMODE_DOUT
 	bool "DOUT"
 endchoice
 
-config FLASHMODE_SWITCH_TO_QIO
-	bool "Try to switch to QIO mode at startup"
-	default y
-	depends on FLASHMODE_DIO
-	help
-        If users use SPI flash DIO mode to download firmware, bootloader or application 
-        can switch to QIO mode by enable this option.
-
 # Note: we use esptool.py to flash bootloader in
 # dio mode for QIO/QOUT, bootloader then upgrades
 # itself to quad mode during initialisation
 config ESPTOOLPY_FLASHMODE
 	string
-	default "qio" if FLASHMODE_QIO
-	default "qout" if FLASHMODE_QOUT
+	default "dio" if FLASHMODE_QIO
+	default "dio" if FLASHMODE_QOUT
 	default "dio" if FLASHMODE_DIO
 	default "dout" if FLASHMODE_DOUT
 
