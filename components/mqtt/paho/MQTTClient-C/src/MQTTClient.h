@@ -227,6 +227,13 @@ static inline DLLExport int MQTTIsConnected(MQTTClient* client)
 *  @return success code
 */
 DLLExport int MQTTStartTask(MQTTClient* client);
+
+/** MQTT stop background thread for a client.
+*  @param client - the client object to use
+*  @return void
+*/
+DLLExport void MQTTStopTask(MQTTClient* client);
+
 #endif
 
 #if defined(__cplusplus)

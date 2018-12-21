@@ -38,6 +38,10 @@ int ThreadStart(Thread* thread, void (*fn)(void*), void* arg)
     return rc;
 }
 
+void ThreadStop(Thread* thread)
+{
+    vTaskDelete(thread->task);
+}
 
 void MutexInit(Mutex* mutex)
 {
@@ -208,6 +212,34 @@ int NetworkConnect(Network* n, char* addr, int port)
 exit:
     return retVal;
 }
+
+int NetworkConnectIP(Network* n, char* addr, int port)
+{
+    struct sockaddr_in sAddr;
+    int retVal = -1;
+
+    sAddr.sin_family = AF_INET;
+    sAddr.sin_addr.s_addr = inet_addr(addr);
+    sAddr.sin_port = htons(port);
+
+    if ((n->my_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        goto exit;
+    }
+
+    if ((retVal = connect(n->my_socket, (struct sockaddr*)&sAddr, sizeof(sAddr))) < 0) {
+        close(n->my_socket);
+        goto exit;
+    }
+
+exit:
+    return retVal;
+}
+
+void NetworkDisconnect(Network* n)
+{
+   close(n->my_socket);
+}
+
 
 #ifdef CONFIG_SSL_USING_MBEDTLS
 static int esp_ssl_read(Network* n, unsigned char* buffer, unsigned int len, unsigned int timeout_ms)
