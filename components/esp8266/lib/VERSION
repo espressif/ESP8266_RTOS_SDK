@@ -1,6 +1,6 @@
 gwen:
     core:       5ce569c
-    net80211:   2e4e807
+    net80211:   f7214eb
     pp:         cf2f721
     wpa:        4e2372f
     espnow:     4e2372f
