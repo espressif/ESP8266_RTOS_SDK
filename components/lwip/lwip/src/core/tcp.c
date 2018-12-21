@@ -62,6 +62,10 @@
 
 #include <string.h>
 
+#if ESP_LWIP
+#include "arch/sys_arch.h"
+#endif
+
 #ifdef LWIP_HOOK_FILENAME
 #include LWIP_HOOK_FILENAME
 #endif
@@ -847,9 +851,13 @@ tcp_new_port(void)
   struct tcp_pcb *pcb;
 
 again:
+#if ESP_LWIP
+  tcp_port = (u16_t)(esp_random() % (TCP_LOCAL_PORT_RANGE_END - TCP_LOCAL_PORT_RANGE_START)) + TCP_LOCAL_PORT_RANGE_START;
+#else
   if (tcp_port++ == TCP_LOCAL_PORT_RANGE_END) {
     tcp_port = TCP_LOCAL_PORT_RANGE_START;
   }
+#endif
   /* Check all PCB lists. */
   for (i = 0; i < NUM_TCP_PCB_LISTS; i++) {
     for (pcb = *tcp_pcb_lists[i]; pcb != NULL; pcb = pcb->next) {
