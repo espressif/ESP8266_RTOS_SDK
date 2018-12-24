@@ -14,7 +14,6 @@
  *    Allan Stockdill-Mander - initial API and implementation and/or initial documentation
  *    Ian Craggs - convert to FreeRTOS
  *******************************************************************************/
-
 #include <string.h>
 
 #include <netdb.h>
@@ -22,7 +21,7 @@
 
 #include "MQTTFreeRTOS.h"
 
-int ThreadStart(Thread* thread, void (*fn)(void*), void* arg)
+int ThreadStart(Thread *thread, void (*fn)(void *), void *arg)
 {
     int rc = 0;
     uint16_t usTaskStackSize = (configMINIMAL_STACK_SIZE * 5);
@@ -39,63 +38,60 @@ int ThreadStart(Thread* thread, void (*fn)(void*), void* arg)
 }
 
 
-void MutexInit(Mutex* mutex)
+void MutexInit(Mutex *mutex)
 {
     mutex->sem = xSemaphoreCreateMutex();
 }
 
-int MutexLock(Mutex* mutex)
+int MutexLock(Mutex *mutex)
 {
     return xSemaphoreTake(mutex->sem, portMAX_DELAY);
 }
 
-int MutexUnlock(Mutex* mutex)
+int MutexUnlock(Mutex *mutex)
 {
-    int x = xSemaphoreGive(mutex->sem);
-    taskYIELD();
-    return x;
+    return xSemaphoreGive(mutex->sem);
 }
 
 
-void TimerCountdownMS(Timer* timer, unsigned int timeout_ms)
+void TimerCountdownMS(Timer *timer, unsigned int timeout_ms)
 {
     timer->xTicksToWait = timeout_ms / portTICK_PERIOD_MS; /* convert milliseconds to ticks */
     vTaskSetTimeOutState(&timer->xTimeOut); /* Record the time at which this function was entered. */
 }
 
 
-void TimerCountdown(Timer* timer, unsigned int timeout)
+void TimerCountdown(Timer *timer, unsigned int timeout)
 {
     TimerCountdownMS(timer, timeout * 1000);
 }
 
 
-int TimerLeftMS(Timer* timer)
+int TimerLeftMS(Timer *timer)
 {
     xTaskCheckForTimeOut(&timer->xTimeOut, &timer->xTicksToWait); /* updates xTicksToWait to the number left */
-    return timer->xTicksToWait * portTICK_PERIOD_MS;
+    return (timer->xTicksToWait < 0) ? 0 : (timer->xTicksToWait * portTICK_PERIOD_MS);
 }
 
 
-char TimerIsExpired(Timer* timer)
+char TimerIsExpired(Timer *timer)
 {
     return xTaskCheckForTimeOut(&timer->xTimeOut, &timer->xTicksToWait) == pdTRUE;
 }
 
 
-void TimerInit(Timer* timer)
+void TimerInit(Timer *timer)
 {
     timer->xTicksToWait = 0;
     memset(&timer->xTimeOut, '\0', sizeof(timer->xTimeOut));
 }
 
 
-static int esp_read(Network* n, unsigned char* buffer, unsigned int len, unsigned int timeout_ms)
+static int esp_read(Network *n, unsigned char *buffer, unsigned int len, unsigned int timeout_ms)
 {
     portTickType xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
     xTimeOutType xTimeOut;
-    int recvLen = 0;
-    int rc = 0;
+    int recvLen = 0, rc = 0, ret = 0;
 
     struct timeval timeout;
     fd_set fdset;
@@ -108,32 +104,36 @@ static int esp_read(Network* n, unsigned char* buffer, unsigned int len, unsigne
 
     vTaskSetTimeOutState(&xTimeOut); /* Record the time at which this function was entered. */
 
-    if (select(n->my_socket + 1, &fdset, NULL, NULL, &timeout) > 0) {
-        if (FD_ISSET(n->my_socket, &fdset)) {
-            do {
-                rc = recv(n->my_socket, buffer + recvLen, len - recvLen, MSG_DONTWAIT);
+    ret = select(n->my_socket + 1, &fdset, NULL, NULL, &timeout);
 
-                if (rc > 0) {
-                    recvLen += rc;
-                } else if (rc < 0) {
-                    recvLen = rc;
-                    break;
-                }
-            } while (recvLen < len && xTaskCheckForTimeOut(&xTimeOut, &xTicksToWait) == pdFALSE);
-        }
+    if (ret <= 0) {
+        // ret == 0: timeout
+        // ret < 0:  socket err
+        return ret;
+    }
+
+    if (FD_ISSET(n->my_socket, &fdset)) {
+        do {
+            rc = recv(n->my_socket, buffer + recvLen, len - recvLen, MSG_DONTWAIT);
+
+            if (rc > 0) {
+                recvLen += rc;
+            } else if (rc < 0) {
+                recvLen = rc;
+                break;
+            }
+        } while (recvLen < len && xTaskCheckForTimeOut(&xTimeOut, &xTicksToWait) == pdFALSE);
     }
 
     return recvLen;
 }
 
 
-static int esp_write(Network* n, unsigned char* buffer, unsigned int len, unsigned int timeout_ms)
+static int esp_write(Network *n, unsigned char *buffer, unsigned int len, unsigned int timeout_ms)
 {
     portTickType xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
     xTimeOutType xTimeOut;
-    int sentLen = 0;
-    int rc = 0;
-    int readysock;
+    int sentLen = 0, rc = 0, ret = 0;
 
     struct timeval timeout;
     fd_set fdset;
@@ -143,12 +143,15 @@ static int esp_write(Network* n, unsigned char* buffer, unsigned int len, unsign
 
     timeout.tv_sec = 0;
     timeout.tv_usec = timeout_ms * 1000;
-
     vTaskSetTimeOutState(&xTimeOut); /* Record the time at which this function was entered. */
 
-    do {
-        readysock = select(n->my_socket + 1, NULL, &fdset, NULL, &timeout);
-    } while (readysock <= 0);
+    ret = select(n->my_socket + 1, NULL, &fdset, NULL, &timeout);
+
+    if (ret <= 0) {
+        // ret == 0: timeout
+        // ret < 0:  socket err
+        return ret;
+    }
 
     if (FD_ISSET(n->my_socket, &fdset)) {
         do {
@@ -167,13 +170,13 @@ static int esp_write(Network* n, unsigned char* buffer, unsigned int len, unsign
 }
 
 
-static void esp_disconnect(Network* n)
+static void esp_disconnect(Network *n)
 {
     close(n->my_socket);
 }
 
 
-void NetworkInit(Network* n)
+void NetworkInit(Network *n)
 {
     n->my_socket = 0;
     n->mqttread = esp_read;
@@ -182,25 +185,25 @@ void NetworkInit(Network* n)
 }
 
 
-int NetworkConnect(Network* n, char* addr, int port)
+int NetworkConnect(Network *n, char *addr, int port)
 {
     struct sockaddr_in sAddr;
     int retVal = -1;
-    struct hostent* ipAddress;
+    struct hostent *ipAddress;
 
     if ((ipAddress = gethostbyname(addr)) == 0) {
         goto exit;
     }
 
     sAddr.sin_family = AF_INET;
-    sAddr.sin_addr.s_addr = ((struct in_addr*)(ipAddress->h_addr))->s_addr;
+    sAddr.sin_addr.s_addr = ((struct in_addr *)(ipAddress->h_addr))->s_addr;
     sAddr.sin_port = htons(port);
 
     if ((n->my_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         goto exit;
     }
 
-    if ((retVal = connect(n->my_socket, (struct sockaddr*)&sAddr, sizeof(sAddr))) < 0) {
+    if ((retVal = connect(n->my_socket, (struct sockaddr *)&sAddr, sizeof(sAddr))) < 0) {
         close(n->my_socket);
         goto exit;
     }
@@ -210,13 +213,13 @@ exit:
 }
 
 #ifdef CONFIG_SSL_USING_MBEDTLS
-static int esp_ssl_read(Network* n, unsigned char* buffer, unsigned int len, unsigned int timeout_ms)
+static int esp_ssl_read(Network *n, unsigned char *buffer, unsigned int len, unsigned int timeout_ms)
 {
     portTickType xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
     xTimeOutType xTimeOut;
     int recvLen = 0;
     int rc = 0;
-    static unsigned char* read_buffer;
+    static unsigned char *read_buffer;
 
     struct timeval timeout;
     fd_set readset;
@@ -297,7 +300,7 @@ static int esp_ssl_read(Network* n, unsigned char* buffer, unsigned int len, uns
 }
 
 
-static int esp_ssl_write(Network* n, unsigned char* buffer, unsigned int len, unsigned int timeout_ms)
+static int esp_ssl_write(Network *n, unsigned char *buffer, unsigned int len, unsigned int timeout_ms)
 {
     portTickType xTicksToWait = timeout_ms / portTICK_RATE_MS; /* convert milliseconds to ticks */
     xTimeOutType xTimeOut;
@@ -342,7 +345,7 @@ static int esp_ssl_write(Network* n, unsigned char* buffer, unsigned int len, un
 }
 
 
-static void esp_ssl_disconnect(Network* n)
+static void esp_ssl_disconnect(Network *n)
 {
     close(n->my_socket);
     SSL_free(n->ssl);
@@ -351,7 +354,7 @@ static void esp_ssl_disconnect(Network* n)
 }
 
 
-void NetworkInitSSL(Network* n)
+void NetworkInitSSL(Network *n)
 {
     n->my_socket = 0;
     n->mqttread = esp_ssl_read;
@@ -363,11 +366,11 @@ void NetworkInitSSL(Network* n)
 }
 
 
-int NetworkConnectSSL(Network* n, char* addr, int port, ssl_ca_crt_key_t* ssl_cck, const SSL_METHOD* method, int verify_mode, size_t frag_len)
+int NetworkConnectSSL(Network *n, char *addr, int port, ssl_ca_crt_key_t *ssl_cck, const SSL_METHOD *method, int verify_mode, size_t frag_len)
 {
     struct sockaddr_in sAddr;
     int retVal = -1;
-    struct hostent* ipAddress;
+    struct hostent *ipAddress;
 
     if ((ipAddress = gethostbyname(addr)) == 0) {
         goto exit;
@@ -408,14 +411,14 @@ int NetworkConnectSSL(Network* n, char* addr, int port, ssl_ca_crt_key_t* ssl_cc
     }
 
     sAddr.sin_family = AF_INET;
-    sAddr.sin_addr.s_addr = ((struct in_addr*)(ipAddress->h_addr))->s_addr;
+    sAddr.sin_addr.s_addr = ((struct in_addr *)(ipAddress->h_addr))->s_addr;
     sAddr.sin_port = htons(port);
 
     if ((n->my_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         goto exit1;
     }
 
-    if ((retVal = connect(n->my_socket, (struct sockaddr*)&sAddr, sizeof(sAddr))) < 0) {
+    if ((retVal = connect(n->my_socket, (struct sockaddr *)&sAddr, sizeof(sAddr))) < 0) {
         goto exit2;
     }
 

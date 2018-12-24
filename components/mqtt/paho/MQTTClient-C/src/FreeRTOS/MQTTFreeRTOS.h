@@ -14,7 +14,7 @@
  *    Allan Stockdill-Mander - initial API and implementation and/or initial documentation
  *******************************************************************************/
 
-#if !defined(MQTTFreeRTOS_H)
+#ifndef MQTTFreeRTOS_H
 #define MQTTFreeRTOS_H
 
 #include "freertos/FreeRTOS.h"
@@ -25,49 +25,50 @@
 #include "openssl/ssl.h"
 #endif
 
-typedef struct Timer
-{
+#define    OVER_TCP                 0       // 0: MQTT over TCP
+#define    TLS_VERIFY_NONE          1       // 1: enable SSL/TLS, but there is no a certificate verify
+#define    TLS_VERIFY_PEER          2       // 2: enable SSL/TLS, and verify the MQTT broker certificate
+#define    TLS_VERIFY_CLIENT        3       // 3: enable SSL/TLS, and verify the MQTT broker certificate, and enable certificate for MQTT broker
+
+typedef struct Timer {
     TickType_t xTicksToWait;
     TimeOut_t xTimeOut;
 } Timer;
 
 typedef struct Network Network;
 
-struct Network
-{
+struct Network {
     int my_socket;
-    int (*mqttread)(Network*, unsigned char*, unsigned int, unsigned int);
-    int (*mqttwrite)(Network*, unsigned char*, unsigned int, unsigned int);
-    void (*disconnect)(Network*);
+    int (*mqttread)(Network *, unsigned char *, unsigned int, unsigned int);
+    int (*mqttwrite)(Network *, unsigned char *, unsigned int, unsigned int);
+    void (*disconnect)(Network *);
 
     int read_count;
 #ifdef CONFIG_SSL_USING_MBEDTLS
-    SSL_CTX* ctx;
-    SSL* ssl;
+    SSL_CTX *ctx;
+    SSL *ssl;
 #endif
 };
 
-void TimerInit(Timer*);
-char TimerIsExpired(Timer*);
-void TimerCountdownMS(Timer*, unsigned int);
-void TimerCountdown(Timer*, unsigned int);
-int TimerLeftMS(Timer*);
+void TimerInit(Timer *);
+char TimerIsExpired(Timer *);
+void TimerCountdownMS(Timer *, unsigned int);
+void TimerCountdown(Timer *, unsigned int);
+int TimerLeftMS(Timer *);
 
-typedef struct Mutex
-{
+typedef struct Mutex {
     SemaphoreHandle_t sem;
 } Mutex;
 
-void MutexInit(Mutex*);
-int MutexLock(Mutex*);
-int MutexUnlock(Mutex*);
+void MutexInit(Mutex *);
+int MutexLock(Mutex *);
+int MutexUnlock(Mutex *);
 
-typedef struct Thread
-{
+typedef struct Thread {
     TaskHandle_t task;
 } Thread;
 
-int ThreadStart(Thread*, void (*fn)(void*), void* arg);
+int ThreadStart(Thread *, void (*fn)(void *), void *arg);
 
 /**
  * @brief Initialize the network structure
@@ -76,7 +77,7 @@ int ThreadStart(Thread*, void (*fn)(void*), void* arg);
  *
  * @return void
  */
-void NetworkInit(Network*);
+void NetworkInit(Network *);
 
 /**
  * @brief connect with mqtt broker
@@ -87,15 +88,15 @@ void NetworkInit(Network*);
  *
  * @return connect status
  */
-int NetworkConnect(Network* n, char* addr, int port);
+int NetworkConnect(Network *n, char *addr, int port);
 
 #ifdef CONFIG_SSL_USING_MBEDTLS
 typedef struct ssl_ca_crt_key {
-    unsigned char* cacrt;
+    unsigned char *cacrt;
     unsigned int cacrt_len;
-    unsigned char* cert;
+    unsigned char *cert;
     unsigned int cert_len;
-    unsigned char* key;
+    unsigned char *key;
     unsigned int key_len;
 } ssl_ca_crt_key_t;
 
@@ -106,7 +107,7 @@ typedef struct ssl_ca_crt_key {
  *
  * @return void
  */
-void NetworkInitSSL(Network* n);
+void NetworkInitSSL(Network *n);
 
 /**
  * @brief Use SSL to connect with mqtt broker
@@ -121,7 +122,7 @@ void NetworkInitSSL(Network* n);
  *
  * @return connect status
  */
-int NetworkConnectSSL(Network* n, char* addr, int port, ssl_ca_crt_key_t* ssl_cck, const SSL_METHOD* method, int verify_mode, unsigned int frag_len);
+int NetworkConnectSSL(Network *n, char *addr, int port, ssl_ca_crt_key_t *ssl_cck, const SSL_METHOD *method, int verify_mode, unsigned int frag_len);
 
 /*int NetworkConnectTLS(Network*, char*, int, SlSockSecureFiles_t*, unsigned char, unsigned int, char);*/
 
