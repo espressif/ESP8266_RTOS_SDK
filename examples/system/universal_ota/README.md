@@ -16,6 +16,65 @@ In this example, the ESP8266 has 2 images in flash: OTA_0, OTA_1. Each of these 
 Flashing the example over serial with "make flash" updates the OTA_0 app image. On first boot, the bootloader loads this OTA_0 app image which then performs an OTA update (triggered in the example code). The update downloads a new image from an http server and saves it into the OTA_1 partition. At this point the example code updates the ota_data partition to indicate the new app partition, and reboots. The bootloader reads ota_data, determines the new OTA image has been selected, and runs it.
 
 
+# Custom partition configuration
+
+If customers want to use their own partition tables with specific partition location. Please see following steps:
+
+## Step 1: Create partition file
+
+Create a partition managment file with "cvs" formate, please refer to "doc/en/api-guides/partition-tables.rst"
+
+## Step 2: Select custom partition mode
+
+1. Select custom partition tables at "menuconfig":
+
+```
+Partition Table  --->
+    Partition Table (XXXXXX)  --->
+        (X) Custom partition table CSV
+```
+
+2. Configurate custom partition location at:
+
+```
+(XXXXXX)Custom partition CSV file
+```
+
+Note: System will add the absolute path of the project to the head of the "Custom partition CSV file" automatically when compling.
+
+3. Configurate patition table location if necessary:
+
+```
+(XXXXXX)Partition table offset address at flash
+```
+
+## Step 3: Configurate application location:
+
+Configurate application location at "mennuconfig" like following base on partition table file.
+
+If you select 1MB flash, application location configuration menu is like following:
+
+```
+Partition Table  --->
+
+    [*] Support to setup partition parameter of APP2
+    (0x5000) App1 offset address 
+    (0x7B000) App1 size by bytes 
+    (0x85000) App2 offset address
+    (0x7b000) App2 size by bytes
+```
+
+If you select 2MB flash and above size, application location configuration menu is like following:
+
+```
+Partition Table  --->
+
+    (0x10000) APP1 partition offset
+    (0xF0000) APP1 partition size(by bytes)
+```
+
+Note: The firmware location information must be same as partition table file. **make ota flash** will only download the app1 at **APP1 partition offset**.
+
 # Workflow
 
 The OTA_workflow.png diagram demonstrates the overall workflow:
@@ -83,6 +142,8 @@ Serial flasher config  --->
     Flash size (2 MB)  --->
         (X) 1 MB
 ```
+
+Configurate the application location information and it must be same as the OTA example's information, how to do refer to **Step 3: Configurate application location** of **Custom partition configuration**.
 
 Save your changes, and type `make` to build the example.
 
