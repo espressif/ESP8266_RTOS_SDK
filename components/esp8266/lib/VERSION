@@ -3,7 +3,7 @@ gwen:
     net80211:   8ec2d94
     pp:         8ec2d94
     wpa:        4e2372f
-    espnow:     4e2372f
+    espnow:     eeb16c6
     wps:        4e2372f
 
     smartconfig:  2.8.1
