@@ -23,6 +23,10 @@
 #include "esp_tls.h"
 #include <errno.h>
 
+#if LWIP_IPV6
+#define ESP_TLS_IPV6
+#endif
+
 static const char *TAG = "esp-tls";
 static mbedtls_x509_crt *global_cacert = NULL;
 
@@ -101,11 +105,13 @@ static int esp_tcp_connect(const char *host, int hostlen, int port, int *sockfd,
         struct sockaddr_in *p = (struct sockaddr_in *)res->ai_addr;
         p->sin_port = htons(port);
         addr_ptr = p;
+#ifdef ESP_TLS_IPV6
     } else if (res->ai_family == AF_INET6) {
         struct sockaddr_in6 *p = (struct sockaddr_in6 *)res->ai_addr;
         p->sin6_port = htons(port);
         p->sin6_family = AF_INET6;
         addr_ptr = p;
+#endif
     } else {
         ESP_LOGE(TAG, "Unsupported protocol family %d", res->ai_family);
         goto err_freesocket;
