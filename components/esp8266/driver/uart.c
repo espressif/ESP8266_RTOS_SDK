@@ -381,6 +381,7 @@ static void uart_intr_service(void *arg)
     }
 
     do {
+        uart_intr_status = UART[uart_num]->int_st.val;
         if (uart_intr_status != 0) {
             if (uart_isr_func[uart_num].fn != NULL) {
                 uart_isr_func[uart_num].fn(uart_isr_func[uart_num].args);
@@ -878,7 +879,6 @@ esp_err_t uart_driver_install(uart_port_t uart_num, int rx_buffer_size, int tx_b
 {
     esp_err_t r;
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
-    UART_CHECK((uart_num == UART_NUM_1) ? (tx_buffer_size == 0) : 1, "uart1 cannot use tx_buffer", ESP_ERR_INVALID_ARG);
     UART_CHECK((rx_buffer_size > UART_FIFO_LEN) || ((uart_num == UART_NUM_1) && (rx_buffer_size == 0)), "uart rx buffer length error(>128)", ESP_ERR_INVALID_ARG);
     UART_CHECK((tx_buffer_size > UART_FIFO_LEN) || (tx_buffer_size == 0), "uart tx buffer length error(>128 or 0)", ESP_ERR_INVALID_ARG);
     UART_CHECK((queue_size >= 0), "queue_size error(>=0)", ESP_ERR_INVALID_ARG);
