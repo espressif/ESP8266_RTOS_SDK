@@ -84,16 +84,6 @@ endif
 
 .PHONY: ota ota-clean
 
-ifeq ($(CONFIG_ESPTOOLPY_FLASHSIZE), "1MB")
-APP1_OFFSET ?= 0x10000
-APP1_SIZE ?= 0x70000
-APP2_OFFSET ?= 0x80000
-APP2_SIZE ?= 0x70000
-else
-APP1_OFFSET ?= CONFIG_APP_OFFSET
-APP1_SIZE ?= 0x100000
-endif
-
 RAW_BIN := ./build/$(PROJECT_NAME).bin
 OTA_BIN := ./build/$(PROJECT_NAME).ota.bin
 OTA1_BIN := ./build/$(PROJECT_NAME).app1.bin
@@ -102,7 +92,7 @@ OTA2_BIN := ./build/$(PROJECT_NAME).app2.bin
 $(OTA2_BIN): all_binaries
 ifeq ($(CONFIG_ESPTOOLPY_FLASHSIZE), "1MB")
 	@rm -f ./build/esp8266/esp8266_out.ld
-	@make APP_OFFSET=$(APP2_OFFSET) APP_SIZE=$(APP2_SIZE) CFLAGS= CXXFLAGS=
+	@make APP_OFFSET=$(CONFIG_APP2_OFFSET) APP_SIZE=$(CONFIG_APP2_SIZE) CFLAGS= CXXFLAGS=
 endif
 	@cp $(RAW_BIN) $(OTA2_BIN)
 	@echo [GEN] $(OTA2_BIN)
@@ -111,7 +101,7 @@ $(OTA1_BIN): all_binaries
 ifeq ($(CONFIG_ESPTOOLPY_FLASHSIZE), "1MB")
 	@rm -f ./build/esp8266/esp8266_out.ld
 endif
-	@make APP_OFFSET=$(APP1_OFFSET) APP_SIZE=$(APP1_SIZE) CFLAGS= CXXFLAGS=
+	@make APP_OFFSET=$(CONFIG_APP1_OFFSET) APP_SIZE=$(CONFIG_APP1_SIZE) CFLAGS= CXXFLAGS=
 	@cp $(RAW_BIN) $(OTA1_BIN)
 	@echo [GEN] $(OTA1_BIN)
 

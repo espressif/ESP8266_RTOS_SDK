@@ -1,0 +1,9 @@
+# Name,   Type, SubType, Offset,   Size, Flags
+# Note: if you change the phy_init or app partition offset, make sure to change the offset in Kconfig.projbuild
+# Bootloader is at 0x0000 - 0x4000, total 16KB
+# Partition table is at 0x4000 - 0x5000, total 4KB
+phy_init, data, phy,     0x5000,   0x1000
+ota_0,    0,    ota_0,   0x6000,   0x7A000
+nvs,      data, nvs,     0x80000,  0x4000
+otadata,  data, ota,     0x84000,  0x2000
+ota_1,    0,    ota_1,   0x86000,  0x7A000

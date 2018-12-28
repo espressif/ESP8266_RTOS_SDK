@@ -163,7 +163,7 @@ class PartitionDefinition(object):
     MAGIC_BYTES = b"\xAA\x50"
 
     ALIGNMENT = {
-        APP_TYPE : 0x10000,
+        APP_TYPE : 0x1000,
         DATA_TYPE : 0x04,
     }
 

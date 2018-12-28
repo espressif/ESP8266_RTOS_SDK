@@ -1,9 +1,5 @@
 menu "ESP8266-specific"
 
-config APP_OFFSET
-       hex
-       default 0x1000
-
 choice NEWLIB_STDOUT_LINE_ENDING
     prompt "Line ending for UART output"
     default NEWLIB_STDOUT_LINE_ENDING_CRLF
