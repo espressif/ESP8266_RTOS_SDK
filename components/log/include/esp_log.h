@@ -79,6 +79,16 @@ void esp_log_level_set(const char* tag, esp_log_level_t level);
 putchar_like_t esp_log_set_putchar(putchar_like_t func);
 
 /**
+ * @brief Function which returns timestamp to be used in log output
+ *
+ * This function uses HW cycle counter and does not depend on OS,
+ * so it can be safely used after application crash.
+ *
+ * @return timestamp, in milliseconds
+ */
+uint32_t esp_log_early_timestamp(void);
+
+/**
  * @brief Write message into the log
  *
  * This function is not intended to be used directly. Instead, use one of

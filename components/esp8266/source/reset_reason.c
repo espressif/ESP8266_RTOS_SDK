@@ -113,7 +113,7 @@ void esp_reset_reason_init(void)
         esp_reset_reason_clear_hint();
     }
 
-    ESP_EARLY_LOGI(TAG, "RTC reset %u wakeup %u store %u, reason is %u", hw_reset, hw_wakeup, hint, s_reset_reason);
+    ESP_LOGI(TAG, "RTC reset %u wakeup %u store %u, reason is %u", hw_reset, hw_wakeup, hint, s_reset_reason);
 }
 
 /**

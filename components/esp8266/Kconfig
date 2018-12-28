@@ -200,6 +200,19 @@ config ESP8266_CORE_GLOBAL_DATA_LINK_IRAM
     help
         Link libcore.a internal global data(.bss .data COMMON) from DRAM to IRAM.
 
+choice CRYSTAL_USED
+    prompt "Crystal used in your module or board"
+    default CRYSTAL_USED_26MHZ
+    help
+        For most modules, 26MHz is the default crystal. If you use special module,
+        you can reconfigure this option.
+
+config CRYSTAL_USED_26MHZ
+    bool "26MHz"
+config CRYSTAL_USED_40MHZ
+    bool "40MHz"
+endchoice
+
 endmenu
 
 menu WIFI
