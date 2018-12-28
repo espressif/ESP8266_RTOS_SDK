@@ -165,11 +165,23 @@ bool bootloader_common_erase_part_type_data(const char *list_erase, bool ota_dat
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <xtensa/hal.h>
+
 #include "esp_err.h"
 #include "esp_log.h"
 #include "crc.h"
 
+#include "rom/gpio.h"
+
 #include "bootloader_config.h"
+#include "bootloader_common.h"
+
+static const char *TAG = "bootloader_common";
+
+static inline uint32_t esp_log_early_timestamp()
+{
+    return xthal_get_ccount() / (80 * 1000);
+}
 
 uint32_t bootloader_common_ota_select_crc(const esp_ota_select_entry_t *s)
 {
@@ -179,6 +191,26 @@ uint32_t bootloader_common_ota_select_crc(const esp_ota_select_entry_t *s)
 bool bootloader_common_ota_select_valid(const esp_ota_select_entry_t *s)
 {
     return s->ota_seq != UINT32_MAX && s->crc == bootloader_common_ota_select_crc(s);
+}
+
+esp_comm_gpio_hold_t bootloader_common_check_long_hold_gpio(uint32_t num_pin, uint32_t delay_sec)
+{
+    gpio_pad_select_gpio(num_pin);
+    gpio_pad_pullup(num_pin);
+
+    uint32_t tm_start = esp_log_early_timestamp();
+    if (GPIO_INPUT_GET(num_pin) == 1) {
+        ESP_LOGD(TAG, "gpio %d input %x", num_pin, GPIO_INPUT_GET(num_pin));
+        return GPIO_NOT_HOLD;
+    }
+    do {
+        if (GPIO_INPUT_GET(num_pin) != 0) {
+            ESP_LOGD(TAG, "gpio %d input %x", num_pin, GPIO_INPUT_GET(num_pin));
+            return GPIO_SHORT_HOLD;
+        }
+    } while (delay_sec > ((esp_log_early_timestamp() - tm_start) / 1000L));
+    ESP_LOGD(TAG, "gpio %d input %x", num_pin, GPIO_INPUT_GET(num_pin));
+    return GPIO_LONG_HOLD;
 }
 
 #endif

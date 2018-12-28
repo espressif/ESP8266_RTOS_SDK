@@ -119,31 +119,40 @@ config BOOTLOADER_DATA_FACTORY_RESET
      default "nvs"
      help
         Allows customers to select which data partitions will be erased while factory reset.
-        
+
         Specify the names of partitions as a comma-delimited with optional spaces for readability. (Like this: "nvs, phy_init, ...")
         Make sure that the name specified in the partition table and here are the same. 
         Partitions of type "app" cannot be specified here.
 
 config BOOTLOADER_APP_TEST
     bool "GPIO triggers boot from test app partition"
-    default N
-    depends on TARGET_PLATFORM_ESP32
+    default n
     help
         Allows to run the test app from "TEST" partition.
         A boot from "test" partition will occur if there is a GPIO input pulled low while device starts up.
         See settings below.
 
+config BOOTLOADER_APP_TEST_IN_OTA_1
+    depends on BOOTLOADER_APP_TEST && TARGET_PLATFORM_ESP8266
+    bool "Put test app in the ota_1 partition"
+    default y
+    help
+        For the small SPI Flash solution, there maybe no enough space for the test app partition.
+        By enable this option, test app will locate in ota_1 partition by default.
+        After ota, the test app will be erased and re-write as new app.
+
+        If you disable this, make sure there has a test app partition in you partition table CVS.
+
 config BOOTLOADER_NUM_PIN_APP_TEST
     int "Number of the GPIO input to boot TEST partition"
     depends on BOOTLOADER_APP_TEST
-    range 0 39
-    default 18
+    range 0 15
+    default 2
     help
         The selected GPIO will be configured as an input with internal pull-up enabled.
-        To trigger a test app, this GPIO must be pulled low on reset.
+        To trigger a test app(the second ota firmware), this GPIO must be pulled low on reset.
         After the GPIO input is deactivated and the device reboots, the old application will boot. 
         (factory or OTA[x]).
-        Note that GPIO34-39 do not have an internal pullup and an external one must be provided.
 
 config BOOTLOADER_HOLD_TIME_GPIO
     int "Hold time of GPIO for reset/test mode (seconds)"

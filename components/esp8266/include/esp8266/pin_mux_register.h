@@ -151,4 +151,23 @@
         SET_PERI_REG_MASK(PIN_NAME, (((FUNC & BIT2) << 2) | (FUNC & 0x3)) << PERIPHS_IO_MUX_FUNC_S); \
     } while (0)
 
+#define PERIPHS_GPIO_MUX_REG(i) \
+    (i==0) ? PERIPHS_IO_MUX_GPIO0_U:  \
+    (i==1) ? PERIPHS_IO_MUX_U0TXD_U:  \
+    (i==2) ? PERIPHS_IO_MUX_GPIO2_U:  \
+    (i==3) ? PERIPHS_IO_MUX_U0RXD_U:  \
+    (i==4) ? PERIPHS_IO_MUX_GPIO4_U:  \
+    (i==5) ? PERIPHS_IO_MUX_GPIO5_U:  \
+    (i==6) ? PERIPHS_IO_MUX_SD_CLK_U:  \
+    (i==7) ? PERIPHS_IO_MUX_SD_DATA0_U:  \
+    (i==8) ? PERIPHS_IO_MUX_SD_DATA1_U:  \
+    (i==9) ? PERIPHS_IO_MUX_SD_DATA2_U:  \
+    (i==10)? PERIPHS_IO_MUX_SD_DATA3_U: \
+    (i==11)? PERIPHS_IO_MUX_SD_CMD_U: \
+    (i==12)? PERIPHS_IO_MUX_MTDI_U: \
+    (i==13)? PERIPHS_IO_MUX_MTCK_U: \
+    (i==14)? PERIPHS_IO_MUX_MTMS_U: \
+    (i==15)? PERIPHS_IO_MUX_MTDO_U: \
+    PAD_XPD_DCDC_CONF
+
 #endif //_PIN_MUX_H_
