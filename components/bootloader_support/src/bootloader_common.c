@@ -178,11 +178,6 @@ bool bootloader_common_erase_part_type_data(const char *list_erase, bool ota_dat
 
 static const char *TAG = "bootloader_common";
 
-static inline uint32_t esp_log_early_timestamp()
-{
-    return xthal_get_ccount() / (80 * 1000);
-}
-
 uint32_t bootloader_common_ota_select_crc(const esp_ota_select_entry_t *s)
 {
     return crc32_le(UINT32_MAX, (uint8_t*)&s->ota_seq, 4);

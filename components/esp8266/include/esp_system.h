@@ -19,8 +19,18 @@
 #include <stdbool.h>
 #include "esp_err.h"
 
+#include "sdkconfig.h"
+
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#if CONFIG_CRYSTAL_USED_26MHZ
+#define CRYSTAL_USED 26
+#endif
+
+#if CONFIG_CRYSTAL_USED_40MHZ
+#define CRYSTAL_USED 40
 #endif
 
 typedef enum {
