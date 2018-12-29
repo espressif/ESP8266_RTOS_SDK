@@ -623,6 +623,9 @@ static esp_err_t bootloader_main()
 
     ESP_LOGI(TAG, "compile time " __TIME__ );
 
+    extern void phy_reg_default(void);
+    phy_reg_default();
+
     print_flash_info(&fhdr);
 
     update_flash_config(&fhdr);

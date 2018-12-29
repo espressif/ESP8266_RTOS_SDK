@@ -1,6 +1,6 @@
 gwen:
     crypto:     8943c89
-    core:       254ecc9
+    core:       64146c3
     net80211:   bbfcc40
     pp:         2f7b347
     smartconfig:  2.8.0
