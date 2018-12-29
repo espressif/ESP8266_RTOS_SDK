@@ -10,6 +10,6 @@ LINKER_SCRIPTS := \
 	$(IDF_PATH)/components/esp8266/ld/esp8266.rom.ld \
 	esp8266.bootloader.rom.ld
 
-COMPONENT_ADD_LDFLAGS += -L $(COMPONENT_PATH) $(addprefix -T ,$(LINKER_SCRIPTS))
+COMPONENT_ADD_LDFLAGS += -L $(IDF_PATH)/components/esp8266/lib -lcore -L $(COMPONENT_PATH) $(addprefix -T ,$(LINKER_SCRIPTS))
 
 COMPONENT_ADD_LINKER_DEPS := $(LINKER_SCRIPTS)
