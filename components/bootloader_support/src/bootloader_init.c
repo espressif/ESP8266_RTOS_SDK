@@ -629,6 +629,9 @@ static esp_err_t bootloader_main()
     fhdr.spi_mode = CONFIG_SPI_FLASH_MODE;
 #endif
 
+    extern void phy_reg_default(void);
+    phy_reg_default();
+
     update_flash_config(&fhdr);
 
     print_flash_info(&fhdr);
