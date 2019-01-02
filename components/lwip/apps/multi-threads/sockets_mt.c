@@ -522,6 +522,7 @@ static void lwip_sync_mt(int s, int how)
     }  while (lock < SOCK_MT_LOCK_MAX);
 }
 
+#if SET_SOLINGER_DEFAULT
 #if LWIP_SO_LINGER
 static void lwip_socket_set_so_link(int s, int linger)
 {
@@ -538,8 +539,8 @@ static void lwip_socket_set_so_link(int s, int linger)
 }
 #else
 #error "LWIP_SO_LINGER must be enable"
-#endif
-
+#endif /* LWIP_SO_LINGER */
+#endif /* SET_SOLINGER_DEFAULT */
 
 int lwip_socket(int domain, int type, int protocol)
 {

@@ -1452,6 +1452,8 @@ size_t memp_malloc_get_size(size_t type);
  */
 #define LWIP_SO_LINGER                  1
 
+#define SET_SOLINGER_DEFAULT            CONFIG_SET_SOLINGER_DEFAULT
+
 /**
  * If LWIP_SO_RCVBUF is used, this is the default value for recv_bufsize.
  */
