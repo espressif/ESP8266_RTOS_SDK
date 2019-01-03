@@ -63,6 +63,17 @@ config LWIP_SOCKET_MULTITHREAD
         Enable the option can enable LWIP socket multithread and all
         function will be thread safe.
 
+config SET_SOLINGER_DEFAULT
+    bool "set socket SO_LINGER default"
+    default y
+    depends on LWIP_SOCKET_MULTITHREAD
+    help
+        The function is only used by socket multi-thread.
+
+        Enable this option can set the target socket to enable the "SO_LINGER" and config timeout to be "0" when it is created.
+        It means that if close the socket, all send queue will be dropped, so heap memory can be collected immediately,
+        but some packets which are waiting to be sent will lost.
+
 config ESP_UDP_SYNC_SEND
     bool "LWIP socket UDP sync send"
     default y
