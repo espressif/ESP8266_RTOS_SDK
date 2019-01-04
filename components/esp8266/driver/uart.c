@@ -249,30 +249,45 @@ esp_err_t uart_get_hw_flow_ctrl(uart_port_t uart_num, uart_hw_flowcontrol_t *flo
     return ESP_OK;
 }
 
-esp_err_t uart_wait_tx_done(uart_port_t uart_num)
+esp_err_t uart_wait_tx_done(uart_port_t uart_num, TickType_t ticks_to_wait)
 {
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
-
+    UART_CHECK((p_uart_obj[uart_num]), "uart driver error", ESP_ERR_INVALID_ARG);
+    uint32_t baudrate;
     uint32_t byte_delay_us = 0;
-    uart_get_baudrate(uart_num, &byte_delay_us);
-    byte_delay_us = (uint32_t)(10000000/byte_delay_us); // (1/baudrate)*10*1000_000 us
+    BaseType_t res;
+    portTickType ticks_end = xTaskGetTickCount() + ticks_to_wait;
 
+    // Take tx_mux
+    res = xSemaphoreTake(p_uart_obj[uart_num]->tx_mux, (portTickType)ticks_to_wait);
+    if(res == pdFALSE) {
+        return ESP_ERR_TIMEOUT;
+    }
+
+    uart_get_baudrate(uart_num, &baudrate);
+    byte_delay_us = (uint32_t)(10000000 / baudrate); // (1/baudrate)*10*1000_000 us
+
+    ticks_to_wait = ticks_end - xTaskGetTickCount();
     // wait for tx done sem.
-    if (pdTRUE == xSemaphoreTake(p_uart_obj[uart_num]->tx_done_sem, (portTickType)portMAX_DELAY)) {
+    if (pdTRUE == xSemaphoreTake(p_uart_obj[uart_num]->tx_done_sem, ticks_to_wait)) {
         while (1) {
             if (UART[uart_num]->status.txfifo_cnt == 0) {
                 ets_delay_us(byte_delay_us); // Delay one byte time to guarantee transmission completion 
                 break;
             }
         }
+    } else {
+        xSemaphoreGive(p_uart_obj[uart_num]->tx_mux);
+        return ESP_ERR_TIMEOUT;
     }
+    xSemaphoreGive(p_uart_obj[uart_num]->tx_mux);
     return ESP_OK;
 }
 
 esp_err_t uart_enable_swap(void)
 {
     // wait for tx done.
-    uart_wait_tx_done(UART_NUM_0);
+    uart_wait_tx_done(UART_NUM_0, portMAX_DELAY);
 
     UART_ENTER_CRITICAL();
     // MTCK -> UART0_CTS -> U0RXD
@@ -289,7 +304,7 @@ esp_err_t uart_enable_swap(void)
 esp_err_t uart_disable_swap(void)
 {
     // wait for tx done.
-    uart_wait_tx_done(UART_NUM_0);
+    uart_wait_tx_done(UART_NUM_0, portMAX_DELAY);
 
     UART_ENTER_CRITICAL();
     // disable swap U0TXD <-> UART0_RTS and U0RXD <-> UART0_CTS
