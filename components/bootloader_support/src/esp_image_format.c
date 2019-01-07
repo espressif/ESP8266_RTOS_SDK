@@ -944,7 +944,7 @@ static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, ui
         return ESP_FAIL;
     }
 #else
-    static char pbuf[SHA_CHUNK];
+    static uint32_t pbuf[SHA_CHUNK / sizeof(uint32_t)];
 #endif
 
     for (int i = 0; i < data_len; i += SHA_CHUNK) {
@@ -962,10 +962,8 @@ static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, ui
         }
 
 #if defined(CONFIG_ENABLE_BOOT_CHECK_SUM)
-        uint32_t *psum = (uint32_t *)pbuf;
-
         for (int i = 0; i < bytes / sizeof(uint32_t); i++)
-            *checksum ^= psum[i];
+            *checksum ^= pbuf[i];
 #endif
 
 #if defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
