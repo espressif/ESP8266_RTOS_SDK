@@ -184,7 +184,7 @@ static void mqtt_client_thread(void *pvParameters)
             continue;
         }
 
-        ESP_LOGI(TAG, "MQTT subscribe to topic %s OK", CONFIG_MQTT_PUB_TOPIC);
+        ESP_LOGI(TAG, "MQTT subscribe to topic %s OK", CONFIG_MQTT_SUB_TOPIC);
 
         for (;;) {
             MQTTMessage message;
