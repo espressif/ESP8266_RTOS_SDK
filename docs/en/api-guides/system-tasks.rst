@@ -81,4 +81,4 @@ Suggestions
 ===========
 
 In general, the priority of user task should NOT be higher than the system real timer task's priority (12). So it is suggested that keep your user tasks' priorities less than 12.  
-If you want to speed up the TCP/UDP throughput, you can try to set the priority of send/receive task to be higher than the "rtT" task's priority (8).
+If you want to speed up the TCP/UDP throughput, you can try to set the priority of send/receive task to be higher than the "tiT" task's priority (8).
