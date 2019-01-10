@@ -49,7 +49,7 @@ static const char *TAG = "pwm";
 #define AHEAD_TICKS0 0
 #define AHEAD_TICKS1 6
 #define AHEAD_TICKS2 8
-#define AHEAD_TICKS3 20
+#define AHEAD_TICKS3 2
 #define MAX_TICKS    10000000ul
 
 #define WDEVTSF0_TIME_LO     0x3ff21004
