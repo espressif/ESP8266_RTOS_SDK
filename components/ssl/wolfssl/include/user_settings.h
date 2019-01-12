@@ -31,6 +31,8 @@
 #define NO_RC4
 #define NO_RABBIT
 #define HAVE_ECC
+#define HAVE_AES_ECB
+#define WOLFSSL_AES_DIRECT
 #define WC_NO_HARDEN
 #define FREERTOS
 #define WOLFSSL_TYPES
@@ -39,6 +41,7 @@
 #define WOLFSSL_ALLOW_TLSV10
 #define WOLFSSL_SMALL_STACK
 #define SMALL_SESSION_CACHE
+#define OPENSSL_EXTRA
 
 #define SSL_CTX_use_certificate_ASN1(ctx,len,buf) wolfSSL_CTX_use_certificate_buffer(ctx,buf,len,WOLFSSL_FILETYPE_PEM)
 #define SSL_CTX_use_PrivateKey_ASN1(type,ctx,buf,len) wolfSSL_CTX_use_PrivateKey_buffer(ctx,buf,len, WOLFSSL_FILETYPE_PEM)
@@ -54,6 +57,7 @@
 #endif
 
 #ifndef CUSTOM_RAND_GENERATE_BLOCK
+#include "esp_libc.h"
     /* To use define the following:*/
     #define CUSTOM_RAND_GENERATE_BLOCK os_get_random
 #endif

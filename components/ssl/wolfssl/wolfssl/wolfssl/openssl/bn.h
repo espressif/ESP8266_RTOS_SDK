@@ -1,16 +1,21 @@
 /* bn.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
  * Contact licensing@wolfssl.com with any questions or comments.
  *
- * http://www.wolfssl.com
+ * https://www.wolfssl.com
  */
 
 
 /* bn.h for openssl */
+
+/*!
+    \file wolfssl/openssl/bn.h
+    \brief bn.h for openssl
+*/
 
 
 #ifndef WOLFSSL_BN_H_
@@ -96,7 +101,7 @@ WOLFSSL_API int wolfSSL_BN_is_prime_ex(const WOLFSSL_BIGNUM*, int,
 WOLFSSL_API WOLFSSL_BN_ULONG wolfSSL_BN_mod_word(const WOLFSSL_BIGNUM*,
                                                  WOLFSSL_BN_ULONG);
 #if !defined(NO_FILESYSTEM) && !defined(NO_STDIO_FILESYSTEM)
-    WOLFSSL_API int wolfSSL_BN_print_fp(FILE*, const WOLFSSL_BIGNUM*);
+    WOLFSSL_API int wolfSSL_BN_print_fp(XFILE, const WOLFSSL_BIGNUM*);
 #endif
 WOLFSSL_API int wolfSSL_BN_rshift(WOLFSSL_BIGNUM*, const WOLFSSL_BIGNUM*, int);
 WOLFSSL_API WOLFSSL_BIGNUM *wolfSSL_BN_CTX_get(WOLFSSL_BN_CTX *ctx);

@@ -1,16 +1,18 @@
 /* hmac.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
  * Contact licensing@wolfssl.com with any questions or comments.
  *
- * http://www.wolfssl.com
+ * https://www.wolfssl.com
  */
 
 
-
+/*!
+    \file wolfssl/wolfcrypt/hmac.h
+*/
 
 #ifndef NO_HMAC
 
@@ -19,17 +21,26 @@
 
 #include <wolfssl/wolfcrypt/hash.h>
 
-#ifdef HAVE_FIPS
-/* for fips */
+#if defined(HAVE_FIPS) && \
+	(!defined(HAVE_FIPS_VERSION) || (HAVE_FIPS_VERSION < 2))
+/* for fips @wc_fips */
     #include <cyassl/ctaocrypt/hmac.h>
     #define WC_HMAC_BLOCK_SIZE HMAC_BLOCK_SIZE
 #endif
 
 
+#if defined(HAVE_FIPS) && \
+	defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION >= 2)
+	#include <wolfssl/wolfcrypt/fips.h>
+#endif
+
 #ifdef __cplusplus
     extern "C" {
 #endif
-#ifndef HAVE_FIPS
+
+/* avoid redefinition of structs */
+#if !defined(HAVE_FIPS) || \
+    (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION >= 2))
 
 #ifdef WOLFSSL_ASYNC_CRYPT
     #include <wolfssl/wolfcrypt/async.h>
@@ -47,62 +58,42 @@ enum {
 
 /* If any hash is not enabled, add the ID here. */
 #ifdef NO_MD5
-    WC_MD5     = 0,
+    WC_MD5     = WC_HASH_TYPE_MD5,
 #endif
 #ifdef NO_SHA
-    WC_SHA     = 1,
+    WC_SHA     = WC_HASH_TYPE_SHA,
 #endif
 #ifdef NO_SHA256
-    WC_SHA256  = 2,
+    WC_SHA256  = WC_HASH_TYPE_SHA256,
 #endif
 #ifndef WOLFSSL_SHA512
-    WC_SHA512  = 4,
+    WC_SHA512  = WC_HASH_TYPE_SHA512,
 #endif
 #ifndef WOLFSSL_SHA384
-    WC_SHA384  = 5,
+    WC_SHA384  = WC_HASH_TYPE_SHA384,
 #endif
 #ifndef HAVE_BLAKE2
-    BLAKE2B_ID = 7,
+    BLAKE2B_ID = WC_HASH_TYPE_BLAKE2B,
 #endif
 #ifndef WOLFSSL_SHA224
-    WC_SHA224  = 8,
+    WC_SHA224  = WC_HASH_TYPE_SHA224,
 #endif
 #ifndef WOLFSSL_SHA3
-    WC_SHA3_224 = 10,
-    WC_SHA3_256 = 11,
-    WC_SHA3_384 = 12,
-    WC_SHA3_512 = 13,
-#else
-    /* These values are used for HMAC, not SHA-3 directly.
-     * They come from from FIPS PUB 202. */
-    WC_SHA3_224_BLOCK_SIZE = 144,
-    WC_SHA3_256_BLOCK_SIZE = 136,
-    WC_SHA3_384_BLOCK_SIZE = 104,
-    WC_SHA3_512_BLOCK_SIZE = 72,
-#endif
-
-/* Select the largest available hash for the buffer size. */
-#if defined(WOLFSSL_SHA3)
-    WC_HMAC_BLOCK_SIZE = WC_SHA3_224_BLOCK_SIZE
-        /* SHA3-224 has the largest block size */
-#elif defined(WOLFSSL_SHA512)
-    WC_HMAC_BLOCK_SIZE = WC_SHA512_BLOCK_SIZE,
-#elif defined(HAVE_BLAKE2)
-    WC_HMAC_BLOCK_SIZE = BLAKE2B_BLOCKBYTES,
-#elif defined(WOLFSSL_SHA384)
-    WC_HMAC_BLOCK_SIZE = WC_SHA384_BLOCK_SIZE
-#elif !defined(NO_SHA256)
-    WC_HMAC_BLOCK_SIZE = WC_SHA256_BLOCK_SIZE
-#elif defined(WOLFSSL_SHA224)
-    WC_HMAC_BLOCK_SIZE = WC_SHA224_BLOCK_SIZE
-#elif !defined(NO_SHA)
-    WC_HMAC_BLOCK_SIZE = WC_SHA_BLOCK_SIZE,
-#elif !defined(NO_MD5)
-    WC_HMAC_BLOCK_SIZE = WC_MD5_BLOCK_SIZE,
-#else
-    #error "You have to have some kind of hash if you want to use HMAC."
+    WC_SHA3_224 = WC_HASH_TYPE_SHA3_224,
+    WC_SHA3_256 = WC_HASH_TYPE_SHA3_256,
+    WC_SHA3_384 = WC_HASH_TYPE_SHA3_384,
+    WC_SHA3_512 = WC_HASH_TYPE_SHA3_512,
 #endif
 };
+
+/* Select the largest available hash for the buffer size. */
+#define WC_HMAC_BLOCK_SIZE WC_MAX_BLOCK_SIZE
+
+#if !defined(WOLFSSL_SHA3) && !defined(WOLFSSL_SHA512) && !defined(HAVE_BLAKE2) && \
+    !defined(WOLFSSL_SHA384) && defined(NO_SHA256) && defined(WOLFSSL_SHA224) && \
+     defined(NO_SHA) && defined(NO_MD5)
+    #error "You have to have some kind of hash if you want to use HMAC."
+#endif
 
 
 /* hash union */
@@ -119,17 +110,17 @@ typedef union {
 #ifndef NO_SHA256
     wc_Sha256 sha256;
 #endif
-#ifdef WOLFSSL_SHA512
 #ifdef WOLFSSL_SHA384
     wc_Sha384 sha384;
 #endif
+#ifdef WOLFSSL_SHA512
     wc_Sha512 sha512;
 #endif
 #ifdef HAVE_BLAKE2
     Blake2b blake2b;
 #endif
 #ifdef WOLFSSL_SHA3
-    Sha3 sha3;
+    wc_Sha3 sha3;
 #endif
 } Hash;
 
@@ -146,10 +137,6 @@ typedef struct Hmac {
 #ifdef WOLFSSL_ASYNC_CRYPT
     WC_ASYNC_DEV asyncDev;
     word16       keyLen;          /* hmac key length (key in ipad) */
-    #ifdef HAVE_CAVIUM
-        byte*    data;            /* buffered input data for one call */
-        word16   dataLen;
-    #endif /* HAVE_CAVIUM */
 #endif /* WOLFSSL_ASYNC_CRYPT */
 } Hmac;
 

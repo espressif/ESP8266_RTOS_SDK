@@ -1,12 +1,12 @@
 /* rsa.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
  * Contact licensing@wolfssl.com with any questions or comments.
  *
- * http://www.wolfssl.com
+ * https://www.wolfssl.com
  */
 
 
@@ -23,21 +23,9 @@
     extern "C" {
 #endif
 
-#if !defined(NO_RSA) && !defined(HAVE_USER_RSA)
-#if defined(HAVE_FIPS) || \
-        (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION < 2))
-    /*
-    choice of padding added after fips, so not available when using fips RSA
-    */
-
-    /* Padding types */
-    #define RSA_PKCS1_PADDING      0
-    #define RSA_PKCS1_OAEP_PADDING 1
-#else
-    #define RSA_PKCS1_PADDING      WC_RSA_PKCSV15_PAD
-    #define RSA_PKCS1_OAEP_PADDING WC_RSA_OAEP_PAD
-#endif /* HAVE_FIPS */
-#endif
+/* Padding types */
+#define RSA_PKCS1_PADDING      0
+#define RSA_PKCS1_OAEP_PADDING 1
 
 #ifndef WOLFSSL_RSA_TYPE_DEFINED /* guard on redeclaration */
 typedef struct WOLFSSL_RSA            WOLFSSL_RSA;
@@ -98,6 +86,7 @@ WOLFSSL_API int wolfSSL_RSA_LoadDer_ex(WOLFSSL_RSA*, const unsigned char*, int s
 
 #define WOLFSSL_RSA_LOAD_PRIVATE 1
 #define WOLFSSL_RSA_LOAD_PUBLIC  2
+#define WOLFSSL_RSA_F4           0x10001L
 
 #define RSA_new  wolfSSL_RSA_new
 #define RSA_free wolfSSL_RSA_free
@@ -114,6 +103,7 @@ WOLFSSL_API int wolfSSL_RSA_LoadDer_ex(WOLFSSL_RSA*, const unsigned char*, int s
 #define RSA_verify          wolfSSL_RSA_verify
 #define RSA_public_decrypt wolfSSL_RSA_public_decrypt
 
+#define RSA_F4             WOLFSSL_RSA_F4
 
 #ifdef __cplusplus
     }  /* extern "C" */
