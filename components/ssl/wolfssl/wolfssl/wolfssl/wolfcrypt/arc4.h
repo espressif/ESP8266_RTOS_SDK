@@ -1,16 +1,18 @@
 /* arc4.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
  * Contact licensing@wolfssl.com with any questions or comments.
  *
- * http://www.wolfssl.com
+ * https://www.wolfssl.com
  */
 
 
-
+/*!
+    \file wolfssl/wolfcrypt/arc4.h
+*/
 
 #ifndef WOLF_CRYPT_ARC4_H
 #define WOLF_CRYPT_ARC4_H
@@ -27,7 +29,8 @@
 
 enum {
 	ARC4_ENC_TYPE   = 4,    /* cipher unique type */
-    ARC4_STATE_SIZE = 256
+    ARC4_STATE_SIZE = 256,
+    RC4_KEY_SIZE    = 16,   /* always 128bit           */
 };
 
 /* ARC4 encryption and decryption */

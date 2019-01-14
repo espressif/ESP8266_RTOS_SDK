@@ -2,7 +2,7 @@ menu "SSL"
 
 choice SSL_LIBRARY_CHOOSE
     prompt "Choose SSL/TLS library"
-    default SSL_USING_WOLFSSL
+    default SSL_USING_MBEDTLS
     help
         Choose the SSL/TLS library which you want to use.
 
@@ -15,6 +15,17 @@ config SSL_USING_AXTLS
 config SSL_USING_WOLFSSL
     bool "wolfSSL"
 endchoice
+
+menu "wolfSSL"
+    depends on SSL_USING_WOLFSSL
+
+config WOLFSSL_DEBUG
+   bool "Enable wolfSSL debugging"
+   default n
+   help
+       Enable wolfSSL debugging functions at compile time.
+
+endmenu  # wolfSSL
 
 menu "mbedTLS"
     depends on SSL_USING_MBEDTLS

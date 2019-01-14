@@ -1,14 +1,18 @@
 /* sha256.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
  * Contact licensing@wolfssl.com with any questions or comments.
  *
- * http://www.wolfssl.com
+ * https://www.wolfssl.com
  */
 
+
+/*!
+    \file wolfssl/wolfcrypt/sha256.h
+*/
 
 
 /* code submitted by raphael.huck@efixo.com */
@@ -20,7 +24,13 @@
 
 #ifndef NO_SHA256
 
-#ifdef HAVE_FIPS
+#if defined(HAVE_FIPS) && \
+    defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION >= 2)
+    #include <wolfssl/wolfcrypt/fips.h>
+#endif /* HAVE_FIPS_VERSION >= 2 */
+
+#if defined(HAVE_FIPS) && \
+	(!defined(HAVE_FIPS_VERSION) || (HAVE_FIPS_VERSION < 2))
     #define wc_Sha256             Sha256
     #define WC_SHA256             SHA256
     #define WC_SHA256_BLOCK_SIZE  SHA256_BLOCK_SIZE
@@ -48,7 +58,9 @@
     extern "C" {
 #endif
 
-#ifndef HAVE_FIPS /* avoid redefinition of structs */
+/* avoid redefinition of structs */
+#if !defined(HAVE_FIPS) || \
+    (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION >= 2))
 
 #ifdef WOLFSSL_MICROCHIP_PIC32MZ
     #include <wolfssl/wolfcrypt/port/pic32/pic32mz-crypt.h>
@@ -59,6 +71,9 @@
 #ifdef WOLFSSL_ASYNC_CRYPT
     #include <wolfssl/wolfcrypt/async.h>
 #endif
+#if defined(WOLFSSL_DEVCRYPTO) && defined(WOLFSSL_DEVCRYPTO_HASH)
+    #include <wolfssl/wolfcrypt/port/devcrypto/wc_devcrypto.h>
+#endif
 
 #if defined(_MSC_VER)
     #define SHA256_NOINLINE __declspec(noinline)
@@ -68,9 +83,10 @@
     #define SHA256_NOINLINE
 #endif
 
-#ifndef NO_OLD_SHA256_NAMES
+#if !defined(NO_OLD_SHA_NAMES)
     #define SHA256             WC_SHA256
 #endif
+
 #ifndef NO_OLD_WC_NAMES
     #define Sha256             wc_Sha256
     #define SHA256_BLOCK_SIZE  WC_SHA256_BLOCK_SIZE
@@ -80,16 +96,19 @@
 
 /* in bytes */
 enum {
-    WC_SHA256              =  2,   /* hash type unique */
+    WC_SHA256              =  WC_HASH_TYPE_SHA256,
     WC_SHA256_BLOCK_SIZE   = 64,
     WC_SHA256_DIGEST_SIZE  = 32,
     WC_SHA256_PAD_SIZE     = 56
 };
 
+
 #ifdef WOLFSSL_TI_HASH
     #include "wolfssl/wolfcrypt/port/ti/ti-hash.h"
 #elif defined(WOLFSSL_IMX6_CAAM)
     #include "wolfssl/wolfcrypt/port/caam/wolfcaam_sha.h"
+#elif defined(WOLFSSL_AFALG_HASH)
+    #include "wolfssl/wolfcrypt/port/af_alg/afalg_hash.h"
 #else
 /* wc_Sha256 digest */
 typedef struct wc_Sha256 {
@@ -114,6 +133,15 @@ typedef struct wc_Sha256 {
 #ifdef WOLFSSL_ASYNC_CRYPT
     WC_ASYNC_DEV asyncDev;
 #endif /* WOLFSSL_ASYNC_CRYPT */
+#ifdef WOLFSSL_SMALL_STACK_CACHE
+    word32* W;
+#endif
+#ifdef WOLFSSL_DEVCRYPTO_HASH
+    WC_CRYPTODEV ctx;
+    byte*  msg;
+    word32 used;
+    word32 len;
+#endif
 #endif
 } wc_Sha256;
 
@@ -124,6 +152,7 @@ typedef struct wc_Sha256 {
 WOLFSSL_API int wc_InitSha256(wc_Sha256*);
 WOLFSSL_API int wc_InitSha256_ex(wc_Sha256*, void*, int);
 WOLFSSL_API int wc_Sha256Update(wc_Sha256*, const byte*, word32);
+WOLFSSL_API int wc_Sha256FinalRaw(wc_Sha256*, byte*);
 WOLFSSL_API int wc_Sha256Final(wc_Sha256*, byte*);
 WOLFSSL_API void wc_Sha256Free(wc_Sha256*);
 
@@ -135,7 +164,9 @@ WOLFSSL_API void wc_Sha256SizeSet(wc_Sha256*, word32);
 #endif
 
 #ifdef WOLFSSL_SHA224
-#ifndef HAVE_FIPS /* avoid redefinition of structs */
+/* avoid redefinition of structs */
+#if !defined(HAVE_FIPS) || \
+    (defined(HAVE_FIPS_VERSION) && (HAVE_FIPS_VERSION >= 2))
 
 #ifndef NO_OLD_WC_NAMES
     #define Sha224             wc_Sha224
@@ -147,11 +178,12 @@ WOLFSSL_API void wc_Sha256SizeSet(wc_Sha256*, word32);
 
 /* in bytes */
 enum {
-    WC_SHA224              =   8,   /* hash type unique */
+    WC_SHA224              =   WC_HASH_TYPE_SHA224,
     WC_SHA224_BLOCK_SIZE   =   WC_SHA256_BLOCK_SIZE,
     WC_SHA224_DIGEST_SIZE  =   28,
     WC_SHA224_PAD_SIZE     =   WC_SHA256_PAD_SIZE
 };
+
 
 typedef wc_Sha256 wc_Sha224;
 #endif /* HAVE_FIPS */

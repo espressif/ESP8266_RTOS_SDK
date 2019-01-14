@@ -1,14 +1,18 @@
 /* md5.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
  * Contact licensing@wolfssl.com with any questions or comments.
  *
- * http://www.wolfssl.com
+ * https://www.wolfssl.com
  */
 
+
+/*!
+    \file wolfssl/wolfcrypt/md5.h
+*/
 
 
 #ifndef WOLF_CRYPT_MD5_H
@@ -39,11 +43,12 @@
 
 /* in bytes */
 enum {
-    WC_MD5             =  0,      /* hash type unique */
+    WC_MD5             =  WC_HASH_TYPE_MD5,
     WC_MD5_BLOCK_SIZE  = 64,
     WC_MD5_DIGEST_SIZE = 16,
     WC_MD5_PAD_SIZE    = 56
 };
+
 
 #ifdef WOLFSSL_MICROCHIP_PIC32MZ
     #include <wolfssl/wolfcrypt/port/pic32/pic32mz-crypt.h>

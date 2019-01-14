@@ -1,12 +1,12 @@
 /* sha.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
  * Contact licensing@wolfssl.com with any questions or comments.
  *
- * http://www.wolfssl.com
+ * https://www.wolfssl.com
  */
 
 
@@ -110,7 +110,7 @@ typedef WOLFSSL_SHA256_CTX SHA256_CTX;
 #define SHA256_Init   wolfSSL_SHA256_Init
 #define SHA256_Update wolfSSL_SHA256_Update
 #define SHA256_Final  wolfSSL_SHA256_Final
-#if defined(NO_OLD_SHA256_NAMES) && !defined(HAVE_FIPS)
+#if defined(NO_OLD_SHA_NAMES) && !defined(HAVE_FIPS) && !defined(HAVE_SELFTEST)
     /* SHA256 is only available in non-fips mode because of SHA256 enum in FIPS
      * build. */
     #define SHA256 wolfSSL_SHA256
@@ -139,7 +139,11 @@ typedef WOLFSSL_SHA384_CTX SHA384_CTX;
 #define SHA384_Init   wolfSSL_SHA384_Init
 #define SHA384_Update wolfSSL_SHA384_Update
 #define SHA384_Final  wolfSSL_SHA384_Final
-
+#if defined(NO_OLD_SHA_NAMES) && !defined(HAVE_FIPS) && !defined(HAVE_SELFTEST)
+    /* SHA384 is only available in non-fips mode because of SHA384 enum in FIPS
+     * build. */
+    #define SHA384 wolfSSL_SHA384
+#endif
 #endif /* WOLFSSL_SHA384 */
 
 #ifdef WOLFSSL_SHA512
@@ -164,7 +168,11 @@ typedef WOLFSSL_SHA512_CTX SHA512_CTX;
 #define SHA512_Init   wolfSSL_SHA512_Init
 #define SHA512_Update wolfSSL_SHA512_Update
 #define SHA512_Final  wolfSSL_SHA512_Final
-
+#if defined(NO_OLD_SHA_NAMES) && !defined(HAVE_FIPS) && !defined(HAVE_SELFTEST)
+    /* SHA512 is only available in non-fips mode because of SHA512 enum in FIPS
+     * build. */
+    #define SHA512 wolfSSL_SHA512
+#endif
 #endif /* WOLFSSL_SHA512 */
 
 
