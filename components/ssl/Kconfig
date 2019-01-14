@@ -2,7 +2,7 @@ menu "SSL"
 
 choice SSL_LIBRARY_CHOOSE
     prompt "Choose SSL/TLS library"
-    default SSL_USING_WOLFSSL
+    default SSL_USING_MBEDTLS
     help
         Choose the SSL/TLS library which you want to use.
 
