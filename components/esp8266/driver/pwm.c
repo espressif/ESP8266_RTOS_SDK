@@ -274,7 +274,7 @@ static void pwm_timer_enable(uint8_t enable)
 static void IRAM_ATTR pwm_timer_intr_handler(void)
 {
     //process continous event
-    uint32_t mask = 0;
+    uint32_t mask = REG_READ(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS);
 
     // In the interrupt handler, first check for data updates, then switch to the updated array at the end of a cycle, start outputting new PWM waveforms, and clear the update flag.
     while (1) {
@@ -290,7 +290,6 @@ static void IRAM_ATTR pwm_timer_intr_handler(void)
                     pwm_obj->run_pwm_toggle = (pwm_obj->run_pwm_toggle ^ 0x1);
                     pwm_obj->update_done = 0;
                 }
-                mask = REG_READ(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS);
                 mask = mask & (~pwm_obj->single->run_pwm_param[pwm_obj->single->run_channel_num - 1].io_clr_mask);
                 mask = mask | pwm_obj->single->run_pwm_param[pwm_obj->single->run_channel_num - 1].io_set_mask;
                 REG_WRITE(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS, mask);
@@ -316,7 +315,7 @@ static void IRAM_ATTR pwm_timer_intr_handler(void)
     }
 
     REG_WRITE(WDEVTSFSW0_LO, 0);
-    //WARNING, pwm_obj->this_target - AHEAD_TICKS1 should be bigger than 20 (https problem) 
+    //WARNING, pwm_obj->this_target - AHEAD_TICKS1 should be bigger than 2
     REG_WRITE(WDEVTSF0_TIMER_LO, pwm_obj->this_target - AHEAD_TICKS1);
     REG_WRITE(WDEVTSF0TIMER_ENA, WDEV_TSF0TIMER_ENA);
 }
