@@ -16,6 +16,17 @@ config SSL_USING_WOLFSSL
     bool "wolfSSL"
 endchoice
 
+menu "wolfSSL"
+    depends on SSL_USING_WOLFSSL
+
+config WOLFSSL_DEBUG
+   bool "Enable wolfSSL debugging"
+   default n
+   help
+       Enable wolfSSL debugging functions at compile time.
+
+endmenu  # wolfSSL
+
 menu "mbedTLS"
     depends on SSL_USING_MBEDTLS
 
