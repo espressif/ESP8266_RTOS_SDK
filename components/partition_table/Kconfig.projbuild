@@ -1,0 +1,106 @@
+menu "Partition Table"
+
+choice PARTITION_TABLE_TYPE
+    prompt "Partition Table"
+    default PARTITION_TABLE_SINGLE_APP
+    help
+        The partition table to flash to the ESP32. The partition table
+        determines where apps, data and other resources are expected to
+        be found.
+
+        The predefined partition table CSV descriptions can be found
+        in the components/partition_table directory. Otherwise it's
+        possible to create a new custom partition CSV for your application.
+
+config PARTITION_TABLE_SINGLE_APP
+    bool "Single factory app, no OTA"
+config PARTITION_TABLE_TWO_OTA
+    bool "Factory app, two OTA definitions"
+config PARTITION_TABLE_CUSTOM
+    bool "Custom partition table CSV"
+endchoice
+
+config PARTITION_TABLE_CUSTOM_FILENAME
+    string "Custom partition CSV file" if PARTITION_TABLE_CUSTOM
+    default partitions.csv
+    help
+        Name of the custom partition CSV filename. This path is evaluated
+        relative to the project root directory.
+
+config PARTITION_TABLE_OFFSET
+    hex "Partition table offset address at flash"
+    default 0x8000
+    help
+        The partition table cannot be placed at application address.
+
+config PARTITION_TABLE_CUSTOM_PHY_DATA_OFFSET
+    hex "PHY data partition offset" if PARTITION_TABLE_CUSTOM
+    depends on ESP_PHY_INIT_DATA_IN_PARTITION
+    default 0xf000
+    help
+        If using a custom partition table, specify the offset in the flash
+        where 'make flash' should write the initial PHY data file.
+
+
+config PARTITION_TABLE_FILENAME
+       string
+       default partitions_singleapp.csv if PARTITION_TABLE_SINGLE_APP && !ESP32_ENABLE_COREDUMP_TO_FLASH
+       default partitions_singleapp_coredump.csv if PARTITION_TABLE_SINGLE_APP && ESP32_ENABLE_COREDUMP_TO_FLASH
+       default partitions_two_ota.csv if PARTITION_TABLE_TWO_OTA && !ESP32_ENABLE_COREDUMP_TO_FLASH && !ESPTOOLPY_FLASHSIZE_1MB
+       default partitions_two_ota.1MB.csv if PARTITION_TABLE_TWO_OTA && !ESP32_ENABLE_COREDUMP_TO_FLASH && ESPTOOLPY_FLASHSIZE_1MB
+       default partitions_two_ota_coredump.csv if PARTITION_TABLE_TWO_OTA && ESP32_ENABLE_COREDUMP_TO_FLASH
+       default PARTITION_TABLE_CUSTOM_FILENAME if PARTITION_TABLE_CUSTOM
+
+config PHY_DATA_OFFSET
+       depends on ESP_PHY_INIT_DATA_IN_PARTITION
+       hex
+       default PARTITION_TABLE_CUSTOM_PHY_DATA_OFFSET if PARTITION_TABLE_CUSTOM
+       default 0xf000 # this is the factory app offset used by the default tables
+
+config APP2_SUPPORT
+    depends on ESPTOOLPY_FLASHSIZE_1MB && (PARTITION_TABLE_TWO_OTA || PARTITION_TABLE_CUSTOM)
+    bool "Support to setup partition parameter of APP2" if PARTITION_TABLE_CUSTOM
+    default y
+    help
+        Enable this option, if you want to have APP1 & APP2 in 1MB SPI Flash.
+
+config APP1_OFFSET
+    hex "APP1 partition offset" if PARTITION_TABLE_CUSTOM
+    default 0x10000
+    help
+        If using a custom partition table, specify the offset in the flash
+        where the APP1 located.
+
+        It should be same as the value in the custom partition table CSV.
+
+config APP1_SIZE
+    hex "APP1 partition size(by bytes)" if PARTITION_TABLE_CUSTOM
+    default 0x70000 if APP2_SUPPORT
+    default 0xF0000
+    help
+        APP1 partition size by bytes.
+
+        It should be same as the value in the custom partition table CSV.
+
+config APP2_OFFSET
+    depends on APP2_SUPPORT
+    hex "APP2 partition offset" if PARTITION_TABLE_CUSTOM
+    default 0x80000
+    help
+        If using a custom partition table, specify the offset in the flash
+        where the APP2 located.
+
+        It should be same as the value in the custom partition table CSV.
+
+config APP2_SIZE
+    depends on APP2_SUPPORT
+    hex "APP2 partition size(by bytes)" if PARTITION_TABLE_CUSTOM
+    default 0x70000
+    help
+        APP2 partition size by bytes.
+
+        It should be same as the value in the custom partition table CSV.
+
+endmenu
+
+

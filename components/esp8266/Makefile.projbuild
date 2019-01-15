@@ -1,0 +1,121 @@
+SUPPORTED_TOOLCHAIN_COMMIT_DESC := 1.22.0-92-g8facf4c
+SUPPORTED_TOOLCHAIN_GCC_VERSIONS := 5.2.0
+
+ifdef CONFIG_ESP8266_LEGACY
+
+BOOTLOADER_FIRMWARE_DIR := $(abspath $(COMPONENT_PATH))/firmware
+
+ESPTOOLPY_FLASHSIZE ?= $(CONFIG_ESPTOOLPY_FLASHSIZE)
+
+ifeq ($(ESPTOOLPY_FLASHSIZE), "2MB")
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x1FC000
+endif
+
+ifeq ($(ESPTOOLPY_FLASHSIZE), "4MB")
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x3FC000
+endif
+
+ifeq ($(ESPTOOLPY_FLASHSIZE), "8MB")
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0x7FC000
+endif
+
+ifeq ($(ESPTOOLPY_FLASHSIZE), "16MB")
+ESP_INIT_DATA_DEFAULT_BIN_OFFSET := 0xFFC000
+endif
+
+ESP_INIT_DATA_DEFAULT_BIN := $(BOOTLOADER_FIRMWARE_DIR)/esp_init_data_default.bin
+
+ESPTOOL_ALL_FLASH_ARGS += $(ESP_INIT_DATA_DEFAULT_BIN_OFFSET) $(ESP_INIT_DATA_DEFAULT_BIN)
+
+else
+
+ifdef CONFIG_ESP_PHY_INIT_DATA_IN_PARTITION
+
+PHY_INIT_DATA_OBJ = $(BUILD_DIR_BASE)/phy_init_data.o
+PHY_INIT_DATA_BIN = $(BUILD_DIR_BASE)/phy_init_data.bin
+
+# Command to flash PHY init data partition
+PHY_INIT_DATA_FLASH_CMD = $(ESPTOOLPY_SERIAL) write_flash $(CONFIG_PHY_DATA_OFFSET) $(PHY_INIT_DATA_BIN)
+ESPTOOL_ALL_FLASH_ARGS += $(CONFIG_PHY_DATA_OFFSET) $(PHY_INIT_DATA_BIN)
+
+ESP8266_COMPONENT_PATH := $(COMPONENT_PATH)
+
+$(PHY_INIT_DATA_OBJ): $(ESP8266_COMPONENT_PATH)/source/phy_init_data.h $(BUILD_DIR_BASE)/include/sdkconfig.h
+	$(summary) CC $(notdir $@)
+	printf "#include \"source/phy_init_data.h\"\n" | $(CC) -I $(BUILD_DIR_BASE)/include -I $(ESP8266_COMPONENT_PATH) -I $(ESP8266_COMPONENT_PATH)/include -c -o $@ -xc -
+
+$(PHY_INIT_DATA_BIN): $(PHY_INIT_DATA_OBJ)
+	$(summary) BIN $(notdir $@)
+	$(OBJCOPY) -O binary $< $@
+
+phy_init_data: $(PHY_INIT_DATA_BIN)
+
+phy_init_data-flash: $(BUILD_DIR_BASE)/phy_init_data.bin
+	@echo "Flashing PHY init data..."
+	$(PHY_INIT_DATA_FLASH_CMD)
+
+phy_init_data-clean:
+	rm -f $(PHY_INIT_DATA_BIN) $(PHY_INIT_DATA_OBJ)
+
+all: phy_init_data
+flash: phy_init_data
+
+endif # CONFIG_ESP_PHY_INIT_DATA_IN_PARTITION
+
+endif
+
+# global CFLAGS for ESP8266
+CFLAGS += -DICACHE_FLASH
+
+ifdef CONFIG_ESP_FILENAME_MACRO_NO_PATH
+CFLAGS += -D__ESP_FILE__='"$$(subst $$(dir $$<),,$$<)"'
+CXXFLAGS +=  -D__ESP_FILE__='"$$(subst $$(dir $$<),,$$<)"'
+endif
+
+ifdef CONFIG_ESP_FILENAME_MACRO_RAW
+CFLAGS += -D__ESP_FILE__=__FILE__
+CXXFLAGS += -D__ESP_FILE__=__FILE__
+endif
+
+ifdef CONFIG_ESP_FILENAME_MACRO_NULL
+CFLAGS += -D__ESP_FILE__='"null"'
+CXXFLAGS += -D__ESP_FILE__='"null"'
+endif
+
+.PHONY: ota ota-clean
+
+RAW_BIN := ./build/$(PROJECT_NAME).bin
+OTA_BIN := ./build/$(PROJECT_NAME).ota.bin
+OTA1_BIN := ./build/$(PROJECT_NAME).app1.bin
+OTA2_BIN := ./build/$(PROJECT_NAME).app2.bin
+
+$(OTA2_BIN): all_binaries
+ifeq ($(CONFIG_ESPTOOLPY_FLASHSIZE), "1MB")
+	@rm -f ./build/esp8266/esp8266_out.ld
+	@make APP_OFFSET=$(CONFIG_APP2_OFFSET) APP_SIZE=$(CONFIG_APP2_SIZE) CFLAGS= CXXFLAGS=
+endif
+	@cp $(RAW_BIN) $(OTA2_BIN)
+	@echo [GEN] $(OTA2_BIN)
+
+$(OTA1_BIN): all_binaries
+ifeq ($(CONFIG_ESPTOOLPY_FLASHSIZE), "1MB")
+	@rm -f ./build/esp8266/esp8266_out.ld
+endif
+	@make APP_OFFSET=$(CONFIG_APP1_OFFSET) APP_SIZE=$(CONFIG_APP1_SIZE) CFLAGS= CXXFLAGS=
+	@cp $(RAW_BIN) $(OTA1_BIN)
+	@echo [GEN] $(OTA1_BIN)
+
+$(OTA_BIN): $(OTA1_BIN) $(OTA2_BIN)
+	@cp $(OTA1_BIN) $(OTA_BIN)
+ifeq ($(CONFIG_ESPTOOLPY_FLASHSIZE), "1MB")
+	@cat $(OTA2_BIN) >> $(OTA_BIN)
+endif
+	@cp $(OTA1_BIN) $(RAW_BIN)
+	@echo [GEN] $(OTA_BIN)
+
+ota: $(OTA_BIN)
+
+ota-clean:
+	@rm -f $(OTA_BIN) $(OTA1_BIN) $(OTA2_BIN)
+
+clean: ota-clean

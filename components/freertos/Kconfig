@@ -1,0 +1,49 @@
+menu "FreeRTOS"
+
+config FREERTOS_ENABLE_REENT
+    bool "Enable \"reent\" function"
+    default n
+    select NEWLIB_ENABLE
+    help
+        Enable "reent" function and FreeRTOS should use "reent" function of newlib.
+
+        The configuration will enable newlib.
+
+config FREERTOS_HZ
+    int "Tick rate (Hz)"
+    range 1 1000
+    default 100
+    help
+        Select the tick rate at which FreeRTOS does pre-emptive context switching.
+
+        The value must be the divisor of 1000, otherwise it may cause time mistake.
+
+config FREERTOS_MAX_HOOK
+    int "FreeRTOS hook max number"
+    range 1 16
+    default 2
+    help
+        configurate the max number of FreeRTOS hook function.
+
+config FREERTOS_ISR_STACKSIZE
+    int "ISR stack size"
+    range 512 8192
+    default 512
+    help
+        The interrupt handlers have their own stack. The size of the stack can be defined here.
+
+config FREERTOS_GLOBAL_DATA_LINK_IRAM
+    bool "Link FreeRTOS global data to IRAM"
+    default y
+    depends on !LWIP_HIGH_THROUGHPUT
+    depends on !SOC_FULL_ICACHE
+    help
+        Link FreeRTOS global data(.bss .data COMMON) from DRAM to IRAM.
+
+config FREERTOS_TIMER_STACKSIZE
+    int "Timer stack size"
+    default 2048
+    help
+        The size of the stack used by the timer in FreeRTOS.
+        
+endmenu

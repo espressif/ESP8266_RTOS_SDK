@@ -1,0 +1,5 @@
+#
+# Override some defaults so wolfSSL is enabled
+# by default in this example
+#
+CONFIG_MBEDTLS_SSL_MAX_CONTENT_LEN=8192

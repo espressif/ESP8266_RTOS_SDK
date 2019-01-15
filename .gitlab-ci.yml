@@ -1,0 +1,75 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  GIT_STRATEGY: clone
+
+  IDF_PATH: "$CI_PROJECT_DIR"
+
+# before each job, we need to check if this job is filtered by bot stage/job filter
+.apply_bot_filter: &apply_bot_filter
+  python $APPLY_BOT_FILTER_SCRIPT || exit 0
+
+before_script:
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - echo -n $GITLAB_KEY >> ~/.ssh/id_rsa_base64
+  - base64 --decode --ignore-garbage ~/.ssh/id_rsa_base64 > ~/.ssh/id_rsa
+  - chmod 600 ~/.ssh/id_rsa
+  - echo -e "Host gitlab.espressif.cn\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
+.do_nothing_before:
+  before_script: &do_nothing_before
+    # apply bot filter in before script
+    - *apply_bot_filter
+    - echo "Not setting up GitLab key, not fetching submodules"
+    - source tools/ci/configure_ci_environment.sh
+
+.build_template: &build_template
+  stage: build
+  image: $CI_DOCKER_REGISTRY/esp8266-ci-env-new
+  tags:
+    - build
+
+build_ssc:
+  <<: *build_template
+  artifacts:
+    paths:
+      - ./SSC/ssc_bin
+    expire_in: 6 mos
+  script:
+    - git clone $GITLAB_SSH_SERVER/yinling/SSC.git
+    - cd SSC
+    # try checkout same branch
+    - git checkout "${CI_BUILD_REF_NAME}_8266" || echo "Using default branch..."
+    - ./gen_misc_rtos.sh
+
+push_master_to_github:
+  stage: deploy
+  image: $CI_DOCKER_REGISTRY/esp32-ci-env$BOT_DOCKER_IMAGE_TAG
+  tags:
+    - deploy
+  only:
+    - master
+    - /^release\/v/
+    - /^v\d+\.\d+(\.\d+)?($|-)/
+  when: on_success
+  dependencies: []
+  variables:
+    GITHUB_PUSH_REFS: refs/remotes/origin/release refs/remotes/origin/master
+  before_script: *do_nothing_before
+  script:
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo -n $GH_PUSH_KEY > ~/.ssh/id_rsa_base64
+    - base64 --decode --ignore-garbage ~/.ssh/id_rsa_base64 > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+    - git remote remove github &>/dev/null || true
+    - git remote add github git@github.com:espressif/ESP8266_RTOS_SDK.git
+    # What the next line of script does: goes through the list of refs for all branches we push to github,
+    # generates a snippet of shell which is evaluated. The snippet checks CI_COMMIT_SHA against the SHA
+    # (aka objectname) at tip of each branch, and if any SHAs match then it checks out the local branch
+    # and then pushes that ref to a corresponding github branch
+    - eval $(git for-each-ref --shell bash --format 'if [ $CI_COMMIT_SHA == %(objectname) ]; then git checkout -B %(refname:strip=3); git push --follow-tags github %(refname:strip=3); fi;' $GITHUB_PUSH_REFS)

@@ -1,0 +1,100 @@
+# This is Doxygen configuration file
+#
+# Doxygen provides over 260 configuration statements
+# To make this file easier to follow,
+# it contains only statements that are non-default
+#
+# NOTE:
+# It is recommended not to change defaults unless specifically required
+# Test any changes how they affect generated documentation
+# Make sure that correct warnings are generated to flag issues with documented code
+#
+# For the complete list of configuration statements see:
+# https://www.stack.nl/~dimitri/doxygen/manual/config.html
+
+
+PROJECT_NAME = "ESP8266 Programming Guide"
+
+## The 'INPUT' statement below is used as input by script 'gen-df-input.py'
+## to automatically generate API reference list files heder_file.inc
+## These files are placed in '_inc' directory
+## and used to include in API reference documentation
+
+INPUT = \
+    ##
+    ## Wi-Fi - API Reference
+    ##
+    ../../components/esp8266/include/esp_wifi.h \
+    ../../components/esp8266/include/esp_wifi_types.h \
+    ../../components/esp8266/include/esp_smartconfig.h \
+    ##
+    ## TCP-IP - API Reference
+    ##
+    ../../components/tcpip_adapter/include/tcpip_adapter.h \
+    ##
+    ## System - API Reference
+    ##
+    ## Watchdogs
+    ../../components/esp8266/include/esp_task_wdt.h \
+    ## Sleep
+    ../../components/esp8266/include/esp_sleep.h \
+    ## System
+    ../../components/esp8266/include/esp_system.h \
+    ## Memory Allocation
+    ../../components/heap/include/esp_heap_caps.h \
+    ../../components/heap/include/esp_heap_trace.h \
+    ../../components/heap/include/esp_heap_caps_init.h \
+    ## Logging
+    ../../components/log/include/esp_log.h \
+    ##
+    ## Peripherals - API Reference
+    ##
+    ../../components/esp8266/include/driver/gpio.h \
+    ../../components/esp8266/include/driver/i2c.h \
+    ../../components/esp8266/include/driver/pwm.h \
+    ../../components/esp8266/include/driver/uart.h
+    ##
+
+## Get warnings for functions that have no documentation for their parameters or return value
+##
+WARN_NO_PARAMDOC = YES
+
+## Enable preprocessing and remove __attribute__(...) expressions from the INPUT files
+##
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = \
+    __attribute__(x)= \
+    IRAM_ATTR= \
+    configSUPPORT_DYNAMIC_ALLOCATION=1 \
+    configSUPPORT_STATIC_ALLOCATION=1 \
+    configQUEUE_REGISTRY_SIZE=1 \
+    configUSE_RECURSIVE_MUTEXES=1 \
+    configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS=1 \
+    configNUM_THREAD_LOCAL_STORAGE_POINTERS=1 \
+    configUSE_APPLICATION_TASK_TAG=1 \
+    configTASKLIST_INCLUDE_COREID=1
+
+## Do not complain about not having dot
+##
+HAVE_DOT = NO
+
+## Generate XML that is required for Breathe
+##
+GENERATE_XML    = YES
+XML_OUTPUT      = xml
+
+GENERATE_HTML   = NO
+HAVE_DOT        = NO
+GENERATE_LATEX  = NO
+GENERATE_MAN    = YES
+GENERATE_RTF    = NO
+
+## Skip distracting progress messages
+##
+QUIET = YES
+## Log warnings in a file for further review
+##
+WARN_LOGFILE = "doxygen-warning-log.txt"
+

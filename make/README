@@ -1,0 +1,10 @@
+README
+
+The SDK uses 'make' of esp-idf, and changed things are following:
+
+1. remove the "toolchain" warning in file project.mk at line 543
+
+Information of esp-idf is following:
+
+commit: 48c3ad37
+

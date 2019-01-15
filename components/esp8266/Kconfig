@@ -1,0 +1,273 @@
+menu "ESP8266-specific"
+
+choice NEWLIB_STDOUT_LINE_ENDING
+    prompt "Line ending for UART output"
+    default NEWLIB_STDOUT_LINE_ENDING_CRLF
+    help
+        This option allows configuring the desired line endings sent to UART
+        when a newline ('\n', LF) appears on stdout.
+        Three options are possible:
+
+        CRLF: whenever LF is encountered, prepend it with CR
+
+        LF: no modification is applied, stdout is sent as is
+
+        CR: each occurence of LF is replaced with CR
+
+        This option doesn't affect behavior of the UART driver (drivers/uart.h).
+
+config NEWLIB_STDOUT_LINE_ENDING_CRLF
+    bool "CRLF"
+config NEWLIB_STDOUT_LINE_ENDING_LF
+    bool "LF"
+config NEWLIB_STDOUT_LINE_ENDING_CR
+    bool "CR"
+endchoice
+
+choice ESP_FILENAME_MACRO
+    prompt "File name macro text"
+    default ESP_FILENAME_MACRO_NO_PATH
+    help
+        This option allows configuring the macro __ESP_FILE__ text.
+        Three options are possible:
+
+        no PATH: strip the path of macro __FILE__, for example: __FILE__="a/b/c/d.h", then __ESP_FILE__="d.h"
+
+        raw: same as macro __FILE__
+
+        null: text is string "null"
+
+config ESP_FILENAME_MACRO_NO_PATH
+    bool "no PATH"
+config ESP_FILENAME_MACRO_RAW
+    bool "raw"
+config ESP_FILENAME_MACRO_NULL
+    bool "null"
+endchoice
+
+config USING_NEW_ETS_VPRINTF
+    bool "Using new ets_vprintf instead of rom code"
+    default y
+    help
+        Enable this option, SDK will use new "ets_vprintf" function instead of old code "ets_vprintf" which is depend on ROM
+        code "ets_io_vprintf".
+
+        Note: Bootloader can't use this function.
+
+config LINK_ETS_PRINTF_TO_IRAM
+    bool "Link ets_printf to IRAM"
+    default n
+    help
+        Enable this option, SDK will link the old/new "ets_printf" and "ets_vprintf" to IRAM instead of flash.
+        So although flash can't be access for SoC when reading to writing, the "ets_printf" and "ets_vprintf" also can be used by user.
+
+        Using new "ets_vprintf" should cost more 1.6KB IRAM.
+
+        Note: Bootloader can't use this function.
+
+config SOC_FULL_ICACHE
+    bool "Enable full cache mode"
+    default n
+    help
+        Enable this option, full 32 KB iram instead of 16 KB iram will be used as icache, so the heap use can use
+        may reduce a lot.
+
+config SOC_IRAM_SIZE
+    hex
+    default 0x8000 if SOC_FULL_ICACHE
+    default 0xC000 if !SOC_FULL_ICACHE
+
+choice CONSOLE_UART
+    prompt "UART for console output"
+    default CONSOLE_UART_DEFAULT
+    help
+        Select whether to use UART for console output (through stdout and stderr).
+
+        - Default is to use UART0.
+        - If "Custom" is selected, UART0 or UART1 can be chosen.
+        - If "None" is selected, there will be no console output on any UART.
+
+config CONSOLE_UART_DEFAULT
+    bool "Default: UART0"
+config CONSOLE_UART_CUSTOM
+    bool "Custom"
+config CONSOLE_UART_NONE
+    bool "None"
+endchoice
+
+choice CONSOLE_UART_NUM
+    prompt "UART peripheral to use for console output (0-1)"
+    depends on CONSOLE_UART_CUSTOM
+    default CONSOLE_UART_CUSTOM_NUM_0
+    help
+        Configrate output console UART for "ets_printf", "printf", "ESP_LOGX" and so on.
+
+config CONSOLE_UART_CUSTOM_NUM_0
+    bool "UART0"
+config CONSOLE_UART_CUSTOM_NUM_1
+    bool "UART1"
+endchoice
+
+config CONSOLE_UART_NUM
+    int
+    default 0 if CONSOLE_UART_DEFAULT || CONSOLE_UART_NONE
+    default 0 if CONSOLE_UART_CUSTOM_NUM_0
+    default 1 if CONSOLE_UART_CUSTOM_NUM_1
+
+config CONSOLE_UART_BAUDRATE
+    int "UART console baud rate"
+    depends on CONSOLE_UART_DEFAULT || CONSOLE_UART_CUSTOM
+    default 74880
+    range 1200 4000000
+
+config UART0_SWAP_IO
+    bool "Swap UART0 I/O pins"
+    default n
+    help
+        Enable this option, UART0's I/O pins are swaped: TXD <-> RTS, RTX <-> CTS.
+
+config MAIN_TASK_STACK_SIZE
+    int "Main task stack size"
+    default 3584
+    help
+        Configure the "main task" stack size. This is the stack of the task
+        which calls app_main(). If app_main() returns then this task is deleted
+        and its stack memory is freed.
+
+config TASK_WDT
+    bool "Initialize Task Watchdog Timer on startup"
+    default y
+    help
+        The Task Watchdog Timer can be used to make sure individual tasks are still
+        running. Enabling this option will cause the Task Watchdog Timer to be
+        initialized automatically at startup. The Task Watchdog timer can be 
+        initialized after startup as well.
+
+config TASK_WDT_PANIC
+    bool "Invoke panic handler on Task Watchdog timeout"
+    default y
+    help
+        If this option is enabled, the Task Watchdog Timer will be configured to
+        trigger the panic handler when it times out. And it may cost some time.
+
+choice TASK_WDT_TIMEOUT_S
+    prompt "Task Watchdog timeout period (seconds)"
+    default TASK_WDT_TIMEOUT_15N
+    help
+        Timeout period configuration for the Task Watchdog Timer in seconds.
+        This is also configurable at run time.
+
+config TASK_WDT_TIMEOUT_13N
+    bool "6.5536s"
+config TASK_WDT_TIMEOUT_14N
+    bool "13.1072s"
+config TASK_WDT_TIMEOUT_15N
+    bool "26.2144s"
+endchoice
+
+config TASK_WDT_TIMEOUT_S
+    int
+    default 13 if TASK_WDT_TIMEOUT_13N
+    default 14 if TASK_WDT_TIMEOUT_14N
+    default 15 if TASK_WDT_TIMEOUT_15N
+
+config RESET_REASON
+    bool "Enable reset reason"
+    default y
+    help
+        Enable this option, the reset reason function can be used, or compiler will show function linking error.
+
+config WIFI_PPT_TASKSTACK_SIZE
+    int "ppT task stack size"
+    default 2048
+    range 2048 8192
+    help
+        Configure the "ppT task" stack size. This is the stack of the task
+        which calls promiscuous callback function. So if user's function is
+        complex, the stack must be set larger.
+
+config EVENT_LOOP_STACK_SIZE
+    int "Event loop stack size"
+    default 2048
+    help
+        Configure the Event loop task stack size per application.
+
+config ESP8266_CORE_GLOBAL_DATA_LINK_IRAM
+    bool "Link libcore.a internal global data to IRAM"
+    default y
+    depends on !LWIP_HIGH_THROUGHPUT
+    depends on !SOC_FULL_ICACHE
+    help
+        Link libcore.a internal global data(.bss .data COMMON) from DRAM to IRAM.
+
+choice CRYSTAL_USED
+    prompt "Crystal used in your module or board"
+    default CRYSTAL_USED_26MHZ
+    help
+        For most modules, 26MHz is the default crystal. If you use special module,
+        you can reconfigure this option.
+
+config CRYSTAL_USED_26MHZ
+    bool "26MHz"
+config CRYSTAL_USED_40MHZ
+    bool "40MHz"
+endchoice
+
+endmenu
+
+menu WIFI
+
+config SCAN_AP_MAX
+    int "Max scan AP number"
+    range 1 64
+    default 32
+    help
+        Function "esp_wifi_scan_get_ap_num" return value will be less than this. It is said that user cannot
+        scan more than this.
+
+        User can use own function "esp_wifi_scan_get_ap_num_max" to determin how many AP to scan , too.
+
+config WIFI_TX_RATE_SEQUENCE_FROM_HIGH
+    bool "Set wifi tx rate from 54M to 1M"
+    default y
+    help
+        If this option is enabled, Wifi will try to send packets first from high rate(54M). If it fails, it will 
+        try at low rate until the transmission is successful.
+
+endmenu
+
+menu PHY
+
+config ESP_PHY_CALIBRATION_AND_DATA_STORAGE
+    bool "Store phy calibration data in NVS"
+    default y
+    help
+        If this option is enabled, NVS will be initialized and calibration data will be loaded from there.
+        PHY calibration will be skipped on deep sleep wakeup. If calibration data is not found, full calibration
+        will be performed and stored in NVS. Normally, only partial calibration will be performed. 
+        If this option is disabled, full calibration will be performed.
+
+        If it's easy that your board calibrate bad data, choose 'n'.
+        Two cases for example, you should choose 'n':
+        1.If your board is easy to be booted up with antenna disconnected.
+        2.Because of your board design, each time when you do calibration, the result are too unstable.
+        If unsure, choose 'y'.
+
+config ESP_PHY_INIT_DATA_IN_PARTITION
+    bool "Use a partition to store PHY init data"
+    default n
+    help
+        If enabled, PHY init data will be loaded from a partition.
+        When using a custom partition table, make sure that PHY data
+        partition is included (type: 'data', subtype: 'phy').
+        With default partition tables, this is done automatically.
+        If PHY init data is stored in a partition, it has to be flashed there,
+        otherwise runtime error will occur.
+
+        If this option is not enabled, PHY init data will be embedded
+        into the application binary.
+
+        If unsure, choose 'n'.
+
+endmenu  # PHY
+

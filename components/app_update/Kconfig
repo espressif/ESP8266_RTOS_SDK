@@ -1,0 +1,15 @@
+menu "App update"
+
+config APP_UPDATE_CHECK_APP_SUM
+    bool "Check APP binary data sum after downloading"
+    default y
+    help
+        If enable this option, app update will check the sum of app binary data after downloading it.
+
+config APP_UPDATE_CHECK_APP_HASH
+    bool "Check APP binary data hash after downloading"
+    default n
+    help
+        If enable this option, app update will check the hash of app binary data after downloading it.
+
+endmenu
