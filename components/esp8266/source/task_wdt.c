@@ -21,11 +21,6 @@
 #include "portmacro.h"
 #include "esp8266/eagle_soc.h"
 
-#define WDT_REG_READ(_reg)                  REG_READ(PERIPHS_WDT_BASEADDR + _reg)
-#define WDT_REG_WRITE(_reg, _val)           REG_WRITE(PERIPHS_WDT_BASEADDR + _reg, _val)
-#define CLEAR_WDT_REG_MASK(_reg, _mask)     WDT_REG_WRITE(_reg, WDT_REG_READ(_reg) & (~_mask))
-#define WDT_FEED()                          WDT_REG_WRITE(WDT_RST_ADDRESS, WDT_FEED_VALUE)
-
 static const char *TAG = "wdt";
 
 #ifdef CONFIG_TASK_WDT_PANIC

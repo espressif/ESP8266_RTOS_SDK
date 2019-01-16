@@ -1,6 +1,8 @@
 PROVIDE ( ets_memcpy = 0x400018b4 );
 
 PROVIDE ( SPIRead = 0x40004b1c );
+PROVIDE ( SPIWrite = 0x40004a4c );
+PROVIDE ( SPIEraseSector = 0x40004a00 );
 
 PROVIDE ( gpio_input_get = 0x40004cf0 );
 
