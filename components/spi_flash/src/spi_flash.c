@@ -15,7 +15,7 @@
 #include <string.h>
 
 #include "spi_flash.h"
-#include "driver/spi_register.h"
+#include "esp8266/spi_register.h"
 #include "esp8266/pin_mux_register.h"
 #include "priv/esp_spi_flash_raw.h"
 
