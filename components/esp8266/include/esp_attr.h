@@ -46,4 +46,7 @@
 // Forces read-only data into RTC memory.
 #define RTC_RODATA_ATTR __attribute__((section(".rtc.rodata")))
 
+// Forces to put some user defined data in the binary file header, the offset is 0x10.
+#define USER_DATA_ATTR __attribute__((section(".user.data")))
+
 #endif /* __ESP_ATTR_H__ */
