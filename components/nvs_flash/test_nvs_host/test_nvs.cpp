@@ -132,14 +132,14 @@ TEST_CASE("when writing and erasing, used/erased counts are updated correctly", 
     CHECK(page.getErasedEntryCount() == 1);
     for (size_t i = 0; i < Page::ENTRY_COUNT - 2; ++i) {
         char name[16];
-        snprintf(name, sizeof(name), "i%ld", i);
+        snprintf(name, sizeof(name), "i%ld", (long int)i);
         CHECK(page.writeItem(1, name, i) == ESP_OK);
     }
     CHECK(page.getUsedEntryCount() == Page::ENTRY_COUNT - 1);
     CHECK(page.getErasedEntryCount() == 1);
     for (size_t i = 0; i < Page::ENTRY_COUNT - 2; ++i) {
         char name[16];
-        snprintf(name, sizeof(name), "i%ld", i);
+        snprintf(name, sizeof(name), "i%ld", (long int)i);
         CHECK(page.eraseItem(1, itemTypeOf<size_t>(), name) == ESP_OK);
     }
     CHECK(page.getUsedEntryCount() == 1);
@@ -153,7 +153,7 @@ TEST_CASE("when page is full, adding an element fails", "[nvs]")
     CHECK(page.load(0) == ESP_OK);
     for (size_t i = 0; i < Page::ENTRY_COUNT; ++i) {
         char name[16];
-        snprintf(name, sizeof(name), "i%ld", i);
+        snprintf(name, sizeof(name), "i%ld", (long int)i);
         CHECK(page.writeItem(1, name, i) == ESP_OK);
     }
     CHECK(page.writeItem(1, "foo", 64UL) == ESP_ERR_NVS_PAGE_FULL);
@@ -257,6 +257,25 @@ TEST_CASE("Page validates blob size", "[nvs]")
     // Should fail as well
     TEST_ESP_ERR(page.writeItem(1, ItemType::BLOB, "2", buf, Page::BLOB_MAX_SIZE + 1), ESP_ERR_NVS_VALUE_TOO_LONG);
     TEST_ESP_OK(page.writeItem(1, ItemType::BLOB, "2", buf, Page::BLOB_MAX_SIZE));
+}
+
+TEST_CASE("Page handles invalid CRC of variable length items", "[nvs][cur]")
+{
+    SpiFlashEmulator emu(4);
+    {
+        Page page;
+        TEST_ESP_OK(page.load(0));
+        char buf[128] = {0};
+        TEST_ESP_OK(page.writeItem(1, ItemType::BLOB, "1", buf, sizeof(buf)));
+    }
+    // corrupt header of the item (64 is the offset of the first item in page)
+    uint32_t overwrite_buf = 0;
+    emu.write(64, &overwrite_buf, 4);
+    // load page again
+    {
+        Page page;
+        TEST_ESP_OK(page.load(0));
+    }
 }
 
 TEST_CASE("can init PageManager in empty flash", "[nvs]")
@@ -1123,7 +1142,7 @@ TEST_CASE("crc errors in item header are handled", "[nvs]")
     // add more items to make the page full
     for (size_t i = 0; i < Page::ENTRY_COUNT; ++i) {
         char item_name[Item::MAX_KEY_LENGTH + 1];
-        snprintf(item_name, sizeof(item_name), "item_%ld", i);
+        snprintf(item_name, sizeof(item_name), "item_%ld", (long int)i);
         TEST_ESP_OK(storage.writeItem(1, item_name, static_cast<uint32_t>(i)));
     }
 
