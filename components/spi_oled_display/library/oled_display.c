@@ -107,7 +107,7 @@ esp_err_t oled_rst()
     oled_write_cmd(0xDB);    // Set VCOMH  Deselect Level (DBh)
     oled_write_cmd(0x40);    // Set Display Start Line (40h~7Fh)
     oled_write_cmd(0x20);    // Set Memory Addressing Mode (20h)
-    oled_write_cmd(0x02);    // Set 页地址模式(A[1:0]=10b) 水平地址模式(A[1:0]=00b) 垂直地址模式(A[1:0]=01b)
+    oled_write_cmd(0x00);    // Set 页地址模式(A[1:0]=10b) 水平地址模式(A[1:0]=00b) 垂直地址模式(A[1:0]=01b)
     oled_write_cmd(0x8D);    //
     oled_write_cmd(0x14);    // Set Higher Column Start Address for Page Addressing Mode (10h~1Fh)
     oled_write_cmd(0xA4);    // Entire Display ON (A4h/A5h)
@@ -270,8 +270,8 @@ void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1) {
 }
 
 
-// Set 页地址模式(A[1:0]=10b) 
-void display()
+// Set 水平地址模式(A[1:0]=00b)
+void display(void) 
 {
 
     if(dispaly_image_buffer==NULL)
@@ -316,28 +316,35 @@ void display()
     // holdes true for all values of pos
     if (minBoundY == UINT8_MAX) return;
 
-    //    printf("minx:%d maxx:%d miny:%d maxy:%d\n",minBoundX,maxBoundX,minBoundY,maxBoundY);
+    oled_write_cmd(0x21);//COLUMNADDR
+    oled_write_cmd(minBoundX);
+    oled_write_cmd(maxBoundX);
 
+    oled_write_cmd(0x22);//PAGEADDR
+    oled_write_cmd(minBoundY);
+    oled_write_cmd(maxBoundY);
+
+    printf("minx:%d maxx:%d miny:%d maxy:%d\n",minBoundX,maxBoundX,minBoundY,maxBoundY);
     for (y = minBoundY; y <= maxBoundY; y++) {
-            oled_set_pos(minBoundX,y);
         for (x = minBoundX; x <= maxBoundX; x++) {
-             oled_write_byte(dispaly_image_buffer[x + y * displayWidth]);
+           oled_write_byte(dispaly_image_buffer[x + y * displayWidth]);//x + y * displayWidth
         }
     }
 
 #else
+    // No double buffering
+    oled_write_cmd(0x21);//COLUMNADDR
+    oled_write_cmd(0x0);
+    oled_write_cmd(0x7F);
 
-    uint8_t x=0,y=0;
-    uint16_t pos=0;
+    oled_write_cmd(0x22);//PAGEADDR
+    oled_write_cmd(0x0);
+    oled_write_cmd(0x7);
 
-    for(y=0;y<displayHeight/8;y++)
-    {
-        oled_set_pos(x,y);
-        for(x=0;x<displayWidth;x++)
-        {
-            oled_write_byte(dispaly_image_buffer[pos++]);//x + y * displayWidth
-        }
+    for (uint16_t i=0; i<displayBufferSize; i++) {
+        oled_write_byte(dispaly_image_buffer[i]);//x + y * displayWidth
     }
 
 #endif
 }
+
