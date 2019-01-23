@@ -213,6 +213,28 @@ config CRYSTAL_USED_40MHZ
     bool "40MHz"
 endchoice
 
+config ESP8266_OTA_FROM_OLD
+    bool "(**Expected**)ESP8266 update from old SDK by OTA"
+    default n
+    depends on TARGET_PLATFORM_ESP8266
+    select ESP8266_BOOT_COPY_APP
+    help
+        The function is not released.
+
+        Enable this option, script will generate the complete firmware for both old RTOS SDK(before V3.0)
+        and NonOS SDK to update to v3 by OTA.
+
+        The old RTOS SDK(before V3.0) or NonOS SDK can download the firmware to its partition and run it as it self's application.
+
+config ESP8266_BOOT_COPY_APP
+    bool "(**Expected**)Boot copy app"
+    default n
+    help
+        The function is not released.
+
+        Enable this option, when it is that "OTA1" application is to run after update by OTA,
+        bootloader will copy "OTA1" application to "OTA0" partition and run "OTA0".
+
 endmenu
 
 menu WIFI

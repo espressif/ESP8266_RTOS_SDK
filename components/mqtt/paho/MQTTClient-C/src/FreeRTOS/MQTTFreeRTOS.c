@@ -155,7 +155,7 @@ static int esp_write(Network *n, unsigned char *buffer, unsigned int len, unsign
 
     if (FD_ISSET(n->my_socket, &fdset)) {
         do {
-            rc = send(n->my_socket, buffer + sentLen, len - sentLen, MSG_DONTWAIT);
+            rc = send(n->my_socket, buffer + sentLen, len - sentLen, 0);
 
             if (rc > 0) {
                 sentLen += rc;

@@ -1,12 +1,12 @@
 /* integer.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
  * Contact licensing@wolfssl.com with any questions or comments.
  *
- * http://www.wolfssl.com
+ * https://www.wolfssl.com
  */
 
 
@@ -60,6 +60,11 @@
 extern "C" {
 
 /* C++ compilers don't like assigning void * to mp_digit * */
+#define  OPT_CAST(x)  (x *)
+
+#elif defined(_SH3)
+
+/* SuperH SH3 compiler doesn't like assigning voi* to mp_digit* */
 #define  OPT_CAST(x)  (x *)
 
 #else
@@ -268,6 +273,7 @@ MP_API int  mp_unsigned_bin_size(mp_int * a);
 MP_API int  mp_read_unsigned_bin (mp_int * a, const unsigned char *b, int c);
 MP_API int  mp_to_unsigned_bin_at_pos(int x, mp_int *t, unsigned char *b);
 MP_API int  mp_to_unsigned_bin (mp_int * a, unsigned char *b);
+MP_API int  mp_to_unsigned_bin_len(mp_int * a, unsigned char *b, int c);
 MP_API int  mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y);
 /* end functions needed by Rsa */
 
@@ -354,15 +360,19 @@ MP_API int mp_radix_size (mp_int * a, int radix, int *size);
     #define mp_dump(desc, a, verbose)
 #endif
 
-#if defined(HAVE_ECC) || defined(WOLFSSL_KEY_GEN)
+#if defined(HAVE_ECC) || defined(WOLFSSL_KEY_GEN) || !defined(NO_RSA) || \
+    !defined(NO_DSA) || !defined(NO_DH)
     MP_API int mp_sqrmod(mp_int* a, mp_int* b, mp_int* c);
 #endif
 #if !defined(NO_DSA) || defined(HAVE_ECC)
     MP_API int mp_read_radix(mp_int* a, const char* str, int radix);
 #endif
 
-#ifdef WOLFSSL_KEY_GEN
+#if defined(WOLFSSL_KEY_GEN) || !defined(NO_RSA) || !defined(NO_DSA) || !defined(NO_DH)
     MP_API int mp_prime_is_prime (mp_int * a, int t, int *result);
+    MP_API int mp_prime_is_prime_ex (mp_int * a, int t, int *result, WC_RNG*);
+#endif /* WOLFSSL_KEY_GEN NO_RSA NO_DSA NO_DH */
+#ifdef WOLFSSL_KEY_GEN
     MP_API int mp_gcd (mp_int * a, mp_int * b, mp_int * c);
     MP_API int mp_lcm (mp_int * a, mp_int * b, mp_int * c);
     MP_API int mp_rand_prime(mp_int* N, int len, WC_RNG* rng, void* heap);

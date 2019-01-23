@@ -21,6 +21,7 @@
 #include "bootloader_common.h"
 #include "esp_image_format.h"
 #include "esp_log.h"
+#include "esp_spi_flash.h"
 
 static const char* TAG = "boot";
 
@@ -111,6 +112,18 @@ static int selected_boot_partition(const bootloader_state_t *bs)
                 return INVALID_INDEX;
             }
 #endif
+        }
+#endif
+#ifdef CONFIG_ESP8266_BOOT_COPY_APP
+        if (boot_index == 1) {
+            ESP_LOGI(TAG, "Copy application from OAT1 to OTA0, please wait ...");
+            int ret = esp_patition_copy_ota1_to_ota0(bs);
+            if (ret) {
+                ESP_LOGE(TAG, "Fail to initialize OTA0");
+                return INVALID_INDEX;
+            }
+
+            boot_index = 0;
         }
 #endif
         // Customer implementation.

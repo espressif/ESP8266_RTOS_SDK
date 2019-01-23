@@ -539,13 +539,10 @@ const esp_partition_t* esp_ota_get_running_partition(void)
     /* Find the flash address of this exact function. By definition that is part
        of the currently running firmware. Then find the enclosing partition. */
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
     size_t phys_offs = spi_flash_cache2phys(esp_ota_get_running_partition);
 
     assert (phys_offs != SPI_FLASH_CACHE2PHYS_FAIL); /* indicates cache2phys lookup is buggy */
-#endif
 
-#if CONFIG_TARGET_PLATFORM_ESP32
     esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP,
                                                      ESP_PARTITION_SUBTYPE_ANY,
                                                      NULL);
@@ -561,9 +558,6 @@ const esp_partition_t* esp_ota_get_running_partition(void)
     }
 
     abort(); /* Partition table is invalid or corrupt */
-#else
-    return esp_ota_get_boot_partition();
-#endif
 }
 
 

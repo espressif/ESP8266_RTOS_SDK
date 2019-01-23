@@ -43,7 +43,9 @@
 static EventGroupHandle_t wifi_event_group;
 
 const int IPV4_GOTIP_BIT = BIT0;
+#ifdef CONFIG_EXAMPLE_IPV6
 const int IPV6_GOTIP_BIT = BIT1;
+#endif
 
 static const char *TAG = "example";
 static const char *payload = "Message from ESP32 ";
@@ -56,8 +58,10 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         ESP_LOGI(TAG, "SYSTEM_EVENT_STA_START");
         break;
     case SYSTEM_EVENT_STA_CONNECTED:
+#ifdef CONFIG_EXAMPLE_IPV6
         /* enable ipv6 */
         tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA);
+#endif
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
         xEventGroupSetBits(wifi_event_group, IPV4_GOTIP_BIT);
@@ -67,14 +71,18 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         /* This is a workaround as ESP32 WiFi libs don't currently auto-reassociate. */
         esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, IPV4_GOTIP_BIT);
+#ifdef CONFIG_EXAMPLE_IPV6
         xEventGroupClearBits(wifi_event_group, IPV6_GOTIP_BIT);
+#endif
         break;
     case SYSTEM_EVENT_AP_STA_GOT_IP6:
+#ifdef CONFIG_EXAMPLE_IPV6
         xEventGroupSetBits(wifi_event_group, IPV6_GOTIP_BIT);
         ESP_LOGI(TAG, "SYSTEM_EVENT_STA_GOT_IP6");
 
         char *ip6 = ip6addr_ntoa(&event->event_info.got_ip6.ip6_info.ip);
         ESP_LOGI(TAG, "IPv6: %s", ip6);
+#endif
     default:
         break;
     }
@@ -103,7 +111,11 @@ static void initialise_wifi(void)
 
 static void wait_for_ip()
 {
-    uint32_t bits = IPV4_GOTIP_BIT | IPV6_GOTIP_BIT ;
+#ifdef CONFIG_EXAMPLE_IPV6
+    uint32_t bits = IPV4_GOTIP_BIT | IPV6_GOTIP_BIT;
+#else
+    uint32_t bits = IPV4_GOTIP_BIT;
+#endif
 
     ESP_LOGI(TAG, "Waiting for AP connection...");
     xEventGroupWaitBits(wifi_event_group, bits, false, true, portMAX_DELAY);

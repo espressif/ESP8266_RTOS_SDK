@@ -32,6 +32,8 @@ extern "C" {
 
 #define SPI_READ_BUF_MAX          64
 
+#define SPI_FLASH_CACHE2PHYS_FAIL UINT32_MAX /*<! Result from spi_flash_cache2phys() if flash cache address is invalid */
+
 #ifdef CONFIG_ENABLE_FLASH_MMAP
 /**
  * @brief Enumeration which specifies memory space requested in an mmap call
@@ -148,6 +150,50 @@ esp_err_t spi_flash_mmap(size_t src_addr, size_t size, spi_flash_mmap_memory_t m
 void spi_flash_munmap(spi_flash_mmap_handle_t handle);
 
 #endif /* CONFIG_ENABLE_FLASH_MMAP */
+
+/**
+ * @brief Given a memory address where flash is mapped, return the corresponding physical flash offset.
+ *
+ * Cache address does not have have been assigned via spi_flash_mmap(), any address in memory mapped flash space can be looked up.
+ *
+ * @param cached Pointer to flashed cached memory.
+ *
+ * @return
+ * - SPI_FLASH_CACHE2PHYS_FAIL If cache address is outside flash cache region, or the address is not mapped.
+ * - Otherwise, returns physical offset in flash
+ */
+uintptr_t spi_flash_cache2phys(const void *cached);
+
+#ifdef CONFIG_ESP8266_OTA_FROM_OLD
+
+/**
+ * @brief Check if current firmware updates from V2 firmware and its location is at "APP2", if so, then V3 bootloader 
+ *        will copy patition table from "APP2" location to "APP1" location of V2 partition map.
+ *
+ * @return 0 if success or others if failed
+ */
+int esp_patition_table_init_location(void);
+
+/**
+ * @brief Check if current firmware updates from V2 firmware and its location is at "APP2", if so, then V3 bootloader
+ *         will copy firmware from "APP2" location to "APP1" location.
+ * 
+ * @note All data which is copied is "ota0" application and all data whose location is before "ota0". 
+ *
+ * @return 0 if success or others if failed
+ */
+int esp_patition_table_init_data(void *partition_info);
+#endif
+
+#ifdef CONFIG_ESP8266_BOOT_COPY_APP
+/**
+ * @brief Check if current application which is to run is at "ota1" location, if so, bootloader will copy it to "ota0" location,
+ *        and clear OTA data partition.
+ *
+ * @return 0 if success or others if failed
+ */
+int esp_patition_copy_ota1_to_ota0(const void *partition_info);
+#endif
 
 #ifdef __cplusplus
 }

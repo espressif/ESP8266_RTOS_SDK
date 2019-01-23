@@ -1,14 +1,18 @@
 /* logging.h
  *
- * Copyright (C) 2006-2017 wolfSSL Inc.  All rights reserved.
+ * Copyright (C) 2006-2018 wolfSSL Inc.  All rights reserved.
  *
  * This file is part of wolfSSL.
  *
  * Contact licensing@wolfssl.com with any questions or comments.
  *
- * http://www.wolfssl.com
+ * https://www.wolfssl.com
  */
 
+
+/*!
+    \file wolfssl/wolfcrypt/logging.h
+*/
 
 
 /* submitted by eof */
@@ -31,6 +35,50 @@ enum wc_LogLevels {
     LEAVE_LOG,
     OTHER_LOG
 };
+
+#ifdef WOLFSSL_FUNC_TIME
+/* WARNING: This code is only to be used for debugging performance.
+ *          The code is not thread-safe.
+ *          Do not use WOLFSSL_FUNC_TIME in production code.
+ */
+enum wc_FuncNum {
+    WC_FUNC_HELLO_REQUEST_SEND = 0,
+    WC_FUNC_HELLO_REQUEST_DO,
+    WC_FUNC_CLIENT_HELLO_SEND,
+    WC_FUNC_CLIENT_HELLO_DO,
+    WC_FUNC_SERVER_HELLO_SEND,
+    WC_FUNC_SERVER_HELLO_DO,
+    WC_FUNC_ENCRYPTED_EXTENSIONS_SEND,
+    WC_FUNC_ENCRYPTED_EXTENSIONS_DO,
+    WC_FUNC_CERTIFICATE_REQUEST_SEND,
+    WC_FUNC_CERTIFICATE_REQUEST_DO,
+    WC_FUNC_CERTIFICATE_SEND,
+    WC_FUNC_CERTIFICATE_DO,
+    WC_FUNC_CERTIFICATE_VERIFY_SEND,
+    WC_FUNC_CERTIFICATE_VERIFY_DO,
+    WC_FUNC_FINISHED_SEND,
+    WC_FUNC_FINISHED_DO,
+    WC_FUNC_KEY_UPDATE_SEND,
+    WC_FUNC_KEY_UPDATE_DO,
+    WC_FUNC_EARLY_DATA_SEND,
+    WC_FUNC_EARLY_DATA_DO,
+    WC_FUNC_NEW_SESSION_TICKET_SEND,
+    WC_FUNC_NEW_SESSION_TICKET_DO,
+    WC_FUNC_SERVER_HELLO_DONE_SEND,
+    WC_FUNC_SERVER_HELLO_DONE_DO,
+    WC_FUNC_TICKET_SEND,
+    WC_FUNC_TICKET_DO,
+    WC_FUNC_CLIENT_KEY_EXCHANGE_SEND,
+    WC_FUNC_CLIENT_KEY_EXCHANGE_DO,
+    WC_FUNC_CERTIFICATE_STATUS_SEND,
+    WC_FUNC_CERTIFICATE_STATUS_DO,
+    WC_FUNC_SERVER_KEY_EXCHANGE_SEND,
+    WC_FUNC_SERVER_KEY_EXCHANGE_DO,
+    WC_FUNC_END_OF_EARLY_DATA_SEND,
+    WC_FUNC_END_OF_EARLY_DATA_DO,
+    WC_FUNC_COUNT
+};
+#endif
 
 typedef void (*wolfSSL_Logging_cb)(const int logLevel,
                                    const char *const logMessage);
@@ -57,10 +105,23 @@ WOLFSSL_API void wolfSSL_Debugging_OFF(void);
     WOLFSSL_API   int wc_SetLoggingHeap(void* h);
     WOLFSSL_API   int wc_ERR_remove_state(void);
     #if !defined(NO_FILESYSTEM) && !defined(NO_STDIO_FILESYSTEM)
-        WOLFSSL_API   void wc_ERR_print_errors_fp(FILE* fp);
+        WOLFSSL_API   void wc_ERR_print_errors_fp(XFILE fp);
     #endif
 #endif /* OPENSSL_EXTRA || DEBUG_WOLFSSL_VERBOSE */
 
+#ifdef WOLFSSL_FUNC_TIME
+    /* WARNING: This code is only to be used for debugging performance.
+     *          The code is not thread-safe.
+     *          Do not use WOLFSSL_FUNC_TIME in production code.
+     */
+    WOLFSSL_API void WOLFSSL_START(int funcNum);
+    WOLFSSL_API void WOLFSSL_END(int funcNum);
+    WOLFSSL_API void WOLFSSL_TIME(int count);
+#else
+    #define WOLFSSL_START(n)
+    #define WOLFSSL_END(n)
+    #define WOLFSSL_TIME(n)
+#endif
 
 #if defined(DEBUG_WOLFSSL) && !defined(WOLFSSL_DEBUG_ERRORS_ONLY)
     #if defined(_WIN32)
@@ -93,7 +154,7 @@ WOLFSSL_API void wolfSSL_Debugging_OFF(void);
 
 #endif /* DEBUG_WOLFSSL && !WOLFSSL_DEBUG_ERRORS_ONLY */
 
-#if defined(DEBUG_WOLFSSL) || defined(WOLFSSL_NGINX) || defined(WOLFSSL_HAPROXY)
+#if defined(DEBUG_WOLFSSL) || defined(OPENSSL_ALL) || defined(WOLFSSL_NGINX) || defined(WOLFSSL_HAPROXY)
 
     #if defined(OPENSSL_EXTRA) || defined(DEBUG_WOLFSSL_VERBOSE)
         WOLFSSL_API void WOLFSSL_ERROR_LINE(int err, const char* func, unsigned int line,

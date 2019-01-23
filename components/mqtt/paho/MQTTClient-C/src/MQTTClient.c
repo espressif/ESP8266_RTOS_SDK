@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "esp_log.h"
+#include "esp_task_wdt.h"
 #include "MQTTClient.h"
 
 static const char *TAG = "mc";
@@ -437,6 +438,10 @@ void MQTTRun(void *parm)
 
     while (1) {
         TimerCountdownMS(&timer, CONFIG_MQTT_RECV_CYCLE); /* Don't wait too long if no traffic is incoming */
+
+#if CONFIG_MQTT_RECV_CYCLE == 0     /* The smaller cycle, the greater throughput */
+        esp_task_wdt_reset();
+#endif
 
 #if defined(MQTT_TASK)
         MutexLock(&c->mutex);
