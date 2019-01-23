@@ -294,7 +294,6 @@ static void IRAM_ATTR pwm_timer_intr_handler(void)
                 mask = mask | pwm_obj->single->run_pwm_param[pwm_obj->single->run_channel_num - 1].io_set_mask;
                 REG_WRITE(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS, mask);
             } else {
-                mask = REG_READ(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS);
                 mask = mask & (~(pwm_obj->single->run_pwm_param[pwm_obj->current_channel - 1].io_clr_mask));
                 mask = mask | (pwm_obj->single->run_pwm_param[pwm_obj->current_channel - 1].io_set_mask);
                 REG_WRITE(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS, mask);
