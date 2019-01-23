@@ -24,8 +24,17 @@
 #include "esp_tls.h"
 #include <errno.h>
 
+#if LWIP_IPV6
+#define ESP_TLS_IPV6
+#endif
+
 static const char *TAG = "esp-tls";
+#if CONFIG_SSL_USING_MBEDTLS
 static mbedtls_x509_crt *global_cacert = NULL;
+#elif CONFIG_SSL_USING_WOLFSSL
+static unsigned char *global_cacert = NULL;
+static unsigned int global_cacert_pem_bytes = 0;
+#endif
 
 #ifdef ESP_PLATFORM
 #include <esp_log.h>
@@ -64,6 +73,7 @@ static ssize_t tcp_read(esp_tls_t *tls, char *data, size_t datalen)
 
 static ssize_t tls_read(esp_tls_t *tls, char *data, size_t datalen)
 {
+#if CONFIG_SSL_USING_MBEDTLS
     ssize_t ret = mbedtls_ssl_read(&tls->ssl, (unsigned char *)data, datalen);   
     if (ret < 0) {
         if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
@@ -71,8 +81,27 @@ static ssize_t tls_read(esp_tls_t *tls, char *data, size_t datalen)
         }
         if (ret != MBEDTLS_ERR_SSL_WANT_READ  && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             ESP_LOGE(TAG, "read error :%d:", ret);
+        } else {
+            ret = (ret == MBEDTLS_ERR_SSL_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
+#elif CONFIG_SSL_USING_WOLFSSL
+    
+    ssize_t ret = wolfSSL_read(tls->ssl, (unsigned char *)data, datalen);
+    if (ret < 0) {
+        ret = wolfSSL_get_error(tls->ssl, ret);
+        /* peer sent close notify */
+        if (ret == WOLFSSL_ERROR_ZERO_RETURN) {
+            return 0;
+        }
+
+        if (ret != WOLFSSL_ERROR_WANT_READ && ret != WOLFSSL_ERROR_WANT_WRITE) {
+            ESP_LOGE(TAG, "read error :%d:", ret);
+        } else {
+            ret = (ret == WOLFSSL_ERROR_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
+        }
+    }
+#endif
     return ret;
 }
 
@@ -101,11 +130,13 @@ static int esp_tcp_connect(const char *host, int hostlen, int port, int *sockfd,
         struct sockaddr_in *p = (struct sockaddr_in *)res->ai_addr;
         p->sin_port = htons(port);
         addr_ptr = p;
+#ifdef ESP_TLS_IPV6
     } else if (res->ai_family == AF_INET6) {
         struct sockaddr_in6 *p = (struct sockaddr_in6 *)res->ai_addr;
         p->sin6_port = htons(port);
         p->sin6_family = AF_INET6;
         addr_ptr = p;
+#endif
     } else {
         ESP_LOGE(TAG, "Unsupported protocol family %d", res->ai_family);
         goto err_freesocket;
@@ -141,6 +172,7 @@ err_freeaddr:
     return ret;
 }
 
+#if CONFIG_SSL_USING_MBEDTLS
 esp_err_t esp_tls_init_global_ca_store()
 {
     if (global_cacert == NULL) {
@@ -153,14 +185,18 @@ esp_err_t esp_tls_init_global_ca_store()
     }
     return ESP_OK;
 }
+#endif
 
 esp_err_t esp_tls_set_global_ca_store(const unsigned char *cacert_pem_buf, const unsigned int cacert_pem_bytes)
 {
-    int ret;
     if (cacert_pem_buf == NULL) {
         ESP_LOGE(TAG, "cacert_pem_buf is null");
         return ESP_ERR_INVALID_ARG;
     }
+
+#if CONFIG_SSL_USING_MBEDTLS
+    int ret;
+
     if (global_cacert == NULL) {
         ret = esp_tls_init_global_ca_store();
         if (ret != ESP_OK) {
@@ -177,23 +213,43 @@ esp_err_t esp_tls_set_global_ca_store(const unsigned char *cacert_pem_buf, const
         ESP_LOGE(TAG, "mbedtls_x509_crt_parse was partly successful. No. of failed certificates: %d", ret);
     }
     return ESP_OK;
+#elif CONFIG_SSL_USING_WOLFSSL
+    if (global_cacert != NULL) {
+        esp_tls_free_global_ca_store(global_cacert);
+    }
+
+    global_cacert = (unsigned char *)strndup((const char *)cacert_pem_buf, cacert_pem_bytes);
+    if (!global_cacert)
+        return ESP_FAIL;
+
+    global_cacert_pem_bytes = cacert_pem_bytes;
+
+    return ESP_OK;
+#endif
 }
 
-mbedtls_x509_crt *esp_tls_get_global_ca_store()
+void *esp_tls_get_global_ca_store()
 {
-    return global_cacert;
+    return (void*)global_cacert;
 }
 
 void esp_tls_free_global_ca_store()
 {
     if (global_cacert) {
+#if CONFIG_SSL_USING_MBEDTLS
         mbedtls_x509_crt_free(global_cacert);
         global_cacert = NULL;
+#elif CONFIG_SSL_USING_WOLFSSL
+        free(global_cacert);
+        global_cacert = NULL;
+        global_cacert_pem_bytes = 0;
+#endif
     }
 }
 
 static void verify_certificate(esp_tls_t *tls)
 {
+#if CONFIG_SSL_USING_MBEDTLS
     int flags;
     char buf[100];
     if ((flags = mbedtls_ssl_get_verify_result(&tls->ssl)) != 0) {
@@ -204,13 +260,22 @@ static void verify_certificate(esp_tls_t *tls)
     } else {
         ESP_LOGI(TAG, "Certificate verified.");
     }
+#elif CONFIG_SSL_USING_WOLFSSL
+    int flags;
+    if ((flags = wolfSSL_get_verify_result(tls->ssl)) != WOLFSSL_SUCCESS) {
+        ESP_LOGE(TAG, "Failed to verify peer certificate %d!", flags);
+    } else {
+        ESP_LOGI(TAG, "Certificate verified.");
+    }
+#endif
 }
 
-static void mbedtls_cleanup(esp_tls_t *tls) 
+static void esp_tls_cleanup(esp_tls_t *tls)
 {
     if (!tls) {
         return;
     }
+#if CONFIG_SSL_USING_MBEDTLS
     if (tls->cacert_ptr != global_cacert) {
         mbedtls_x509_crt_free(tls->cacert_ptr);
     }
@@ -222,12 +287,19 @@ static void mbedtls_cleanup(esp_tls_t *tls)
     mbedtls_ssl_config_free(&tls->conf);
     mbedtls_ctr_drbg_free(&tls->ctr_drbg);
     mbedtls_ssl_free(&tls->ssl);
+#elif CONFIG_SSL_USING_WOLFSSL
+    wolfSSL_shutdown(tls->ssl);
+    wolfSSL_free(tls->ssl);
+    wolfSSL_CTX_free(tls->ctx);
+    wolfSSL_Cleanup();
+#endif
 }
 
 static int create_ssl_handle(esp_tls_t *tls, const char *hostname, size_t hostlen, const esp_tls_cfg_t *cfg)
 {
     int ret;
 
+#if CONFIG_SSL_USING_MBEDTLS
     tls->server_fd.fd = tls->sockfd;
     mbedtls_ssl_init(&tls->ssl);
     mbedtls_ctr_drbg_init(&tls->ctr_drbg);
@@ -338,8 +410,74 @@ static int create_ssl_handle(esp_tls_t *tls, const char *hostname, size_t hostle
 
     return 0;
 exit:
-    mbedtls_cleanup(tls);
+    esp_tls_cleanup(tls);
     return -1;
+#elif CONFIG_SSL_USING_WOLFSSL
+    ret = wolfSSL_Init();
+    if (ret != WOLFSSL_SUCCESS) {
+        ESP_LOGE(TAG, "Init wolfSSL failed: %d", ret);
+        goto exit;
+    }
+
+    tls->ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+    if (!tls->ctx) {
+        ESP_LOGE(TAG, "Set wolfSSL ctx failed");
+        goto exit;
+    }
+
+#ifdef HAVE_ALPN
+    if (cfg->alpn_protos) {
+        char **alpn_list = (char **)cfg->alpn_protos;
+        for (; *alpn_list != NULL; alpn_list ++) {
+            if (wolfSSL_UseALPN(tls->ssl, *alpn_list, strlen(*alpn_list), WOLFSSL_ALPN_FAILED_ON_MISMATCH) != WOLFSSL_SUCCESS) {
+                ESP_LOGE(TAG, "Use wolfSSL ALPN failed");
+                goto exit;
+            }
+        }
+    }
+#endif
+
+    if (cfg->use_global_ca_store == true) {
+        wolfSSL_CTX_load_verify_buffer(tls->ctx, global_cacert, global_cacert_pem_bytes, WOLFSSL_FILETYPE_PEM);
+        wolfSSL_CTX_set_verify(tls->ctx, SSL_VERIFY_PEER, NULL);
+    } else if (cfg->cacert_pem_buf != NULL) {
+        wolfSSL_CTX_load_verify_buffer(tls->ctx, cfg->cacert_pem_buf, cfg->cacert_pem_bytes, WOLFSSL_FILETYPE_PEM);
+        wolfSSL_CTX_set_verify(tls->ctx, SSL_VERIFY_PEER, NULL);
+    } else {
+        wolfSSL_CTX_set_verify(tls->ctx, SSL_VERIFY_NONE, NULL);
+    }
+
+    if (cfg->clientcert_pem_buf != NULL && cfg->clientkey_pem_buf != NULL) {
+        wolfSSL_CTX_use_certificate_buffer(tls->ctx, cfg->clientcert_pem_buf, cfg->clientcert_pem_bytes, WOLFSSL_FILETYPE_PEM);
+        wolfSSL_CTX_use_PrivateKey_buffer(tls->ctx, cfg->clientkey_pem_buf, cfg->clientkey_pem_bytes, WOLFSSL_FILETYPE_PEM);
+    } else if (cfg->clientcert_pem_buf != NULL || cfg->clientkey_pem_buf != NULL) {
+        ESP_LOGE(TAG, "You have to provide both clientcert_pem_buf and clientkey_pem_buf for mutual authentication\n\n");
+        goto exit;
+    }
+
+    tls->ssl = wolfSSL_new(tls->ctx);
+    if (!tls->ssl) {
+        ESP_LOGE(TAG, "Create wolfSSL failed");
+        goto exit;
+    }
+
+#ifdef HAVE_SNI
+    /* Hostname set here should match CN in server certificate */
+    char *use_host = strndup(hostname, hostlen);
+    if (!use_host) {
+        goto exit;
+    }
+    wolfSSL_set_tlsext_host_name(tls->ssl, use_host);
+    free(use_host);
+#endif
+
+    wolfSSL_set_fd(tls->ssl, tls->sockfd);
+
+    return 0;
+exit:
+    esp_tls_cleanup(tls);
+    return -1;
+#endif
 }
 
 /**
@@ -348,10 +486,13 @@ exit:
 void esp_tls_conn_delete(esp_tls_t *tls)
 {
     if (tls != NULL) {
-        mbedtls_cleanup(tls);
+        esp_tls_cleanup(tls);
+#if CONFIG_SSL_USING_MBEDTLS
         if (tls->is_tls) {
             mbedtls_net_free(&tls->server_fd);
-        } else if (tls->sockfd >= 0) {
+        } else
+#endif
+        if (tls->sockfd >= 0) {
             close(tls->sockfd);
         }
         free(tls);
@@ -365,13 +506,28 @@ static ssize_t tcp_write(esp_tls_t *tls, const char *data, size_t datalen)
 
 static ssize_t tls_write(esp_tls_t *tls, const char *data, size_t datalen)
 {
+#if CONFIG_SSL_USING_MBEDTLS
     ssize_t ret = mbedtls_ssl_write(&tls->ssl, (unsigned char*) data, datalen);
     if (ret < 0) {
         if (ret != MBEDTLS_ERR_SSL_WANT_READ  && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             ESP_LOGE(TAG, "write error :%d:", ret);
+        } else {
+            ret = (ret == MBEDTLS_ERR_SSL_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
     return ret;
+#elif CONFIG_SSL_USING_WOLFSSL
+    ssize_t ret = wolfSSL_write(tls->ssl, (unsigned char*) data, datalen);
+    if (ret < 0) {
+        ret = wolfSSL_get_error(tls->ssl, ret);
+        if (ret != WOLFSSL_ERROR_WANT_READ  && ret != WOLFSSL_ERROR_WANT_WRITE) {
+            ESP_LOGE(TAG, "write error :%d:", ret);
+        } else {
+            ret = (ret == WOLFSSL_ERROR_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
+        }
+    }
+    return ret;
+#endif
 }
 
 static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, const esp_tls_cfg_t *cfg, esp_tls_t *tls)
@@ -386,7 +542,9 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
         case ESP_TLS_INIT:
             tls->sockfd = -1;
             if (cfg != NULL) {
+#if CONFIG_SSL_USING_MBEDTLS
                 mbedtls_net_init(&tls->server_fd);
+#endif
                 tls->is_tls = true;
             }
             int ret = esp_tcp_connect(hostname, hostlen, port, &tls->sockfd, cfg);
@@ -394,8 +552,8 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
                 return -1;
             }
             if (!cfg) {
-                tls->read = tcp_read;
-                tls->write = tcp_write;
+                tls->_read = tcp_read;
+                tls->_write = tcp_write;
                 ESP_LOGD(TAG, "non-tls connection established");
                 return 1;
             }
@@ -437,12 +595,13 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
                 tls->conn_state = ESP_TLS_FAIL;
                 return -1;
             }
-            tls->read = tls_read;
-            tls->write = tls_write;
+            tls->_read = tls_read;
+            tls->_write = tls_write;
             tls->conn_state = ESP_TLS_HANDSHAKE;
             /* falls through */
         case ESP_TLS_HANDSHAKE:
             ESP_LOGD(TAG, "handshake in progress...");
+#if CONFIG_SSL_USING_MBEDTLS
             ret = mbedtls_ssl_handshake(&tls->ssl);
             if (ret == 0) {
                 tls->conn_state = ESP_TLS_DONE;
@@ -461,6 +620,27 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
                    or MBEDTLS_ERR_SSL_WANT_WRITE during handshake */
                 return 0;
             }
+#elif CONFIG_SSL_USING_WOLFSSL
+            ret = wolfSSL_connect(tls->ssl);
+            if (ret == WOLFSSL_SUCCESS) {
+                tls->conn_state = ESP_TLS_DONE;
+                return 1;
+            } else {
+                int err = wolfSSL_get_error(tls->ssl, ret);
+                if (err != WOLFSSL_ERROR_WANT_READ && err != WOLFSSL_ERROR_WANT_WRITE) {
+                    ESP_LOGE(TAG, "wolfSSL_connect returned -0x%x", -ret);
+                    if (cfg->cacert_pem_buf != NULL || cfg->use_global_ca_store == true) {
+                        /* This is to check whether handshake failed due to invalid certificate*/
+                        verify_certificate(tls);
+                    }
+                    tls->conn_state = ESP_TLS_FAIL;
+                    return -1;
+                }
+                /* Irrespective of blocking or non-blocking I/O, we return on getting wolfSSL_want_read
+                   or wolfSSL_want_write during handshake */
+                return 0;
+            }
+#endif
             break;
         case ESP_TLS_FAIL:
             ESP_LOGE(TAG, "failed to open a new connection");;
@@ -539,7 +719,11 @@ size_t esp_tls_get_bytes_avail(esp_tls_t *tls)
         ESP_LOGE(TAG, "empty arg passed to esp_tls_get_bytes_avail()");
         return ESP_FAIL;
     }
+#if CONFIG_SSL_USING_MBEDTLS
     return mbedtls_ssl_get_bytes_avail(&tls->ssl);
+#elif CONFIG_SSL_USING_WOLFSSL
+    return wolfSSL_pending(tls->ssl);
+#endif
 }
 
 /**

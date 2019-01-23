@@ -18,6 +18,7 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
+#if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/platform.h"
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/esp_debug.h"
@@ -26,10 +27,18 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
 #include "mbedtls/certs.h"
+#else
+#include "wolfssl/ssl.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum {
+    ESP_TLS_ERROR_WANT_READ = -2,
+    ESP_TLS_ERROR_WANT_WRITE = -3,
+} esp_tls_error_t;
 
 /**
  *  @brief ESP-TLS Connection State
@@ -98,6 +107,7 @@ typedef struct esp_tls_cfg {
  * @brief      ESP-TLS Connection Handle 
  */
 typedef struct esp_tls {
+#if CONFIG_SSL_USING_MBEDTLS
     mbedtls_ssl_context ssl;                                                    /*!< TLS/SSL context */
  
     mbedtls_entropy_context entropy;                                            /*!< mbedTLS entropy context structure */
@@ -120,13 +130,16 @@ typedef struct esp_tls {
 
     mbedtls_pk_context clientkey;                                               /*!< Container for the private key of the client
                                                                                      certificate */
-
+#else
+    WOLFSSL_CTX *ctx;
+    WOLFSSL     *ssl;
+#endif
     int sockfd;                                                                 /*!< Underlying socket file descriptor. */
  
-    ssize_t (*read)(struct esp_tls  *tls, char *data, size_t datalen);          /*!< Callback function for reading data from TLS/SSL
+    ssize_t (*_read)(struct esp_tls  *tls, char *data, size_t datalen);         /*!< Callback function for reading data from TLS/SSL
                                                                                      connection. */
  
-    ssize_t (*write)(struct esp_tls *tls, const char *data, size_t datalen);    /*!< Callback function for writing data to TLS/SSL
+    ssize_t (*_write)(struct esp_tls *tls, const char *data, size_t datalen);   /*!< Callback function for writing data to TLS/SSL
                                                                                      connection. */
 
     esp_tls_conn_state_t  conn_state;                                           /*!< ESP-TLS Connection state */
@@ -221,7 +234,7 @@ int esp_tls_conn_http_new_async(const char *url, const esp_tls_cfg_t *cfg, esp_t
  */
 static inline ssize_t esp_tls_conn_write(esp_tls_t *tls, const void *data, size_t datalen)
 {
-    return tls->write(tls, (char *)data, datalen);
+    return tls->_write(tls, (char *)data, datalen);
 }
 
 /**
@@ -241,7 +254,7 @@ static inline ssize_t esp_tls_conn_write(esp_tls_t *tls, const void *data, size_
  */
 static inline ssize_t esp_tls_conn_read(esp_tls_t *tls, void  *data, size_t datalen)
 {
-    return tls->read(tls, (char *)data, datalen);
+    return tls->_read(tls, (char *)data, datalen);
 }
 
 /**
@@ -313,7 +326,7 @@ esp_err_t esp_tls_set_global_ca_store(const unsigned char *cacert_pem_buf, const
  *             - Pointer to the global CA store currently being used    if successful.
  *             - NULL                                                   if there is no global CA store set.
  */
-mbedtls_x509_crt *esp_tls_get_global_ca_store();
+void *esp_tls_get_global_ca_store();
 
 /**
  * @brief      Free the global CA store currently being used.
