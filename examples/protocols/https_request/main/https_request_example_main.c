@@ -38,6 +38,10 @@
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
 
+#if CONFIG_SSL_USING_WOLFSSL
+#include "lwip/apps/sntp.h"
+#endif
+
 #include "esp_tls.h"
 
 /* The examples use simple WiFi configuration that you can set via
@@ -123,10 +127,49 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_start() );
 }
 
+#if CONFIG_SSL_USING_WOLFSSL
+static void get_time()
+{
+    struct timeval now;
+    int sntp_retry_cnt = 0;
+    int sntp_retry_time = 0;
+
+    sntp_setoperatingmode(0);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_init();
+
+    while (1) {
+        for (int32_t i = 0; (i < (SNTP_RECV_TIMEOUT / 100)) && now.tv_sec < 1525952900; i++) {
+            vTaskDelay(100 / portTICK_RATE_MS);
+            gettimeofday(&now, NULL);
+        }
+
+        if (now.tv_sec < 1525952900) {
+            sntp_retry_time = SNTP_RECV_TIMEOUT << sntp_retry_cnt;
+
+            if (SNTP_RECV_TIMEOUT << (sntp_retry_cnt + 1) < SNTP_RETRY_TIMEOUT_MAX) {
+                sntp_retry_cnt ++;
+            }
+
+            printf("SNTP get time failed, retry after %d ms\n", sntp_retry_time);
+            vTaskDelay(sntp_retry_time / portTICK_RATE_MS);
+        } else {
+            printf("SNTP get time success\n");
+            break;
+        }
+    }
+}
+#endif
+
 static void https_get_task(void *pvParameters)
 {
     char buf[512];
     int ret, len;
+
+#if CONFIG_SSL_USING_WOLFSSL
+    /* CA date verification need system time */
+    get_time();
+#endif
 
     while(1) {
         /* Wait for the callback to set the CONNECTED_BIT in the
@@ -157,7 +200,13 @@ static void https_get_task(void *pvParameters)
             if (ret >= 0) {
                 ESP_LOGI(TAG, "%d bytes written", ret);
                 written_bytes += ret;
-            } else if (ret != MBEDTLS_ERR_SSL_WANT_READ  && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+            } else if
+#if CONFIG_SSL_USING_MBEDTLS
+            (ret != MBEDTLS_ERR_SSL_WANT_READ  && ret != MBEDTLS_ERR_SSL_WANT_WRITE)
+#else
+            (ret != WOLFSSL_ERROR_WANT_READ  && ret != WOLFSSL_ERROR_WANT_WRITE)
+#endif
+            {
                 ESP_LOGE(TAG, "esp_tls_conn_write  returned 0x%x", ret);
                 goto exit;
             }
@@ -170,8 +219,13 @@ static void https_get_task(void *pvParameters)
             len = sizeof(buf) - 1;
             bzero(buf, sizeof(buf));
             ret = esp_tls_conn_read(tls, (char *)buf, len);
-            
-            if(ret == MBEDTLS_ERR_SSL_WANT_WRITE  || ret == MBEDTLS_ERR_SSL_WANT_READ)
+
+            if
+#if CONFIG_SSL_USING_MBEDTLS
+            (ret == MBEDTLS_ERR_SSL_WANT_WRITE  || ret == MBEDTLS_ERR_SSL_WANT_READ)
+#else
+            (ret == WOLFSSL_ERROR_WANT_READ  && ret == WOLFSSL_ERROR_WANT_WRITE)
+#endif
                 continue;
             
             if(ret < 0)
