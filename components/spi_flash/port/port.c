@@ -27,7 +27,7 @@
 #include "esp8266/rom_functions.h"
 #include "esp8266/eagle_soc.h"
 
-#define PARTITION_DATA_OFFSET   (CONFIG_SPI_FLASH_SIZE / 2)
+#define PARTITION_DATA_OFFSET   (s_v2_flash_bin_size / 2)
 
 typedef struct s_sys_param {
     uint8_t     flag;
@@ -65,6 +65,8 @@ typedef union s_boot_param {
 static const char *TAG = "partition_port";
 static uint32_t s_partition_offset;
 static ROM_FLASH_BUF_DECLARE(s_cache_buf, SPI_FLASH_SEC_SIZE);
+static uint32_t s_v2_flash_bin_size;
+static uint32_t s_v2_flash_size;
 static sys_param_t s_sys_param;
 static boot_param_t s_boot_param;
 static esp_spi_flash_chip_t s_flash_chip = {
@@ -75,6 +77,37 @@ static esp_spi_flash_chip_t s_flash_chip = {
     256,
     0xffff
 };
+
+#define FLASH_KB(_x)    (_x) * 1024
+#define FLASH_MB(_x)    (_x) * 1024 * 1024
+
+static const uint32_t s_v2_flash_bin_size_map_table[] = {
+    FLASH_KB(512),
+    FLASH_KB(256),
+    FLASH_MB(1),
+    FLASH_MB(2),
+    FLASH_MB(4),
+    FLASH_MB(2),
+    FLASH_MB(4),
+    FLASH_MB(4),
+    FLASH_MB(8),
+    FLASH_MB(16)
+};
+
+static const uint32_t s_v2_flash_bin_map_table[] = {
+    FLASH_KB(512),
+    FLASH_KB(0),
+    FLASH_MB(1),
+    FLASH_MB(1),
+    FLASH_MB(1),
+    FLASH_MB(2),
+    FLASH_MB(2),
+    FLASH_MB(0),
+    FLASH_MB(2),
+    FLASH_MB(2)
+};
+
+static const uint32_t s_v2_flash_bin_size_map_size = sizeof(s_v2_flash_bin_map_table) / sizeof(s_v2_flash_bin_map_table[0]);
 
 static inline void esp_hw_reset(void)
 {
@@ -135,15 +168,52 @@ static inline int spi_flash_erase(uint32_t addr)
     return ret;
 }
 
+static inline int get_v2_flash_map_size(void)
+{
+    int ret;
+    esp_image_header_t header;
+
+    ret = spi_flash_read_data(0, &header, sizeof(esp_image_header_t));
+    if (ret) {
+        ESP_LOGE(TAG, "read V2 header error %d", ret);
+        return -1;
+    }
+
+    if (header.spi_size >= s_v2_flash_bin_size_map_size) {
+        ESP_LOGE(TAG, "V2 header flash size is error");
+        return -1;
+    }
+
+    s_v2_flash_bin_size = s_v2_flash_bin_map_table[header.spi_size];
+    if (!s_v2_flash_bin_size) {
+        ESP_LOGE(TAG, "V2 header flash size mapped value is error");
+        return -1;
+    }
+
+    s_v2_flash_size = s_v2_flash_bin_size_map_table[header.spi_size];
+
+    ESP_LOGD(TAG, "V2 flash size is %d %x %x", header.spi_size, s_v2_flash_size, s_v2_flash_bin_size);
+
+    return 0;
+}
+
 static inline uint32_t esp_get_updated_partition_table_addr(void)
 {
     int ret;
     size_t offset;
     uint8_t user_bin;
-    const uint32_t sect = CONFIG_SPI_FLASH_SIZE / SPI_FLASH_SEC_SIZE - 3;
+    uint32_t sect;
 
     if (s_partition_offset)
         return s_partition_offset;
+
+    ret = get_v2_flash_map_size();
+    if (ret) {
+        ESP_LOGE(TAG, "read V2 flash header error %d", ret);
+        return -1UL;
+    }
+
+    sect = s_v2_flash_size / SPI_FLASH_SEC_SIZE - 3;
 
     ret = spi_flash_read_data((sect + 2) * SPI_FLASH_SEC_SIZE, &s_sys_param, sizeof(sys_param_t));
     if (ret) {
@@ -246,8 +316,8 @@ static int esp_flash_sector_copy(uint32_t dest, uint32_t src, uint32_t total_siz
 static inline int esp_set_v2boot_app1(void)
 {
     int ret;
-    size_t offset = s_sys_param.flag ? 1 : 0;
-    const uint32_t base_addr = CONFIG_SPI_FLASH_SIZE / SPI_FLASH_SEC_SIZE - 3;
+    const size_t offset = s_sys_param.flag ? 1 : 0;
+    const uint32_t base_addr = s_v2_flash_size / SPI_FLASH_SEC_SIZE - 3;
     const uint32_t sys_addr = (base_addr + 2) * SPI_FLASH_SEC_SIZE;
     const uint32_t to_addr = (base_addr + 1 - offset) * SPI_FLASH_SEC_SIZE;
 
@@ -364,7 +434,7 @@ int esp_patition_table_init_data(void *partition_info)
 {
     int ret;
     const uint32_t boot_base = 0x1000;
-    const uint32_t boot_size = CONFIG_SPI_FLASH_SIZE / 2 - boot_base - 4 * SPI_FLASH_SEC_SIZE;
+    const uint32_t boot_size = s_v2_flash_bin_size / 2 - boot_base - 4 * SPI_FLASH_SEC_SIZE;
 
     if (!esp_sdk_update_from_v2())
         return 0;
@@ -374,18 +444,22 @@ int esp_patition_table_init_data(void *partition_info)
 
     ESP_LOGD(TAG, "Copy firmware1 from %d total %d", boot_base + PARTITION_DATA_OFFSET, boot_size);
 
+    ESP_LOGI(TAG, "Start unpacking V3 firmware ...");
+
     ret = esp_flash_sector_copy(boot_base, boot_base + PARTITION_DATA_OFFSET, boot_size);
     if (ret) {
-        ESP_LOGE(TAG, "Fail to copy V3 bootloader from 0x%x to 0x%x total %d", boot_base + PARTITION_DATA_OFFSET,
+        ESP_LOGE(TAG, "Fail to copy V3 firmware from 0x%x to 0x%x total %d", boot_base + PARTITION_DATA_OFFSET,
                         boot_base, boot_size);
         return -1;
     }
 
     ret = esp_set_v2boot_app1();
     if (ret) {
-        ESP_LOGE(TAG, "Fail to update V2 bootloader data");
+        ESP_LOGE(TAG, "Fail to set V2 app1 default");
         return -1;        
     }
+
+    ESP_LOGI(TAG, "Pack V3 firmware successfully and start to reboot");
 
     esp_hw_reset();
 
