@@ -185,7 +185,7 @@ bool _esp_ota_firm_parse_http(esp_ota_firm_t *ota_firm, const char *text, size_t
             memset(length_str, 0, sizeof(length_str));
             memcpy(length_str, ptr, ptr2 - ptr);
             ota_firm->content_len = atoi(length_str);
-#ifdef CONFIG_ESPTOOLPY_FLASHSIZE_1MB
+#if defined(CONFIG_ESPTOOLPY_FLASHSIZE_1MB) && !defined(CONFIG_ESP8266_BOOT_COPY_APP)
             ota_firm->ota_size = ota_firm->content_len / ota_firm->ota_num;
             ota_firm->ota_offset = ota_firm->ota_size * ota_firm->update_ota_num;
 #else
