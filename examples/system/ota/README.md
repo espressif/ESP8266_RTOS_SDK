@@ -1,4 +1,10 @@
 
+# Important
+
+If your development board is based on **ESP8285** or **ESP8266 + 1MB flash**, you should read this document carefully, especially the Chapter **"Principle"**.
+
+---
+
 # Simple OTA Demo
 
 This example demonstrates a working OTA (over the air) firmware update workflow.
@@ -13,8 +19,7 @@ An app running on ESP8266 can upgrade itself by downloading a new app "image" bi
 
 In this example, the ESP8266 has 2 images in flash: OTA_0, OTA_1. Each of these is a self-contained partition. The number of OTA image partition is determined by the partition table layout.
 
-Flashing the example over serial with "make flash" updates the OTA_0 app image. On first boot, the bootloader loads this OTA_0 app image which then performs an OTA update (triggered in the example code). The update downloads a new image from an http server and saves it into the OTA_1 partition. At this point the example code updates the ota_data partition to indicate the new app partition, and reboots. The bootloader reads ota_data, determines the new OTA image has been selected, and runs it.
-
+Flash the example through serial port with command "make flash" to update the OTA_0 app image. In first boot, the bootloader loads this OTA_0 app image which then will execute an OTA update (triggered in the example code). The OTA update will download a new image from an http server and save it into the OTA_1 partition. After that, the example code will update the ota_data partition to indicate the new app partition, and then reboot, which leads to the second boot. During the second boot, the bootloader will read the ota_data, and select to run the new OTA image.
 
 # Custom partition configuration
 
@@ -93,7 +98,7 @@ For our upgrade example OTA file, we're going to use the `get-started/project_te
 
 Open a new terminal to run the HTTP server, then run these commands to build the example and start the server, if your board's flash size is "1 MB", you should firstly configure flash size to be "1 MB"(default is "2 MB") at "menuconfig" and then build project:
 
-Configure 1MB flash if need:
+Configure 1MB flash if it is needed:
 
 ```
 Serial flasher config  --->
@@ -119,10 +124,6 @@ While the server is running, the contents of the build directory can be browsed 
 
 NB: On some systems, the command may be `python2 -m SimpleHTTPServer`.
 
-NB: Command "make ota" will generate 3 binaries: "xxx(project name).app1.bin", "xxx(project name).app2.bin" and "xxx(project name).ota.bin". You should only upload the "xxx(project name).ota.bin" to your OTA server and let the app download it by the example.
-
-NB: "xxx.app1.bin" is for downloading to OTA_0 partition, and "xxx.app2.bin" is for downloading to OTA_1 partition. If your board's flash size is larger than "1 MB", then "xxx.app1.bin" = "xxx.app2.bin" = "xxx.ota.bin". Otherwise "xxx.ota.bin" = "xxx.app1.bin" + "xxx.app2.bin". So the flash size configuration is very important. The example will select the binary it needs and store it to flash.
-
 If you have any firewall software running that will block incoming access to port 8070, configure it to allow access while running the example.
 
 ## Step 3: Build OTA Example
@@ -143,7 +144,7 @@ Serial flasher config  --->
         (X) 1 MB
 ```
 
-Configurate the application location information and it must be same as the OTA example's information, how to do refer to **Step 3: Configurate application location** of **Custom partition configuration**.
+Configurate the application location information and it must be the same as the OTA example's information, you can refer to the **Step 3: Configurate application location** of **Custom partition configuration**.
 
 Save your changes, and type `make` to build the example.
 
@@ -166,11 +167,29 @@ When the example starts up, it will print "ota: Starting OTA example..." then:
 3. Write the image to flash, and configure the next boot from this image.
 4. Reboot
 
+# Principle
+
+Command "make ota" will generate 3 binaries: "xxx(project name).app1.bin", "xxx(project name).app2.bin" and "xxx(project name).ota.bin". You should only upload the "xxx(project name).ota.bin" to your OTA server and let the app download it as the example.
+
+"xxx.app1.bin" is for downloading to OTA_0 partition, and "xxx.app2.bin" is for downloading to OTA_1 partition. If your board's flash size is larger than "1 MB" or you select "Copy OTA" function, then "xxx.app1.bin" = "xxx.app2.bin" = "xxx.ota.bin". Otherwise If your board's flash size is "1 MB" and you don't select "Copy OTA" function, "xxx.app1.bin" != "xxx.app2.bin" != "xxx.ota.bin", "xxx.ota.bin" = "xxx.app1.bin" + "xxx.app2.bin". So the flash size configuration is very important. Otherwise if and at the last The example will select the binary it needs and download it into flash.
+
+Based on the above theory, we can see that for ESP8266 + 2MB flash(or larger size), app1 and app2 are the same, you can download it directly without any distinction. But for ESP8285 (ESP8266 + 1MB flash), the ota0 (app1) and ota1 (app2) are different, you need to distinguish which one should be downloaded, and to what location, during FOTA. Now, the way in the example code is to synthesize app1 and app2 into an "xxxx (project name).ota.bin". And only write the target app (app1 or app2) into the flash, according to the location of download, when FOTA; the other part will be discarded.
+
+On the other hand, if you want to use ESP8285(ESP8266 + 1MB flash) and don't want to upload 2 binaries for OTA, you can enable the "Copy OTA" function in menuconfig.
+
+```
+Component config  --->
+    ESP8266-specific  --->
+        [*] (**Expected**)Boot copy app
+```
+
+After enabling "Copy OTA" mode, the system will always download the app bin into ota_1 partition and then re-boot. After reboot, the bootloader will unpack the app bin and copy it to the ota_0 partition, then run the application in ota_0 partition.
+
 # Troubleshooting
 
-* Check your PC can ping the ESP8266 at its IP, and that the IP, AP and other configuration settings are correct in menuconfig.
-* Check if any firewall software is preventing incoming connections on the PC.
-* Check you can see the configured file (default project_template.ota.bin) if you browse the file listing at http://127.0.0.1/
+* Check whether your PC can ping the ESP8266 at its IP, and make sure that the IP, AP and other configuration settings are correct in menuconfig.
+* Check if there is any firewall software on the PC that prevents incoming connections.
+* Check whether you can see the configured file (default project_template.ota.bin) when browsing the file listing at http://127.0.0.1/
 * If you have another PC or a phone, try viewing the file listing from the separate host.
 
 ## Error "ota_begin error err=0x104"
