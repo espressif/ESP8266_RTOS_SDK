@@ -613,7 +613,6 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
     bootloader_munmap(partitions);
 
 #ifdef CONFIG_ESP8266_OTA_FROM_OLD
-    ESP_LOGI(TAG, "Copy firmware ...");
     if (esp_patition_table_init_data(bs)) {
         ESP_LOGE(TAG,"Failed to update partition data");
         return false;
