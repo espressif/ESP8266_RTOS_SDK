@@ -59,12 +59,12 @@ typedef union s_boot_param {
         uint8_t enhance_boot_flag : 1;
     } boot_base;
 
-    uint8_t data[4096];
+    ROM_FLASH_BUF_DECLARE(__data, 32);
 } boot_param_t;
 
 static const char *TAG = "partition_port";
 static uint32_t s_partition_offset;
-static uint8_t s_cache_buf[SPI_FLASH_SEC_SIZE];
+static ROM_FLASH_BUF_DECLARE(s_cache_buf, SPI_FLASH_SEC_SIZE);
 static sys_param_t s_sys_param;
 static boot_param_t s_boot_param;
 static esp_spi_flash_chip_t s_flash_chip = {
@@ -96,6 +96,11 @@ static inline int spi_flash_read_data(uint32_t addr, void *buf, size_t n)
 {
     int ret;
 
+    if (addr & 3 || (uint32_t)buf & 3 || n & 3) {
+        ESP_LOGE(TAG, "flash read parameters is not align, value is %p %x %x", buf, n ,addr);
+        return -1;
+    }
+
     ESP_LOGD(TAG, "read buffer %p total %d from 0x%x", buf, n ,addr);
 
     ret = SPI_read_data(&s_flash_chip, addr, buf, n);
@@ -106,6 +111,11 @@ static inline int spi_flash_read_data(uint32_t addr, void *buf, size_t n)
 static inline int spi_flash_write_data(uint32_t addr, const void *buf, uint32_t n)
 {
     int ret;
+
+    if (addr & 3 || (uint32_t)buf & 3 || n & 3) {
+        ESP_LOGE(TAG, "flash write parameters is not align, value is %p %x %x", buf, n ,addr);
+        return -1;
+    }
 
     ESP_LOGD(TAG, "write buffer %p total %d to 0x%x", buf, n ,addr);
 
@@ -182,7 +192,7 @@ static inline uint32_t esp_get_updated_partition_table_addr(void)
 static inline int spi_flash_write_data_safe(uint32_t addr, const void *buf, size_t n)
 {
     int ret;
-    static uint8_t check_buf[SPI_FLASH_SEC_SIZE];
+    static ROM_FLASH_BUF_DECLARE(check_buf, SPI_FLASH_SEC_SIZE);
 
     ret = spi_flash_erase(addr);
     if (ret) {
