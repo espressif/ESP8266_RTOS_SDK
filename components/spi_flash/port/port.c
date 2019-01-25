@@ -14,7 +14,7 @@
 
 #include "sdkconfig.h"
 
-#if defined(CONFIG_ESP8266_OTA_FROM_OLD) && defined(BOOTLOADER_BUILD)
+#if (defined(CONFIG_ESP8266_OTA_FROM_OLD) || defined(CONFIG_ESP8266_BOOT_COPY_APP)) && defined(BOOTLOADER_BUILD)
 
 #include <string.h>
 #include <stdint.h>
