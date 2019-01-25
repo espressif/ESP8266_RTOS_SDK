@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+#define ROM_FLASH_BUF_DECLARE(__name, __size) uint8_t __name[__size] __attribute__((aligned(4)))
+
 typedef struct esp_spi_flash_chip {
     uint32_t  deviceId;
     uint32_t  chip_size;    // chip size in byte
