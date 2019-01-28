@@ -160,3 +160,50 @@ git pull
 ```
 
 The ``git pull`` command is fetching and merging changes from ESP8266_RTOS_SDK repository on GitHub.
+
+# Developers
+
+*This section is for developers of ESP8266_RTOS_SDK itself*
+
+## Code style
+
+We use [astyle](http://astyle.sourceforge.net/) to format the code.
+The formatting settings can be seen in
+[tools/format.sh](tools/format.sh).
+
+## The code-style tool
+
+`tools/code-style` is a tool to expand tabs and run clang-format on the
+entire repository.
+
+Usage: `tools/code-style [-e] [-c]`
+
+* `-t` shows all the files that will be tagged.
+* `-e` runs untabbing (replace tab characters with 4 spaces)
+* `-a` runs astyle.
+* `-n` enabled dry-run mode. In this mode no files will be changed,
+  but it will let you know which files that would have been changed.
+
+It uses `tools/astyle` to find files in the repository. The
+tool reads `tools/code-style.ini` (see the current version
+[here](tools/code-style.ini)) and tags each file it finds with attributes
+explaining what should be done with the file.
+
+The tools are written in bash and Python.
+
+## Installing dependencies for Python
+
+`tag-files` requires the following packages:
+
+* pathspec
+* configparser (build-in in python3)
+
+If these are not available through your OSes package manager you can
+use virtualenv to install them locally:
+
+    virtualenv venv
+    venv/bin/pip install -r tools/requirements.txt
+
+After that you can add `venv/bin` to path and run `tools/tag-files` like this:
+
+    PATH=$(pwd)/venv/bin:$PATH
