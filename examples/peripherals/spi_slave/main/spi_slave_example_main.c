@@ -149,6 +149,7 @@ static void spi_slave_read_master_task(void *arg)
     trans.bits.addr = 32 * 1;
     trans.bits.mosi = 32 * 8;
 
+    spi_trans(HSPI_HOST, trans); // init spi slave buf
     while (1) {
         spi_slave_set_status(HSPI_HOST, &status);
         xSemaphoreTake(spi_wr_buf_done_sem, portMAX_DELAY);
