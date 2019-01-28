@@ -121,6 +121,6 @@ I (1478) spi_master_example: read_data[7]: 0x2
 
     ![wave](wave_write_to_slave.png)  
 
-  - SPI_MASTER_READ_DATA_FROM
+  - SPI_MASTER_READ_DATA_FROM_SLAVE
 
     ![wave](wave_read_from_slave.png)
