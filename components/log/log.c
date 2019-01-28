@@ -190,7 +190,7 @@ static int esp_log_write_str(const char *s)
     return ret;
 }
 
-static uint32_t esp_log_timestamp()
+uint32_t esp_log_timestamp()
 {
     static uint32_t base = 0;
 
