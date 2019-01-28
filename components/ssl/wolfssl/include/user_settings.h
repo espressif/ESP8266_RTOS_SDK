@@ -5,7 +5,8 @@
  *
  * This file is part of wolfSSL.
  *
- * Contact licensing@wolfssl.com with any questions or comments.
+ * wolfSSL is distributed in binary form as licensed by Espressif Systems.
+ * See README file or contact licensing@wolfssl.com with any questions or comments.
  *
  * http://www.wolfssl.com
  */
