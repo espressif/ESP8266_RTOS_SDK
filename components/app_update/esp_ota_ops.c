@@ -69,6 +69,28 @@ static ota_select s_ota_select[2];
 
 const static char *TAG = "esp_ota_ops";
 
+#ifndef CONFIG_ESP8266_BOOT_COPY_APP
+static inline int esp_ota_verify_binary(const esp_partition_pos_t *pos, esp_image_header_t *image)
+{
+    const int32_t entry = image->entry_addr - 0x40200010;
+
+    ESP_LOGD(TAG, "OTA binary start entry 0x%x, partition start from 0x%x to 0x%x\n", entry, pos->offset,
+                        pos->offset + pos->size);
+
+    if (pos->offset + pos->size <= 0x100000) {
+        if (entry <= 0 || entry <= pos->offset || entry >= pos->offset + pos->size) {
+            const char *doc_str = "<<ESP8266_RTOS_SDK/examples/system/ota/README.md>>";
+
+            ESP_LOGE(TAG, "**Important**: The OTA binary link data is error, "
+                          "please refer to document %s for how to generate OTA binaries", doc_str);
+            return ESP_ERR_INVALID_ARG;
+        }
+    }
+
+    return ESP_OK;
+}
+#endif
+
 /* Return true if this is an OTA app partition */
 static bool is_ota_partition(const esp_partition_t *p)
 {
@@ -243,6 +265,13 @@ esp_err_t esp_ota_end(esp_ota_handle_t handle)
         ret = ESP_ERR_OTA_VALIDATE_FAILED;
         goto cleanup;
     }
+
+#ifndef CONFIG_ESP8266_BOOT_COPY_APP
+    if (esp_ota_verify_binary(&part_pos, &data.image) != ESP_OK) {
+        ret = ESP_ERR_OTA_VALIDATE_FAILED;
+        goto cleanup;
+    }
+#endif
 
 #ifdef CONFIG_SECURE_BOOT_ENABLED
     ret = esp_secure_boot_verify_signature(it->part->address, data.image_len);
