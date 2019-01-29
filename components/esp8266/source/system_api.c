@@ -36,7 +36,7 @@ esp_err_t esp_base_mac_addr_set(uint8_t *mac)
 {
     if (mac == NULL) {
         ESP_LOGE(TAG, "Base MAC address is NULL");
-        abort();
+        return ESP_ERR_INVALID_ARG;
     }
 
     memcpy(base_mac_addr, mac, 6);
@@ -65,6 +65,7 @@ esp_err_t esp_efuse_mac_get_default(uint8_t* mac)
     uint8_t efuse_crc = 0;
     uint8_t calc_crc = 0;
     uint8_t version;
+    uint8_t use_default = 1;
 
     efuse[0] = REG_READ(EFUSE_DATA0_REG);
     efuse[1] = REG_READ(EFUSE_DATA1_REG);
@@ -82,6 +83,8 @@ esp_err_t esp_efuse_mac_get_default(uint8_t* mac)
         mac[1] = efuse[3] >> 8;
         mac[2] = efuse[3];
 
+        use_default = 0;
+
         tmp_mac[0] = mac[2];
         tmp_mac[1] = mac[1];
         tmp_mac[2] = mac[0];
@@ -89,28 +92,28 @@ esp_err_t esp_efuse_mac_get_default(uint8_t* mac)
         efuse_crc = efuse[2] >> 24;
         calc_crc = esp_crc8(tmp_mac, 3);
 
-        if (efuse_crc != calc_crc) {
-            ESP_LOGE(TAG, "High MAC CRC error, efuse_crc = 0x%02x; calc_crc = 0x%02x", efuse_crc, calc_crc);
-            return ESP_ERR_INVALID_MAC;
-        }
+        if (efuse_crc != calc_crc)
+            use_default = 1;
 
-        version = (efuse[1] >> EFUSE_VERSION_S) & EFUSE_VERSION_V;
+        if (!use_default) {
+            version = (efuse[1] >> EFUSE_VERSION_S) & EFUSE_VERSION_V;
 
-        if (version == EFUSE_VERSION_1 || version == EFUSE_VERSION_2) {
-            tmp_mac[0] = mac[5];
-            tmp_mac[1] = mac[4];
-            tmp_mac[2] = mac[3];
-            tmp_mac[3] = efuse[1] >> 16;
+            if (version == EFUSE_VERSION_1 || version == EFUSE_VERSION_2) {
+                tmp_mac[0] = mac[5];
+                tmp_mac[1] = mac[4];
+                tmp_mac[2] = mac[3];
+                tmp_mac[3] = efuse[1] >> 16;
 
-            efuse_crc = efuse[0] >> 16;
-            calc_crc = esp_crc8(tmp_mac, 4);
+                efuse_crc = efuse[0] >> 16;
+                calc_crc = esp_crc8(tmp_mac, 4);
 
-            if (efuse_crc != calc_crc) {
-                ESP_LOGE(TAG, "CRC8 error, efuse_crc = 0x%02x; calc_crc = 0x%02x", efuse_crc, calc_crc);
-                return ESP_ERR_INVALID_MAC;
+                if (efuse_crc != calc_crc)
+                    use_default = 1;
             }
         }
-    } else {
+    }
+
+    if (use_default) {
         mac[0] = 0x18;
         mac[1] = 0xFE;
         mac[2] = 0x34;
