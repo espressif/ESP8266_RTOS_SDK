@@ -52,7 +52,10 @@ INPUT = \
     ../../components/esp8266/include/driver/gpio.h \
     ../../components/esp8266/include/driver/i2c.h \
     ../../components/esp8266/include/driver/pwm.h \
-    ../../components/esp8266/include/driver/uart.h
+    ../../components/esp8266/include/driver/uart.h \
+    ../../components/esp8266/include/driver/adc.h \
+    ../../components/esp8266/include/driver/spi.h \
+    ../../components/esp8266/include/driver/hw_timer.h
     ##
 
 ## Get warnings for functions that have no documentation for their parameters or return value
