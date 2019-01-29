@@ -32,6 +32,32 @@
 #define BUFFSIZE 1500
 #define TEXT_BUFFSIZE 1024
 
+typedef enum esp_ota_firm_state {
+    ESP_OTA_INIT = 0,
+    ESP_OTA_PREPARE,
+    ESP_OTA_START,
+    ESP_OTA_RECVED,
+    ESP_OTA_FINISH,
+} esp_ota_firm_state_t;
+
+typedef struct esp_ota_firm {
+    uint8_t             ota_num;
+    uint8_t             update_ota_num;
+
+    esp_ota_firm_state_t    state;
+
+    size_t              content_len;
+
+    size_t              read_bytes;
+    size_t              write_bytes;
+
+    size_t              ota_size;
+    size_t              ota_offset;
+
+    const char          *buf;
+    size_t              bytes;
+} esp_ota_firm_t;
+
 static const char *TAG = "ota";
 /*an ota data write buffer ready to write to the flash*/
 static char ota_write_data[BUFFSIZE + 1] = { 0 };
@@ -92,7 +118,7 @@ static void initialise_wifi(void)
 }
 
 /*read buffer by byte still delim ,return read bytes counts*/
-static int read_until(char *buffer, char delim, int len)
+static int read_until(const char *buffer, char delim, int len)
 {
 //  /*TODO: delim check,buffer check,further: do an buffer length limited*/
     int i = 0;
@@ -100,38 +126,6 @@ static int read_until(char *buffer, char delim, int len)
         ++i;
     }
     return i + 1;
-}
-
-/* resolve a packet from http socket
- * return true if packet including \r\n\r\n that means http packet header finished,start to receive packet body
- * otherwise return false
- * */
-static bool read_past_http_header(char text[], int total_len, esp_ota_handle_t update_handle)
-{
-    /* i means current position */
-    int i = 0, i_read_len = 0;
-    while (text[i] != 0 && i < total_len) {
-        i_read_len = read_until(&text[i], '\n', total_len);
-        // if we resolve \r\n line,we think packet header is finished
-        if (i_read_len == 2) {
-            int i_write_len = total_len - (i + 2);
-            memset(ota_write_data, 0, BUFFSIZE);
-            /*copy first http packet body to write buffer*/
-            memcpy(ota_write_data, &(text[i + 2]), i_write_len);
-
-            esp_err_t err = esp_ota_write( update_handle, (const void *)ota_write_data, i_write_len);
-            if (err != ESP_OK) {
-                ESP_LOGE(TAG, "Error: esp_ota_write failed! err=0x%x", err);
-                return false;
-            } else {
-                ESP_LOGI(TAG, "esp_ota_write header OK");
-                binary_file_length += i_write_len;
-            }
-            return true;
-        }
-        i += i_read_len;
-    }
-    return false;
 }
 
 static bool connect_to_http_server()
@@ -177,6 +171,153 @@ static void __attribute__((noreturn)) task_fatal_error()
     }
 }
 
+bool _esp_ota_firm_parse_http(esp_ota_firm_t *ota_firm, const char *text, size_t total_len, size_t *parse_len)
+{
+    /* i means current position */
+    int i = 0, i_read_len = 0;
+    char *ptr = NULL, *ptr2 = NULL;
+    char length_str[32];
+
+    while (text[i] != 0 && i < total_len) {
+        if (ota_firm->content_len == 0 && (ptr = (char *)strstr(text, "Content-Length")) != NULL) {
+            ptr += 16;
+            ptr2 = (char *)strstr(ptr, "\r\n");
+            memset(length_str, 0, sizeof(length_str));
+            memcpy(length_str, ptr, ptr2 - ptr);
+            ota_firm->content_len = atoi(length_str);
+#if defined(CONFIG_ESPTOOLPY_FLASHSIZE_1MB) && !defined(CONFIG_ESP8266_BOOT_COPY_APP)
+            ota_firm->ota_size = ota_firm->content_len / ota_firm->ota_num;
+            ota_firm->ota_offset = ota_firm->ota_size * ota_firm->update_ota_num;
+#else
+            ota_firm->ota_size = ota_firm->content_len;
+            ota_firm->ota_offset = 0;
+#endif
+            ESP_LOGI(TAG, "parse Content-Length:%d, ota_size %d", ota_firm->content_len, ota_firm->ota_size);
+        }
+
+        i_read_len = read_until(&text[i], '\n', total_len - i);
+
+        if (i_read_len > total_len - i) {
+            ESP_LOGE(TAG, "recv malformed http header");
+            task_fatal_error();
+        }
+
+        // if resolve \r\n line, http header is finished
+        if (i_read_len == 2) {
+            if (ota_firm->content_len == 0) {
+                ESP_LOGE(TAG, "did not parse Content-Length item");
+                task_fatal_error();
+            }
+
+            *parse_len = i + 2;
+
+            return true;
+        }
+
+        i += i_read_len;
+    }
+
+    return false;
+}
+
+static size_t esp_ota_firm_do_parse_msg(esp_ota_firm_t *ota_firm, const char *in_buf, size_t in_len)
+{
+    size_t tmp;
+    size_t parsed_bytes = in_len; 
+
+    switch (ota_firm->state) {
+        case ESP_OTA_INIT:
+            if (_esp_ota_firm_parse_http(ota_firm, in_buf, in_len, &tmp)) {
+                ota_firm->state = ESP_OTA_PREPARE;
+                ESP_LOGD(TAG, "Http parse %d bytes", tmp);
+                parsed_bytes = tmp;
+            }
+            break;
+        case ESP_OTA_PREPARE:
+            ota_firm->read_bytes += in_len;
+
+            if (ota_firm->read_bytes >= ota_firm->ota_offset) {
+                ota_firm->buf = &in_buf[in_len - (ota_firm->read_bytes - ota_firm->ota_offset)];
+                ota_firm->bytes = ota_firm->read_bytes - ota_firm->ota_offset;
+                ota_firm->write_bytes += ota_firm->read_bytes - ota_firm->ota_offset;
+                ota_firm->state = ESP_OTA_START;
+                ESP_LOGD(TAG, "Receive %d bytes and start to update", ota_firm->read_bytes);
+                ESP_LOGD(TAG, "Write %d total %d", ota_firm->bytes, ota_firm->write_bytes);
+            }
+
+            break;
+        case ESP_OTA_START:
+            if (ota_firm->write_bytes + in_len > ota_firm->ota_size) {
+                ota_firm->bytes = ota_firm->ota_size - ota_firm->write_bytes;
+                ota_firm->state = ESP_OTA_RECVED;
+            } else
+                ota_firm->bytes = in_len;
+
+            ota_firm->buf = in_buf;
+
+            ota_firm->write_bytes += ota_firm->bytes;
+
+            ESP_LOGD(TAG, "Write %d total %d", ota_firm->bytes, ota_firm->write_bytes);
+
+            break;
+        case ESP_OTA_RECVED:
+            parsed_bytes = 0;
+            ota_firm->state = ESP_OTA_FINISH;
+            break;
+        default:
+            parsed_bytes = 0;
+            ESP_LOGD(TAG, "State is %d", ota_firm->state);
+            break;
+    }
+
+    return parsed_bytes;
+}
+
+static void esp_ota_firm_parse_msg(esp_ota_firm_t *ota_firm, const char *in_buf, size_t in_len)
+{
+    size_t parse_bytes = 0;
+
+    ESP_LOGD(TAG, "Input %d bytes", in_len);
+
+    do {
+        size_t bytes = esp_ota_firm_do_parse_msg(ota_firm, in_buf + parse_bytes, in_len - parse_bytes);
+        ESP_LOGD(TAG, "Parse %d bytes", bytes);
+        if (bytes)
+            parse_bytes += bytes;
+    } while (parse_bytes != in_len);
+}
+
+static inline int esp_ota_firm_is_finished(esp_ota_firm_t *ota_firm)
+{
+    return (ota_firm->state == ESP_OTA_FINISH || ota_firm->state == ESP_OTA_RECVED);
+}
+
+static inline int esp_ota_firm_can_write(esp_ota_firm_t *ota_firm)
+{
+    return (ota_firm->state == ESP_OTA_START || ota_firm->state == ESP_OTA_RECVED);
+}
+
+static inline const char* esp_ota_firm_get_write_buf(esp_ota_firm_t *ota_firm)
+{
+    return ota_firm->buf;
+}
+
+static inline size_t esp_ota_firm_get_write_bytes(esp_ota_firm_t *ota_firm)
+{
+    return ota_firm->bytes;
+}
+
+static void esp_ota_firm_init(esp_ota_firm_t *ota_firm, const esp_partition_t *update_partition)
+{
+    memset(ota_firm, 0, sizeof(esp_ota_firm_t));
+    ota_firm->state = ESP_OTA_INIT;
+    ota_firm->ota_num = get_ota_partition_count();
+    ota_firm->update_ota_num = update_partition->subtype - ESP_PARTITION_SUBTYPE_APP_OTA_0;
+
+    ESP_LOGI(TAG, "Totoal OTA number %d update to %d part", ota_firm->ota_num, ota_firm->update_ota_num);
+
+}
+
 static void ota_example_task(void *pvParameter)
 {
     esp_err_t err;
@@ -184,7 +325,7 @@ static void ota_example_task(void *pvParameter)
     esp_ota_handle_t update_handle = 0 ;
     const esp_partition_t *update_partition = NULL;
 
-    ESP_LOGI(TAG, "Starting OTA example...");
+    ESP_LOGI(TAG, "Starting OTA example... @ %p flash %s", ota_example_task, CONFIG_ESPTOOLPY_FLASHSIZE);
 
     const esp_partition_t *configured = esp_ota_get_boot_partition();
     const esp_partition_t *running = esp_ota_get_running_partition();
@@ -246,7 +387,11 @@ static void ota_example_task(void *pvParameter)
     }
     ESP_LOGI(TAG, "esp_ota_begin succeeded");
 
-    bool resp_body_start = false, flag = true;
+    bool flag = true;
+    esp_ota_firm_t ota_firm;
+
+    esp_ota_firm_init(&ota_firm, update_partition);
+
     /*deal with all receive packet*/
     while (flag) {
         memset(text, 0, TEXT_BUFFSIZE);
@@ -255,11 +400,15 @@ static void ota_example_task(void *pvParameter)
         if (buff_len < 0) { /*receive error*/
             ESP_LOGE(TAG, "Error: receive data error! errno=%d", errno);
             task_fatal_error();
-        } else if (buff_len > 0 && !resp_body_start) { /*deal with response header*/
-            memcpy(ota_write_data, text, buff_len);
-            resp_body_start = read_past_http_header(text, buff_len, update_handle);
-        } else if (buff_len > 0 && resp_body_start) { /*deal with response body*/
-            memcpy(ota_write_data, text, buff_len);
+        } else if (buff_len > 0) { /*deal with response body*/
+            esp_ota_firm_parse_msg(&ota_firm, text, buff_len);
+
+            if (!esp_ota_firm_can_write(&ota_firm))
+                continue;
+
+            memcpy(ota_write_data, esp_ota_firm_get_write_buf(&ota_firm), esp_ota_firm_get_write_bytes(&ota_firm));
+            buff_len = esp_ota_firm_get_write_bytes(&ota_firm);
+
             err = esp_ota_write( update_handle, (const void *)ota_write_data, buff_len);
             if (err != ESP_OK) {
                 ESP_LOGE(TAG, "Error: esp_ota_write failed! err=0x%x", err);
@@ -274,6 +423,9 @@ static void ota_example_task(void *pvParameter)
         } else {
             ESP_LOGE(TAG, "Unexpected recv result");
         }
+
+        if (esp_ota_firm_is_finished(&ota_firm))
+            break;
     }
 
     ESP_LOGI(TAG, "Total Write binary data length : %d", binary_file_length);
