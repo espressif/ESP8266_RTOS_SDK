@@ -46,7 +46,7 @@ static const char *TAG = "spi";
 #define spi_intr_disable() _xt_isr_mask(1 << ETS_SPI_INUM)
 #define spi_intr_register(a, b) _xt_isr_attach(ETS_SPI_INUM, (a), (b))
 
-// SPI interrupt status register address definition for determining the interrupt source
+/* SPI interrupt status register address definition for determining the interrupt source */
 #define DPORT_SPI_INT_STATUS_REG 0x3ff00020
 #define DPORT_SPI_INT_STATUS_SPI0 BIT4
 #define DPORT_SPI_INT_STATUS_SPI1 BIT7
@@ -60,7 +60,7 @@ typedef struct {
 
 static spi_object_t *spi_object[SPI_NUM_MAX] = {NULL, NULL};
 
-// DRAM_ATTR is required to avoid SPI array placed in flash, due to accessed from ISR
+/* DRAM_ATTR is required to avoid SPI array placed in flash, due to accessed from ISR */
 static DRAM_ATTR spi_dev_t *const SPI[SPI_NUM_MAX] = {&SPI0, &SPI1};
 
 esp_err_t spi_get_clk_div(spi_host_t host, spi_clk_div_t *clk_div)
