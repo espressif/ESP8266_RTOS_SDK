@@ -54,21 +54,27 @@ Connect your host PC and the ESP8266 to the same AP.
 Step 2: Configure and Build
 -----------------------------
 
-Here, we use the [SP8266_RTOS_SDK/examples/system/ota](https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/system/ota) example.
+Here, we use the `SP8266_RTOS_SDK/examples/system/ota <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/system/ota>`_ example.
 
 Open a new terminal on your PC, set the following configurations, and then compile the example:
 
 1. Enter the target directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- cd $IDF_PATH/examples/system/ota
+::
+
+    cd $IDF_PATH/examples/system/ota
+
 
 2. Enable the OTA compatibility function
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    - Component config --->
-        - ESP8266-specific --->
-        - [*] (**Expected**)ESP8266 update from old SDK by OTA
+::
+
+    Component config --->
+        ESP8266-specific --->
+            [*] (**Expected**)ESP8266 update from old SDK by OTA
+
 
 3. Configure the target custom partition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,16 +86,29 @@ ESP8285(ESP8266 + 1MB flash) configuration:
 
 Set the file "partitions_two_ota_v2tov3.1MB.csv" to configure the partition of the example. Users can refer to its note for the partition layout.
 
-    - Partition Table --->
-        - Partition Table (Custom partition table CSV) --->
-            - Custom partition table CSV
-        - (partitions_two_ota_v2tov3.1MB.csv) Custom partition CSV file
-        - (0x5000) Partition table offset address at flash
-        - [*] Support to setup partition parameter of APP2
-        - (0x7000) APP1 partition offset
-        - (0x77000) APP1 partition size(by bytes)
-        - (0x85000) APP2 partition offset
-        - (0x77000) APP2 partition size(by bytes)
+::
+
+    Partition Table --->
+        Partition Table (Custom partition table CSV) --->
+            Custom partition table CSV
+        (partitions_two_ota_v2tov3.1MB.csv) Custom partition CSV file
+        (0x5000) Partition table offset address at flash
+        [*] Support to setup partition parameter of APP2
+        (0x7000) APP1 partition offset
+        (0x77000) APP1 partition size(by bytes)
+        (0x85000) APP2 partition offset
+        (0x77000) APP2 partition size(by bytes)
+
+Partition information of file "partitions_two_ota_v2tov3.1MB.csv" is following:
+
+::
+
+    Name,     Type, SubType, Offset,   Size,   Flags
+    phy_init, data, phy,     0x6000,   0x1000
+    ota_0,    0,    ota_0,   0x7000,   0x77000
+    nvs,      data, nvs,     0x7f000,  0x4000
+    otadata,  data, ota,     0x83000,  0x2000
+    ota_1,    0,    ota_1,   0x85000,  0x77000
 
 - Partition table offset address at flash: partition table layout address
 - APP1 partition offset: ota_0 base address
@@ -102,13 +121,26 @@ ESP8266 + 2MB(including larger size flash) flash configuration:
 
 Set the file "partitions_two_ota_v2tov3.2MB.csv" to configure the partition of the example. Users can refer to its note for the partition layout.
 
-    - Partition Table --->
-        - Partition Table (Custom partition table CSV) --->
-            - Custom partition table CSV
-        - (partitions_two_ota_v2tov3.2MB.csv) Custom partition CSV file
-        - (0x8000) Partition table offset address at flash
-        - (0x10000) APP1 partition offset
-        - (0xEC000) APP1 partition size(by bytes)
+::
+
+    Partition Table --->
+        Partition Table (Custom partition table CSV) --->
+            Custom partition table CSV
+        (partitions_two_ota_v2tov3.2MB.csv) Custom partition CSV file
+        (0x8000) Partition table offset address at flash
+        (0x10000) APP1 partition offset
+        (0xEC000) APP1 partition size(by bytes)
+
+Partition information of file "partitions_two_ota_v2tov3.2MB.csv" is following:
+
+::
+
+    Name,     Type, SubType, Offset,  Size,   Flags
+    nvs,      data, nvs,     0x9000,  0x4000
+    otadata,  data, ota,     0xd000,  0x2000
+    phy_init, data, phy,     0xf000,  0x1000
+    ota_0,    0,    ota_0,   0x10000, 0xEC000
+    ota_1,    0,    ota_1,   0x110000,0xEC000
 
 - Partition table offset address at flash: partition table layout address
 - APP1 partition offset: ota_0 base address
@@ -116,19 +148,23 @@ Set the file "partitions_two_ota_v2tov3.2MB.csv" to configure the partition of t
 
 Configure the flash size according to your actual development board's flash.
 
-    - Serial flasher config  --->
-        - Flash size (x MB)  ---> real flash size
+::
+
+    Serial flasher config  --->
+        Flash size (x MB)  ---> real flash size
 
 
 4. Configure example's parameters 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    - Example Configuration --->
-        - (myssid) WiFi SSID
-        - (mypassword) WiFi Password
-        - (192.168.0.3) HTTP Server IP
-        - (8070)HTTP Server Port
-        - (/project_template.ota.bin) HTTP GET Filename
+::
+
+    Example Configuration --->
+        (myssid) WiFi SSID
+        (mypassword) WiFi Password
+        (192.168.0.3) HTTP Server IP
+        (8070)HTTP Server Port
+        (/project_template.ota.bin) HTTP GET Filename
 
 - WiFi SSID: Wi-Fi SSID of router
 - WiFi Password: Wi-Fi password of router
@@ -139,9 +175,9 @@ Configure the flash size according to your actual development board's flash.
 5. Build the project
 ^^^^^^^^^^^^^^^^^^^^
 
-Input following command to start building:
+Input following command to start building::
 
-- make ota
+    make ota
 
 After compiling, the final firmware "ota.v2_to_v3.ota.bin" will be generated. Then users can download and update to this new firmware when running an old SDK OTA application.
 
@@ -150,19 +186,20 @@ After compiling, the final firmware "ota.v2_to_v3.ota.bin" will be generated. Th
 4. Start HTTP Server
 ^^^^^^^^^^^^^^^^^^^^
 
-```
-cd build
-python -m SimpleHTTPServer 8070
-```
+::
+
+    cd build
+    python -m SimpleHTTPServer 8070
+
 
 Note
 ====
 
- * It will take a lot of time for the new bootloader unpacking the firmware at the first time, please wait a while.
+- It will take a lot of time for the new bootloader unpacking the firmware at the first time, please wait a while.
 
- * The terminal will print some log that shows the progress:
-     * log "I (281) boot: Start unpacking V3 firmware ...", it means that bootloader starts unpacking.
-     * log "Pack V3 firmware successfully and start to reboot", it means that bootloader unpacked firmware successfully.
+- The terminal will print some log that shows the progress:
+    - log "I (281) boot: Start unpacking V3 firmware ...", it means that bootloader starts unpacking.
+    - log "Pack V3 firmware successfully and start to reboot", it means that bootloader unpacked firmware successfully.
 
- * This "unpacking workflow" will only be executed when it is an old SDK firmware that upgrade to the new SDK firmware, for example, V2.0 upgrade to V3.1. After that, the FOTA in later versions (for example, V3.1 upgrade to later) will be the [normal FOTA workflow](https://github.com/espressif/ESP8266_RTOS_SDK/blob/master/examples/system/ota/README.md).
+- This "unpacking workflow" will only be executed when it is an old SDK firmware that upgrade to the new SDK firmware, for example, V2.0 upgrade to V3.1. After that, the FOTA in later versions (for example, V3.1 upgrade to later) will be the `normal FOTA workflow <https://github.com/espressif/ESP8266_RTOS_SDK/blob/master/examples/system/ota/README.md>`_.
 
