@@ -1,7 +1,8 @@
+#ifdef CONFIG_SSL_USING_MBEDTLS
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <sys/random.h>
+#include "esp_libc.h"
 
 #include "esp_log.h"
 #include "esp_transport.h"
@@ -84,7 +85,7 @@ static int ws_connect(esp_transport_handle_t t, const char *host, int port, int 
     }
 
     unsigned char random_key[16];
-    getrandom(random_key, sizeof(random_key), 0);
+    os_get_random(random_key, sizeof(random_key));
 
     // Size of base64 coded string is equal '((input_size * 4) / 3) + (input_size / 96) + 6' including Z-term
     unsigned char client_key[28] = {0};
@@ -167,7 +168,7 @@ static int ws_write(esp_transport_handle_t t, const char *buff, int len, int tim
         ws_header[header_len++] = (uint8_t)(len | WS_MASK);
     }
     mask = &ws_header[header_len];
-    getrandom(ws_header + header_len, 4, 0);
+    os_get_random((unsigned char *)ws_header + header_len, 4);
     header_len += 4;
 
     for (i = 0; i < len; ++i) {
@@ -290,4 +291,4 @@ esp_transport_handle_t esp_transport_ws_init(esp_transport_handle_t parent_handl
     esp_transport_set_context_data(t, ws);
     return t;
 }
-
+#endif
