@@ -55,4 +55,10 @@ config TASK_SWITCH_FASTER
 
         But it may cost more 1KB IRAM, so user global heap may decrease 1KB.
 
+config USE_QUEUE_SETS
+    bool "Using Queue Sets"
+    default n
+    help
+        Enable this option, the FreeRTOS macro "configUSE_QUEUE_SETS" in file "FreeRTOSConfig.h" will be set to be 1.
+
 endmenu

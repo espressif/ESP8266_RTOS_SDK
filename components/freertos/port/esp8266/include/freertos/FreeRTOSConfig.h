@@ -133,5 +133,9 @@ NVIC value of 255. */
 #define TASK_SW_ATTR
 #endif
 
+#if CONFIG_USE_QUEUE_SETS
+#define configUSE_QUEUE_SETS 1
+#endif
+
 #endif /* FREERTOS_CONFIG_H */
 
