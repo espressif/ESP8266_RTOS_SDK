@@ -57,70 +57,42 @@ typedef struct task_info
     StackType_t		*pxEndOfStack;
 } task_info_t;
 
-static void panic_data32(uint32_t data, int hex)
+static void panic_stack(const uint32_t *reg, const uint32_t *start_stk, const uint32_t *end_stk)
 {
-    char buf[12];
-    size_t off = 0;
+    const uint32_t *stk_ptr = (const uint32_t *)reg[4];
 
-    if (!data)
-        buf[off++] = '0';
-    else {
-        while (data) {
-            char tmp = data % hex;
-
-            if (tmp >= 10)
-                tmp = tmp - 10 + 'a';
-            else
-                tmp = tmp + '0';
-
-            data = data / hex;
-
-            buf[off++] = tmp;
-        }
+    if (stk_ptr <= start_stk || stk_ptr >= end_stk) {
+        ets_printf("register map is %x error\n", stk_ptr);
+        while (1);
+    } else {
+        start_stk = (const uint32_t *)((uint32_t)stk_ptr & (~(STACK_VOL_NUM * sizeof(const uint32_t *) - 1)));
     }
 
-    if (hex == 16) {
-        while (off < 8)
-            buf[off++] = '0';
+    size_t size = end_stk - start_stk + 1;
+
+    if (size < STACK_VOL_NUM) {
+        start_stk = start_stk - (STACK_VOL_NUM - size);
+        size = STACK_VOL_NUM;
     }
 
-    while (off)
-        ets_putc(buf[--off]);
-}
-
-static void panic_str(const char *s)
-{
-    while (*s)
-        ets_putc(*s++);
-}
-
-static void panic_stack(StackType_t *start_stk, StackType_t *end_stk)
-{
-    uint32_t *start = (uint32_t *)start_stk, *end = (uint32_t *)end_stk;
-    size_t i, j;
-    size_t size = end - start;
-
-    panic_str("          ");
-    for (i = 0; i < STACK_VOL_NUM; i++) {
-        panic_data32(i * sizeof(void *), 16);
-        panic_str(" ");
+    ets_printf("%10s", " ");
+    for (int i = 0; i < STACK_VOL_NUM; i++) {
+        ets_printf("  %8x ", i * sizeof(void *));
     }
-    panic_str("\r\n\r\n");
+    ets_printf("\r\n\r\n");
 
-    for (i = 0; i < size; i += STACK_VOL_NUM) {
+    for (int i = 0; i < size; i += STACK_VOL_NUM) {
         size_t len = size > i ? size - i : STACK_VOL_NUM - (i - size);
 
         if (len > STACK_VOL_NUM)
             len = STACK_VOL_NUM;
 
-        panic_data32((uint32_t)&start[i], 16);
-        panic_str("  ");
+        ets_printf("%08x  ", start_stk + i);
 
-        for (j = 0; j < len; j++) {
-            panic_data32((uint32_t)start[i + j], 16);
-            panic_str(" ");
+        for (int j = 0; j < len; j++) {
+            ets_printf("0x%08x ", start_stk[i + j]);
         }
-        panic_str("\r\n");
+        ets_printf("\r\n");
     }
 }
 
@@ -136,69 +108,58 @@ static __attribute__((noreturn)) void panic_info(void *frame, int wdt)
     extern int _chip_nmi_cnt;
 
     task_info_t *task;
-    int *regs = (int *)frame;
+    uint32_t *regs = (uint32_t *)frame;
     int x, y;
     const char *sdesc[] = {
-        "      PC",   "      PS",   "      A0",   "      A1",
-        "      A2",   "      A3",   "      A4",   "      A5",
-        "      A6",   "      A7",   "      A8",   "      A9",
-        "     A10",   "     A11",   "     A12",   "     A13",
-        "     A14",   "     A15",   "     SAR",   "EXCCAUSE"
+        "PC",   "PS",   "A0",   "A1",
+        "A2",   "A3",   "A4",   "A5",
+        "A6",   "A7",   "A8",   "A9",
+        "A10",  "A11",  "A12",  "A13",
+        "A14",  "A15",  "SAR",  "EXCCAUSE"
     };
 
-    panic_str("\r\n\r\n");
+    ets_printf("\r\n\r\n");
 
     if (wdt) {
-        panic_str("Task watchdog got triggered.\r\n\r\n");
+        ets_printf("Task watchdog got triggered.\r\n\r\n");
     }
     
     if (_chip_nmi_cnt) {
-        extern StackType_t _chip_nmi_stk, LoadStoreErrorHandlerStack;
+        extern const uint32_t _chip_nmi_stk, LoadStoreErrorHandlerStack;
 
         _chip_nmi_cnt = 0;
-        panic_str("Core 0 was running in NMI context:\r\n\r\n");
+        ets_printf("Core 0 was running in NMI context:\r\n\r\n");
 
-        panic_stack(&_chip_nmi_stk, &LoadStoreErrorHandlerStack);
+        panic_stack(regs, &_chip_nmi_stk, &LoadStoreErrorHandlerStack);
     } else {
         if (xPortInIsrContext() && !wdt) {
-            extern StackType_t _chip_interrupt_stk, _chip_interrupt_tmp;
+            extern const uint32_t _chip_interrupt_stk, _chip_interrupt_tmp;
 
-            panic_str("Core 0 was running in ISR context:\r\n\r\n");
+            ets_printf("Core 0 was running in ISR context:\r\n\r\n");
 
-            panic_stack(&_chip_interrupt_stk, &_chip_interrupt_tmp);
+            panic_stack(regs, &_chip_interrupt_stk, &_chip_interrupt_tmp);
         } else {
             if ((task = (task_info_t *)xTaskGetCurrentTaskHandle())) {
-                StackType_t *pdata = task->pxStack;
-                StackType_t *end = task->pxEndOfStack + 4;
+                const uint32_t *pdata = (uint32_t *)task->pxStack;
+                const uint32_t *end = (uint32_t *)task->pxEndOfStack;
 
-                // "Task stack [%s] stack from [%p] to [%p], total [%d] size\r\n\r\n"
-                panic_str("Task stack [");
-                panic_str(task->pcTaskName);
-                panic_str("] stack from [");
-                panic_data32((uint32_t)pdata, 16);
-                panic_str("] to [");
-                panic_data32((uint32_t)end, 16);
-                panic_str("], total [");
-                panic_data32((uint32_t)(end - pdata), 10);
-                panic_str("] size\r\n\r\n");
+                ets_printf("Task stack [%s] stack from [%p] to [%p], total [%d] size\r\n\r\n", task->pcTaskName, 
+                            pdata, end, (end - pdata + 1) * sizeof(const uint32_t *));
 
-                panic_stack(pdata, end);
+                panic_stack(regs, pdata, end);
 
-                panic_str("\r\n\r\n");
+                ets_printf("\r\n\r\n");
             } else {
-                panic_str("No task\r\n\r\n");
+                ets_printf("No task\r\n\r\n");
             }
         }
     }
 
     for (x = 0; x < 20; x += 4) {
         for (y = 0; y < 4; y++) {
-            panic_str(sdesc[x + y]);
-            panic_str(": 0x");
-            panic_data32((uint32_t)regs[x + y + 1], 16);
-            panic_str(" ");
+            ets_printf("%10s: 0x%08x", sdesc[x + y], regs[x + y + 1]);
         }
-        panic_str("\r\n");
+        ets_printf("\r\n");
     }
 
     /*
@@ -212,13 +173,11 @@ static __attribute__((noreturn)) void panic_info(void *frame, int wdt)
 
 void __attribute__((noreturn)) panicHandler(void *frame, int wdt)
 {
-    int cnt = 10;
-
     /* NMI can interrupt exception. */
     vPortEnterCritical();
-    while (cnt--) {
+    do {
         REG_WRITE(INT_ENA_WDEV, 0);
-    }
+    } while (REG_READ(INT_ENA_WDEV) != 0);
 
     panic_info(frame, wdt);
 }
