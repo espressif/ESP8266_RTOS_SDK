@@ -54,7 +54,7 @@ esp_err_t esp_https_ota(const esp_http_client_config_t *config)
     esp_err_t err = esp_http_client_open(client, 0);
     if (err != ESP_OK) {
         esp_http_client_cleanup(client);
-        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "Failed to open HTTP connection: %d", err);
         return err;
     }
     esp_http_client_fetch_headers(client);
