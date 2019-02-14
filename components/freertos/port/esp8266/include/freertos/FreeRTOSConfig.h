@@ -127,5 +127,11 @@ NVIC value of 255. */
 /* add this to dump task stack information */
 #define configRECORD_STACK_HIGH_ADDRESS 1
 
+#ifdef CONFIG_TASK_SWITCH_FASTER
+#define TASK_SW_ATTR IRAM_ATTR
+#else
+#define TASK_SW_ATTR
+#endif
+
 #endif /* FREERTOS_CONFIG_H */
 
