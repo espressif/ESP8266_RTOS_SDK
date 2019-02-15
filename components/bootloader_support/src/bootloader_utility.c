@@ -14,7 +14,7 @@
 
 #include "sdkconfig.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 
 #include <string.h>
 #include <stdint.h>
@@ -478,7 +478,7 @@ static void set_cache_and_start_app(
 
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 
 #include <stdbool.h>
 #include <sys/param.h>

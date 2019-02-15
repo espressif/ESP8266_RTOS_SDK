@@ -55,7 +55,7 @@ config BOOTLOADER_SPI_WP_PIN
     int "SPI Flash WP Pin when customising pins via efuse (read help)"
     range 0 33
     default 7
-    depends on (FLASHMODE_QIO || FLASHMODE_QOUT) && TARGET_PLATFORM_ESP32
+    depends on (FLASHMODE_QIO || FLASHMODE_QOUT) && IDF_TARGET_ESP32
     help
         This value is ignored unless flash mode is set to QIO or QOUT *and* the SPI flash pins have been
         overriden by setting the efuses SPI_PAD_CONFIG_xxx.
@@ -69,7 +69,7 @@ config BOOTLOADER_SPI_WP_PIN
 choice BOOTLOADER_VDDSDIO_BOOST
     bool "VDDSDIO LDO voltage"
     default BOOTLOADER_VDDSDIO_BOOST_1_9V
-    depends on TARGET_PLATFORM_ESP32
+    depends on IDF_TARGET_ESP32
     help
         If this option is enabled, and VDDSDIO LDO is set to 1.8V (using EFUSE
         or MTDI bootstrapping pin), bootloader will change LDO settings to
@@ -81,7 +81,7 @@ choice BOOTLOADER_VDDSDIO_BOOST
 
 config BOOTLOADER_VDDSDIO_BOOST_1_8V
     bool "1.8V"
-    depends on !ESPTOOLPY_FLASHFREQ_80M && TARGET_PLATFORM_ESP32
+    depends on !ESPTOOLPY_FLASHFREQ_80M && IDF_TARGET_ESP32
 config BOOTLOADER_VDDSDIO_BOOST_1_9V
     bool "1.9V"
 endchoice
@@ -89,7 +89,7 @@ endchoice
 config BOOTLOADER_FACTORY_RESET
     bool "GPIO triggers factory reset"
     default N
-    depends on TARGET_PLATFORM_ESP32
+    depends on IDF_TARGET_ESP32
     help
         Allows to reset the device to factory settings:
         - clear one or more data partitions;
@@ -99,7 +99,7 @@ config BOOTLOADER_FACTORY_RESET
 
 config BOOTLOADER_NUM_PIN_FACTORY_RESET
     int "Number of the GPIO input for factory reset"
-    depends on BOOTLOADER_FACTORY_RESET && TARGET_PLATFORM_ESP32
+    depends on BOOTLOADER_FACTORY_RESET && IDF_TARGET_ESP32
     range 0 39
     default 4
     help
@@ -133,7 +133,7 @@ config BOOTLOADER_APP_TEST
         See settings below.
 
 config BOOTLOADER_APP_TEST_IN_OTA_1
-    depends on BOOTLOADER_APP_TEST && TARGET_PLATFORM_ESP8266
+    depends on BOOTLOADER_APP_TEST && IDF_TARGET_ESP8266
     bool "Put test app in the ota_1 partition"
     default y
     help
@@ -166,7 +166,7 @@ endmenu  # Bootloader
 
 
 menu "Security features"
-    depends on TARGET_PLATFORM_ESP32
+    depends on IDF_TARGET_ESP32
 
 config SECURE_BOOT_ENABLED
     bool "Enable secure boot in bootloader (READ DOCS FIRST)"

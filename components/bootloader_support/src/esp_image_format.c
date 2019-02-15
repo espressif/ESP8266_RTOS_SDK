@@ -14,7 +14,7 @@
 
 #include "sdkconfig.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 
 #include <string.h>
 #include <sys/param.h>
@@ -583,7 +583,7 @@ static void debug_log_hash(const uint8_t *image_hash, const char *label)
 
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 
 #include <string.h>
 #include <stdlib.h>
@@ -692,7 +692,7 @@ esp_err_t esp_image_load(esp_image_load_mode_t mode, const esp_partition_pos_t *
     if (1) {
 #else
 #ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
     if (data->image.hash_appended)
 #endif
     {
@@ -1074,7 +1074,7 @@ static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t
         bootloader_sha256_data(sha_handle, buf, length - unpadded_length);
     }
 
-#if CONFIG_TARGET_PLATFORM_ESP32
+#if CONFIG_IDF_TARGET_ESP32
     if (data->image.hash_appended)
 #endif
     {
@@ -1100,7 +1100,7 @@ static esp_err_t verify_secure_boot_signature(bootloader_sha256_handle_t sha_han
 
     // For secure boot, we calculate the signature hash over the whole file, which includes any "simple" hash
     // appended to the image for corruption detection
-#if CONFIG_TARGET_PLATFORM_ESP32
+#if CONFIG_IDF_TARGET_ESP32
     if (data->image.hash_appended)
 #endif
     {

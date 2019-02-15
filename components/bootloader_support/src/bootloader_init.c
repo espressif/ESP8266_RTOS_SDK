@@ -14,7 +14,7 @@
 
 #include "sdkconfig.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 
 #include <string.h>
 #include <stdint.h>
@@ -536,7 +536,7 @@ void __assert_func(const char *file, int line, const char *func, const char *exp
 
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 
 #include <string.h>
 
