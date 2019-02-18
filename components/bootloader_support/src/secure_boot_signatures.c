@@ -13,7 +13,7 @@
 // limitations under the License.
 #include "sdkconfig.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 
 #include "bootloader_flash.h"
 #include "bootloader_sha.h"

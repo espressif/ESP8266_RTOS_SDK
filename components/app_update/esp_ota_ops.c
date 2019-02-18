@@ -34,7 +34,7 @@
 #include "crc.h"
 #include "esp_log.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 #include "spi_flash.h"
 esp_err_t bootloader_flash_read(size_t src_addr, void *dest, size_t size, bool allow_decrypt);
 #endif
@@ -174,7 +174,7 @@ esp_err_t esp_ota_write(esp_ota_handle_t handle, const void *data, size_t size)
                 return ESP_ERR_OTA_VALIDATE_FAILED;
             }
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
             if (esp_flash_encryption_enabled()) {
                 /* Can only write 16 byte blocks to flash, so need to cache anything else */
                 size_t copy_len;
@@ -354,7 +354,7 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
         if (SUB_TYPE_ID(subtype) >= ota_app_count) {
             return ESP_ERR_INVALID_ARG;
         }
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
         const void *result = NULL;
         static spi_flash_mmap_memory_t ota_data_map;
         ret = esp_partition_mmap(find_partition, 0, find_partition->size, SPI_FLASH_MMAP_DATA, &result, &ota_data_map);
@@ -368,7 +368,7 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
         }
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
         ret = spi_flash_read(find_partition->address, &s_ota_select[0], sizeof(ota_select));
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "read failed");
@@ -502,7 +502,7 @@ const esp_partition_t *esp_ota_get_boot_partition(void)
         return NULL;
     }
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
     const void *result = NULL;
     static spi_flash_mmap_memory_t ota_data_map;
     ret = esp_partition_mmap(find_partition, 0, find_partition->size, SPI_FLASH_MMAP_DATA, &result, &ota_data_map);
@@ -517,7 +517,7 @@ const esp_partition_t *esp_ota_get_boot_partition(void)
 
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
     ret = spi_flash_read(find_partition->address, &s_ota_select[0], sizeof(ota_select));
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "read failed");

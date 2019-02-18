@@ -14,7 +14,7 @@
 
 #include "sdkconfig.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 
 #include <stdbool.h>
 #include <assert.h>
@@ -160,7 +160,7 @@ bool bootloader_common_erase_part_type_data(const char *list_erase, bool ota_dat
 
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 
 #include <stdbool.h>
 #include <stdint.h>

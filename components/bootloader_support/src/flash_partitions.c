@@ -14,7 +14,7 @@
 
 #include "sdkconfig.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 
 #include <string.h>
 #include "esp_flash_partitions.h"
@@ -91,7 +91,7 @@ esp_err_t esp_partition_table_basic_verify(const esp_partition_info_t *partition
 
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 
 #include <stdbool.h>
 #include <string.h>

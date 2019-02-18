@@ -216,7 +216,7 @@ endchoice
 config ESP8266_OTA_FROM_OLD
     bool "(**Expected**)ESP8266 update from old SDK by OTA"
     default n
-    depends on TARGET_PLATFORM_ESP8266
+    depends on IDF_TARGET_ESP8266
     select ESP8266_BOOT_COPY_APP
     help
         The function is not released.
