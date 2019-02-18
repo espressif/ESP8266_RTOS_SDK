@@ -1,5 +1,5 @@
 set(COMPONENT_ADD_INCLUDEDIRS include)
-set(COMPONENT_PRIV_INCLUDEDIRS src/port/esp32 src/util)
+set(COMPONENT_PRIV_INCLUDEDIRS src/port/esp8266 src/util)
 set(COMPONENT_SRCS "src/httpd_main.c"
                    "src/httpd_parse.c"
                    "src/httpd_sess.c"
