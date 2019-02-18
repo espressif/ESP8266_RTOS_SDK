@@ -497,10 +497,6 @@ class NVS(object):
                     break
 
             result = self.get_binary_data()
-            if version == Page.VERSION1:
-                print("Version: ", VERSION1_PRINT)
-            else:
-                print("Version: ", VERSION2_PRINT)
             self.fout.write(result)
 
     def create_new_page(self, is_rsrv_page=False):
@@ -786,48 +782,18 @@ def main():
             "--size",
             help='Size of NVS Partition in bytes (must be multiple of 4096)')
 
-    nvs_part_gen_group.add_argument(
-            "--version",
-            help='Set version. Default: v2',
-            choices=['v1','v2'],
-            default='v2',
-            type=str.lower)
-
-    keygen_action=nvs_part_gen_group.add_argument(
-            "--keygen",
-            help='Generate keys for encryption. Creates an `encryption_keys.bin` file. Default: false',
-            choices=['true','false'],
-            default= 'false',
-            type=str.lower)
-
-    nvs_part_gen_group.add_argument(
-            "--encrypt",
-            help='Set encryption mode. Default: false',
-            choices=['true','false'],
-            default='false',
-            type=str.lower)
-
-    nvs_part_gen_group.add_argument(
-            "--keyfile",
-            help='File having key for encryption (Applicable only if encryption mode is true)',
-            default = None)
-
-    key_gen_group = parser.add_argument_group('To generate encryption keys')
-    key_gen_group._group_actions.append(keygen_action)
-
     args = parser.parse_args()
     input_filename = args.input
     output_filename = args.output
     part_size = args.size
-    version_no = args.version
-    is_key_gen = args.keygen
-    is_encrypt_data = args.encrypt
-    key_file = args.keyfile
+    version_no = 'v1'
+    is_key_gen = 'false'
+    is_encrypt_data = 'false'
+    key_file = None
 
-    print_arg_str = "Invalid.\nTo generate nvs partition binary --input, --output and --size arguments are mandatory.\nTo generate encryption keys --keygen argument is mandatory."
-    print_encrypt_arg_str = "Missing parameter. Enter --keyfile or --keygen."
+    print_arg_str = "Invalid.\nTo generate nvs partition binary --input, --output and --size arguments are mandatory."
 
-    check_input_args(input_filename,output_filename, part_size, is_key_gen, is_encrypt_data, key_file, version_no, print_arg_str, print_encrypt_arg_str)
+    check_input_args(input_filename,output_filename, part_size, is_key_gen, is_encrypt_data, key_file, version_no, print_arg_str)
     nvs_part_gen(input_filename, output_filename, part_size, is_key_gen, is_encrypt_data, key_file, version_no)
 
 
