@@ -158,6 +158,7 @@ static int ets_printf_int(val_attr_t * const attr, uint8_t hex)
         ets_printf_buf(&buf[offset], VINT_STR_MAX - offset);
 
         if (isfill_left(attr)) {
+            fill_data = ' ';
             ets_printf_ch_mutlti(fill_data, left);
         }
     } else {
@@ -203,7 +204,7 @@ int ets_vprintf(const char *fmt, va_list va)
                     ps++;
                     break;
                 case '0'...'9':
-                    if (!isstart(&attr) && *ps == '0') {
+                    if ((!isstart(&attr) || *(ps - 1) == '-') && *ps == '0') {
                         attr.state |= FILL_0;
                     } else {
                         if (attr.state & POINTOR)
