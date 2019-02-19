@@ -434,7 +434,8 @@ int esp_patition_table_init_data(void *partition_info)
 {
     int ret;
     const uint32_t boot_base = 0x1000;
-    const uint32_t boot_size = s_v2_flash_bin_size / 2 - boot_base - 4 * SPI_FLASH_SEC_SIZE;
+    const bootloader_state_t *bs = (const bootloader_state_t *)partition_info;
+    const uint32_t boot_size = bs->ota[0].offset + bs->ota[0].size - boot_base;
 
     if (!esp_sdk_update_from_v2())
         return 0;

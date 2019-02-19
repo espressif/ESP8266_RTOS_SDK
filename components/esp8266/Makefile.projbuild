@@ -134,7 +134,7 @@ ifdef CONFIG_ESP8266_OTA_FROM_OLD
 $(OTA_V2_TO_V3_BIN): $(OTA_BIN)
 	@cp $(RAW_BIN) $(RAW_BIN).tmp.bak
 	@cp $(OTA1_BIN) $(RAW_BIN)
-	@python $(IDF_PATH)/tools/pack_fw.py --output $(OTA_V2_TO_V3_BIN) pack3 $(ESPTOOL_ALL_FLASH_ARGS)
+	@python $(IDF_PATH)/tools/pack_fw.py --output $(OTA_V2_TO_V3_BIN) --app $(PROJECT_NAME).bin  pack3 $(ESPTOOL_ALL_FLASH_ARGS)
 	@cp $(RAW_BIN).tmp.bak $(RAW_BIN)
 	@echo [GEN] $(OTA_V2_TO_V3_BIN)
 endif
