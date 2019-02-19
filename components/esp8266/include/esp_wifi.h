@@ -386,10 +386,11 @@ esp_err_t esp_wifi_get_ps(wifi_ps_type_t *type);
 
 /**
   * @brief     Set protocol type of specified interface
-  *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N)
+  *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G)
   *
   * @attention Currently we only support 802.11b or 802.11bg or 802.11bgn mode
-  *
+  * @attention Please call this API in SYSTEM_EVENT_STA_START event
+  * 
   * @param     ifx  interfaces
   * @param     protocol_bitmap  WiFi protocol bitmap
   *
