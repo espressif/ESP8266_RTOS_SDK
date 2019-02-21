@@ -1,0 +1,21 @@
+#
+# Virtual file system
+#
+CONFIG_USING_ESP_VFS=y
+
+#
+# PThreads
+#
+CONFIG_ENABLE_PTHREAD=y
+
+#
+# Partition Table
+#
+CONFIG_PARTITION_TABLE_TWO_OTA=y
+
+#
+# Bootloader config
+#
+CONFIG_BOOTLOADER_APP_TEST=y
+CONFIG_BOOTLOADER_APP_TEST_IN_OTA_1=y
+CONFIG_BOOTLOADER_NUM_PIN_APP_TEST=12
