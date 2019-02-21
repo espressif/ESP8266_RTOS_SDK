@@ -14,6 +14,9 @@
 #include <nvs_flash.h>
 #include <nvs.h>
 
+#include <task.h>
+#include <stdlib.h>
+#include <esp_timer.h>
 #include <protocomm.h>
 #include <protocomm_httpd.h>
 #include <protocomm_security0.h>

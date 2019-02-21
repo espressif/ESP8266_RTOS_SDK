@@ -11,6 +11,6 @@ set(COMPONENT_SRCS  "src/common/protocomm.c"
                     "proto-c/session.pb-c.c"
                     "src/transports/protocomm_httpd.c")
 
-set(COMPONENT_PRIV_REQUIRES protobuf-c mbedtls)
+set(COMPONENT_PRIV_REQUIRES protobuf-c mbedtls wifi_provisioning)
 
 register_component()

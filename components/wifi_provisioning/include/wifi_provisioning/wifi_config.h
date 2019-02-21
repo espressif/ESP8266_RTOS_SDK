@@ -16,7 +16,7 @@
 #define _WIFI_PROV_CONFIG_H_
 
 #include <lwip/inet.h>
-
+#include <stdlib.h>
 #ifdef __cplusplus
 extern "C" {
 #endif

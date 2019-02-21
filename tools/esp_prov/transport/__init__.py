@@ -13,6 +13,4 @@
 # limitations under the License.
 #
 
-from .transport_console import *
 from .transport_softap import *
-from .transport_ble import *

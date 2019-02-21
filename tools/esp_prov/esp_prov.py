@@ -36,21 +36,11 @@ def get_security(secver, pop=None, verbose=False):
         return security.Security0(verbose)
     return None
 
-def get_transport(sel_transport, softap_endpoint=None, ble_devname=None):
+def get_transport(sel_transport, softap_endpoint=None):
     try:
         tp = None
         if (sel_transport == 'softap'):
             tp = transport.Transport_Softap(softap_endpoint)
-        elif (sel_transport == 'ble'):
-            tp = transport.Transport_BLE(devname = ble_devname,
-                                         service_uuid = '0000ffff-0000-1000-8000-00805f9b34fb',
-                                         nu_lookup = {
-                                             'prov-session': 'ff51',
-                                             'prov-config' : 'ff52',
-                                             'proto-ver'   : 'ff53'
-                                         })
-        elif (sel_transport == 'console'):
-            tp = transport.Transport_Console()
         return tp
     except RuntimeError as e:
         print(e)
@@ -134,12 +124,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--softap_endpoint", dest = 'softap_endpoint', type = str,
         help = "<softap_ip:port>, http(s):// shouldn't be included", default = '192.168.4.1:80')
-
-    parser.add_argument("--ble_devname", dest = 'ble_devname', type = str,
-        help = "BLE Device Name", default = '')
-
-    parser.add_argument("--transport", dest = 'provmode', type = str,
-        help = "provisioning mode i.e console or softap or ble", default = 'softap')
+    
 
     parser.add_argument("--custom_config", help="Provision Custom Configuration",
         action = "store_true")
@@ -159,7 +144,7 @@ if __name__ == '__main__':
         print("---- Invalid Security Version ----")
         exit(1)
 
-    transport = get_transport(args.provmode, args.softap_endpoint, args.ble_devname)
+    transport = get_transport('softap', args.softap_endpoint)
     if transport == None:
         print("---- Invalid provisioning mode ----")
         exit(2)

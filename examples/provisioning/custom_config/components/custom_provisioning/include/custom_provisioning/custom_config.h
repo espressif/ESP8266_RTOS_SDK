@@ -14,6 +14,7 @@
 
 #ifndef _CUSTOM_PROV_CONFIG_H_
 #define _CUSTOM_PROV_CONFIG_H_
+#include <stdlib.h>
 
 /**
  * @brief   Custom config data received by device
