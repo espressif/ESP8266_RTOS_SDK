@@ -155,7 +155,7 @@ static esp_err_t protocomm_httpd_add_endpoint(const char *ep_name,
     esp_err_t err;
     httpd_handle_t *server = (httpd_handle_t *) pc_httpd->priv;
     if ((err = httpd_register_uri_handler(*server, &config_handler)) != ESP_OK) {
-        ESP_LOGE(TAG, "Uri handler register failed: %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "Uri handler register failed: %d", err);
         free(ep_uri);
         return ESP_FAIL;
     }
@@ -184,7 +184,7 @@ static esp_err_t protocomm_httpd_remove_endpoint(const char *ep_name)
     esp_err_t err;
     httpd_handle_t *server = (httpd_handle_t *) pc_httpd->priv;
     if ((err = httpd_unregister_uri_handler(*server, ep_uri, HTTP_POST)) != ESP_OK) {
-        ESP_LOGE(TAG, "Uri handler de-register failed: %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "Uri handler de-register failed: %d", err);
         free(ep_uri);
         return ESP_FAIL;
     }
@@ -233,7 +233,7 @@ esp_err_t protocomm_httpd_start(protocomm_t *pc, const protocomm_httpd_config_t 
 
         esp_err_t err;
         if ((err = httpd_start((httpd_handle_t *)pc->priv, &server_config)) != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to start http server: %s", esp_err_to_name(err));
+            ESP_LOGE(TAG, "Failed to start http server: %d", err);
             free(pc->priv);
             return err;
         }
