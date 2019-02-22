@@ -70,7 +70,7 @@ void TimerCountdown(Timer *timer, unsigned int timeout)
 int TimerLeftMS(Timer *timer)
 {
     xTaskCheckForTimeOut(&timer->xTimeOut, &timer->xTicksToWait); /* updates xTicksToWait to the number left */
-    return (timer->xTicksToWait < 0) ? 0 : (timer->xTicksToWait * portTICK_PERIOD_MS);
+    return (timer->xTicksToWait <= 0) ? 0 : (timer->xTicksToWait * portTICK_PERIOD_MS);
 }
 
 

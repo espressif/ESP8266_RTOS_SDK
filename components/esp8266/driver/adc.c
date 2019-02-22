@@ -25,7 +25,6 @@
 #define ENTER_CRITICAL() portENTER_CRITICAL()
 #define EXIT_CRITICAL() portEXIT_CRITICAL()
 
-static const char *TAG = "adc";
 
 #define ADC_CHECK(a, str, ret_val) \
     if (!(a)) { \
