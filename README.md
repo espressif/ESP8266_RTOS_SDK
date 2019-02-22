@@ -1,3 +1,8 @@
+# ESP8266 RTOS Software Development Kit
+
+[![Documentation Status](https://readthedocs.com/projects/espressif-esp8266-rtos-sdk/badge/?version=release-v3.1)](https://docs.espressif.com/projects/esp8266-rtos-sdk/en/release-v3.1/?badge=release-v3.1)
+
+
 # ** IMPORTANT NOTICE **
 
 ## About this repository
