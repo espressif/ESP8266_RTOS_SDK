@@ -63,6 +63,12 @@ config LWIP_SOCKET_MULTITHREAD
         Enable the option can enable LWIP socket multithread and all
         function will be thread safe.
 
+config ENABLE_NONBLOCK_SPEEDUP
+    bool "Speed up send speed of nonblock TCP"
+    default n
+    help
+        Enable this option, send speed of nonblock TCP will increase obviously.
+
 config SET_SOLINGER_DEFAULT
     bool "set socket SO_LINGER default"
     default y
