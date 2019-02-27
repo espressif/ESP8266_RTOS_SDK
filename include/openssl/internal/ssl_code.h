@@ -27,7 +27,9 @@
 # define SSL_SENT_SHUTDOWN       1
 # define SSL_RECEIVED_SHUTDOWN   2
 
+#ifndef SSL_VERIFY_NONE
 # define SSL_VERIFY_NONE                 0x00
+#endif
 # define SSL_VERIFY_PEER                 0x01
 # define SSL_VERIFY_FAIL_IF_NO_PEER_CERT 0x02
 # define SSL_VERIFY_CLIENT_ONCE          0x04
