@@ -126,6 +126,12 @@ config UART0_SWAP_IO
     help
         Enable this option, UART0's I/O pins are swaped: TXD <-> RTS, RTX <-> CTS.
 
+config DISABLE_ROM_UART_PRINT
+    bool "Disable ROM UART print"
+    default n
+    help
+        "Disable main part of ROM UART print when rom bootloader process."
+
 config MAIN_TASK_STACK_SIZE
     int "Main task stack size"
     default 3584
