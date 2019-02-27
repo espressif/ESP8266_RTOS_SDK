@@ -210,7 +210,8 @@ esp_err_t spi_set_mode(spi_host_t host, spi_mode_t *mode)
         SPI[host]->pin.slave_mode = true;
         SPI[host]->slave.slave_mode = true;
         SPI[host]->user.usr_miso_highpart = true;
-        SPI[host]->ctrl2.mosi_delay_num = 1;
+        // MOSI signals are delayed by APB_CLK(80MHz) mosi_delay_num cycles
+        SPI[host]->ctrl2.mosi_delay_num = 2;
         SPI[host]->ctrl2.miso_delay_num = 0;
         SPI[host]->slave.wr_rd_sta_en = 1;
         SPI[host]->slave1.status_bitlen = 31;

@@ -338,7 +338,7 @@ esp_err_t gpio_config(const gpio_config_t *gpio_cfg)
     return ESP_OK;
 }
 
-void gpio_intr_service(void *arg)
+void IRAM_ATTR gpio_intr_service(void *arg)
 {
     //GPIO intr process
     uint32_t gpio_num = 0;
@@ -352,11 +352,10 @@ void gpio_intr_service(void *arg)
     do {
         if (gpio_num < GPIO_PIN_COUNT - 1) {
             if (gpio_intr_status & BIT(gpio_num)) { //gpio0-gpio15
+                GPIO.status_w1tc = BIT(gpio_num);
                 if (gpio_isr_func[gpio_num].fn != NULL) {
                     gpio_isr_func[gpio_num].fn(gpio_isr_func[gpio_num].args);
                 }
-
-                GPIO.status_w1tc = BIT(gpio_num);
             }
         }
     } while (++gpio_num < GPIO_PIN_COUNT - 1);
