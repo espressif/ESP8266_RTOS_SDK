@@ -3310,6 +3310,7 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 		}
 		#endif /* configUSE_IDLE_HOOK */
 
+		#if CONFIG_ENABLE_FREERTOS_SLEEP
 		/* This conditional compilation should use inequality to 0, not equality
 		to 1.  This is to ensure portSUPPRESS_TICKS_AND_SLEEP() is called when
 		user defined low power mode	implementations require
@@ -3359,6 +3360,7 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 			}
 		}
 		#endif /* configUSE_TICKLESS_IDLE */
+		#endif /* CONFIG_ENABLE_FREERTOS_SLEEP */
 	}
 }
 /*-----------------------------------------------------------*/
