@@ -61,4 +61,12 @@ config USE_QUEUE_SETS
     help
         Enable this option, the FreeRTOS macro "configUSE_QUEUE_SETS" in file "FreeRTOSConfig.h" will be set to be 1.
 
+config ENABLE_FREERTOS_SLEEP
+    bool "Enable FreeRTOS SLEEP"
+    default n
+    help
+        Enable this option, FreeRTOS sleep module at idle task will be enable.
+        
+        The module is not working now, so if users want to make it work, they should do this themselves. 
+
 endmenu
