@@ -84,7 +84,7 @@ Note: The firmware location information must be same as partition table file. **
 
 The OTA_workflow.png diagram demonstrates the overall workflow:
 
-![OTA Workflow diagram](OTA_workflow.png)
+![OTA Workflow diagram](../OTA_workflow.png)
 
 ## Step 1: Connect to AP
 
