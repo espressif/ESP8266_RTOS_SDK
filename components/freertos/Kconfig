@@ -45,5 +45,13 @@ config FREERTOS_TIMER_STACKSIZE
     default 2048
     help
         The size of the stack used by the timer in FreeRTOS.
+
+config ENABLE_FREERTOS_SLEEP
+    bool "Enable FreeRTOS SLEEP"
+    default n
+    help
+        Enable this option, FreeRTOS sleep module at idle task will be enable.
         
+        The module is not working now, so if users want to make it work, they should do this themselves. 
+
 endmenu
