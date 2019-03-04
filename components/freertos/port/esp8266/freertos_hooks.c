@@ -22,6 +22,8 @@
 
 #include "sdkconfig.h"
 
+#ifdef CONFIG_FREERTOS_EXTENED_HOOKS
+
 //We use just a static array here because it's not expected many components will need
 //an idle or tick hook.
 #define MAX_HOOKS CONFIG_FREERTOS_MAX_HOOK
@@ -158,3 +160,4 @@ void esp_deregister_freertos_tick_hook(esp_freertos_tick_cb_t old_tick_cb)
     portEXIT_CRITICAL(&hooks_spinlock);
 }
 
+#endif /* CONFIG_FREERTOS_EXTENED_HOOKS */

@@ -2752,6 +2752,12 @@ BaseType_t xSwitchRequired = pdFALSE;
 			}
 		}
 		#endif /* configUSE_TICK_HOOK */
+
+		#ifdef CONFIG_FREERTOS_EXTENED_HOOKS
+		{
+			esp_vApplicationTickHook();
+		}
+		#endif /* CONFIG_FREERTOS_EXTENED_HOOKS */
 	}
 	else
 	{
@@ -2764,6 +2770,12 @@ BaseType_t xSwitchRequired = pdFALSE;
 			vApplicationTickHook();
 		}
 		#endif
+
+		#ifdef CONFIG_FREERTOS_EXTENED_HOOKS
+		{
+			esp_vApplicationTickHook();
+		}
+		#endif /* CONFIG_FREERTOS_EXTENED_HOOKS */
 	}
 
 	#if ( configUSE_PREEMPTION == 1 )
@@ -3309,6 +3321,18 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 			vApplicationIdleHook();
 		}
 		#endif /* configUSE_IDLE_HOOK */
+		#ifdef CONFIG_FREERTOS_EXTENED_HOOKS
+		{
+			/* Call the esp-idf hook system */
+			esp_vApplicationIdleHook();
+		}
+		#endif /* CONFIG_FREERTOS_EXTENED_HOOKS */
+
+		{
+			extern void esp_internal_idle_hook(void);
+
+			esp_internal_idle_hook();
+		}
 
 		#if CONFIG_ENABLE_FREERTOS_SLEEP
 		/* This conditional compilation should use inequality to 0, not equality

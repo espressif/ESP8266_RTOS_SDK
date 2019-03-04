@@ -344,14 +344,28 @@ BaseType_t xQueueGenericReceive(QueueHandle_t xQueue, void * const pvBuffer,
     return xQueueReceive(xQueue, pvBuffer, xTicksToWait);
 }
 
-void vApplicationIdleHook(void)
+void esp_internal_idle_hook(void)
 {
     extern void pmIdleHook(void);
     extern void esp_task_wdt_reset(void);
 
-    pmIdleHook();
     esp_task_wdt_reset();
+    pmIdleHook();
 }
+
+#if configUSE_IDLE_HOOK == 1
+void __attribute__((weak)) vApplicationIdleHook(void)
+{
+
+}
+#endif
+
+#if configUSE_TICK_HOOK == 1
+void __attribute__((weak)) vApplicationTickHook(void)
+{
+
+}
+#endif
 
 uint32_t xPortGetTickRateHz(void)
 {
