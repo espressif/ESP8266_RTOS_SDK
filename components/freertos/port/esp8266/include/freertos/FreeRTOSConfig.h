@@ -59,8 +59,7 @@
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 768 )
 //#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 17 * 1024 ) )
 #define configMAX_TASK_NAME_LEN		( 16 )
-#define configUSE_TRACE_FACILITY	0
-#define configUSE_STATS_FORMATTING_FUNCTIONS 0
+
 #define configUSE_16_BIT_TICKS		0
 #define configIDLE_SHOULD_YIELD		1
 
@@ -135,6 +134,14 @@ NVIC value of 255. */
 
 #if CONFIG_USE_QUEUE_SETS
 #define configUSE_QUEUE_SETS 1
+#endif
+
+#ifdef CONFIG_FREERTOS_USE_TRACE_FACILITY
+#define configUSE_TRACE_FACILITY        1       /* Used by uxTaskGetSystemState(), and other trace facility functions */
+#endif
+
+#ifdef CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
+#define configUSE_STATS_FORMATTING_FUNCTIONS    1   /* Used by vTaskList() */
 #endif
 
 #endif /* FREERTOS_CONFIG_H */
