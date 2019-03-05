@@ -371,13 +371,31 @@ sent_tcp(void *arg, struct tcp_pcb *pcb, u16_t len)
       lwip_netconn_do_close_internal(conn  WRITE_DELAYED);
     }
 
-    /* If the queued byte- or pbuf-count drops below the configured low-water limit,
-       let select mark this pcb as writable again. */
-    if ((conn->pcb.tcp != NULL) && (tcp_sndbuf(conn->pcb.tcp) > TCP_SNDLOWAT) &&
-      (tcp_sndqueuelen(conn->pcb.tcp) < TCP_SNDQUEUELOWAT)) {
-      conn->flags &= ~NETCONN_FLAG_CHECK_WRITESPACE;
-      API_EVENT(conn, NETCONN_EVT_SENDPLUS, len);
+#if ESP_NONBLOCK
+    int dontblock = netconn_is_nonblocking(conn)
+                    | (conn->flags & NETCONN_FLAG_CHECK_WRITESPACE);
+
+    if (dontblock && conn->pcb.tcp) {
+      if (tcp_sndbuf(conn->pcb.tcp) != TCP_SND_BUF) {
+        tcp_output(conn->pcb.tcp);
+      }
+      if ((tcp_sndbuf(conn->pcb.tcp) > 0) &&
+        (tcp_sndqueuelen(conn->pcb.tcp) < TCP_SND_QUEUELEN)) {
+        conn->flags &= ~NETCONN_FLAG_CHECK_WRITESPACE;
+        API_EVENT(conn, NETCONN_EVT_SENDPLUS, len);
+      }
+    } else {
+#endif /* ESP_NONBLOCK */
+      /* If the queued byte- or pbuf-count drops below the configured low-water limit,
+        let select mark this pcb as writable again. */
+      if ((conn->pcb.tcp != NULL) && (tcp_sndbuf(conn->pcb.tcp) > TCP_SNDLOWAT) &&
+        (tcp_sndqueuelen(conn->pcb.tcp) < TCP_SNDQUEUELOWAT)) {
+        conn->flags &= ~NETCONN_FLAG_CHECK_WRITESPACE;
+        API_EVENT(conn, NETCONN_EVT_SENDPLUS, len);
+      }
+#if ESP_NONBLOCK
     }
+#endif /* ESP_NONBLOCK */
   }
 
   return ERR_OK;
@@ -1560,7 +1578,7 @@ lwip_netconn_do_writemore(struct netconn *conn  WRITE_DELAYED_PARAM)
 {
   err_t err;
   const void *dataptr;
-  u16_t len, available;
+  u16_t len = 0, available;
   u8_t write_finished = 0;
   size_t diff;
   u8_t dontblock;
@@ -1608,6 +1626,9 @@ lwip_netconn_do_writemore(struct netconn *conn  WRITE_DELAYED_PARAM)
       if (dontblock) {
         if (!len) {
           err = ERR_WOULDBLOCK;
+#if ESP_NONBLOCK
+          conn->flags |= NETCONN_FLAG_CHECK_WRITESPACE;
+#endif /* ESP_NONBLOCK */
           goto err_mem;
         }
       } else {
@@ -1687,6 +1708,17 @@ err_mem:
     conn->write_offset = 0;
     conn->state = NETCONN_NONE;
     NETCONN_SET_SAFE_ERR(conn, err);
+
+#if ESP_NONBLOCK
+    if (dontblock) {
+      if (tcp_sndbuf(conn->pcb.tcp) > 0 &&
+        (tcp_sndqueuelen(conn->pcb.tcp) < TCP_SND_QUEUELEN)) {
+        conn->flags &= ~NETCONN_FLAG_CHECK_WRITESPACE;
+        API_EVENT(conn, NETCONN_EVT_SENDPLUS, len);
+      }
+    }
+#endif /* ESP_NONBLOCK */
+
 #if LWIP_TCPIP_CORE_LOCKING
     if (delayed)
 #endif
