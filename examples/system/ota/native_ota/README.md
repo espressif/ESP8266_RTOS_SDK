@@ -53,32 +53,7 @@ Note: System will add the absolute path of the project to the head of the "Custo
 (XXXXXX)Partition table offset address at flash
 ```
 
-## Step 3: Configurate application location:
-
-Configurate application location at "mennuconfig" like following base on partition table file.
-
-If you select 1MB flash, application location configuration menu is like following:
-
-```
-Partition Table  --->
-
-    [*] Support to setup partition parameter of APP2
-    (0x5000) App1 offset address 
-    (0x7B000) App1 size by bytes 
-    (0x85000) App2 offset address
-    (0x7b000) App2 size by bytes
-```
-
-If you select 2MB flash and above size, application location configuration menu is like following:
-
-```
-Partition Table  --->
-
-    (0x10000) APP1 partition offset
-    (0xF0000) APP1 partition size(by bytes)
-```
-
-Note: The firmware location information must be same as partition table file. **make ota flash** will only download the app1 at **APP1 partition offset**.
+**make ota flash** will only download the app1 at **APP1 partition offset**.
 
 # Workflow
 
@@ -144,7 +119,7 @@ Serial flasher config  --->
         (X) 1 MB
 ```
 
-Configurate the application location information and it must be the same as the OTA example's information, you can refer to the **Step 3: Configurate application location** of **Custom partition configuration**.
+Configurate the application partition table information and it must be the same as the OTA example's information, you can refer to the **Custom partition configuration**.
 
 Save your changes, and type `make` to build the example.
 

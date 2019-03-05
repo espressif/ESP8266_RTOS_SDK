@@ -76,75 +76,8 @@ Open a new terminal on your PC, set the following configurations, and then compi
             [*] (**Expected**)ESP8266 update from old SDK by OTA
 
 
-3. Configure the target custom partition
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The last 16KB flash, which is used to store system parameters of the old SDKs,  must be reserved.
-
-ESP8285(ESP8266 + 1MB flash) configuration:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Set the file "partitions_two_ota_v2tov3.1MB.csv" to configure the partition of the example. Users can refer to its note for the partition layout.
-
-::
-
-    Partition Table --->
-        Partition Table (Custom partition table CSV) --->
-            Custom partition table CSV
-        (partitions_two_ota_v2tov3.1MB.csv) Custom partition CSV file
-        (0x5000) Partition table offset address at flash
-        [*] Support to setup partition parameter of APP2
-        (0x7000) APP1 partition offset
-        (0x77000) APP1 partition size(by bytes)
-        (0x85000) APP2 partition offset
-        (0x77000) APP2 partition size(by bytes)
-
-Partition information of file "partitions_two_ota_v2tov3.1MB.csv" is following:
-
-::
-
-    Name,     Type, SubType, Offset,   Size,   Flags
-    phy_init, data, phy,     0x6000,   0x1000
-    ota_0,    0,    ota_0,   0x7000,   0x77000
-    nvs,      data, nvs,     0x7f000,  0x4000
-    otadata,  data, ota,     0x83000,  0x2000
-    ota_1,    0,    ota_1,   0x85000,  0x77000
-
-- Partition table offset address at flash: partition table layout address
-- APP1 partition offset: ota_0 base address
-- APP1 partition size: ota_0 size
-- APP2 partition offset: ota_1 base address
-- APP2 partition size: ota_1 size
-
-ESP8266 + 2MB(including larger size flash) flash configuration:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Set the file "partitions_two_ota_v2tov3.2MB.csv" to configure the partition of the example. Users can refer to its note for the partition layout.
-
-::
-
-    Partition Table --->
-        Partition Table (Custom partition table CSV) --->
-            Custom partition table CSV
-        (partitions_two_ota_v2tov3.2MB.csv) Custom partition CSV file
-        (0x8000) Partition table offset address at flash
-        (0x10000) APP1 partition offset
-        (0xEC000) APP1 partition size(by bytes)
-
-Partition information of file "partitions_two_ota_v2tov3.2MB.csv" is following:
-
-::
-
-    Name,     Type, SubType, Offset,  Size,   Flags
-    nvs,      data, nvs,     0x9000,  0x4000
-    otadata,  data, ota,     0xd000,  0x2000
-    phy_init, data, phy,     0xf000,  0x1000
-    ota_0,    0,    ota_0,   0x10000, 0xEC000
-    ota_1,    0,    ota_1,   0x110000,0xEC000
-
-- Partition table offset address at flash: partition table layout address
-- APP1 partition offset: ota_0 base address
-- APP1 partition size: ota_0 size
+3. ESP8285(ESP8266 + 1MB flash) configuration:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Configure the flash size according to your actual development board's flash.
 
