@@ -49,8 +49,8 @@
 #define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
 
 extern char NMIIrqIsOn;
-static uint8_t HdlMacSig = 0;
-static uint8_t SWReq = 0;
+static uint32_t HdlMacSig = 0;
+static uint32_t SWReq = 0;
 
 unsigned cpu_sr;
 
