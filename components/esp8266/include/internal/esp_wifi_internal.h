@@ -63,6 +63,49 @@ typedef void (*wifi_sta_rx_probe_req_t)(const uint8_t *frame, int len, int rssi)
   */
 esp_err_t esp_wifi_set_sta_rx_probe_req(wifi_sta_rx_probe_req_t cb);
 
+/**
+  * @brief  free the rx buffer which allocated by wifi driver
+  *
+  * @param  void* buffer: rx buffer pointer
+  */
+void esp_wifi_internal_free_rx_buffer(void* buffer);
+
+/**
+  * @brief  transmit the buffer via wifi driver
+  *
+  * @param  wifi_interface_t wifi_if : wifi interface id
+  * @param  void *buffer : the buffer to be tansmit
+  * @param  uint16_t len : the length of buffer
+  *
+  * @return
+  *    - ERR_OK  : Successfully transmit the buffer to wifi driver
+  *    - ERR_MEM : Out of memory
+  *    - ERR_IF : WiFi driver error
+  *    - ERR_ARG : Invalid argument
+  */
+int esp_wifi_internal_tx(wifi_interface_t wifi_if, void *buffer, uint16_t len);
+
+/**
+  * @brief     The WiFi RX callback function
+  *
+  *            Each time the WiFi need to forward the packets to high layer, the callback function will be called
+  */
+typedef esp_err_t (*wifi_rxcb_t)(void *buffer, uint16_t len, void *eb);
+
+/**
+  * @brief     Set the WiFi RX callback
+  *
+  * @attention 1. Currently we support only one RX callback for each interface
+  *
+  * @param     wifi_interface_t ifx : interface
+  * @param     wifi_rxcb_t fn : WiFi RX callback
+  *
+  * @return
+  *     - ESP_OK : succeed
+  *     - others : fail
+  */
+esp_err_t esp_wifi_internal_reg_rxcb(wifi_interface_t ifx, wifi_rxcb_t fn);
+
 #ifdef __cplusplus
 }
 #endif

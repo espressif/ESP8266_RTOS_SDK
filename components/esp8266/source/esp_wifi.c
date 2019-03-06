@@ -17,8 +17,6 @@
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "internal/esp_wifi_internal.h"
-#include "esp_socket.h"
-#include "net/sockio.h"
 #include "phy.h"
 
 const size_t _g_esp_wifi_ppt_task_stk_size = CONFIG_WIFI_PPT_TASKSTACK_SIZE;
