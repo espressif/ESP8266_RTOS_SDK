@@ -16,14 +16,26 @@
 
 #define _heap_caps_lock(_num)               \
 {                                           \
+    extern int esp_wifi_is_sniffer(void);   \
     extern void vPortETSIntrLock(void);     \
-    vPortETSIntrLock();                     \
+    extern void vPortEnterCritical(void);   \
+                                            \
+    if (esp_wifi_is_sniffer())              \
+        vPortETSIntrLock();                 \
+    else                                    \
+        vPortEnterCritical();               \
 }
 
 #define _heap_caps_unlock(_num)             \
 {                                           \
+    extern int esp_wifi_is_sniffer(void);   \
     extern void vPortETSIntrUnlock(void);   \
-    vPortETSIntrUnlock();                   \
+    extern void vPortExitCritical(void);    \
+                                            \
+    if (esp_wifi_is_sniffer())              \
+        vPortETSIntrUnlock();               \
+    else                                    \
+        vPortExitCritical();                \
 }
 
 #define _heap_caps_feed_wdt(_num)           \
