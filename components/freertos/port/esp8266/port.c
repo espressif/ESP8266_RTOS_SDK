@@ -118,7 +118,7 @@ void IRAM_ATTR HDL_MAC_SIG_IN_LV1_ISR(void)
 
 extern portBASE_TYPE MacIsrSigPostDefHdl(void);
 
-void SoftIsrHdl(void* arg)
+void IRAM_ATTR SoftIsrHdl(void* arg)
 {
     ETS_NMI_LOCK();
 
@@ -130,7 +130,7 @@ void SoftIsrHdl(void* arg)
     }
 
     if (xHigherPriorityTaskWoken || (SWReq == 1)) {
-        _xt_timer_int1();
+        _xt_timer_int1(); // call vTaskSwitchContext
         SWReq = 0;
     }
 

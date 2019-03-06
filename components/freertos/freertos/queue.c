@@ -920,7 +920,7 @@ Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 }
 /*-----------------------------------------------------------*/
 
-BaseType_t xQueueGenericSendFromISR( QueueHandle_t xQueue, const void * const pvItemToQueue, BaseType_t * const pxHigherPriorityTaskWoken, const BaseType_t xCopyPosition )
+BaseType_t IRAM_ATTR xQueueGenericSendFromISR( QueueHandle_t xQueue, const void * const pvItemToQueue, BaseType_t * const pxHigherPriorityTaskWoken, const BaseType_t xCopyPosition )
 {
 BaseType_t xReturn;
 UBaseType_t uxSavedInterruptStatus;
@@ -2037,7 +2037,7 @@ Queue_t * const pxQueue = ( Queue_t * ) xQueue;
 #endif /* configUSE_MUTEXES */
 /*-----------------------------------------------------------*/
 
-static BaseType_t prvCopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const BaseType_t xPosition )
+static BaseType_t IRAM_ATTR prvCopyDataToQueue( Queue_t * const pxQueue, const void *pvItemToQueue, const BaseType_t xPosition )
 {
 BaseType_t xReturn = pdFALSE;
 UBaseType_t uxMessagesWaiting;
@@ -2843,7 +2843,7 @@ BaseType_t xReturn;
 
 #if ( configUSE_QUEUE_SETS == 1 )
 
-	static BaseType_t prvNotifyQueueSetContainer( const Queue_t * const pxQueue, const BaseType_t xCopyPosition )
+	static BaseType_t IRAM_ATTR prvNotifyQueueSetContainer( const Queue_t * const pxQueue, const BaseType_t xCopyPosition )
 	{
 	Queue_t *pxQueueSetContainer = pxQueue->pxQueueSetContainer;
 	BaseType_t xReturn = pdFALSE;

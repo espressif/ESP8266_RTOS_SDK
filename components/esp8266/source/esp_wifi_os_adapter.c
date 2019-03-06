@@ -50,7 +50,7 @@ static void task_yield_wrapper(void)
     portYIELD();
 }
 
-static void task_yield_from_isr_wrapper(void)
+static void IRAM_ATTR task_yield_from_isr_wrapper(void)
 {
     portYIELD();
 }
@@ -206,7 +206,7 @@ static bool queue_send_wrapper(void *queue, void *item, uint32_t block_time_tick
     return ret == pdPASS ? true : false;
 }
 
-static bool queue_send_from_isr_wrapper(void *queue, void *item, int *hptw)
+static bool IRAM_ATTR queue_send_from_isr_wrapper(void *queue, void *item, int *hptw)
 {
     signed portBASE_TYPE ret;
 
@@ -272,7 +272,7 @@ static bool timer_delete_wrapper(void *timer, uint32_t ticks)
     return xTimerDelete(timer, ticks);
 }
 
-static void *malloc_wrapper(uint32_t s, uint32_t cap, const char *file, size_t line)
+static void IRAM_ATTR *malloc_wrapper(uint32_t s, uint32_t cap, const char *file, size_t line)
 {
     uint32_t os_caps;
 
@@ -284,7 +284,7 @@ static void *malloc_wrapper(uint32_t s, uint32_t cap, const char *file, size_t l
     return _heap_caps_malloc(s, os_caps, file, line);
 }
 
-static void *zalloc_wrapper(uint32_t s, uint32_t cap, const char *file, size_t line)
+static void IRAM_ATTR *zalloc_wrapper(uint32_t s, uint32_t cap, const char *file, size_t line)
 {
     uint32_t os_caps;
 
@@ -296,7 +296,7 @@ static void *zalloc_wrapper(uint32_t s, uint32_t cap, const char *file, size_t l
     return _heap_caps_zalloc(s, os_caps, file, line);
 }
 
-static void *realloc_wrapper(void *ptr, uint32_t s, uint32_t cap, const char *file, size_t line)
+static void IRAM_ATTR *realloc_wrapper(void *ptr, uint32_t s, uint32_t cap, const char *file, size_t line)
 {
     uint32_t os_caps;
 
@@ -308,7 +308,7 @@ static void *realloc_wrapper(void *ptr, uint32_t s, uint32_t cap, const char *fi
     return _heap_caps_realloc(ptr, s, os_caps, file, line);
 }
 
-static void *calloc_wrapper(uint32_t cnt, uint32_t s, uint32_t cap, const char *file, size_t line)
+static void IRAM_ATTR *calloc_wrapper(uint32_t cnt, uint32_t s, uint32_t cap, const char *file, size_t line)
 {
     uint32_t os_caps;
 
@@ -320,7 +320,7 @@ static void *calloc_wrapper(uint32_t cnt, uint32_t s, uint32_t cap, const char *
     return _heap_caps_calloc(cnt , s, os_caps, file, line);
 }
 
-static void free_wrapper(void *ptr, const char *file, size_t line)
+static void IRAM_ATTR free_wrapper(void *ptr, const char *file, size_t line)
 {
     _heap_caps_free(ptr, file, line);
 }
@@ -342,7 +342,7 @@ void *osi_task_top_sp(void)
     return pxCurrentTCB[0];
 }
 
-const wifi_osi_funcs_t s_wifi_osi_funcs = {
+wifi_osi_funcs_t s_wifi_osi_funcs = {
     .version = ESP_WIFI_OS_ADAPTER_VERSION,
     
     .task_create = task_create_wrapper,

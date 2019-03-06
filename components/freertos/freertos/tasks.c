@@ -2873,7 +2873,7 @@ BaseType_t xSwitchRequired = pdFALSE;
 #endif /* configUSE_APPLICATION_TASK_TAG */
 /*-----------------------------------------------------------*/
 
-void vTaskSwitchContext( void )
+void IRAM_ATTR vTaskSwitchContext( void )
 {
 	if( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )
 	{
@@ -3006,7 +3006,7 @@ void vTaskPlaceOnUnorderedEventList( List_t * pxEventList, const TickType_t xIte
 #endif /* configUSE_TIMERS */
 /*-----------------------------------------------------------*/
 
-BaseType_t xTaskRemoveFromEventList( const List_t * const pxEventList )
+BaseType_t IRAM_ATTR xTaskRemoveFromEventList( const List_t * const pxEventList )
 {
 TCB_t *pxUnblockedTCB;
 BaseType_t xReturn;
@@ -3781,7 +3781,7 @@ static void prvCheckTasksWaitingTermination( void )
 #endif /* INCLUDE_vTaskDelete */
 /*-----------------------------------------------------------*/
 
-static void prvResetNextTaskUnblockTime( void )
+static void IRAM_ATTR prvResetNextTaskUnblockTime( void )
 {
 TCB_t *pxTCB;
 
@@ -3939,7 +3939,7 @@ TCB_t *pxTCB;
 
 #if ( configUSE_MUTEXES == 1 )
 
-	BaseType_t xTaskPriorityDisinherit( TaskHandle_t const pxMutexHolder )
+	BaseType_t IRAM_ATTR xTaskPriorityDisinherit( TaskHandle_t const pxMutexHolder )
 	{
 	TCB_t * const pxTCB = ( TCB_t * ) pxMutexHolder;
 	BaseType_t xReturn = pdFALSE;
