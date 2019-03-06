@@ -41,6 +41,20 @@ When FOTA completing, the partition map may look like the following graph (what 
 
 In this case, there are about 40KB(4KB + 16KB + 4KB + 16KB) flash size cannot be used by users.
 
+FOTA by Single Firmware URL
+---------------------------
+
+|single_ota_url|
+
+.. |single_ota_url| image:: ../../_static/single_ota_url.gif
+
+FOTA by Multi Firmware URLs
+---------------------------
+
+|multi-ota-urls|
+
+.. |multi-ota-urls| image:: ../../_static/multi-ota-urls.gif
+
 Workflow
 ========
 
