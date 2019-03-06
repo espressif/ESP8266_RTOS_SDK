@@ -81,6 +81,10 @@ static void user_init_entry(void *param)
     assert(esp_pthread_init() == 0);
 #endif
 
+#ifdef CONFIG_ESP8266_DEFAULT_CPU_FREQ_160
+    rtc_clk_cpu_freq_set(RTC_CPU_FREQ_160M);
+#endif
+
     app_main();
 
     wifi_task_delete(NULL);

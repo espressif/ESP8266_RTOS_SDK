@@ -1,5 +1,22 @@
 menu "ESP8266-specific"
 
+choice ESP8266_DEFAULT_CPU_FREQ_MHZ
+    prompt "CPU frequency"
+    default ESP8266_DEFAULT_CPU_FREQ_80
+    help
+        CPU frequency to be set on application startup.
+
+    config ESP8266_DEFAULT_CPU_FREQ_80
+        bool "80 MHz"
+    config ESP8266_DEFAULT_CPU_FREQ_160
+        bool "160 MHz"
+endchoice
+
+config ESP8266_DEFAULT_CPU_FREQ_MHZ
+    int
+    default 80 if ESP8266_DEFAULT_CPU_FREQ_80
+    default 160 if ESP8266_DEFAULT_CPU_FREQ_160
+
 choice NEWLIB_STDOUT_LINE_ENDING
     prompt "Line ending for UART output"
     default NEWLIB_STDOUT_LINE_ENDING_CRLF
