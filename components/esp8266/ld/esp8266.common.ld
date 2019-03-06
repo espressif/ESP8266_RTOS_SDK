@@ -133,6 +133,8 @@ SECTIONS
     *libesp8266.a:ets_printf.o(.literal .text .literal.* .text.* .rodata.* .rodata)
 #endif
 
+    *libheap.a:(.literal .text .literal.* .text.*)
+
     _text_end = ABSOLUTE(.);
     _etext = .;
   } >iram1_0_seg :iram1_0_phdr
