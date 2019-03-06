@@ -50,7 +50,7 @@ static void task_yield_wrapper(void)
     portYIELD();
 }
 
-static void task_yield_from_isr_wrapper(void)
+static void IRAM_ATTR task_yield_from_isr_wrapper(void)
 {
     portYIELD();
 }
@@ -206,7 +206,7 @@ static bool queue_send_wrapper(void *queue, void *item, uint32_t block_time_tick
     return ret == pdPASS ? true : false;
 }
 
-static bool queue_send_from_isr_wrapper(void *queue, void *item, int *hptw)
+static bool IRAM_ATTR queue_send_from_isr_wrapper(void *queue, void *item, int *hptw)
 {
     signed portBASE_TYPE ret;
 
@@ -342,7 +342,7 @@ void *osi_task_top_sp(void)
     return pxCurrentTCB[0];
 }
 
-const wifi_osi_funcs_t s_wifi_osi_funcs = {
+wifi_osi_funcs_t s_wifi_osi_funcs = {
     .version = ESP_WIFI_OS_ADAPTER_VERSION,
     
     .task_create = task_create_wrapper,
