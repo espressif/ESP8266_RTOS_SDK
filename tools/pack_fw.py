@@ -19,8 +19,9 @@ import inspect
 import sys
 import binascii
 import struct
+import logging
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 FLASH_SECTOR_SIZE = 0x1000
 
@@ -52,6 +53,8 @@ class proc_addr_file(argparse.Action):
         for i in range(0, len(values) ,2):
             try:
                 address = int(values[i], 0)
+                if address == 0:
+                    address = 0x1000
             except ValueError:
                 raise argparse.ArgumentError(self, 'Address "%s" must be a number' % values[i])
             try:
@@ -83,10 +86,10 @@ def pack3(args):
         print(e)
 
     end_addr = None
+    prev_addr = 0
+    prec_file = ''
+    app_offset = 0
     for address, argfile in args.addr_filename:
-        if address == 0:
-           address = 4096
-
         if end_addr is not None and address > end_addr:
             data = (address - end_addr) * ['ff']
             filled = binascii.a2b_hex(''.join(data))
@@ -98,9 +101,19 @@ def pack3(args):
             fw_data += data
 
             argfile.seek(0, 2)
-            end_addr = address + argfile.tell() 
+            prev_addr = address
+            prec_file = argfile.name
+            end_addr = address + argfile.tell()
+            if app_offset is not 0:
+                raise Exception('Partition %s can be put behind %s'%(argfile.name, args.app))
+            else:
+                if args.app in argfile.name:
+                    app_offset = address - 0x1000
         except IOError as e:
             raise e
+
+    if app_offset is 0:
+        raise Exception('Failed to find application binary %s in all arguments'%args.app)
 
     crc32 = esp8266_crc32(fw_data)
     fw_data += struct.pack('<I', crc32)
@@ -110,7 +123,8 @@ def pack3(args):
         output_file.close()
     except IOError as e:
         raise e
-        
+
+    print('\r\n\033[1;31;40mOTA example should use following macro:\r\n\r\n    #define OTA_EXAMPLE_APP_OFFSET 0x%x\r\n\033[0m'%(app_offset))
 
 def main():
     parser = argparse.ArgumentParser(description='pack_fw v%s - ESP8266 ROM Bootloader Utility' % __version__, prog='pack_fw')
@@ -118,6 +132,11 @@ def main():
     parser.add_argument(
         '--output', '-o',
         help='Output file name with full path',
+        default=None)
+
+    parser.add_argument(
+        '--app', '-a',
+        help='application binary file name',
         default=None)
 
     subparsers = parser.add_subparsers(
