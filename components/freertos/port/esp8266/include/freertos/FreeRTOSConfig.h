@@ -144,5 +144,25 @@ NVIC value of 255. */
 #define configUSE_STATS_FORMATTING_FUNCTIONS    1   /* Used by vTaskList() */
 #endif
 
+#ifdef CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
+#define configGENERATE_RUN_TIME_STATS           1   /* Used by vTaskGetRunTimeStats() */
+#define configSUPPORT_DYNAMIC_ALLOCATION        1
+
+//ccount or esp_timer are initialized elsewhere
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
+
+#ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
+/* Fine resolution time */
+#define portGET_RUN_TIME_COUNTER_VALUE()  xthal_get_ccount()
+#elif defined(CONFIG_FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER)
+/* Coarse resolution time (us) */
+#ifndef __ASSEMBLER__
+uint32_t esp_get_time(void);
+#define portALT_GET_RUN_TIME_COUNTER_VALUE(x)    x = (uint32_t)esp_get_time()
+#endif /* __ASSEMBLER__ */
+#endif /* CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK */
+
+#endif /* CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS */
+
 #endif /* FREERTOS_CONFIG_H */
 
