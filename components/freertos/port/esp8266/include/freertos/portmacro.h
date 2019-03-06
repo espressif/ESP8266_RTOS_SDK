@@ -151,7 +151,7 @@ void PortEnableInt_NoNest( void );
 not necessary for to use this port.  They are defined so the common demo files
 (which build with all the ports) will build. */
 #define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
-#define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
+#define portTASK_FUNCTION( vFunction, pvParameters ) void IRAM_ATTR vFunction( void *pvParameters )
 /*-----------------------------------------------------------*/
 
 void        _xt_user_exit           (void);
