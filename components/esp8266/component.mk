@@ -41,10 +41,8 @@ COMPONENT_ADD_LINKER_DEPS := $(ALL_LIB_FILES) $(addprefix ld/,$(LINKER_SCRIPTS))
 # saves us from having to add the target to a Makefile.projbuild
 $(COMPONENT_LIBRARY): esp8266_out.ld esp8266_common_out.ld
 
-OUTLD_CFLAGS := -DAPP_OFFSET=$(APP_OFFSET) -DAPP_SIZE=$(APP_SIZE)
-
 esp8266_out.ld: $(COMPONENT_PATH)/ld/esp8266.ld ../include/sdkconfig.h
-	$(CC) $(OUTLD_CFLAGS) -I ../include -C -P -x c -E $< -o $@
+	$(CC) $(CFLAGS) -I ../include -C -P -x c -E $< -o $@
 
 esp8266_common_out.ld: $(COMPONENT_PATH)/ld/esp8266.common.ld ../include/sdkconfig.h
 	$(CC) -I ../include -C -P -x c -E $< -o $@

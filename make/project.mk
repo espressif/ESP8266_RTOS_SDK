@@ -192,6 +192,8 @@ COMPONENT_LDFLAGS :=
 COMPONENT_SUBMODULES :=
 COMPONENT_LIBRARIES :=
 
+global-macro:
+
 # COMPONENT_PROJECT_VARS is the list of component_project_vars.mk generated makefiles
 # for each component.
 #
@@ -437,7 +439,7 @@ endef
 define GenerateComponentTargets
 .PHONY: component-$(2)-build component-$(2)-clean
 
-component-$(2)-build: check-submodules $(call prereq_if_explicit, component-$(2)-clean) | $(BUILD_DIR_BASE)/$(2)
+component-$(2)-build: check-submodules global-macro $(call prereq_if_explicit, component-$(2)-clean) | $(BUILD_DIR_BASE)/$(2)
 	$(call ComponentMake,$(1),$(2)) build
 
 component-$(2)-clean: | $(BUILD_DIR_BASE)/$(2) $(BUILD_DIR_BASE)/$(2)/component_project_vars.mk
