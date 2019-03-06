@@ -75,12 +75,12 @@ static uint32_t task_ms_to_tick_wrapper(uint32_t ms)
     return (uint32_t)(ms / portTICK_RATE_MS);
 }
 
-static void task_suspend_all_wrapper(void)
+static void IRAM_ATTR task_suspend_all_wrapper(void)
 {
     vTaskSuspendAll();
 }
 
-static void task_resume_all_wrapper(void)
+static void IRAM_ATTR task_resume_all_wrapper(void)
 {
     xTaskResumeAll();
 }

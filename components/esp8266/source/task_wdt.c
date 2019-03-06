@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 
+#include "esp_attr.h"
 #include "esp_log.h"
 #include "esp_libc.h"
 #include "esp_wifi_osi.h"
@@ -78,7 +79,7 @@ esp_err_t esp_task_wdt_init(void)
   * @brief  Reset(Feed) the Task Watchdog Timer (TWDT) on behalf of the currently
   *         running task
   */
-void esp_task_wdt_reset(void)
+void IRAM_ATTR esp_task_wdt_reset(void)
 {
     WDT_FEED();
 }
