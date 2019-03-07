@@ -88,7 +88,7 @@ typedef unsigned int INT32U;
 /*-----------------------------------------------------------*/
 
 /* Scheduler utilities. */
-extern void PendSV(char req);
+extern void PendSV(int req);
 //#define portYIELD()	vPortYield()
 #define portYIELD()	PendSV(1)
 

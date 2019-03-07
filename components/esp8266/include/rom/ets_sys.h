@@ -51,13 +51,9 @@ extern uint32_t WDEV_INTEREST_EVENT;
 
 #define ETS_NMI_LOCK()  \
     do {    \
-        char m = 10;    \
         do {    \
-            REG_WRITE(INT_ENA_WDEV, 0); \
-            m = 10; \
-            for (; m > 0; m--) {}   \
             REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
-        } while(0); \
+        } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT); \
     } while (0)
 
 #define ETS_NMI_UNLOCK()    \
@@ -68,13 +64,9 @@ extern uint32_t WDEV_INTEREST_EVENT;
 #define ETS_INTR_LOCK() do {    \
     if (NMIIrqIsOn == 0) { \
         vPortEnterCritical();   \
-        char m = 10;    \
         do {    \
-            REG_WRITE(INT_ENA_WDEV, 0); \
-            m = 10; \
-            for (; m > 0; m--) {}   \
             REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
-        } while(0);  \
+        } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT); \
     }   \
     } while(0)
 
