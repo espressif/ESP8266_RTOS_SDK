@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2017 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdarg.h>
-#include <fcntl.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int fcntl(int fd, int request, ...)
-{
-    int val, ret;
-    va_list va;
+void esp_vfs_lwip_sockets_register();
 
-    va_start(va, request);
-    
-    val = va_arg(va, int);
-    ret = lwip_fcntl(fd, request, val);
-
-    va_end(va);
-
-    return ret;    
+#ifdef __cplusplus
 }
+#endif

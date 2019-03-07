@@ -18,10 +18,6 @@
 extern "C" {
 #endif
 
-#include <sys/socket.h>
-
-#undef ioctl
-
 int ioctl(int fd, int request, ...);
 
 #ifdef __cplusplus
