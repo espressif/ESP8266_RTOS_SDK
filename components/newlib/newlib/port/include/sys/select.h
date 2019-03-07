@@ -15,6 +15,28 @@
 #ifndef __ESP_SYS_SELECT_H__
 #define __ESP_SYS_SELECT_H__
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_USING_ESP_VFS
+
+#include <sys/types.h>
+#include <sys/time.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds, struct timeval *timeout);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#else
+
 #include "lwip/sockets.h"
 
+#endif
+
 #endif //__ESP_SYS_SELECT_H__
+

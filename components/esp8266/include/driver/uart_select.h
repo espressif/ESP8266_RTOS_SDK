@@ -40,7 +40,7 @@ void uart_set_select_notif_callback(uart_port_t uart_num, uart_select_notif_call
 /**
  * @brief Get mutex guarding select() notifications
  */
-portMUX_TYPE *uart_get_selectlock();
+void *uart_get_selectlock();
 
 #ifdef __cplusplus
 }

@@ -22,13 +22,23 @@
 #include "esp_vfs.h"
 #include "esp_vfs_dev.h"
 #include "esp_attr.h"
-#include "soc/uart_struct.h"
+#include "esp8266/uart_struct.h"
+#include "driver/uart_select.h"
 #include "driver/uart.h"
 #include "sdkconfig.h"
-#include "driver/uart_select.h"
+
+#ifdef portENTER_CRITICAL
+#undef portENTER_CRITICAL
+#define portENTER_CRITICAL(_lock)   vPortEnterCritical()
+#endif
+
+#ifdef portEXIT_CRITICAL
+#undef portEXIT_CRITICAL
+#define portEXIT_CRITICAL(_lock)    vPortExitCritical()
+#endif
 
 // TODO: make the number of UARTs chip dependent
-#define UART_NUM 3
+#define UART_NUM 2
 
 // Token signifying that no character is available
 #define NONE -1
@@ -47,12 +57,12 @@ static void uart_tx_char_via_driver(int fd, int c);
 static int uart_rx_char_via_driver(int fd);
 
 // Pointers to UART peripherals
-static uart_dev_t* s_uarts[UART_NUM] = {&UART0, &UART1, &UART2};
+static uart_dev_t* s_uarts[UART_NUM] = {&uart0, &uart1};
 // per-UART locks, lazily initialized
 static _lock_t s_uart_read_locks[UART_NUM];
 static _lock_t s_uart_write_locks[UART_NUM];
 // One-character buffer used for newline conversion code, per UART
-static int s_peek_char[UART_NUM] = { NONE, NONE, NONE };
+static int s_peek_char[UART_NUM] = { NONE, NONE };
 // Per-UART non-blocking flag. Note: default implementation does not honor this
 // flag, all reads are non-blocking. This option becomes effective if UART
 // driver is used.
@@ -94,12 +104,12 @@ static void uart_end_select();
 
 // Functions used to write bytes to UART. Default to "basic" functions.
 static tx_func_t s_uart_tx_func[UART_NUM] = {
-        &uart_tx_char, &uart_tx_char, &uart_tx_char
+        &uart_tx_char, &uart_tx_char
 };
 
 // Functions used to read bytes from UART. Default to "basic" functions.
 static rx_func_t s_uart_rx_func[UART_NUM] = {
-        &uart_rx_char, &uart_rx_char, &uart_rx_char
+        &uart_rx_char, &uart_rx_char
 };
 
 

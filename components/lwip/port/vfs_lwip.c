@@ -21,7 +21,7 @@
 #include "esp_vfs.h"
 #include "esp_vfs_dev.h"
 #include "esp_attr.h"
-#include "soc/uart_struct.h"
+#include "esp8266/uart_struct.h"
 #include "lwip/sockets.h"
 #include "sdkconfig.h"
 #include "lwip/sys.h"
@@ -42,23 +42,23 @@ static void lwip_stop_socket_select_isr(BaseType_t *woken)
 
 static int lwip_fcntl_r_wrapper(int fd, int cmd, va_list args)
 {
-    return lwip_fcntl_r(fd, cmd, va_arg(args, int));
+    return lwip_fcntl(fd, cmd, va_arg(args, int));
 }
 
 static int lwip_ioctl_r_wrapper(int fd, int cmd, va_list args)
 {
-    return lwip_ioctl_r(fd, cmd, va_arg(args, void *));
+    return lwip_ioctl(fd, cmd, va_arg(args, void *));
 }
 
 void esp_vfs_lwip_sockets_register()
 {
     esp_vfs_t vfs = {
         .flags = ESP_VFS_FLAG_DEFAULT,
-        .write = &lwip_write_r,
+        .write = &lwip_write,
         .open = NULL,
         .fstat = NULL,
-        .close = &lwip_close_r,
-        .read = &lwip_read_r,
+        .close = &lwip_close,
+        .read = &lwip_read,
         .fcntl = &lwip_fcntl_r_wrapper,
         .ioctl = &lwip_ioctl_r_wrapper,
         .socket_select = &lwip_select,
