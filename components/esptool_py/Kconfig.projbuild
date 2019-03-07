@@ -170,23 +170,26 @@ config ESPTOOLPY_BEFORE
 
 choice ESPTOOLPY_AFTER
     prompt "After flashing"
-    default ESPTOOLPY_AFTER_RESET
+    default ESPTOOLPY_AFTER_HARD_RESET
     help
-        Configure whether esptool.py should reset the ESP32 after flashing.
+        Configure whether esptool.py should reset the ESP8266 after flashing.
 
         Automatic resetting depends on the RTS & DTR signals being
         wired from the serial port to the ESP32. Most USB development
         boards do this internally.
 
-config ESPTOOLPY_AFTER_RESET
-    bool "Reset after flashing"
+config ESPTOOLPY_AFTER_HARD_RESET
+    bool "Hard reset after flashing"
+config ESPTOOLPY_AFTER_SOFT_RESET
+    bool "Soft reset after flashing"
 config ESPTOOLPY_AFTER_NORESET
     bool "Stay in bootloader"
 endchoice
 
 config ESPTOOLPY_AFTER
     string
-    default "hard_reset" if ESPTOOLPY_AFTER_RESET
+    default "hard_reset" if ESPTOOLPY_AFTER_HARD_RESET
+    default "soft_reset" if ESPTOOLPY_AFTER_SOFT_RESET
     default "no_reset" if ESPTOOLPY_AFTER_NORESET
 
 choice MONITOR_BAUD
