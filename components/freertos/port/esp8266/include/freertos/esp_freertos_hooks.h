@@ -15,6 +15,10 @@
 #ifndef __ESP_FREERTOS_HOOKS_H__
 #define __ESP_FREERTOS_HOOKS_H__
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_FREERTOS_EXTENED_HOOKS
+
 #include <stdbool.h>
 #include "esp_err.h"
 
@@ -127,5 +131,6 @@ void esp_deregister_freertos_tick_hook(esp_freertos_tick_cb_t old_tick_cb);
 }
 #endif
 
+#endif /* CONFIG_FREERTOS_EXTENED_HOOKS */
 
 #endif

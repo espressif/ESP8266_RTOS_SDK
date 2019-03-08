@@ -50,8 +50,10 @@
 
 #define portNUM_PROCESSORS          1
 #define configUSE_PREEMPTION		1
+
 #define configUSE_IDLE_HOOK			1
-#define configUSE_TICK_HOOK			0
+#define configUSE_TICK_HOOK			1
+
 #define configUSE_TICKLESS_IDLE 	1
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 80000000 )	
 #define configTICK_RATE_HZ			( ( portTickType ) CONFIG_FREERTOS_HZ )

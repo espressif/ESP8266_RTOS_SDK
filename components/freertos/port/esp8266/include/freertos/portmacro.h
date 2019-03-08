@@ -205,6 +205,9 @@ void _xt_enter_first_task(void);
 #define xTaskCreatePinnedToCore(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask, tskNO_AFFINITY) \
         xTaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
 
+extern void esp_vApplicationIdleHook( void );
+extern void esp_vApplicationTickHook( void );
+
 #ifdef __cplusplus
 }
 #endif
