@@ -34,7 +34,7 @@ static const int START_BIT = BIT0;
 static char printbuf[100];
 
 static void sniffer_cb(void* buf, wifi_promiscuous_pkt_type_t type)
-{    
+{
     wifi_pkt_rx_ctrl_t* rx_ctrl = (wifi_pkt_rx_ctrl_t*)buf;
     uint8_t* frame = (uint8_t*)(rx_ctrl + 1);
     uint32_t len = rx_ctrl->sig_mode ? rx_ctrl->HT_length : rx_ctrl->legacy_length;
@@ -50,10 +50,12 @@ static void sniffer_cb(void* buf, wifi_promiscuous_pkt_type_t type)
     for (count = 0; count < total_num; count++) {
         if (total_num > 1) {
             len = *((uint16_t*)(frame + MAC_HDR_LEN_MAX + 2 * count));
+
             if (seq_buf == 0) {
-                seq_buf = *((uint16_t *)(frame+22)) >> 4;
+                seq_buf = *((uint16_t*)(frame + 22)) >> 4;
             }
-            printf("seq_num:%d, total_num:%d\r\n", seq_buf, total_num);
+
+            ESP_LOGI(TAG, "seq_num:%d, total_num:%d\r\n", seq_buf, total_num);
         }
 
         switch (type) {
@@ -81,10 +83,12 @@ static void sniffer_cb(void* buf, wifi_promiscuous_pkt_type_t type)
         }
 
         ++seq_buf;
+
         if (total_num > 1) {
-            *(uint16_t *)(frame + 22) = (seq_buf << 4) | (*(uint16_t *)(frame + 22) & 0xf);
+            *(uint16_t*)(frame + 22) = (seq_buf << 4) | (*(uint16_t*)(frame + 22) & 0xf);
         }
     }
+
     ESP_LOGI(TAG, "Rx ctrl header:");
 
     for (i = 0; i < 12; i++) {
