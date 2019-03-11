@@ -1,10 +1,10 @@
 gwen:
-    core:       021ebb5
-    net80211:   021ebb5
-    pp:         021ebb5
-    wpa:        021ebb5
-    espnow:     021ebb5
-    wps:        021ebb5
+    core:       38f8c34
+    net80211:   38f8c34
+    pp:         38f8c34
+    wpa:        38f8c34
+    espnow:     38f8c34
+    wps:        38f8c34
 
     smartconfig:  2.8.1
     phy:         1055_8
