@@ -18,6 +18,7 @@
 #include "FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
+#include "driver/soc.h"
 
 #define ESP_TIMER_HZ CONFIG_FREERTOS_HZ
 
@@ -197,4 +198,30 @@ esp_err_t esp_timer_delete(esp_timer_handle_t timer)
         heap_caps_free(timer);
 
     return os_ret == pdPASS ? ESP_OK : ESP_ERR_INVALID_STATE; 
+}
+
+int64_t esp_timer_get_time()
+{
+    extern esp_tick_t g_cpu_ticks;
+    extern uint64_t g_os_ticks;
+
+    esp_irqflag_t flag;
+    esp_tick_t diff_ticks, ticks;
+    uint64_t time;
+
+    flag = soc_save_local_irq();
+
+    time = g_os_ticks * portTICK_PERIOD_MS * 1000;
+    ticks = soc_get_ticks();
+    if (ticks >= g_cpu_ticks) {
+        diff_ticks = ticks - g_cpu_ticks;
+    } else {
+        diff_ticks = ESP_TICKS_MAX - g_cpu_ticks + ticks;
+    }
+
+    time += diff_ticks / (_xt_tick_divisor * configTICK_RATE_HZ / (1000 * 1000));
+    
+    soc_restore_local_irq(flag);
+
+    return (int64_t)time;
 }

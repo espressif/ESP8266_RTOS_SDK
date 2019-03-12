@@ -166,5 +166,7 @@ uint32_t esp_get_time(void);
 
 #endif /* CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS */
 
+#define traceINCREASE_TICK_COUNT(_ticks)    esp_increase_tick_cnt(_ticks)
+
 #endif /* FREERTOS_CONFIG_H */
 

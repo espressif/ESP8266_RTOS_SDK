@@ -45,6 +45,7 @@
 #include "esp8266/eagle_soc.h"
 #include "rom/ets_sys.h"
 #include "esp8266/rom_functions.h"
+#include "driver/soc.h"
 
 #define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
 
@@ -57,6 +58,9 @@ unsigned cpu_sr;
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */
 static uint32_t uxCriticalNesting = 0;
+
+esp_tick_t g_cpu_ticks = 0;
+uint64_t g_os_ticks = 0;
 
 void vPortEnterCritical(void);
 void vPortExitCritical(void);
@@ -137,8 +141,23 @@ void TASK_SW_ATTR SoftIsrHdl(void* arg)
     ETS_NMI_UNLOCK();
 }
 
+void esp_increase_tick_cnt(const TickType_t ticks)
+{
+    esp_irqflag_t flag;
+
+    flag = soc_save_local_irq();
+
+    g_cpu_ticks = soc_get_ticks();
+    g_os_ticks += ticks;
+
+    soc_restore_local_irq(flag);
+}
+
 void TASK_SW_ATTR xPortSysTickHandle(void)
 {
+    g_cpu_ticks = soc_get_ticks();
+    g_os_ticks++;
+
     if (xTaskIncrementTick() != pdFALSE) {
         vTaskSwitchContext();
     }
@@ -168,6 +187,9 @@ portBASE_TYPE xPortStartScheduler(void)
     _xt_tick_timer_init();
 
     vTaskSwitchContext();
+
+    /* Get ticks before RTOS starts */
+    g_cpu_ticks = soc_get_ticks();
 
     /* Restore the context of the first task that is going to run. */
     _xt_enter_first_task();

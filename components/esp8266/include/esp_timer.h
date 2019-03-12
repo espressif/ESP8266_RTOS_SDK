@@ -187,6 +187,13 @@ esp_err_t esp_timer_stop(esp_timer_handle_t timer);
  */
 esp_err_t esp_timer_delete(esp_timer_handle_t timer);
 
+/**
+ * @brief Get time in microseconds since RTOS starts
+ * @return number of microseconds since RTOS starts starts (this normally
+ *          happens much early during application startup).
+ */
+int64_t esp_timer_get_time();
+
 #ifdef __cplusplus
 }
 #endif

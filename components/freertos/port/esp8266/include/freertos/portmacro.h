@@ -201,6 +201,8 @@ uint32_t xPortGetTickRateHz(void);
 
 void _xt_enter_first_task(void);
 
+void esp_increase_tick_cnt(const TickType_t ticks);
+
 /* API compatible with esp-idf  */
 #define xTaskCreatePinnedToCore(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask, tskNO_AFFINITY) \
         xTaskCreate(pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask)
