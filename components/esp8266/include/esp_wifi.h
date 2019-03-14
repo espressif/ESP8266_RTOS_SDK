@@ -871,16 +871,16 @@ esp_err_t esp_wifi_get_event_mask(uint32_t *mask);
   *               the next packet is allowed to send. Otherwise, wifi_send_pkt_freedom
   *               will return fail.
   *
-  * @param     uint8 *buf : pointer of packet
-  * @param     uint16 len : packet length
-  * @param     bool sys_seq : follow the system's 802.11 packets sequence number or not,
+  * @param     const void *buffer: pointer of packet
+  * @param     int len: packet length
+  * @param     bool en_sys_seq: follow the system's 802.11 packets sequence number or not,
   *                           if it is true, the sequence number will be increased 1 every
   *                           time a packet sent.
   *
   * @return    ESP_OK, succeed;
   * @return    ESP_FAIL, fail.
   */
-esp_err_t esp_wifi_send_pkt_freedom(uint8_t *buf, int32_t len, bool sys_seq); 
+esp_err_t esp_wifi_80211_tx(wifi_interface_t ifx, const void *buffer, int len, bool en_sys_seq);
 
 #ifdef __cplusplus
 }
