@@ -1,6 +1,5 @@
-#
-# Component Makefile
-#
-COMPONENT_ADD_INCLUDEDIRS += include/spiffs
+COMPONENT_ADD_INCLUDEDIRS := include
+COMPONENT_PRIV_INCLUDEDIRS := . spiffs/src
+COMPONENT_SRCDIRS := . spiffs/src
 
-COMPONENT_SRCDIRS := library
+COMPONENT_SUBMODULES := spiffs
