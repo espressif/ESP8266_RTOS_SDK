@@ -257,6 +257,7 @@ int ets_vprintf(const char *fmt, va_list va)
                 ets_printf_int(&attr, 16);
                 break;
             case 'p':
+                ets_printf_buf("0x", 2);
                 attr.value.valcp = va_arg(va, const char *);
                 ets_printf_int(&attr, 16);
             default:
