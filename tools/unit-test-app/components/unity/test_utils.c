@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <string.h>
+#include <unistd.h>
 #include "unity.h"
 #include "test_utils.h"
 #include "rom/ets_sys.h"

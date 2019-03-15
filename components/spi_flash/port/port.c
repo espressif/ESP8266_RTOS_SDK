@@ -69,7 +69,7 @@ static uint32_t s_v2_flash_bin_size;
 static uint32_t s_v2_flash_size;
 static sys_param_t s_sys_param;
 static boot_param_t s_boot_param;
-static esp_spi_flash_chip_t s_flash_chip = {
+static esp_rom_spiflash_chip_t s_flash_chip = {
     0x1640ef,
     CONFIG_SPI_FLASH_SIZE,
     64 * 1024,

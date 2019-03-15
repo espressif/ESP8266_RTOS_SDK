@@ -1,4 +1,10 @@
-menu "SPIFFS Configuration"
+menuconfig USING_SPIFFS
+    bool "SPIFFS"
+    select USING_ESP_VFS
+    help
+       Select this option to enable support for the SPIFFS.
+
+if USING_SPIFFS
 
 config SPIFFS_MAX_PARTITIONS
     int "Maximum Number of Partitions"
@@ -158,4 +164,4 @@ config SPIFFS_TEST_VISUALISATION
 
 endmenu
 
-endmenu
+endif

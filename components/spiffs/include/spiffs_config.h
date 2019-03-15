@@ -205,7 +205,7 @@ _Static_assert(SPIFFS_OBJ_META_LEN + SPIFFS_OBJ_NAME_LEN + SPIFFS_PAGE_EXTRA_SIZ
 #define SPIFFS_SINGLETON 0
 
 // Enable this if your target needs aligned data for index tables
-#define SPIFFS_ALIGNED_OBJECT_INDEX_TABLES      0
+#define SPIFFS_ALIGNED_OBJECT_INDEX_TABLES      4
 
 // Enable this if you want the HAL callbacks to be called with the spiffs struct
 #define SPIFFS_HAL_CALLBACK_EXTRA               1
