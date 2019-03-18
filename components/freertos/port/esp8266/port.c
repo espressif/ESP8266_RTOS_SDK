@@ -163,6 +163,14 @@ void TASK_SW_ATTR xPortSysTickHandle(void)
     }
 }
 
+/**
+ * @brief Return current CPU clock frequency
+ */
+int esp_clk_cpu_freq(void)
+{
+    return _xt_tick_divisor * XT_TICK_PER_SEC;
+}
+
 /*
  * See header file for description.
  */

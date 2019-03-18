@@ -58,3 +58,4 @@ PROVIDE ( gpio_pin_wakeup_disable = 0x40004ed4 );
 PROVIDE ( gpio_pin_wakeup_enable = 0x40004e90 );
 
 PROVIDE ( ets_io_vprintf = 0x40001f00 );
+PROVIDE ( uart_rx_one_char = 0x40003b8c );
