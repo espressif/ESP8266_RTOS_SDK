@@ -200,7 +200,7 @@ static esp_err_t load_partitions()
                are always encrypted */
             item->info.encrypted = true;
         }
-else
+#else
         item->info.encrypted = false;
 #endif
 
