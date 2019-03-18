@@ -1,3 +1,5 @@
+#include "sdkconfig.h"
+
 #ifdef CONFIG_SSL_USING_MBEDTLS
 #include <stdlib.h>
 #include <string.h>
