@@ -1,11 +1,6 @@
 #include <stdio.h>
-#include <stdint.h>
-
-#include "esp_system.h"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
 #include "unity.h"
 #include "unity_config.h"
 
@@ -15,7 +10,10 @@ void unityTask(void *pvParameters)
     unity_run_menu(); /* Doesn't return */
 }
 
-void app_main(void)
+void app_main()
 {
-    xTaskCreate(unityTask, "unityTask", 8192, NULL, UNITY_FREERTOS_PRIORITY, NULL);
+    // Note: if unpinning this task, change the way run times are calculated in
+    // unity_platform
+    xTaskCreatePinnedToCore(unityTask, "unityTask", UNITY_FREERTOS_STACK_SIZE, NULL,
+                            UNITY_FREERTOS_PRIORITY, NULL, UNITY_FREERTOS_CPU);
 }
