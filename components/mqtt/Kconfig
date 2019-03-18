@@ -1,4 +1,21 @@
-menu "MQTT(Paho)"
+menu "MQTT"
+
+choice MQTT_LIBRARY_CHOOSE
+    prompt "Choose MQTT library"
+    default MQTT_USING_IBM
+    help
+        Choose the MQTT library which you want to use.
+
+        Currently we support ESP-MQTT and IBM-MQTT(paho).
+
+config MQTT_USING_ESP
+    bool "ESP-MQTT"
+config MQTT_USING_IBM
+    bool "IBM-MQTT(paho)"
+endchoice
+
+menu "IBM-MQTT(paho)"
+    depends on MQTT_USING_IBM
 
 choice MQTT_VERSION
     prompt "MQTT version"
@@ -132,5 +149,111 @@ config MQTT_PING_TIMEOUT
         When MQTT_KEEP_ALIVE expired, it will start sending ping request.
         If the ESP device does not receive any ping response within MQTT_PING_TIMEOUT,
         it will terminate the MQTT connection.
+
+endmenu  # IBM-MQTT(paho)
+
+menu "ESP-MQTT"
+    depends on MQTT_USING_ESP
+
+config MQTT_PROTOCOL_311
+    bool "Enable MQTT protocol 3.1.1"
+    default y
+    help
+        If not, this library will use MQTT protocol 3.1
+
+config MQTT_TRANSPORT_SSL
+    bool "Enable MQTT over SSL"
+    default y
+    help
+        Enable MQTT transport over SSL with mbedtls
+
+config MQTT_TRANSPORT_WEBSOCKET
+    bool "Enable MQTT over Websocket"
+    default y
+    help
+        Enable MQTT transport over Websocket.
+
+config MQTT_TRANSPORT_WEBSOCKET_SECURE
+    bool "Enable MQTT over Websocket Secure"
+    default y
+    depends on MQTT_TRANSPORT_WEBSOCKET
+    depends on MQTT_TRANSPORT_SSL
+    help
+        Enable MQTT transport over Websocket Secure.
+
+config MQTT_USE_CUSTOM_CONFIG
+    bool "MQTT Using custom configurations"
+    default n
+    help
+        Custom MQTT configurations.
+
+config MQTT_TCP_DEFAULT_PORT
+    int "Default MQTT over TCP port"
+    default 1883
+    depends on MQTT_USE_CUSTOM_CONFIG
+    help
+        Default MQTT over TCP port
+
+config MQTT_SSL_DEFAULT_PORT
+    int "Default MQTT over SSL port"
+    default 8883
+    depends on MQTT_USE_CUSTOM_CONFIG
+    depends on MQTT_TRANSPORT_SSL
+    help
+        Default MQTT over SSL port
+        
+config MQTT_WS_DEFAULT_PORT
+    int "Default MQTT over Websocket port"
+    default 80
+    depends on MQTT_USE_CUSTOM_CONFIG
+    depends on MQTT_TRANSPORT_WEBSOCKET
+    help
+        Default MQTT over Websocket port
+
+config MQTT_WSS_DEFAULT_PORT
+    int "Default MQTT over Websocket Secure port"
+    default 443
+    depends on MQTT_USE_CUSTOM_CONFIG
+    depends on MQTT_TRANSPORT_WEBSOCKET
+    depends on MQTT_TRANSPORT_WEBSOCKET_SECURE
+    help
+        Default MQTT over Websocket Secure port
+
+config MQTT_BUFFER_SIZE
+    int "Default MQTT Buffer Size"
+    default 1024
+    depends on MQTT_USE_CUSTOM_CONFIG
+    help
+        This buffer size using for both transmit and receive
+
+config MQTT_TASK_STACK_SIZE
+    int "MQTT task stack size"
+    default 6144
+    depends on MQTT_USE_CUSTOM_CONFIG
+    help
+        MQTT task stack size
+
+config MQTT_TASK_CORE_SELECTION_ENABLED
+    bool "Enable MQTT task core selection"
+    default false
+    help
+        This will enable core selection
+
+choice MQTT_TASK_CORE_SELECTION
+    depends on MQTT_TASK_CORE_SELECTION_ENABLED
+    prompt "Core to use ?"
+    config MQTT_USE_CORE_0
+          bool "Core 0"
+    config MQTT_USE_CORE_1
+          bool "Core 1"
+ endchoice
+
+config MQTT_CUSTOM_OUTBOX
+    bool "Enable custom outbox implementation"
+    default n
+    help
+        Set to true if a specific implementation of message outbox is needed (e.g. persistant outbox in NVM or similar).
+
+endmenu # ESP-MQTT
 
 endmenu
