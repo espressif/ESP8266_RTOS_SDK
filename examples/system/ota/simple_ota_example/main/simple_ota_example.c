@@ -21,6 +21,10 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
+#if CONFIG_SSL_USING_WOLFSSL
+#include "lwip/apps/sntp.h"
+#endif
+
 static const char *TAG = "simple_ota_example";
 extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
@@ -32,6 +36,40 @@ static EventGroupHandle_t wifi_event_group;
    but we only care about one event - are we connected
    to the AP with an IP? */
 const int CONNECTED_BIT = BIT0;
+
+#if CONFIG_SSL_USING_WOLFSSL
+static void get_time()
+{
+    struct timeval now;
+    int sntp_retry_cnt = 0;
+    int sntp_retry_time = 0;
+
+    sntp_setoperatingmode(0);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_init();
+
+    while (1) {
+        for (int32_t i = 0; (i < (SNTP_RECV_TIMEOUT / 100)) && now.tv_sec < 1525952900; i++) {
+            vTaskDelay(100 / portTICK_RATE_MS);
+            gettimeofday(&now, NULL);
+        }
+
+        if (now.tv_sec < 1525952900) {
+            sntp_retry_time = SNTP_RECV_TIMEOUT << sntp_retry_cnt;
+
+            if (SNTP_RECV_TIMEOUT << (sntp_retry_cnt + 1) < SNTP_RETRY_TIMEOUT_MAX) {
+                sntp_retry_cnt ++;
+            }
+
+            ESP_LOGI(TAG, "SNTP get time failed, retry after %d ms\n", sntp_retry_time);
+            vTaskDelay(sntp_retry_time / portTICK_RATE_MS);
+        } else {
+            ESP_LOGI(TAG, "SNTP get time success\n");
+            break;
+        }
+    }
+}
+#endif
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
@@ -105,7 +143,12 @@ static void initialise_wifi(void)
 void simple_ota_example_task(void * pvParameter)
 {
     ESP_LOGI(TAG, "Starting OTA example...");
-
+    
+    #if CONFIG_SSL_USING_WOLFSSL
+    /* CA date verification need system time */
+    get_time();
+    #endif
+    
     /* Wait for the callback to set the CONNECTED_BIT in the
        event group.
     */

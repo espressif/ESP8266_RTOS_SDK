@@ -30,7 +30,7 @@
 static const char *TAG = "esp-tls";
 #if CONFIG_SSL_USING_MBEDTLS
 static mbedtls_x509_crt *global_cacert = NULL;
-#else
+#elif CONFIG_SSL_USING_WOLFSSL
 static unsigned char *global_cacert = NULL;
 static unsigned int global_cacert_pem_bytes = 0;
 #endif
@@ -82,8 +82,9 @@ static ssize_t tls_read(esp_tls_t *tls, char *data, size_t datalen)
             ESP_LOGE(TAG, "read error :%d:", ret);
         }
     }
-#else
-    size_t ret = wolfSSL_read(tls->ssl, (unsigned char *)data, datalen);
+#elif CONFIG_SSL_USING_WOLFSSL
+    
+    ssize_t ret = wolfSSL_read(tls->ssl, (unsigned char *)data, datalen);
     if (ret < 0) {
         ret = wolfSSL_get_error(tls->ssl, ret);
         /* peer sent close notify */
@@ -193,7 +194,7 @@ esp_err_t esp_tls_set_global_ca_store(const unsigned char *cacert_pem_buf, const
         ESP_LOGE(TAG, "mbedtls_x509_crt_parse was partly successful. No. of failed certificates: %d", ret);
     }
     return ESP_OK;
-#else
+#elif CONFIG_SSL_USING_WOLFSSL
     if (global_cacert != NULL) {
         esp_tls_free_global_ca_store(global_cacert);
     }
@@ -219,7 +220,7 @@ void esp_tls_free_global_ca_store()
 #if CONFIG_SSL_USING_MBEDTLS
         mbedtls_x509_crt_free(global_cacert);
         global_cacert = NULL;
-#else
+#elif CONFIG_SSL_USING_WOLFSSL
         free(global_cacert);
         global_cacert = NULL;
         global_cacert_pem_bytes = 0;
@@ -240,7 +241,7 @@ static void verify_certificate(esp_tls_t *tls)
     } else {
         ESP_LOGI(TAG, "Certificate verified.");
     }
-#else
+#elif CONFIG_SSL_USING_WOLFSSL
     int flags;
     if ((flags = wolfSSL_get_verify_result(tls->ssl)) != WOLFSSL_SUCCESS) {
         ESP_LOGE(TAG, "Failed to verify peer certificate %d!", flags);
@@ -268,7 +269,7 @@ static void esp_tls_cleanup(esp_tls_t *tls)
     mbedtls_ctr_drbg_free(&tls->ctr_drbg);
     mbedtls_ssl_free(&tls->ssl);
     mbedtls_net_free(&tls->server_fd);
-#else
+#elif CONFIG_SSL_USING_WOLFSSL
     wolfSSL_shutdown(tls->ssl);
     wolfSSL_free(tls->ssl);
     close(tls->sockfd);
@@ -386,7 +387,7 @@ static int create_ssl_handle(esp_tls_t *tls, const char *hostname, size_t hostle
 exit:
     esp_tls_cleanup(tls);
     return -1;
-#else
+#elif CONFIG_SSL_USING_WOLFSSL
     ret = wolfSSL_Init();
     if (ret != WOLFSSL_SUCCESS) {
         ESP_LOGE(TAG, "Init wolfSSL failed: %d", ret);
@@ -483,7 +484,7 @@ static ssize_t tls_write(esp_tls_t *tls, const char *data, size_t datalen)
         }
     }
     return ret;
-#else
+#elif CONFIG_SSL_USING_WOLFSSL
     ssize_t ret = wolfSSL_write(tls->ssl, (unsigned char*) data, datalen);
     if (ret < 0) {
         if (ret != WOLFSSL_ERROR_WANT_READ  && ret != WOLFSSL_ERROR_WANT_WRITE) {
@@ -580,13 +581,14 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
                    or MBEDTLS_ERR_SSL_WANT_WRITE during handshake */
                 return 0;
             }
-#else
+#elif CONFIG_SSL_USING_WOLFSSL
             ret = wolfSSL_connect(tls->ssl);
             if (ret == WOLFSSL_SUCCESS) {
                 tls->conn_state = ESP_TLS_DONE;
                 return 1;
             } else {
-                if (ret != WOLFSSL_ERROR_WANT_READ && ret != WOLFSSL_ERROR_WANT_WRITE) {
+                int err = wolfSSL_get_error(tls->ssl, ret);
+                if (err != WOLFSSL_ERROR_WANT_READ && err != WOLFSSL_ERROR_WANT_WRITE) {
                     ESP_LOGE(TAG, "wolfSSL_connect returned -0x%x", -ret);
                     if (cfg->cacert_pem_buf != NULL || cfg->use_global_ca_store == true) {
                         /* This is to check whether handshake failed due to invalid certificate*/
@@ -645,13 +647,13 @@ int esp_tls_conn_new_async(const char *hostname, int hostlen, int port, const es
 
 size_t esp_tls_get_bytes_avail(esp_tls_t *tls)
 {
-#if CONFIG_SSL_USING_MBEDTLS
     if (!tls) {
         ESP_LOGE(TAG, "empty arg passed to esp_tls_get_bytes_avail()");
         return ESP_FAIL;
     }
+#if CONFIG_SSL_USING_MBEDTLS
     return mbedtls_ssl_get_bytes_avail(&tls->ssl);
-#else
-    return 0;
+#elif CONFIG_SSL_USING_WOLFSSL
+    return wolfSSL_pending(tls->ssl);
 #endif
 }
