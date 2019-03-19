@@ -118,7 +118,7 @@ endif
 	@echo [GEN] $(OTA_BIN)
 
 ifdef CONFIG_ESP8266_OTA_FROM_OLD
-$(OTA_V2_TO_V3_BIN):
+$(OTA_V2_TO_V3_BIN): all_binaries
 	@python $(IDF_PATH)/tools/pack_fw.py --output $(OTA_V2_TO_V3_BIN) pack3 $(ESPTOOL_ALL_FLASH_ARGS)
 	@echo [GEN] $(OTA_V2_TO_V3_BIN)
 endif
