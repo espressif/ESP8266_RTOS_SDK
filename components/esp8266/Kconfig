@@ -258,6 +258,16 @@ config ESP8266_BOOT_COPY_APP
         Enable this option, when it is that "OTA1" application is to run after update by OTA,
         bootloader will copy "OTA1" application to "OTA0" partition and run "OTA0".
 
+config ESP_ERR_TO_NAME_LOOKUP
+    bool "Enable lookup of error code strings"
+    default "y"
+    help
+        Functions esp_err_to_name() and esp_err_to_name_r() return string
+        representations of error codes from a pre-generated lookup table.
+        This option can be used to turn off the use of the look-up table in
+        order to save memory but this comes at the price of sacrificing
+        distinguishable (meaningful) output string representations.
+
 endmenu
 
 menu WIFI
