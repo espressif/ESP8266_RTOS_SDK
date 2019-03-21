@@ -42,7 +42,7 @@ build_ssc:
     - git clone $GITLAB_SSH_SERVER/yinling/SSC.git
     - cd SSC
     # try checkout same branch
-    - git checkout "${CI_BUILD_REF_NAME}_8266" || echo "Using default branch..."
+    - git checkout "release/v3.1_8266" || echo "Using default branch..."
     - ./gen_misc_rtos.sh
 
 push_master_to_github:
