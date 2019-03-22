@@ -444,5 +444,16 @@ config ESP_PHY_INIT_DATA_IN_PARTITION
 
         If unsure, choose 'n'.
 
+config ESP_PHY_INIT_DATA_VDD33_CONST
+    int "vdd33_const value"
+    range 0 255
+    default 33
+    help
+        vdd33_const provides ADC mode settings, i.e. selecting system voltage or external voltage measurements. 
+        When measuring system voltage, it must be set to 255. 
+        To read the external voltage on TOUT(ADC) pin, vdd33_const need less than 255
+        When the ADC reference voltage is set to the actual VDD33 power supply voltage, the value range of vdd33_const is [18,36], the unit is 0.1V.
+        When the ADC reference voltage is set to the default value of 3.3V as the supply voltage, the range of vdd33_const is [0, 18] or (36, 255).
+
 endmenu  # PHY
 
