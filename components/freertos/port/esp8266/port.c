@@ -50,8 +50,7 @@
 #define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
 
 extern char NMIIrqIsOn;
-static uint8_t HdlMacSig = 0;
-static uint8_t SWReq = 0;
+static int SWReq = 0;
 
 unsigned cpu_sr;
 
@@ -102,7 +101,7 @@ StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack, pdTASK_CODE pxCode
     return (StackType_t *)sp;
 }
 
-void IRAM_ATTR PendSV(char req)
+void IRAM_ATTR PendSV(int req)
 {
     if (req == 1) {
         vPortEnterCritical();
@@ -110,35 +109,18 @@ void IRAM_ATTR PendSV(char req)
         xthal_set_intset(1 << ETS_SOFT_INUM);
         vPortExitCritical();
     } else if (req == 2) {
-        HdlMacSig = 1;
         xthal_set_intset(1 << ETS_SOFT_INUM);
     }
 }
 
-void IRAM_ATTR HDL_MAC_SIG_IN_LV1_ISR(void)
-{
-    PendSV(2);
-}
-
-extern portBASE_TYPE MacIsrSigPostDefHdl(void);
-
 void TASK_SW_ATTR SoftIsrHdl(void* arg)
 {
-    ETS_NMI_LOCK();
+    extern int MacIsrSigPostDefHdl(void);
 
-    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-
-    if (HdlMacSig == 1) {
-        HdlMacSig = 0;
-        xHigherPriorityTaskWoken = MacIsrSigPostDefHdl();
-    }
-
-    if (xHigherPriorityTaskWoken || (SWReq == 1)) {
+    if (MacIsrSigPostDefHdl() || (SWReq == 1)) {
         _xt_timer_int1();
         SWReq = 0;
     }
-
-    ETS_NMI_UNLOCK();
 }
 
 void esp_increase_tick_cnt(const TickType_t ticks)
@@ -243,7 +225,6 @@ void IRAM_ATTR vPortExitCritical(void)
 void show_critical_info(void)
 {
     ets_printf("ShowCritical:%u\n", uxCriticalNesting);
-    ets_printf("HdlMacSig:%u\n", HdlMacSig);
     ets_printf("SWReq:%u\n", SWReq);
 }
 

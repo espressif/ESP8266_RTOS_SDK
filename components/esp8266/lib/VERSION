@@ -1,10 +1,10 @@
 gwen:
-    core:       f0128c3
-    net80211:   f0128c3
-    pp:         f0128c3
-    wpa:        f0128c3
-    espnow:     f0128c3
-    wps:        f0128c3
+    core:       021ebb5
+    net80211:   021ebb5
+    pp:         021ebb5
+    wpa:        021ebb5
+    espnow:     021ebb5
+    wps:        021ebb5
 
     smartconfig:  2.8.1
     phy:         1055_8
