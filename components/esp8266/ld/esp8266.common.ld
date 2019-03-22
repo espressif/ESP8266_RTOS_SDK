@@ -144,7 +144,7 @@ SECTIONS
     _data_start = ABSOLUTE(.);
     *(.data)
     *(.data.*)
-    *(.dram0)
+    *(.dram0. .dram0.*)
     *(.gnu.linkonce.d.*)
     *(.data1)
     *(.sdata)
