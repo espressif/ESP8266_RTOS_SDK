@@ -1,7 +1,7 @@
 gwen:
     core:       38f8c34
     net80211:   38f8c34
-    pp:         38f8c34
+    pp:         ee8b2d1
     wpa:        38f8c34
     espnow:     38f8c34
     wps:        38f8c34
