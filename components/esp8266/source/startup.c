@@ -25,12 +25,18 @@
 #include "esp_log.h"
 #include "esp_image_format.h"
 #include "esp_phy_init.h"
-#include "esp_wifi_osi.h"
 #include "esp_heap_caps_init.h"
 #include "esp_task_wdt.h"
 #include "internal/esp_wifi_internal.h"
 #include "internal/esp_system_internal.h"
 #include "esp8266/eagle_soc.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+
+#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+#include "esp_newlib.h"
+#endif
 
 extern void chip_boot(void);
 extern int rtc_init(void);
@@ -95,7 +101,7 @@ static void user_init_entry(void *param)
 
     app_main();
 
-    wifi_task_delete(NULL);
+    vTaskDelete(NULL);
 }
 
 void call_user_start(size_t start_addr)
@@ -149,9 +155,11 @@ void call_user_start(size_t start_addr)
 
     heap_caps_init();
 
-    wifi_os_init();
+#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+    esp_newlib_init();
+#endif
 
-    assert(wifi_task_create(user_init_entry, "uiT", CONFIG_MAIN_TASK_STACK_SIZE, NULL, wifi_task_get_max_priority()) != NULL);
+    assert(xTaskCreate(user_init_entry, "uiT", CONFIG_MAIN_TASK_STACK_SIZE, NULL, configMAX_PRIORITIES, NULL) == pdPASS);
 
-    wifi_os_start();
+    vTaskStartScheduler();
 }
