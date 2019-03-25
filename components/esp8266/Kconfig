@@ -236,6 +236,15 @@ config CRYSTAL_USED_40MHZ
     bool "40MHz"
 endchoice
 
+config INIT_OS_BEFORE_START
+    bool "Init OS before starting it"
+    default n
+    depends on DISABLE_FREERTOS
+    help
+        Some OSes should initialize their global data structure before starting them. rt-thread is like this one.
+
+        FreeRTOS need not do this.
+
 config ESP8266_OTA_FROM_OLD
     bool "(**Expected**)ESP8266 update from old SDK by OTA"
     default n
