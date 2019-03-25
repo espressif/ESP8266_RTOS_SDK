@@ -59,3 +59,8 @@ PROVIDE ( gpio_pin_wakeup_enable = 0x40004e90 );
 
 PROVIDE ( ets_io_vprintf = 0x40001f00 );
 PROVIDE ( uart_rx_one_char = 0x40003b8c );
+
+PROVIDE ( rom_i2c_readReg = 0x40007268 );
+PROVIDE ( rom_i2c_readReg_Mask = 0x4000729c );
+PROVIDE ( rom_i2c_writeReg = 0x400072d8 );
+PROVIDE ( rom_i2c_writeReg_Mask = 0x4000730c );
