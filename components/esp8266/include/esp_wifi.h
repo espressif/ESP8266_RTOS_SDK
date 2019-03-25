@@ -65,7 +65,6 @@
 #include "esp_err.h"
 #include "esp_wifi_types.h"
 #include "esp_event.h"
-#include "esp_wifi_os_adapter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -96,7 +95,7 @@ extern "C" {
  */
 typedef struct {
     system_event_handler_t event_handler;          /**< WiFi event handler */
-    wifi_osi_funcs_t*      osi_funcs;              /**< WiFi OS functions */
+    void*                  osi_funcs;              /**< WiFi OS functions */
     int                    static_rx_buf_num;      /**< WiFi static RX buffer number */
     int                    dynamic_rx_buf_num;     /**< WiFi dynamic RX buffer number */
     int                    tx_buf_type;            /**< WiFi TX buffer type */
@@ -114,10 +113,9 @@ typedef struct {
 
 #define WIFI_INIT_CONFIG_MAGIC    0x1F2F3F4F
 
-extern wifi_osi_funcs_t s_wifi_osi_funcs;
 #define WIFI_INIT_CONFIG_DEFAULT() { \
     .event_handler = &esp_event_send, \
-    .osi_funcs = &s_wifi_osi_funcs, \
+    .osi_funcs = NULL, \
     .static_rx_buf_num = 5,\
     .dynamic_rx_buf_num = 0,\
     .tx_buf_type = 0,\
