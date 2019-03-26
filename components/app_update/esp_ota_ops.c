@@ -34,7 +34,7 @@
 #include "crc.h"
 #include "esp_log.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 #include "spi_flash.h"
 esp_err_t bootloader_flash_read(size_t src_addr, void *dest, size_t size, bool allow_decrypt);
 #endif
@@ -68,6 +68,28 @@ static uint32_t s_ota_ops_last_handle = 0;
 static ota_select s_ota_select[2];
 
 const static char *TAG = "esp_ota_ops";
+
+#ifndef CONFIG_ESP8266_BOOT_COPY_APP
+static inline int esp_ota_verify_binary(const esp_partition_pos_t *pos, esp_image_header_t *image)
+{
+    const int32_t entry = image->entry_addr - 0x40200010;
+
+    ESP_LOGD(TAG, "OTA binary start entry 0x%x, partition start from 0x%x to 0x%x\n", entry, pos->offset,
+                        pos->offset + pos->size);
+
+    if (pos->offset + pos->size <= 0x100000) {
+        if (entry <= 0 || entry <= pos->offset || entry >= pos->offset + pos->size) {
+            const char *doc_str = "<<ESP8266_RTOS_SDK/examples/system/ota/README.md>>";
+
+            ESP_LOGE(TAG, "**Important**: The OTA binary link data is error, "
+                          "please refer to document %s for how to generate OTA binaries", doc_str);
+            return ESP_ERR_INVALID_ARG;
+        }
+    }
+
+    return ESP_OK;
+}
+#endif
 
 /* Return true if this is an OTA app partition */
 static bool is_ota_partition(const esp_partition_t *p)
@@ -152,7 +174,7 @@ esp_err_t esp_ota_write(esp_ota_handle_t handle, const void *data, size_t size)
                 return ESP_ERR_OTA_VALIDATE_FAILED;
             }
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
             if (esp_flash_encryption_enabled()) {
                 /* Can only write 16 byte blocks to flash, so need to cache anything else */
                 size_t copy_len;
@@ -244,6 +266,13 @@ esp_err_t esp_ota_end(esp_ota_handle_t handle)
         goto cleanup;
     }
 
+#ifndef CONFIG_ESP8266_BOOT_COPY_APP
+    if (esp_ota_verify_binary(&part_pos, &data.image) != ESP_OK) {
+        ret = ESP_ERR_OTA_VALIDATE_FAILED;
+        goto cleanup;
+    }
+#endif
+
 #ifdef CONFIG_SECURE_BOOT_ENABLED
     ret = esp_secure_boot_verify_signature(it->part->address, data.image_len);
     if (ret != ESP_OK) {
@@ -325,7 +354,7 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
         if (SUB_TYPE_ID(subtype) >= ota_app_count) {
             return ESP_ERR_INVALID_ARG;
         }
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
         const void *result = NULL;
         static spi_flash_mmap_memory_t ota_data_map;
         ret = esp_partition_mmap(find_partition, 0, find_partition->size, SPI_FLASH_MMAP_DATA, &result, &ota_data_map);
@@ -339,7 +368,7 @@ static esp_err_t esp_rewrite_ota_data(esp_partition_subtype_t subtype)
         }
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
         ret = spi_flash_read(find_partition->address, &s_ota_select[0], sizeof(ota_select));
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "read failed");
@@ -473,7 +502,7 @@ const esp_partition_t *esp_ota_get_boot_partition(void)
         return NULL;
     }
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
     const void *result = NULL;
     static spi_flash_mmap_memory_t ota_data_map;
     ret = esp_partition_mmap(find_partition, 0, find_partition->size, SPI_FLASH_MMAP_DATA, &result, &ota_data_map);
@@ -488,7 +517,7 @@ const esp_partition_t *esp_ota_get_boot_partition(void)
 
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
     ret = spi_flash_read(find_partition->address, &s_ota_select[0], sizeof(ota_select));
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "read failed");

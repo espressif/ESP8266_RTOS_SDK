@@ -178,10 +178,17 @@
 #define IRAM_SIZE                       (48 * 1024)
 
 #define FLASH_BASE                      (0x40200000)
-#define FLASH_SIZE                      (16 * 1024 * 1024)
+#define FLASH_SIZE                      (1 * 1024 * 1024)
+
+#define RTC_SYS_BASE                    (0x60001000)
+#define RTC_SYS_SIZE                    (0x200)
+
+#define RTC_USER_BASE                   (0x60001200)
+#define RTC_USER_SIZE                   (0x200)
 
 #define IS_DRAM(a)                      ((size_t)(a) >= DRAM_BASE && (size_t)(a) < (DRAM_BASE + DRAM_SIZE))
 #define IS_IRAM(a)                      ((size_t)(a) >= IRAM_BASE && (size_t)(a) < (IRAM_BASE + IRAM_SIZE))
 #define IS_FLASH(a)                     ((size_t)(a) >= FLASH_BASE && (size_t)(a) < (FLASH_BASE + FLASH_SIZE))
+#define IS_USR_RTC(a)                   ((size_t)(a) >= RTC_USER_BASE && (size_t)(a) < (RTC_USER_BASE + RTC_USER_SIZE))
 
 #endif //_EAGLE_SOC_H_

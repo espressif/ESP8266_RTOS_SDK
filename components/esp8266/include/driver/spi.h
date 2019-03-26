@@ -23,42 +23,42 @@ extern "C" {
 
 #define SPI_NUM_MAX 2
 
-// SPI bus CPOL and CPHA definition
+/* SPI bus CPOL and CPHA definition */
 #define SPI_CPOL_LOW  0
 #define SPI_CPOL_HIGH 1
 #define SPI_CPHA_LOW  0
 #define SPI_CPHA_HIGH 1
 
-// SPI bus data sequence definition
+/* SPI bus data sequence definition */
 #define SPI_BIT_ORDER_MSB_FIRST  1
 #define SPI_BIT_ORDER_LSB_FIRST  0
 #define SPI_BYTE_ORDER_MSB_FIRST 1
 #define SPI_BYTE_ORDER_LSB_FIRST 0
 
-// SPI default bus interface parameter definition
-// CS_EN:1, MISO_EN:1, MOSI_EN:1, BYTE_TX_ORDER:1, BYTE_TX_ORDER:1, BIT_RX_ORDER:0, BIT_TX_ORDER:0, CPHA:0, CPOL:0
-#define SPI_DEFAULT_INTERFACE   0x1F0
+/* SPI default bus interface parameter definition */
+#define SPI_DEFAULT_INTERFACE   0x1F0    /* CS_EN:1, MISO_EN:1, MOSI_EN:1, BYTE_TX_ORDER:1, BYTE_TX_ORDER:1, BIT_RX_ORDER:0, BIT_TX_ORDER:0, CPHA:0, CPOL:0 */
 
-// SPI master default interrupt enable definition
-// TRANS_DONE: true, WRITE_STATUS: false, READ_STATUS: false, WRITE_BUFFER: false, READ_BUFFER: false
-#define SPI_MASTER_DEFAULT_INTR_ENABLE 0x10
+/* SPI master default interrupt enable definition */
+#define SPI_MASTER_DEFAULT_INTR_ENABLE 0x10    /* TRANS_DONE: true, WRITE_STATUS: false, READ_STATUS: false, WRITE_BUFFER: false, READ_BUFFER: false */
 
-// SPI slave default interrupt enable definition
-// TRANS_DONE: false, WRITE_STATUS: true, READ_STATUS: true, WRITE_BUFFER: true, READ_BUFFER: ture
-#define SPI_SLAVE_DEFAULT_INTR_ENABLE 0x0F
+/* SPI slave default interrupt enable definition */
+#define SPI_SLAVE_DEFAULT_INTR_ENABLE 0x0F    /* TRANS_DONE: false, WRITE_STATUS: true, READ_STATUS: true, WRITE_BUFFER: true, READ_BUFFER: ture */
 
-// SPI event definition
+/* SPI event definition */
 #define SPI_INIT_EVENT        0
 #define SPI_TRANS_START_EVENT 1
 #define SPI_TRANS_DONE_EVENT  2
 #define SPI_DEINIT_EVENT      3
 
+/* SPI data cmd definition */
 #define SPI_MASTER_WRITE_DATA_TO_SLAVE_CMD     2
 #define SPI_MASTER_READ_DATA_FROM_SLAVE_CMD    3
 
+/* SPI status cmd definition */
 #define SPI_MASTER_WRITE_STATUS_TO_SLAVE_CMD   1
 #define SPI_MASTER_READ_STATUS_FROM_SLAVE_CMD  4
 
+/* SPI slave transfer done interrupt status definition */
 #define SPI_SLV_RD_BUF_DONE (BIT(0))
 #define SPI_SLV_WR_BUF_DONE (BIT(1))
 #define SPI_SLV_RD_STA_DONE (BIT(2))
@@ -67,14 +67,19 @@ extern "C" {
 
 typedef void (*spi_event_callback_t)(int event, void *arg);
 
-// ESP8266 has two hardware SPI, CSPI and HSPI. Currently, HSPI can be used arbitrarily.
-// SPI peripheral enumeration
+/**
+ * @brief SPI peripheral enumeration
+ * 
+ * @note ESP8266 has two hardware SPI, CSPI and HSPI. Currently, HSPI can be used arbitrarily.
+ */
 typedef enum {
     CSPI_HOST = 0,
     HSPI_HOST
 } spi_host_t;
 
-// SPI clock division factor enumeration
+/**
+ * @brief SPI clock division factor enumeration
+ */
 typedef enum {
     SPI_2MHz_DIV  = 40,
     SPI_4MHz_DIV  = 20,
@@ -87,13 +92,17 @@ typedef enum {
     SPI_80MHz_DIV = 1,
 } spi_clk_div_t;
 
-// SPI working mode enumeration
+/**
+ * @brief SPI working mode enumeration
+ */
 typedef enum {
     SPI_MASTER_MODE,
     SPI_SLAVE_MODE
 } spi_mode_t;
 
-// SPI interrupt enable union type definition
+/**
+ * @brief SPI interrupt enable union type definition
+ */
 typedef union {
     struct {
         uint32_t read_buffer:  1;
@@ -106,24 +115,28 @@ typedef union {
     uint32_t val;
 } spi_intr_enable_t;
 
-// SPI bus interface parameter union type definition
+/**
+ * @brief SPI bus interface parameter union type definition
+ */
 typedef union {
     struct {
-        uint32_t cpol:          1;   // Clock Polarity
-        uint32_t cpha:          1;   // Clock Phase
-        uint32_t bit_tx_order:  1;
-        uint32_t bit_rx_order:  1;
-        uint32_t byte_tx_order: 1;
-        uint32_t byte_rx_order: 1;
-        uint32_t mosi_en:       1;
-        uint32_t miso_en:       1;
-        uint32_t cs_en:         1;
-        uint32_t reserved9:    23;
+        uint32_t cpol:          1;   /*!< Clock Polarity */
+        uint32_t cpha:          1;   /*!< Clock Phase */
+        uint32_t bit_tx_order:  1;   /*!< Tx bit order */
+        uint32_t bit_rx_order:  1;   /*!< Rx bit order */
+        uint32_t byte_tx_order: 1;   /*!< Tx byte order */
+        uint32_t byte_rx_order: 1;   /*!< Rx byte order */
+        uint32_t mosi_en:       1;   /*!< MOSI line enable */
+        uint32_t miso_en:       1;   /*!< MISO line enable */
+        uint32_t cs_en:         1;   /*!< CS line enable */
+        uint32_t reserved9:    23;   /*!< resserved */
     };
     uint32_t val;
 } spi_interface_t;
 
-// SPI transmission parameter structure type definition
+/**
+ * @brief SPI transmission parameter structure type definition
+ */
 typedef struct {
     uint16_t *cmd;
     uint32_t *addr;
@@ -140,7 +153,9 @@ typedef struct {
     } bits;
 } spi_trans_t;
 
-// SPI initialization parameter structure type definition
+/**
+ * @brief SPI initialization parameter structure type definition
+ */
 typedef struct {
     spi_interface_t interface;
     spi_intr_enable_t intr_enable;

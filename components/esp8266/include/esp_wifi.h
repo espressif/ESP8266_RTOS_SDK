@@ -65,27 +65,28 @@
 #include "esp_err.h"
 #include "esp_wifi_types.h"
 #include "esp_event.h"
-#include "esp_wifi_os_adapter.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ESP_ERR_WIFI_NOT_INIT    (ESP_ERR_WIFI_BASE + 1)   /*!< WiFi driver was not installed by esp_wifi_init */
-#define ESP_ERR_WIFI_NOT_STARTED (ESP_ERR_WIFI_BASE + 2)   /*!< WiFi driver was not started by esp_wifi_start */
-#define ESP_ERR_WIFI_NOT_STOPPED (ESP_ERR_WIFI_BASE + 3)   /*!< WiFi driver was not stopped by esp_wifi_stop */
-#define ESP_ERR_WIFI_IF          (ESP_ERR_WIFI_BASE + 4)   /*!< WiFi interface error */
-#define ESP_ERR_WIFI_MODE        (ESP_ERR_WIFI_BASE + 5)   /*!< WiFi mode error */
-#define ESP_ERR_WIFI_STATE       (ESP_ERR_WIFI_BASE + 6)   /*!< WiFi internal state error */
-#define ESP_ERR_WIFI_CONN        (ESP_ERR_WIFI_BASE + 7)   /*!< WiFi internal control block of station or soft-AP error */
-#define ESP_ERR_WIFI_NVS         (ESP_ERR_WIFI_BASE + 8)   /*!< WiFi internal NVS module error */
-#define ESP_ERR_WIFI_MAC         (ESP_ERR_WIFI_BASE + 9)   /*!< MAC address is invalid */
-#define ESP_ERR_WIFI_SSID        (ESP_ERR_WIFI_BASE + 10)   /*!< SSID is invalid */
-#define ESP_ERR_WIFI_PASSWORD    (ESP_ERR_WIFI_BASE + 11)  /*!< Password is invalid */
-#define ESP_ERR_WIFI_TIMEOUT     (ESP_ERR_WIFI_BASE + 12)  /*!< Timeout error */
-#define ESP_ERR_WIFI_WAKE_FAIL   (ESP_ERR_WIFI_BASE + 13)  /*!< WiFi is in sleep state(RF closed) and wakeup fail */
-#define ESP_ERR_WIFI_WOULD_BLOCK (ESP_ERR_WIFI_BASE + 14)  /*!< The caller would block */
-#define ESP_ERR_WIFI_NOT_CONNECT (ESP_ERR_WIFI_BASE + 15)  /*!< Station still in disconnect status */
+#define ESP_ERR_WIFI_NOT_INIT     (ESP_ERR_WIFI_BASE + 1)   /*!< WiFi driver was not installed by esp_wifi_init */
+#define ESP_ERR_WIFI_NOT_STARTED  (ESP_ERR_WIFI_BASE + 2)   /*!< WiFi driver was not started by esp_wifi_start */
+#define ESP_ERR_WIFI_NOT_STOPPED  (ESP_ERR_WIFI_BASE + 3)   /*!< WiFi driver was not stopped by esp_wifi_stop */
+#define ESP_ERR_WIFI_IF           (ESP_ERR_WIFI_BASE + 4)   /*!< WiFi interface error */
+#define ESP_ERR_WIFI_MODE         (ESP_ERR_WIFI_BASE + 5)   /*!< WiFi mode error */
+#define ESP_ERR_WIFI_STATE        (ESP_ERR_WIFI_BASE + 6)   /*!< WiFi internal state error */
+#define ESP_ERR_WIFI_CONN         (ESP_ERR_WIFI_BASE + 7)   /*!< WiFi internal control block of station or soft-AP error */
+#define ESP_ERR_WIFI_NVS          (ESP_ERR_WIFI_BASE + 8)   /*!< WiFi internal NVS module error */
+#define ESP_ERR_WIFI_MAC          (ESP_ERR_WIFI_BASE + 9)   /*!< MAC address is invalid */
+#define ESP_ERR_WIFI_SSID         (ESP_ERR_WIFI_BASE + 10)  /*!< SSID is invalid */
+#define ESP_ERR_WIFI_PASSWORD     (ESP_ERR_WIFI_BASE + 11)  /*!< Password is invalid */
+#define ESP_ERR_WIFI_TIMEOUT      (ESP_ERR_WIFI_BASE + 12)  /*!< Timeout error */
+#define ESP_ERR_WIFI_WAKE_FAIL    (ESP_ERR_WIFI_BASE + 13)  /*!< WiFi is in sleep state(RF closed) and wakeup fail */
+#define ESP_ERR_WIFI_WOULD_BLOCK  (ESP_ERR_WIFI_BASE + 14)  /*!< The caller would block */
+#define ESP_ERR_WIFI_NOT_CONNECT  (ESP_ERR_WIFI_BASE + 15)  /*!< Station still in disconnect status */
+#define ESP_ERR_WIFI_PM_MODE_OPEN (ESP_ERR_WIFI_BASE + 18)  /*!< Wifi is in min/max modem sleep mode */
+#define ESP_ERR_WIFI_FPM_MODE     (ESP_ERR_WIFI_BASE + 19)  /*!< Have not enable fpm mode */
 
 #define ESP_WIFI_PARAM_USE_NVS  0
 
@@ -94,7 +95,7 @@ extern "C" {
  */
 typedef struct {
     system_event_handler_t event_handler;          /**< WiFi event handler */
-    wifi_osi_funcs_t*      osi_funcs;              /**< WiFi OS functions */
+    void*                  osi_funcs;              /**< WiFi OS functions */
     int                    static_rx_buf_num;      /**< WiFi static RX buffer number */
     int                    dynamic_rx_buf_num;     /**< WiFi dynamic RX buffer number */
     int                    tx_buf_type;            /**< WiFi TX buffer type */
@@ -112,10 +113,9 @@ typedef struct {
 
 #define WIFI_INIT_CONFIG_MAGIC    0x1F2F3F4F
 
-extern wifi_osi_funcs_t s_wifi_osi_funcs;
 #define WIFI_INIT_CONFIG_DEFAULT() { \
     .event_handler = &esp_event_send, \
-    .osi_funcs = &s_wifi_osi_funcs, \
+    .osi_funcs = NULL, \
     .static_rx_buf_num = 5,\
     .dynamic_rx_buf_num = 0,\
     .tx_buf_type = 0,\
@@ -386,10 +386,11 @@ esp_err_t esp_wifi_get_ps(wifi_ps_type_t *type);
 
 /**
   * @brief     Set protocol type of specified interface
-  *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N)
+  *            The default protocol is (WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G)
   *
   * @attention Currently we only support 802.11b or 802.11bg or 802.11bgn mode
-  *
+  * @attention Please call this API in SYSTEM_EVENT_STA_START event
+  * 
   * @param     ifx  interfaces
   * @param     protocol_bitmap  WiFi protocol bitmap
   *
@@ -651,6 +652,31 @@ esp_err_t esp_wifi_get_promiscuous_filter(wifi_promiscuous_filter_t *filter);
 esp_err_t esp_wifi_set_config(wifi_interface_t interface, wifi_config_t *conf);
 
 /**
+  * @brief Enable subtype filter of the control packet in promiscuous mode.
+  *
+  * @note The default filter is to filter none control packet.
+  *
+  * @param filter the subtype of the control packet filtered in promiscuous mode.
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  */
+esp_err_t esp_wifi_set_promiscuous_ctrl_filter(const wifi_promiscuous_filter_t *filter);
+
+/**
+  * @brief     Get the subtype filter of the control packet in promiscuous mode.
+  *
+  * @param[out] filter  store the current status of subtype filter of the control packet in promiscuous mode
+  *
+  * @return
+  *    - ESP_OK: succeed
+  *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+  *    - ESP_ERR_WIFI_ARG: invalid argument
+  */
+esp_err_t esp_wifi_get_promiscuous_ctrl_filter(wifi_promiscuous_filter_t *filter);
+
+/**
   * @brief     Get configuration of specified interface
   *
   * @param     interface  interface
@@ -870,16 +896,16 @@ esp_err_t esp_wifi_get_event_mask(uint32_t *mask);
   *               the next packet is allowed to send. Otherwise, wifi_send_pkt_freedom
   *               will return fail.
   *
-  * @param     uint8 *buf : pointer of packet
-  * @param     uint16 len : packet length
-  * @param     bool sys_seq : follow the system's 802.11 packets sequence number or not,
+  * @param     const void *buffer: pointer of packet
+  * @param     int len: packet length
+  * @param     bool en_sys_seq: follow the system's 802.11 packets sequence number or not,
   *                           if it is true, the sequence number will be increased 1 every
   *                           time a packet sent.
   *
   * @return    ESP_OK, succeed;
   * @return    ESP_FAIL, fail.
   */
-esp_err_t esp_wifi_send_pkt_freedom(uint8_t *buf, int32_t len, bool sys_seq); 
+esp_err_t esp_wifi_80211_tx(wifi_interface_t ifx, const void *buffer, int len, bool en_sys_seq);
 
 #ifdef __cplusplus
 }

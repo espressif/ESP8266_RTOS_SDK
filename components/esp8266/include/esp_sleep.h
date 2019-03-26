@@ -162,9 +162,10 @@ void esp_wifi_fpm_set_wakeup_cb(fpm_wakeup_cb cb);
   *    - if wifi_fpm_set_sleep_type is set to be LIGHT_SLEEP_T, ESP8266 can wake up by GPIO.
   *    - if wifi_fpm_set_sleep_type is set to be MODEM_SLEEP_T, ESP8266 can wake up by wifi_fpm_do_wakeup.
   *
-  * @return   0, setting succeed;
-  * @return  -1, fail to sleep, sleep status error;
-  * @return  -2, fail to sleep, force sleep function is not enabled.
+  * @return  ESP_OK, setting succeed;
+  * @return  ESP_ERR_WIFI_FPM_MODE, fail to sleep, force sleep function is not enabled.
+  * @return  ESP_ERR_WIFI_PM_MODE_OPEN, fail to sleep, Please call esp_wifi_set_ps(WIFI_PS_NONE) first.
+  * @return  ESP_ERR_WIFI_MODE, fail to sleep, Please call esp_wifi_set_mode(WIFI_MODE_NULL) first.
   */
 esp_err_t esp_wifi_fpm_do_sleep(uint32_t sleep_time_in_us);
 
@@ -187,6 +188,34 @@ void esp_wifi_fpm_set_sleep_type(wifi_sleep_type_t type);
   * @return sleep type
   */
 wifi_sleep_type_t esp_wifi_fpm_get_sleep_type(void);
+
+/**
+  * @brief  Set a GPIO to wake the ESP8266 up from light-sleep mode 
+  *         ESP8266 will be wakened from Light-sleep, when the GPIO is in low-level.
+  * 
+  * If the ESP8266 enters light-sleep automatically(esp_wifi_set_sleep_type(LIGHT_SLEEP_T);), 
+  * after being waken up by GPIO, when the chip attempts to sleep again, it will check the status of the GPIO:
+  * Note:
+  * • If the GPIO is still in the wakeup status, the EP8266 will enter modem-sleep mode instead;
+  * • If the GPIO is NOT in the wakeup status, the ESP8266 will enter light-sleep mode
+  * 
+  * @param  uint32_t gpio_num: GPIO number, range: [0, 15].
+  *         gpio_int_type_t intr_status: status of GPIO interrupt to trigger the wakeup process.
+  *    - if esp_wifi_fpm_set_sleep_type is set to be LIGHT_SLEEP_T, ESP8266 can wake up by GPIO.
+  *    - if esp_wifi_fpm_set_sleep_type is set to be MODEM_SLEEP_T, ESP8266 can wake up by esp_wifi_fpm_do_wakeup.
+  *
+  * @return   null
+  */
+void esp_wifi_enable_gpio_wakeup(uint32_t gpio_num, gpio_int_type_t intr_status);
+
+/**
+  * @brief  Disable the function that the GPIO can wake the ESP8266 up from light-sleep mode.
+  * 
+  * @param  null
+  *
+  * @return null
+  */
+void esp_wifi_disable_gpio_wakeup(void);
 
 /**
   * @}

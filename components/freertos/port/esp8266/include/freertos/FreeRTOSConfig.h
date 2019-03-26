@@ -50,8 +50,10 @@
 
 #define portNUM_PROCESSORS          1
 #define configUSE_PREEMPTION		1
+
 #define configUSE_IDLE_HOOK			1
-#define configUSE_TICK_HOOK			0
+#define configUSE_TICK_HOOK			1
+
 #define configUSE_TICKLESS_IDLE 	1
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 80000000 )	
 #define configTICK_RATE_HZ			( ( portTickType ) CONFIG_FREERTOS_HZ )
@@ -59,8 +61,7 @@
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 768 )
 //#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 17 * 1024 ) )
 #define configMAX_TASK_NAME_LEN		( 16 )
-#define configUSE_TRACE_FACILITY	0
-#define configUSE_STATS_FORMATTING_FUNCTIONS 0
+
 #define configUSE_16_BIT_TICKS		0
 #define configIDLE_SHOULD_YIELD		1
 
@@ -126,6 +127,46 @@ NVIC value of 255. */
 
 /* add this to dump task stack information */
 #define configRECORD_STACK_HIGH_ADDRESS 1
+
+#ifdef CONFIG_TASK_SWITCH_FASTER
+#define TASK_SW_ATTR IRAM_ATTR
+#else
+#define TASK_SW_ATTR
+#endif
+
+#if CONFIG_USE_QUEUE_SETS
+#define configUSE_QUEUE_SETS 1
+#endif
+
+#ifdef CONFIG_FREERTOS_USE_TRACE_FACILITY
+#define configUSE_TRACE_FACILITY        1       /* Used by uxTaskGetSystemState(), and other trace facility functions */
+#endif
+
+#ifdef CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
+#define configUSE_STATS_FORMATTING_FUNCTIONS    1   /* Used by vTaskList() */
+#endif
+
+#ifdef CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
+#define configGENERATE_RUN_TIME_STATS           1   /* Used by vTaskGetRunTimeStats() */
+#define configSUPPORT_DYNAMIC_ALLOCATION        1
+
+//ccount or esp_timer are initialized elsewhere
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
+
+#ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
+/* Fine resolution time */
+#define portGET_RUN_TIME_COUNTER_VALUE()  xthal_get_ccount()
+#elif defined(CONFIG_FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER)
+/* Coarse resolution time (us) */
+#ifndef __ASSEMBLER__
+uint32_t esp_get_time(void);
+#define portALT_GET_RUN_TIME_COUNTER_VALUE(x)    x = (uint32_t)esp_get_time()
+#endif /* __ASSEMBLER__ */
+#endif /* CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK */
+
+#endif /* CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS */
+
+#define traceINCREASE_TICK_COUNT(_ticks)    esp_increase_tick_cnt(_ticks)
 
 #endif /* FREERTOS_CONFIG_H */
 

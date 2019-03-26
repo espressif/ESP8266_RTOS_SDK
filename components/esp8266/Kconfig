@@ -1,5 +1,22 @@
 menu "ESP8266-specific"
 
+choice ESP8266_DEFAULT_CPU_FREQ_MHZ
+    prompt "CPU frequency"
+    default ESP8266_DEFAULT_CPU_FREQ_80
+    help
+        CPU frequency to be set on application startup.
+
+    config ESP8266_DEFAULT_CPU_FREQ_80
+        bool "80 MHz"
+    config ESP8266_DEFAULT_CPU_FREQ_160
+        bool "160 MHz"
+endchoice
+
+config ESP8266_DEFAULT_CPU_FREQ_MHZ
+    int
+    default 80 if ESP8266_DEFAULT_CPU_FREQ_80
+    default 160 if ESP8266_DEFAULT_CPU_FREQ_160
+
 choice NEWLIB_STDOUT_LINE_ENDING
     prompt "Line ending for UART output"
     default NEWLIB_STDOUT_LINE_ENDING_CRLF
@@ -126,6 +143,12 @@ config UART0_SWAP_IO
     help
         Enable this option, UART0's I/O pins are swaped: TXD <-> RTS, RTX <-> CTS.
 
+config DISABLE_ROM_UART_PRINT
+    bool "Disable ROM UART print"
+    default n
+    help
+        "Disable main part of ROM UART print when rom bootloader process."
+
 config MAIN_TASK_STACK_SIZE
     int "Main task stack size"
     default 3584
@@ -216,8 +239,8 @@ endchoice
 config ESP8266_OTA_FROM_OLD
     bool "(**Expected**)ESP8266 update from old SDK by OTA"
     default n
-    depends on TARGET_PLATFORM_ESP8266
-    select ESP8266_BOOT_COPY_APP
+    depends on IDF_TARGET_ESP8266
+    select ESP8266_BOOT_COPY_APP if ESPTOOLPY_FLASHSIZE_1MB
     help
         The function is not released.
 

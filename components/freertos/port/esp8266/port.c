@@ -45,18 +45,21 @@
 #include "esp8266/eagle_soc.h"
 #include "rom/ets_sys.h"
 #include "esp8266/rom_functions.h"
+#include "driver/soc.h"
 
 #define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
 
 extern char NMIIrqIsOn;
-static uint8_t HdlMacSig = 0;
-static uint8_t SWReq = 0;
+static int SWReq = 0;
 
 unsigned cpu_sr;
 
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */
 static uint32_t uxCriticalNesting = 0;
+
+esp_tick_t g_cpu_ticks = 0;
+uint64_t g_os_ticks = 0;
 
 void vPortEnterCritical(void);
 void vPortExitCritical(void);
@@ -98,7 +101,7 @@ StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack, pdTASK_CODE pxCode
     return (StackType_t *)sp;
 }
 
-void IRAM_ATTR PendSV(char req)
+void IRAM_ATTR PendSV(int req)
 {
     if (req == 1) {
         vPortEnterCritical();
@@ -106,39 +109,37 @@ void IRAM_ATTR PendSV(char req)
         xthal_set_intset(1 << ETS_SOFT_INUM);
         vPortExitCritical();
     } else if (req == 2) {
-        HdlMacSig = 1;
         xthal_set_intset(1 << ETS_SOFT_INUM);
     }
 }
 
-void IRAM_ATTR HDL_MAC_SIG_IN_LV1_ISR(void)
+void TASK_SW_ATTR SoftIsrHdl(void* arg)
 {
-    PendSV(2);
-}
+    extern int MacIsrSigPostDefHdl(void);
 
-extern portBASE_TYPE MacIsrSigPostDefHdl(void);
-
-void SoftIsrHdl(void* arg)
-{
-    ETS_NMI_LOCK();
-
-    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-
-    if (HdlMacSig == 1) {
-        HdlMacSig = 0;
-        xHigherPriorityTaskWoken = MacIsrSigPostDefHdl();
-    }
-
-    if (xHigherPriorityTaskWoken || (SWReq == 1)) {
+    if (MacIsrSigPostDefHdl() || (SWReq == 1)) {
         _xt_timer_int1();
         SWReq = 0;
     }
-
-    ETS_NMI_UNLOCK();
 }
 
-void xPortSysTickHandle(void)
+void esp_increase_tick_cnt(const TickType_t ticks)
 {
+    esp_irqflag_t flag;
+
+    flag = soc_save_local_irq();
+
+    g_cpu_ticks = soc_get_ticks();
+    g_os_ticks += ticks;
+
+    soc_restore_local_irq(flag);
+}
+
+void TASK_SW_ATTR xPortSysTickHandle(void)
+{
+    g_cpu_ticks = soc_get_ticks();
+    g_os_ticks++;
+
     if (xTaskIncrementTick() != pdFALSE) {
         vTaskSwitchContext();
     }
@@ -168,6 +169,9 @@ portBASE_TYPE xPortStartScheduler(void)
     _xt_tick_timer_init();
 
     vTaskSwitchContext();
+
+    /* Get ticks before RTOS starts */
+    g_cpu_ticks = soc_get_ticks();
 
     /* Restore the context of the first task that is going to run. */
     _xt_enter_first_task();
@@ -221,7 +225,6 @@ void IRAM_ATTR vPortExitCritical(void)
 void show_critical_info(void)
 {
     ets_printf("ShowCritical:%u\n", uxCriticalNesting);
-    ets_printf("HdlMacSig:%u\n", HdlMacSig);
     ets_printf("SWReq:%u\n", SWReq);
 }
 
@@ -284,7 +287,7 @@ void _xt_isr_attach(uint8_t i, _xt_isr func, void* arg)
     isr[i].arg = arg;
 }
 
-uint16_t _xt_isr_handler(uint16_t i)
+uint16_t TASK_SW_ATTR _xt_isr_handler(uint16_t i)
 {
     uint8_t index;
 
@@ -344,14 +347,28 @@ BaseType_t xQueueGenericReceive(QueueHandle_t xQueue, void * const pvBuffer,
     return xQueueReceive(xQueue, pvBuffer, xTicksToWait);
 }
 
-void vApplicationIdleHook(void)
+void esp_internal_idle_hook(void)
 {
     extern void pmIdleHook(void);
     extern void esp_task_wdt_reset(void);
 
-    pmIdleHook();
     esp_task_wdt_reset();
+    pmIdleHook();
 }
+
+#if configUSE_IDLE_HOOK == 1
+void __attribute__((weak)) vApplicationIdleHook(void)
+{
+
+}
+#endif
+
+#if configUSE_TICK_HOOK == 1
+void __attribute__((weak)) vApplicationTickHook(void)
+{
+
+}
+#endif
 
 uint32_t xPortGetTickRateHz(void)
 {

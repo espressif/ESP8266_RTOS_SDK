@@ -2611,7 +2611,7 @@ implementations require configUSE_TICKLESS_IDLE to be set to a value other than
 #endif /* INCLUDE_xTaskAbortDelay */
 /*----------------------------------------------------------*/
 
-BaseType_t xTaskIncrementTick( void )
+BaseType_t TASK_SW_ATTR xTaskIncrementTick( void )
 {
 TCB_t * pxTCB;
 TickType_t xItemValue;
@@ -2752,6 +2752,12 @@ BaseType_t xSwitchRequired = pdFALSE;
 			}
 		}
 		#endif /* configUSE_TICK_HOOK */
+
+		#ifdef CONFIG_FREERTOS_EXTENED_HOOKS
+		{
+			esp_vApplicationTickHook();
+		}
+		#endif /* CONFIG_FREERTOS_EXTENED_HOOKS */
 	}
 	else
 	{
@@ -2764,6 +2770,12 @@ BaseType_t xSwitchRequired = pdFALSE;
 			vApplicationTickHook();
 		}
 		#endif
+
+		#ifdef CONFIG_FREERTOS_EXTENED_HOOKS
+		{
+			esp_vApplicationTickHook();
+		}
+		#endif /* CONFIG_FREERTOS_EXTENED_HOOKS */
 	}
 
 	#if ( configUSE_PREEMPTION == 1 )
@@ -2873,7 +2885,7 @@ BaseType_t xSwitchRequired = pdFALSE;
 #endif /* configUSE_APPLICATION_TASK_TAG */
 /*-----------------------------------------------------------*/
 
-void vTaskSwitchContext( void )
+void TASK_SW_ATTR vTaskSwitchContext( void )
 {
 	if( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )
 	{
@@ -3309,7 +3321,20 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 			vApplicationIdleHook();
 		}
 		#endif /* configUSE_IDLE_HOOK */
+		#ifdef CONFIG_FREERTOS_EXTENED_HOOKS
+		{
+			/* Call the esp-idf hook system */
+			esp_vApplicationIdleHook();
+		}
+		#endif /* CONFIG_FREERTOS_EXTENED_HOOKS */
 
+		{
+			extern void esp_internal_idle_hook(void);
+
+			esp_internal_idle_hook();
+		}
+
+		#if CONFIG_ENABLE_FREERTOS_SLEEP
 		/* This conditional compilation should use inequality to 0, not equality
 		to 1.  This is to ensure portSUPPRESS_TICKS_AND_SLEEP() is called when
 		user defined low power mode	implementations require
@@ -3359,6 +3384,7 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 			}
 		}
 		#endif /* configUSE_TICKLESS_IDLE */
+		#endif /* CONFIG_ENABLE_FREERTOS_SLEEP */
 	}
 }
 /*-----------------------------------------------------------*/

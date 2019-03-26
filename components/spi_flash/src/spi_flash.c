@@ -20,7 +20,6 @@
 #include "priv/esp_spi_flash_raw.h"
 
 #include "esp_attr.h"
-#include "esp_wifi_osi.h"
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_task_wdt.h"

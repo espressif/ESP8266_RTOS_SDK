@@ -13,7 +13,7 @@ config SSL_USING_MBEDTLS
 config SSL_USING_AXTLS
     bool "axTLS"
 config SSL_USING_WOLFSSL
-    bool "wolfSSL"
+    bool "wolfSSL (License info in wolfssl subdirectory README)"
 endchoice
 
 menu "wolfSSL"

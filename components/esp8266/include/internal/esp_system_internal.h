@@ -15,6 +15,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <esp_system.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,6 +48,13 @@ void esp_reset_reason_init(void);
  * @param hint  Desired esp_reset_reason_t value for the real reset reason
  */
 void esp_reset_reason_set_hint(esp_reset_reason_t hint);
+
+/**
+ * @brief  Get reason of last reset but not clear it for next reset
+ *
+ * @return See description of esp_reset_reason_t for explanation of each value.
+ */
+esp_reset_reason_t esp_reset_reason_early(void);
 
 #ifdef __cplusplus
 }

@@ -927,8 +927,12 @@ _xt_user_entry1:
     s32i    a1, a0, 0
     mov     a1, a0
 
+#ifndef CONFIG_TASK_SWITCH_FASTER
     movi    a0, _xt_isr_handler
     callx0	a0
+#else
+    call0   _xt_isr_handler
+#endif
 
     movi    a0, _chip_interrupt_tmp
     l32i    a1, a0, 0

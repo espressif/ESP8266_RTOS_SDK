@@ -14,7 +14,7 @@
 
 #include "sdkconfig.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 
 #include <string.h>
 #include <stdint.h>
@@ -478,7 +478,7 @@ static void set_cache_and_start_app(
 
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 
 #include <stdbool.h>
 #include <sys/param.h>
@@ -613,7 +613,6 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
     bootloader_munmap(partitions);
 
 #ifdef CONFIG_ESP8266_OTA_FROM_OLD
-    ESP_LOGI(TAG, "Copy firmware ...");
     if (esp_patition_table_init_data(bs)) {
         ESP_LOGE(TAG,"Failed to update partition data");
         return false;

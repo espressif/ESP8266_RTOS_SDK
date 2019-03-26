@@ -16,7 +16,6 @@
 
 #include "esp_log.h"
 #include "esp_libc.h"
-#include "esp_wifi_osi.h"
 #include "esp_task_wdt.h"
 #include "portmacro.h"
 #include "esp8266/eagle_soc.h"
@@ -30,8 +29,9 @@ static const char *TAG = "wdt";
 static void esp_task_wdt_isr(void *param)
 {
     extern void panicHandler(void *frame, int wdt);
+    extern void *__wifi_task_top_sp(void);
 
-    panicHandler(osi_task_top_sp(), 1);
+    panicHandler(__wifi_task_top_sp(), 1);
 }
 #endif
 

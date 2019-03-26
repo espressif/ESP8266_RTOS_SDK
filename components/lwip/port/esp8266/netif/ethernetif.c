@@ -19,15 +19,15 @@
 #include "netif/etharp.h"
 #include "esp_libc.h"
 #include "esp_wifi.h"
+#include "esp_aio.h"
 #include "tcpip_adapter.h"
-#include "esp_socket.h"
 #include "freertos/semphr.h"
 #include "lwip/tcpip.h"
 #include "stdlib.h"
 
 #include "esp8266/eagle_soc.h"
 
-int8_t ieee80211_output_pbuf(uint8_t fd, uint8_t* dataptr, uint16_t datalen);
+int ieee80211_output_pbuf(esp_aio_t *aio);
 int8_t wifi_get_netif(uint8_t fd);
 void wifi_station_set_default_hostname(uint8_t* hwaddr);
 
@@ -144,7 +144,7 @@ void send_from_list()
             aio.arg = pbuf_list_head->p;
             aio.ret = 0;
 
-            err = esp_aio_sendto(&aio, NULL, 0);
+            err = ieee80211_output_pbuf(aio);
             tmp_pbuf_list1 = pbuf_list_head->next;
 
             if (err == ERR_MEM) {
@@ -349,7 +349,7 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
      * we use "SOCK_RAW" to create socket, so all input/output datas include full ethernet
      * header, meaning we should not pass target low-level address here.
      */
-    err = esp_aio_sendto(&aio, NULL, 0);
+    err = ieee80211_output_pbuf(&aio);
 #if ESP_UDP
     udp_sync_set_ret(netif, p, err);
 #endif

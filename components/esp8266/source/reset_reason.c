@@ -21,8 +21,6 @@
 #include "esp_log.h"
 #include "esp_libc.h"
 
-#if CONFIG_RESET_REASON
-
 #define RTC_RESET_SW_CAUSE_REG              RTC_STORE0
 #define RTC_RESET_HW_CAUSE_REG              RTC_STATE1
 #define RTC_WAKEUP_HW_CAUSE_REG             RTC_STATE2
@@ -96,9 +94,9 @@ static inline uint32_t get_reset_reason(uint32_t rtc_reset_reason, uint32_t rese
 }
 
 /**
- * @brief  Internal function to get SoC reset reason at system initialization
+ * Internal function to initialize SoC reset reason at system initialization
  */
-void esp_reset_reason_init(void)
+static void __esp_reset_reason_init(int init)
 {
     const uint32_t hw_reset = esp_rtc_get_reset_reason();
 #if CONFIG_RESET_REASON_CHECK_WAKEUP
@@ -109,12 +107,23 @@ void esp_reset_reason_init(void)
     const uint32_t hint = esp_reset_reason_get_hint(hw_reset);
 
     s_reset_reason = get_reset_reason(hw_reset, hint);
-    if (hint != ESP_RST_UNKNOWN) {
+    if (init && hint != ESP_RST_UNKNOWN) {
         esp_reset_reason_clear_hint();
     }
 
-    ESP_LOGI(TAG, "RTC reset %u wakeup %u store %u, reason is %u", hw_reset, hw_wakeup, hint, s_reset_reason);
+    if (init)
+        ESP_LOGI(TAG, "RTC reset %u wakeup %u store %u, reason is %u", hw_reset, hw_wakeup, hint, s_reset_reason);
 }
+
+/**
+ * @brief  Internal function to get SoC reset reason at system initialization
+ */
+void esp_reset_reason_init(void)
+{
+    __esp_reset_reason_init(1);
+}
+
+#if CONFIG_RESET_REASON
 
 /**
  * @brief  Internal function to set reset reason hint
@@ -143,3 +152,13 @@ void esp_reset_reason_set_hint(esp_reset_reason_t hint)
 }
 
 #endif /* CONFIG_RESET_REASON */
+
+/**
+ * Get reason of last reset but not clear it for next reset
+ */
+esp_reset_reason_t esp_reset_reason_early(void)
+{
+    __esp_reset_reason_init(0);
+
+    return (esp_reset_reason_t)s_reset_reason;
+}

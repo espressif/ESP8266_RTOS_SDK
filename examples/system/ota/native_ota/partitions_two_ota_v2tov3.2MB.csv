@@ -1,0 +1,10 @@
+# Name,   Type, SubType, Offset,   Size, Flags
+# Note: if you change the phy_init or app partition offset, make sure to change the offset in Kconfig.projbuild
+# Bootloader is at 0x1000 - 0x8000, total 28KB
+# Partition table is at 0x8000 - 0x9000, total 4KB
+# Reserve 4 sectors at the end flash address for V2 updating to V3 and system can read V2 parameters.
+nvs,      data, nvs,     0x9000,  0x4000
+otadata,  data, ota,     0xd000,  0x2000
+phy_init, data, phy,     0xf000,  0x1000
+ota_0,    0,    ota_0,   0x10000, 0xEC000
+ota_1,    0,    ota_1,   0x110000,0xEC000

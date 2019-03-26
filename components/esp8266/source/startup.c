@@ -25,14 +25,18 @@
 #include "esp_log.h"
 #include "esp_image_format.h"
 #include "esp_phy_init.h"
-#include "esp_wifi_osi.h"
 #include "esp_heap_caps_init.h"
 #include "esp_task_wdt.h"
 #include "internal/esp_wifi_internal.h"
 #include "internal/esp_system_internal.h"
+#include "esp8266/eagle_soc.h"
 
-#define FLASH_MAP_ADDR 0x40200000
-#define FLASH_MAP_SIZE 0x00100000
+#include "FreeRTOS.h"
+#include "task.h"
+
+#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+#include "esp_newlib.h"
+#endif
 
 extern void chip_boot(void);
 extern int rtc_init(void);
@@ -43,6 +47,16 @@ extern int wifi_timer_init(void);
 extern int wifi_nvs_init(void);
 extern esp_err_t esp_pthread_init(void);
 extern void phy_get_bb_evm(void);
+
+static inline int should_load(uint32_t load_addr)
+{
+    if (IS_USR_RTC(load_addr)) {
+        if (esp_reset_reason_early() == ESP_RST_DEEPSLEEP)
+            return 0;
+    }
+
+    return 1;
+}
 
 static void user_init_entry(void *param)
 {
@@ -81,9 +95,13 @@ static void user_init_entry(void *param)
     assert(esp_pthread_init() == 0);
 #endif
 
+#ifdef CONFIG_ESP8266_DEFAULT_CPU_FREQ_160
+    rtc_clk_cpu_freq_set(RTC_CPU_FREQ_160M);
+#endif
+
     app_main();
 
-    wifi_task_delete(NULL);
+    vTaskDelete(NULL);
 }
 
 void call_user_start(size_t start_addr)
@@ -93,11 +111,17 @@ void call_user_start(size_t start_addr)
 
     extern int _bss_start, _bss_end;
 
-    esp_image_header_t *head = (esp_image_header_t *)(FLASH_MAP_ADDR + (start_addr & (FLASH_MAP_SIZE - 1)));
+    esp_image_header_t *head = (esp_image_header_t *)(FLASH_BASE + (start_addr & (FLASH_SIZE - 1)));
     esp_image_segment_header_t *segment = (esp_image_segment_header_t *)((uintptr_t)head + sizeof(esp_image_header_t));
 
-    for (i = 0; i < 3; i++) {
+    /* The data in flash cannot be accessed by byte in this stage, so just access by word and get the segment count. */
+    uint8_t segment_count = ((*(volatile uint32_t *)head) & 0xFF00) >> 8;
+
+    for (i = 0; i < segment_count - 1; i++) {
         segment = (esp_image_segment_header_t *)((uintptr_t)segment + sizeof(esp_image_segment_header_t) + segment->data_len);
+
+        if (!should_load(segment->load_addr))
+            continue;
 
         uint32_t *dest = (uint32_t *)segment->load_addr;
         uint32_t *src = (uint32_t *)((uintptr_t)segment + sizeof(esp_image_segment_header_t));
@@ -131,9 +155,11 @@ void call_user_start(size_t start_addr)
 
     heap_caps_init();
 
-    wifi_os_init();
+#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+    esp_newlib_init();
+#endif
 
-    assert(wifi_task_create(user_init_entry, "uiT", CONFIG_MAIN_TASK_STACK_SIZE, NULL, wifi_task_get_max_priority()) != NULL);
+    assert(xTaskCreate(user_init_entry, "uiT", CONFIG_MAIN_TASK_STACK_SIZE, NULL, configMAX_PRIORITIES, NULL) == pdPASS);
 
-    wifi_os_start();
+    vTaskStartScheduler();
 }

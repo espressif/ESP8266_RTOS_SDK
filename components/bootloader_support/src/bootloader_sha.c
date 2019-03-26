@@ -14,7 +14,7 @@
 
 #include "sdkconfig.h"
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 
 #include "bootloader_sha.h"
 #include <stdbool.h>
@@ -170,7 +170,7 @@ void bootloader_sha256_finish(bootloader_sha256_handle_t handle, uint8_t *digest
 
 #endif
 
-#elif defined(CONFIG_TARGET_PLATFORM_ESP8266)
+#elif defined(CONFIG_IDF_TARGET_ESP8266)
 
 #ifndef BOOTLOADER_BUILD
 

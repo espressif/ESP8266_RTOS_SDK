@@ -44,7 +44,7 @@ enum {
     ESP_IMAGE_SPI_SPEED_80M = 0xF
 } esp_image_spi_freq_t;
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 /* Supported SPI flash sizes */
 typedef enum {
     ESP_IMAGE_FLASH_SIZE_1MB = 0,
@@ -56,7 +56,7 @@ typedef enum {
 } esp_image_flash_size_t;
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 /* Supported SPI flash sizes */
 typedef enum {
     ESP_IMAGE_FLASH_SIZE_512KB = 0,
@@ -87,7 +87,7 @@ typedef struct {
     uint8_t spi_size: 4;
     uint32_t entry_addr;
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
     /* WP pin when SPI pins set via efuse (read by ROM bootloader, the IDF bootloader uses software to configure the WP
      * pin and sets this field to 0xEE=disabled) */
     uint8_t wp_pin;
@@ -102,11 +102,11 @@ typedef struct {
 #endif
 } __attribute__((packed))  esp_image_header_t;
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 _Static_assert(sizeof(esp_image_header_t) == 24, "binary image header should be 24 bytes");
 #endif
 
-#ifdef CONFIG_TARGET_PLATFORM_ESP8266
+#ifdef CONFIG_IDF_TARGET_ESP8266
 _Static_assert(sizeof(esp_image_header_t) == 8, "binary image header should be 8 bytes");
 #endif
 

@@ -1,5 +1,12 @@
 menu "FreeRTOS"
 
+config DISABLE_FREERTOS
+    bool "Disable FreeRTOS"
+    default n
+    help
+        Enable this option, FreeRTOS will not be compiled and linked, and the user
+        can user other OS platform.
+
 config FREERTOS_ENABLE_REENT
     bool "Enable \"reent\" function"
     default n
@@ -32,6 +39,17 @@ config FREERTOS_ISR_STACKSIZE
     help
         The interrupt handlers have their own stack. The size of the stack can be defined here.
 
+config FREERTOS_EXTENED_HOOKS
+    bool "Use FreeRTOS extened hooks"
+    default n
+    help
+        By using the "esp_register_freertos_xxx_hook system", extened hook function offers a number
+        of registerable hooks/callback functions that are called when a timer tick happens,
+        the idle thread runs etc.
+
+        Otherwise User can also use FreeRTOS raw hook functions "vApplicationIdleHook" and
+        "vApplicationTickHook".
+
 config FREERTOS_GLOBAL_DATA_LINK_IRAM
     bool "Link FreeRTOS global data to IRAM"
     default y
@@ -45,5 +63,96 @@ config FREERTOS_TIMER_STACKSIZE
     default 2048
     help
         The size of the stack used by the timer in FreeRTOS.
+
+config TASK_SWITCH_FASTER
+    bool "Task switch faster"
+    default y
+    help
+        Enable this option, linking task switch function and its father functions to IRAM
+        to speed up task switch. It is specific for faster I/O application and so on.
+
+        But it may cost more 1KB IRAM, so user global heap may decrease 1KB.
+
+config USE_QUEUE_SETS
+    bool "Using Queue Sets"
+    default n
+    help
+        Enable this option, the FreeRTOS macro "configUSE_QUEUE_SETS" in file "FreeRTOSConfig.h" will be set to be 1.
+
+config ENABLE_FREERTOS_SLEEP
+    bool "Enable FreeRTOS SLEEP"
+    default n
+    help
+        Enable this option, FreeRTOS sleep module at idle task will be enable.
         
+        The module is not working now, so if users want to make it work, they should do this themselves. 
+
+config FREERTOS_USE_TRACE_FACILITY
+    bool "Enable FreeRTOS trace facility"
+    default n
+    help
+        If enabled, configUSE_TRACE_FACILITY will be defined as 1 in FreeRTOS.
+        This will allow the usage of trace facility functions such as
+        uxTaskGetSystemState().
+
+config FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
+    bool "Enable FreeRTOS stats formatting functions"
+    depends on FREERTOS_USE_TRACE_FACILITY
+    default n
+    help
+        If enabled, configUSE_STATS_FORMATTING_FUNCTIONS will be defined as 1 in
+        FreeRTOS. This will allow the usage of stats formatting functions such
+        as vTaskList().
+
+config FREERTOS_GENERATE_RUN_TIME_STATS
+    bool "Enable FreeRTOS to collect run time stats"
+    default n
+    select FREERTOS_USE_TRACE_FACILITY
+    select FREERTOS_USE_STATS_FORMATTING_FUNCTIONS
+    help
+        If enabled, configGENERATE_RUN_TIME_STATS will be defined as 1 in
+        FreeRTOS. This will allow FreeRTOS to collect information regarding the
+        usage of processor time amongst FreeRTOS tasks. Run time stats are
+        generated using either the ESP Timer or the CPU Clock as the clock
+        source (Note that run time stats are only valid until the clock source
+        overflows). The function vTaskGetRunTimeStats() will also be available
+        if FREERTOS_USE_STATS_FORMATTING_FUNCTIONS and
+        FREERTOS_USE_TRACE_FACILITY are enabled. vTaskGetRunTimeStats() will
+        display the run time of each task as a % of the total run time of all
+        CPUs (task run time / no of CPUs) / (total run time / 100 )
+
+choice FREERTOS_RUN_TIME_STATS_CLK
+    prompt "Choose the clock source for run time stats"
+    depends on FREERTOS_GENERATE_RUN_TIME_STATS
+    default FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER
+    help
+        Choose the clock source for FreeRTOS run time stats. Options are CPU0's
+        CPU Clock or the ESP Timer. Both clock sources are 32 bits. The CPU
+        Clock can run at a higher frequency hence provide a finer resolution
+        but will overflow much quicker. Note that run time stats are only valid
+        until the clock source overflows.
+
+config FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER
+    bool "Use ESP TIMER for run time stats"
+    help
+        ESP Timer will be used as the clock source for FreeRTOS run time stats.
+        The ESP Timer runs at a frequency of 1MHz regardless of Dynamic
+        Frequency Scaling. Therefore the ESP Timer will overflow in
+        approximately 4290 seconds.
+
+config FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
+    bool "Use CPU Clock for run time stats"
+    help
+        CPU Clock will be used as the clock source for the generation of run
+        time stats. The CPU Clock has a frequency dependent on
+        ESP32_DEFAULT_CPU_FREQ_MHZ and Dynamic Frequency Scaling (DFS).
+        Therefore the CPU Clock frequency can fluctuate between 80 to 240MHz.
+        Run time stats generated using the CPU Clock represents the number of
+        CPU cycles each task is allocated and DOES NOT reflect the amount of
+        time each task runs for (as CPU clock frequency can change). If the CPU
+        clock consistently runs at the maximum frequency of 240MHz, it will
+        overflow in approximately 17 seconds.
+
+endchoice
+
 endmenu

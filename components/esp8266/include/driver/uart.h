@@ -444,12 +444,13 @@ esp_err_t uart_driver_delete(uart_port_t uart_num);
  * @brief Waiting for the last byte of data to be sent
  *
  * @param uart_num Uart port number.
+ * @param ticks_to_wait Timeout, count in RTOS ticks
  *
  * @return
  *     - ESP_OK   Success
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
-esp_err_t uart_wait_tx_done(uart_port_t uart_num);
+esp_err_t uart_wait_tx_done(uart_port_t uart_num, TickType_t ticks_to_wait);
 
 /**
  * @brief Send data to the UART port from a given buffer and length.

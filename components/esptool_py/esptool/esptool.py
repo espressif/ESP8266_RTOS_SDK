@@ -1358,6 +1358,11 @@ class ESP8266ROMFirmwareImage(BaseFirmwareImage):
         """ Derive a default output name from the ELF name. """
         return input_file + '-'
 
+    def close_rom_print(self):
+        """ Configurate UART0 baudrate to be max value to \"close\" ROM UART print. """
+        segment = ImageSegment(0x60000014, '\x00' * 8)
+        self.segments.insert(0, segment)
+
     def save(self, basename):
         """ Save a set of V1 images for flashing. Parameter is a base filename. """
         # IROM data goes in its own plain binary file
@@ -2353,6 +2358,9 @@ def elf2image(args):
     image.flash_size_freq = image.ROM_LOADER.FLASH_SIZES[args.flash_size]
     image.flash_size_freq += {'40m':0, '26m':1, '20m':2, '80m': 0xf}[args.flash_freq]
 
+    if args.version == '1' and args.rom_print == 0:
+        image.close_rom_print()
+
     if args.output is None:
         args.output = image.default_output_name(args.input)
     image.save(args.output)
@@ -2612,6 +2620,7 @@ def main():
     parser_elf2image.add_argument('input', help='Input ELF file')
     parser_elf2image.add_argument('--output', '-o', help='Output filename prefix (for version 1 image), or filename (for version 2 single image)', type=str)
     parser_elf2image.add_argument('--version', '-e', help='Output image version', choices=['1','2','3'], default='1')
+    parser_elf2image.add_argument('--rom_print', type=arg_auto_int, help='Configurate UART0 baudrate to be max value to \"close\" ROM UART print', choices=[0, 1], default=1)
 
     add_spi_flash_subparsers(parser_elf2image, is_elf2image=True)
 

@@ -20,10 +20,13 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_event_loop.h"
-#include "esp_wifi_osi.h"
 
 #include "esp_log.h"
 #include "sdkconfig.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 
 static const char* TAG = "event";
 static bool s_event_init_flag = false;
@@ -43,7 +46,7 @@ static void esp_event_loop_task(void *pvParameters)
 {
     while (1) {
         system_event_t evt;
-        if (wifi_queue_recv(s_event_queue, &evt, OSI_FUNCS_TIME_BLOCKING) == pdPASS) {
+        if (xQueueReceive(s_event_queue, &evt, portMAX_DELAY) == pdPASS) {
             esp_err_t ret = esp_event_process_default(&evt);
             if (ret != ESP_OK) {
                 ESP_LOGE(TAG, "default event handler failed!");
@@ -71,8 +74,8 @@ esp_err_t esp_event_send(system_event_t *event)
         return ESP_ERR_INVALID_STATE;
     }
 
-    int ret = wifi_queue_send(s_event_queue, event, 0, OSI_QUEUE_SEND_BACK);
-    if (ret != true) {
+    int ret = xQueueGenericSend(s_event_queue, event, 0, queueSEND_TO_BACK);
+    if (ret != pdPASS) {
         if (event) {
             ESP_LOGE(TAG, "e=%d f", event->event_id);
         } else {
@@ -95,10 +98,10 @@ esp_err_t esp_event_loop_init(system_event_cb_t cb, void *ctx)
     }
     s_event_handler_cb = cb;
     s_event_ctx = ctx;
-    s_event_queue = wifi_queue_create(32, sizeof(system_event_t));
+    s_event_queue = xQueueCreate(32, sizeof(system_event_t));
     if(s_event_queue == NULL)
         return ESP_ERR_NO_MEM;
-    if(wifi_task_create(esp_event_loop_task, "esp_event_loop_task", EVENT_LOOP_STACKSIZE, NULL, wifi_task_get_max_priority() - 5) == NULL) {
+    if(xTaskCreate(esp_event_loop_task, "esp_event_loop_task", EVENT_LOOP_STACKSIZE, NULL, configMAX_PRIORITIES - 5, NULL) != pdPASS) {
         return ESP_ERR_NO_MEM;
     }
     s_event_handler_cb = cb;

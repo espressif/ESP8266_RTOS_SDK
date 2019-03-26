@@ -40,17 +40,17 @@
 #include "rom/ets_sys.h"
 #include "dhcpserver/dhcpserver.h"
 #include "dhcpserver/dhcpserver_options.h"
-#include "net/sockio.h"
-#include "esp_socket.h"
 #include "esp_log.h"
-#include "esp_wifi_osi.h"
+#include "internal/esp_wifi_internal.h"
+
+#include "FreeRTOS.h"
+#include "timers.h"
 
 struct tcpip_adapter_pbuf {
     struct pbuf_custom  pbuf;
 
-    void                *base;
-
-    struct netif        *netif;
+    void                *eb;
+    void                *buffer;
 };
 
 struct tcpip_adapter_api_call_data {
@@ -74,8 +74,7 @@ static esp_err_t tcpip_adapter_reset_ip_info(tcpip_adapter_if_t tcpip_if);
 static esp_err_t tcpip_adapter_start_ip_lost_timer(tcpip_adapter_if_t tcpip_if);
 static void tcpip_adapter_dhcpc_cb(struct netif *netif);
 static void tcpip_adapter_ip_lost_timer(void *arg);
-static int tcpip_adapter_bind_netcard(const char *name, struct netif *netif);
-static void tcpip_adapter_dhcpc_done(void *arg);
+static void tcpip_adapter_dhcpc_done(TimerHandle_t arg);
 static bool tcpip_inited = false;
 
 static const char* TAG = "tcpip_adapter";
@@ -86,7 +85,7 @@ void system_station_got_ip_set();
 
 static int dhcp_fail_time = 0;
 static tcpip_adapter_ip_info_t esp_ip[TCPIP_ADAPTER_IF_MAX];
-static void *dhcp_check_timer;
+static TimerHandle_t *dhcp_check_timer;
 
 static void tcpip_adapter_dhcps_cb(u8_t client_ip[4])
 {
@@ -183,14 +182,96 @@ void tcpip_adapter_init(void)
         IP4_ADDR(&esp_ip[TCPIP_ADAPTER_IF_AP].gw, 192, 168 , 4, 1);
         IP4_ADDR(&esp_ip[TCPIP_ADAPTER_IF_AP].netmask, 255, 255 , 255, 0);
 
-        dhcp_check_timer = wifi_timer_create("check_dhcp", wifi_task_ms_to_ticks(500), true, NULL, tcpip_adapter_dhcpc_done);
+        dhcp_check_timer = xTimerCreate("check_dhcp", 500 / portTICK_RATE_MS, true, NULL, tcpip_adapter_dhcpc_done);
         if (!dhcp_check_timer) {
             ESP_LOGI(TAG, "TCPIP adapter timer create error");
         }
     }
 }
 
-static void tcpip_adapter_dhcpc_done(void *arg)
+/*
+ * @brief LWIP custom pbuf callback function, it is to free custom pbuf
+ *
+ * @param p LWIP pbuf pointer
+ *
+ * @return none
+ */
+static void tcpip_adapter_free_pbuf(struct pbuf *p)
+{
+    struct tcpip_adapter_pbuf *pa = (struct tcpip_adapter_pbuf *)p;
+
+    if (pa->eb) {
+        esp_wifi_internal_free_rx_buffer(pa->eb);
+        pa->eb = NULL;
+    } else {
+        os_free(pa->buffer);
+        pa->buffer = NULL;
+    }
+
+    os_free(pa);
+}
+
+/*
+ * @brief TCPIP adapter AI/O recieve callback function, it is to recieve input data
+ *        and pass it to LWIP core
+ *
+ * @param aio AI/O control block pointer
+ *
+ * @return 0 if success or others if failed
+ */
+static int tcpip_adapter_recv_cb(void *index, void *buffer, uint16_t len, void *eb)
+{
+    struct pbuf *pbuf = NULL;
+    struct tcpip_adapter_pbuf *p;
+    struct netif *netif = (struct netif *)index;
+
+    extern void ethernetif_input(struct netif *netif, struct pbuf *p);
+
+    p = os_malloc(sizeof(struct tcpip_adapter_pbuf));
+    if (!p)
+        return -ENOMEM;
+
+    // PBUF_RAW means payload = (char *)aio->pbuf + offset(=0)
+    pbuf = pbuf_alloced_custom(PBUF_RAW, len, PBUF_REF, &p->pbuf, buffer, len);
+    if (!pbuf)
+        return -ENOMEM;
+
+    p->pbuf.custom_free_function = tcpip_adapter_free_pbuf;
+    p->eb = (void *)eb;
+    p->buffer = buffer;
+
+    ethernetif_input(netif, pbuf);
+
+    return 0;
+}
+
+/*
+ * @brief TCPIP adapter AI/O recieve callback function, it is to recieve input data
+ *        and pass it to LWIP core
+ *
+ * @param aio AI/O control block pointer
+ *
+ * @return 0 if success or others if failed
+ */
+static int tcpip_adapter_ap_recv_cb(void *buffer, uint16_t len, void *eb)
+{
+    return tcpip_adapter_recv_cb(esp_netif[ESP_IF_WIFI_AP], buffer, len, eb);
+}
+
+/*
+ * @brief TCPIP adapter AI/O recieve callback function, it is to recieve input data
+ *        and pass it to LWIP core
+ *
+ * @param aio AI/O control block pointer
+ *
+ * @return 0 if success or others if failed
+ */
+static int tcpip_adapter_sta_recv_cb(void *buffer, uint16_t len, void *eb)
+{
+    return tcpip_adapter_recv_cb(esp_netif[ESP_IF_WIFI_STA], buffer, len, eb);
+}
+
+static void tcpip_adapter_dhcpc_done(TimerHandle_t xTimer)
 {
     struct dhcp *clientdhcp = netif_dhcp_data(esp_netif[TCPIP_ADAPTER_IF_STA]) ;
     struct netif *netif = esp_netif[TCPIP_ADAPTER_IF_STA];
@@ -204,7 +285,7 @@ static void tcpip_adapter_dhcpc_done(void *arg)
     struct autoip *autoip = netif_autoip_data(netif);
 #endif
 
-    wifi_timer_stop(dhcp_check_timer, 0);
+    xTimerStop(dhcp_check_timer, 0);
     if (netif_is_up(esp_netif[TCPIP_ADAPTER_IF_STA])) {
         if (clientdhcp->state == DHCP_STATE_BOUND
 #if LWIP_IPV4 && LWIP_AUTOIP
@@ -219,7 +300,7 @@ static void tcpip_adapter_dhcpc_done(void *arg)
         } else if (dhcp_fail_time < (CONFIG_IP_LOST_TIMER_INTERVAL * 1000 / 500)) {
             ESP_LOGD(TAG,"dhcpc time(ms): %d\n", dhcp_fail_time * 500);
             dhcp_fail_time ++;
-            wifi_timer_reset(dhcp_check_timer, 0);
+            xTimerReset(dhcp_check_timer, 0);
         } else {
             dhcp_fail_time = 0;
             ESP_LOGD(TAG,"ERROR dhcp get ip error\n");
@@ -247,7 +328,7 @@ static esp_err_t tcpip_adapter_update_default_netif(void)
 
 esp_err_t tcpip_adapter_start(tcpip_adapter_if_t tcpip_if, uint8_t *mac, tcpip_adapter_ip_info_t *ip_info)
 {
-    int s = -1;
+    esp_err_t ret = -1;
     if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || mac == NULL || ip_info == NULL) {
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
@@ -267,22 +348,19 @@ esp_err_t tcpip_adapter_start(tcpip_adapter_if_t tcpip_if, uint8_t *mac, tcpip_a
         }
         memcpy(esp_netif[tcpip_if]->hwaddr, mac, NETIF_MAX_HWADDR_LEN);
         if (tcpip_if == TCPIP_ADAPTER_IF_STA) {
-            const char *netcard_name = "sta0";
-            s = tcpip_adapter_bind_netcard(netcard_name, esp_netif[tcpip_if]);
-            if (s < 0) {
-                ESP_LOGE(TAG, "TCPIP adapter bind net card %s error\n", netcard_name);
+            ret = esp_wifi_internal_reg_rxcb(ESP_IF_WIFI_STA, tcpip_adapter_sta_recv_cb);
+            if (ret < 0) {
+                ESP_LOGE(TAG, "TCPIP adapter bind %d error\n", ESP_IF_WIFI_STA);
                 return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
             }
         } else if (tcpip_if == TCPIP_ADAPTER_IF_AP) {
-            const char *netcard_name = "ap0";
-
-            s = tcpip_adapter_bind_netcard(netcard_name, esp_netif[tcpip_if]);
-            if (s < 0) {
-                ESP_LOGE(TAG, "TCPIP adapter bind net card %s error\n", netcard_name);
+            ret = esp_wifi_internal_reg_rxcb(ESP_IF_WIFI_AP, tcpip_adapter_ap_recv_cb);
+            if (ret < 0) {
+                ESP_LOGE(TAG, "TCPIP adapter bind %d error\n", ESP_IF_WIFI_AP);
                 return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
             }
         }
-        netif_add(esp_netif[tcpip_if], &ip_info->ip, &ip_info->netmask, &ip_info->gw, (void *)s, ethernetif_init, tcpip_input);
+        netif_add(esp_netif[tcpip_if], &ip_info->ip, &ip_info->netmask, &ip_info->gw, (void *)tcpip_if, ethernetif_init, tcpip_input);
     }
 
     if (tcpip_if == TCPIP_ADAPTER_IF_AP) {
@@ -315,7 +393,7 @@ esp_err_t tcpip_adapter_stop(tcpip_adapter_if_t tcpip_if)
         return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;
     }
     
-    esp_close((int)esp_netif[tcpip_if]->state);
+    esp_wifi_internal_reg_rxcb((wifi_interface_t)tcpip_if, NULL);
     if (!netif_is_up(esp_netif[tcpip_if])) {
         tcpip_adapter_clean_dhcp(esp_netif[tcpip_if]);
         netif_remove(esp_netif[tcpip_if]);
@@ -341,89 +419,6 @@ esp_err_t tcpip_adapter_stop(tcpip_adapter_if_t tcpip_if)
     //os_free(esp_netif[tcpip_if]);
     //esp_netif[tcpip_if] = NULL;
     return ESP_OK;
-}
-
-
-/*
- * @brief LWIP custom pbuf callback function, it is to free custom pbuf
- *
- * @param p LWIP pbuf pointer
- *
- * @return none
- */
-static void tcpip_adapter_free_pbuf(struct pbuf *p)
-{
-    struct tcpip_adapter_pbuf *pa = (struct tcpip_adapter_pbuf *)p;
-    int s = (int)pa->netif->state;
-
-    esp_free_pbuf(s, pa->base);
-    os_free(pa);
-}
-
-/*
- * @brief TCPIP adapter AI/O recieve callback function, it is to recieve input data
- *        and pass it to LWIP core
- *
- * @param aio AI/O control block pointer
- *
- * @return 0 if success or others if failed
- */
-static int tcpip_adapter_recv_cb(struct esp_aio *aio)
-{
-    struct pbuf *pbuf = NULL;
-    struct tcpip_adapter_pbuf *p;
-    struct netif *netif = (struct netif *)aio->arg;
-
-    extern void ethernetif_input(struct netif *netif, struct pbuf *p);
-
-    p = os_malloc(sizeof(struct tcpip_adapter_pbuf));
-    if (!p)
-        return -ENOMEM;
-    p->pbuf.custom_free_function = tcpip_adapter_free_pbuf;
-    p->base = (void *)aio->pbuf;
-    p->netif = netif;
-
-    // PBUF_RAW means payload = (char *)aio->pbuf + offset(=0)
-    pbuf = pbuf_alloced_custom(PBUF_RAW, aio->len, PBUF_REF, &p->pbuf, (void *)aio->pbuf, aio->len);
-    if (!pbuf)
-        return -ENOMEM;
-
-    ethernetif_input(netif, pbuf);
-
-    return 0;
-}
-
-/*
- * @brief create a "esp_socket" and bind it to target net card
- *
- * @param name net card name pointer
- * @param netif LWIP net interface pointer
- *
- * @return 0 if success or others if failed
- */
-static int tcpip_adapter_bind_netcard(const char *name, struct netif *netif)
-{
-    int s, ret;
-    s = esp_socket(AF_PACKET, SOCK_RAW, ETH_P_ALL);
-    if (s < 0) {
-        ESP_LOGE(TAG,"create socket of (AF_PACKET, SOCK_RAW, ETH_P_ALL) error\n");
-        return -1;
-    }
-
-    ret = esp_ioctl(s, SIOCGIFINDEX, name);
-    if (ret) {
-        ESP_LOGE(TAG,"bind socket %d to netcard %s error\n", s, name);
-        esp_close(s);
-        return -1;
-    }
-
-    ret = esp_aio_event(s, ESP_SOCKET_RECV_EVENT, tcpip_adapter_recv_cb, netif);
-    if (ret) {
-        ESP_LOGE(TAG,"socket %d register receive callback function %p error\n", s, tcpip_adapter_recv_cb);
-        esp_close(s);
-        return -1;
-    }
-    return s;
 }
 
 esp_err_t tcpip_adapter_up(tcpip_adapter_if_t tcpip_if)
@@ -1069,7 +1064,7 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
             }
 
             dhcp_fail_time = 0;
-            wifi_timer_reset(dhcp_check_timer, 0);
+            xTimerReset(dhcp_check_timer, 0);
             ESP_LOGD(TAG, "dhcp client start successfully");
             dhcpc_status[tcpip_if] = TCPIP_ADAPTER_DHCP_STARTED;
             return ESP_OK;
