@@ -155,6 +155,11 @@ void call_user_start(size_t start_addr)
 
     heap_caps_init();
 
+#ifdef CONFIG_INIT_OS_BEFORE_START
+    extern int __esp_os_init(void);
+    assert(__esp_os_init() == 0);
+#endif
+
 #if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
     esp_newlib_init();
 #endif
