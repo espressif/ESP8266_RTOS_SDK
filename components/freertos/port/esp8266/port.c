@@ -47,7 +47,8 @@
 #include "esp8266/rom_functions.h"
 #include "driver/soc.h"
 
-#define PORT_ASSERT(x) do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
+#define SET_STKREG(r,v)     sp[(r) >> 2] = (uint32_t)(v)
+#define PORT_ASSERT(x)      do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
 
 extern char NMIIrqIsOn;
 static int SWReq = 0;
@@ -67,16 +68,13 @@ void vPortExitCritical(void);
 void _xt_timer_int1(void);
 
 
-/*
- * See header file for description.
- */
-StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters)
+uint8_t *__cpu_init_stk(uint8_t *stack_top, void (*_entry)(void *), void *param, void (*_exit)(void))
 {
-#define SET_STKREG(r,v) sp[(r) >> 2] = (unsigned long)(v)
-    unsigned long *sp, *tp, *stk = (unsigned long *)pxTopOfStack;
+
+    uint32_t *sp, *tp, *stk = (uint32_t *)stack_top;
 
     /* Create interrupt stack frame aligned to 16 byte boundary */
-    sp = (unsigned long *)(((INT32U)(stk + 1) - XT_CP_SIZE - XT_STK_FRMSZ) & ~0xf);
+    sp = (uint32_t *)(((INT32U)(stk + 1) - XT_CP_SIZE - XT_STK_FRMSZ) & ~0xf);
 
     /* Clear the entire frame (do not use memset() because we don't depend on C library) */
     for (tp = sp; tp <= stk; ++tp) {
@@ -84,22 +82,27 @@ StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack, pdTASK_CODE pxCode
     }
 
     /* Explicitly initialize certain saved registers */
-    SET_STKREG(XT_STK_PC,   pxCode);                        /* task entrypoint                  */
-    SET_STKREG(XT_STK_A0,   0);                             /* to terminate GDB backtrace       */
+    SET_STKREG(XT_STK_PC,   _entry);                        /* task entrypoint                  */
+    SET_STKREG(XT_STK_A0,   _exit);                         /* to terminate GDB backtrace       */
     SET_STKREG(XT_STK_A1,   (INT32U)sp + XT_STK_FRMSZ);     /* physical top of stack frame      */
-    SET_STKREG(XT_STK_A2,   pvParameters);                  /* parameters      */
+    SET_STKREG(XT_STK_A2,   param);                         /* parameters      */
     SET_STKREG(XT_STK_EXIT, _xt_user_exit);                 /* user exception exit dispatcher   */
 
     /* Set initial PS to int level 0, EXCM disabled ('rfe' will enable), user mode. */
-#ifdef __XTENSA_CALL0_ABI__
     SET_STKREG(XT_STK_PS,      PS_UM | PS_EXCM);
-#else
-    /* + for windowed ABI also set WOE and CALLINC (pretend task was 'call4'd). */
-    SET_STKREG(XT_STK_PS,      PS_UM | PS_EXCM | PS_WOE | PS_CALLINC(1));
-#endif
 
-    return (StackType_t *)sp;
+    return (uint8_t *)sp;
 }
+
+#ifndef DISABLE_FREERTOS
+/*
+ * See header file for description.
+ */
+StackType_t *pxPortInitialiseStack(StackType_t *pxTopOfStack, pdTASK_CODE pxCode, void *pvParameters)
+{
+    return (StackType_t *)__cpu_init_stk((uint8_t *)pxTopOfStack, pxCode, pvParameters, NULL);
+}
+#endif
 
 void IRAM_ATTR PendSV(int req)
 {
@@ -238,32 +241,6 @@ void IRAM_ATTR vPortETSIntrUnlock(void)
     ETS_INTR_UNLOCK();
 }
 
-void PortDisableInt_NoNest(void)
-{
-    if (NMIIrqIsOn == 0) {
-        if (ClosedLv1Isr != 1) {
-            portDISABLE_INTERRUPTS();
-            ClosedLv1Isr = 1;
-        }
-    }
-}
-
-void PortEnableInt_NoNest(void)
-{
-    if (NMIIrqIsOn == 0) {
-        if (ClosedLv1Isr == 1) {
-            ClosedLv1Isr = 0;
-            portENABLE_INTERRUPTS();
-        }
-    }
-}
-
-/*-----------------------------------------------------------*/
-void ResetCcountVal(unsigned int cnt_val)
-{
-    asm volatile("wsr a2, ccount");
-}
-
 /*
  * @brief check if CPU core interrupt is disable
  */
@@ -356,6 +333,7 @@ void esp_internal_idle_hook(void)
     pmIdleHook();
 }
 
+#ifndef DISABLE_FREERTOS
 #if configUSE_IDLE_HOOK == 1
 void __attribute__((weak)) vApplicationIdleHook(void)
 {
@@ -368,6 +346,7 @@ void __attribute__((weak)) vApplicationTickHook(void)
 {
 
 }
+#endif
 #endif
 
 uint32_t xPortGetTickRateHz(void)
