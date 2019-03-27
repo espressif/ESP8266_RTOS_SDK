@@ -29,6 +29,7 @@
 
 #define STACK_VOL_NUM 16
 
+#ifndef DISABLE_FREERTOS
 /*
  * @Note: If freeRTOS is updated, the structure must be checked.
  */
@@ -56,6 +57,22 @@ typedef struct task_info
 
     StackType_t		*pxEndOfStack;
 } task_info_t;
+
+static inline uint32_t *__get_stack_head(void *task)
+{
+    return (uint32_t *)((task_info_t *)task)->pxStack;
+}
+
+static inline uint32_t *__get_stack_tail(void *task)
+{
+    return (uint32_t *)((task_info_t *)task)->pxEndOfStack;
+} 
+#else
+typedef void*   task_info_t;
+
+extern uint32_t *__get_stack_head(void *task);
+extern uint32_t *__get_stack_tail(void *task);
+#endif
 
 static void panic_stack(const uint32_t *reg, const uint32_t *start_stk, const uint32_t *end_stk)
 {
@@ -140,8 +157,8 @@ static __attribute__((noreturn)) void panic_info(void *frame, int wdt)
             panic_stack(regs, &_chip_interrupt_stk, &_chip_interrupt_tmp);
         } else {
             if ((task = (task_info_t *)xTaskGetCurrentTaskHandle())) {
-                const uint32_t *pdata = (uint32_t *)task->pxStack;
-                const uint32_t *end = (uint32_t *)task->pxEndOfStack;
+                const uint32_t *pdata = __get_stack_head(task);
+                const uint32_t *end = __get_stack_tail(task);
 
                 ets_printf("Task stack [%s] stack from [%p] to [%p], total [%d] size\r\n\r\n", task->pcTaskName, 
                             pdata, end, (end - pdata + 1) * sizeof(const uint32_t *));
