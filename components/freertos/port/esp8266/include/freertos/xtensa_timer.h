@@ -140,7 +140,6 @@ Derviation of clock divisor for timer tick and interrupt (one per tick).
 #else
 #ifndef __ASSEMBLER__
 extern unsigned _xt_tick_divisor;
-extern void     _xt_tick_divisor_init(void);
 #endif
 #define XT_TICK_DIVISOR     _xt_tick_divisor
 #endif
