@@ -26,7 +26,6 @@
 #include "esp_heap_caps.h"
 
 #include "driver/pwm.h"
-
 #include "driver/gpio.h"
 
 // Temporary use the FreeRTOS critical function
@@ -61,7 +60,7 @@ static const char *TAG = "pwm";
 #define WDEVTSF0TIMER_ENA    0x3ff21098
 #define WDEV_TSF0TIMER_ENA   BIT(31)
 
-#define PWM_VERSION          "PWM v3.0"
+#define PWM_VERSION          "PWM v3.2"
 
 typedef struct {
     uint32_t duty;  /*!< pwm duty for each channel */
@@ -114,16 +113,16 @@ int wDev_MacTimSetFunc(void (*handle)(void));
 
 static void pwm_phase_init(void)
 {
-    int16_t time_delay;
+    int32_t time_delay;
     uint8_t i;
 
     for (i = 0; i < pwm_obj->channel_num; i++) {
         if (-180 < pwm_obj->pwm_info[i].phase && pwm_obj->pwm_info[i].phase < 0) {
-            time_delay = 0 - ((0 - pwm_obj->pwm_info[i].phase) * pwm_obj->depth / 180);
+            time_delay = 0 - ((0 - pwm_obj->pwm_info[i].phase) * pwm_obj->depth / 360);
         } else if (pwm_obj->pwm_info[i].phase == 0) {
             continue;
         } else if (180 > pwm_obj->pwm_info[i].phase && pwm_obj->pwm_info[i].phase > 0) {
-            time_delay = pwm_obj->pwm_info[i].phase * pwm_obj->depth / 180;
+            time_delay = pwm_obj->pwm_info[i].phase * pwm_obj->depth / 360;
         } else {
             ESP_LOGE(TAG, "channel[%d]  phase error %d, valid ramge from (-180,180)\n", i, pwm_obj->pwm_info[i].phase);
             continue;
