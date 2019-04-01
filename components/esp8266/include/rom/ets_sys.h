@@ -43,6 +43,14 @@ extern "C" {
 #define ETS_WDT_INUM        8
 #define ETS_FRC_TIMER1_INUM 9
 
+typedef enum {
+    OK = 0,
+    FAIL,
+    PENDING,
+    BUSY,
+    CANCEL,
+} STATUS;
+
 extern char NMIIrqIsOn;
 extern uint32_t WDEV_INTEREST_EVENT;
 

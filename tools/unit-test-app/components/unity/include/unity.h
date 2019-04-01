@@ -16,6 +16,9 @@ extern "C"
 #define UNITY_INCLUDE_CONFIG_H
 #include "unity_internals.h"
 
+/* include performance pass standards header file */
+#include "idf_performance.h"
+
 void setUp(void);
 void tearDown(void);
 
