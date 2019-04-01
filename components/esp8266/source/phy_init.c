@@ -90,6 +90,7 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t *init_data, esp_phy_calibrat
 
     esp_efuse_mac_get_default(sta_mac);
     chip_init(local_init_data, sta_mac, uart_baudrate);
+    ESP_LOGI(TAG, "phy ver: %d_%d", (READ_PERI_REG(0x6000107C)>>16)&0xFFF, READ_PERI_REG(0x6000107C)>>28);
     get_data_from_rtc((uint8_t *)calibration_data);
 
     memcpy(rx_gain_dc_table, calibration_data->rx_gain_dc_table, 4 * 125);
