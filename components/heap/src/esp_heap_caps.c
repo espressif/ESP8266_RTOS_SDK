@@ -22,12 +22,15 @@
 #include "esp_heap_trace.h"
 #include "priv/esp_heap_caps_priv.h"
 
+#include "esp_attr.h"
+
 #define LOG_LOCAL_LEVEL ESP_LOG_NONE
 
 #include "esp_log.h"
 
 static const char *TAG = "heap_caps";
 extern heap_region_t g_heap_region[HEAP_REGIONS_MAX];
+int __g_heap_trace_mode = HEAP_TRACE_NONE;
 
 /**
  * @brief Initialize regions of memory to the collection of heaps at runtime.
@@ -90,7 +93,7 @@ size_t heap_caps_get_minimum_free_size(uint32_t caps)
 /**
  * @brief Allocate a chunk of memory which has the given capabilities
  */
-void *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, size_t line)
+void IRAM_ATTR *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, size_t line)
 {
     mem_blk_t *mem_blk, *next_mem_blk;
     void *ret_mem = NULL;
@@ -112,7 +115,7 @@ void *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, size_t lin
 
         _heap_caps_lock(num);
 
-        trace = heap_trace_is_on();
+        trace = __g_heap_trace_mode == HEAP_TRACE_LEAKS;
 
         mem_blk_size = ptr2memblk_size(size, trace);
 
@@ -209,7 +212,7 @@ next_region:
 /**
  * @brief Free memory previously allocated via heap_caps_(m/c/r/z)alloc().
  */
-void _heap_caps_free(void *ptr, const char *file, size_t line)
+void IRAM_ATTR _heap_caps_free(void *ptr, const char *file, size_t line)
 {
     int num;
     mem_blk_t *mem_blk;
