@@ -590,6 +590,9 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
                 partition_usage = "OTA data";
                 break;
             case PART_SUBTYPE_DATA_RF:
+#ifdef CONFIG_LOAD_OLD_RF_PARAMETER
+                bs->rf = partition->pos;
+#endif
                 partition_usage = "RF data";
                 break;
             case PART_SUBTYPE_DATA_WIFI:
