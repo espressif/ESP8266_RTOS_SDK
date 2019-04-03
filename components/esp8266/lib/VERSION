@@ -2,7 +2,7 @@ gwen:
     core:       eacdf2c
     net80211:   eacdf2c
     pp:         eacdf2c
-    wpa:        eacdf2c
+    wpa:        4dcf668
     espnow:     eacdf2c
     wps:        eacdf2c
 
