@@ -87,6 +87,7 @@ typedef struct {
     uart_tx_data_t *tx_head;            /*!< TX data pointer to head of the current buffer in TX ring buffer*/
     uint32_t tx_len_tot;                /*!< Total length of current item in ring buffer*/
     uint32_t tx_len_cur;
+    bool wait_tx_done_flg;
 } uart_obj_t;
 
 static uart_obj_t *p_uart_obj[UART_NUM_MAX] = {0};
@@ -264,6 +265,11 @@ esp_err_t uart_wait_tx_done(uart_port_t uart_num, TickType_t ticks_to_wait)
         return ESP_ERR_TIMEOUT;
     }
 
+    if(false == p_uart_obj[uart_num]->wait_tx_done_flg) {
+        xSemaphoreGive(p_uart_obj[uart_num]->tx_mux);
+        return ESP_OK;
+    }
+
     uart_get_baudrate(uart_num, &baudrate);
     byte_delay_us = (uint32_t)(10000000 / baudrate); // (1/baudrate)*10*1000_000 us
 
@@ -276,6 +282,7 @@ esp_err_t uart_wait_tx_done(uart_port_t uart_num, TickType_t ticks_to_wait)
                 break;
             }
         }
+        p_uart_obj[uart_num]->wait_tx_done_flg = false;
     } else {
         xSemaphoreGive(p_uart_obj[uart_num]->tx_mux);
         return ESP_ERR_TIMEOUT;
@@ -700,7 +707,7 @@ static int uart_tx_all(uart_port_t uart_num, const char *src, size_t size)
 
     // lock for uart_tx
     xSemaphoreTake(p_uart_obj[uart_num]->tx_mux, (portTickType)portMAX_DELAY);
-
+    p_uart_obj[uart_num]->wait_tx_done_flg = true;
     if (p_uart_obj[uart_num]->tx_buf_size > 0) {
         int max_size = xRingbufferGetMaxItemSize(p_uart_obj[uart_num]->tx_ring_buf);
         int offset = 0;
@@ -918,6 +925,7 @@ esp_err_t uart_driver_install(uart_port_t uart_num, int rx_buffer_size, int tx_b
         p_uart_obj[uart_num]->tx_head = NULL;
         p_uart_obj[uart_num]->tx_len_tot = 0;
         p_uart_obj[uart_num]->rx_buffered_len = 0;
+        p_uart_obj[uart_num]->wait_tx_done_flg = false;
 
         if (uart_queue) {
             p_uart_obj[uart_num]->xQueueUart = xQueueCreate(queue_size, sizeof(uart_event_t));
