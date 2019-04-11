@@ -1,6 +1,6 @@
 gwen:
     core:       da96924
-    net80211:   da96924
+    net80211:   f882857
     pp:         da96924
     wpa:        da96924
     espnow:     da96924
