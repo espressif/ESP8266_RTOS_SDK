@@ -81,6 +81,20 @@ putchar_like_t esp_log_set_putchar(putchar_like_t func);
 /**
  * @brief Function which returns timestamp to be used in log output
  *
+ * This function is used in expansion of ESP_LOGx macros.
+ * In the 2nd stage bootloader, and at early application startup stage
+ * this function uses CPU cycle counter as time source. Later when
+ * FreeRTOS scheduler start running, it switches to FreeRTOS tick count.
+ *
+ * For now, we ignore millisecond counter overflow.
+ *
+ * @return timestamp, in milliseconds
+ */
+uint32_t esp_log_timestamp(void);
+
+/**
+ * @brief Function which returns timestamp to be used in log output
+ *
  * This function uses HW cycle counter and does not depend on OS,
  * so it can be safely used after application crash.
  *

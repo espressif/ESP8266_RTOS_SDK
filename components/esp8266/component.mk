@@ -11,8 +11,13 @@ COMPONENT_SRCDIRS := driver source
 
 LIBS ?=
 ifndef CONFIG_NO_BLOBS
+ifndef CONFIG_ESP8266_WIFI_DEBUG_LOG_ENABLE
 LIBS += gcc hal core net80211 \
         phy pp smartconfig ssc wpa espnow wps
+else
+LIBS += gcc hal core_dbg net80211_dbg \
+        phy pp_dbg smartconfig ssc wpa_dbg espnow_dbg wps_dbg
+endif
 endif
 
 #Linker scripts used to link the final application.

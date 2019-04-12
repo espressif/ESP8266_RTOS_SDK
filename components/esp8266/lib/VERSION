@@ -1,10 +1,10 @@
 gwen:
-    core:       8300b16
-    net80211:   8300b16
-    pp:         8300b16
-    wpa:        8300b16
-    espnow:     eacdf2c
-    wps:        eacdf2c
+    core:       da96924
+    net80211:   da96924
+    pp:         da96924
+    wpa:        da96924
+    espnow:     da96924
+    wps:        da96924
 
     smartconfig:  2.8.1
     phy:         1055_22
