@@ -118,7 +118,7 @@ set(COMPONENT_SRCS "${SRC}/crypto_aead/chacha20poly1305/sodium/aead_chacha20poly
                    "${SRC}/sodium/version.c"
                    "port/randombytes_esp8266.c")
 
-if(CONFIG_SSL_USING_MBEDTLS)
+if(CONFIG_LIBSODIUM_USE_MBEDTLS_SHA)
     list(APPEND COMPONENT_SRCS "port/crypto_hash_mbedtls/crypto_hash_sha256_mbedtls.c"
                    "port/crypto_hash_mbedtls/crypto_hash_sha512_mbedtls.c")
 else()
