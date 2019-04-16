@@ -53,7 +53,9 @@
 extern char NMIIrqIsOn;
 static int SWReq = 0;
 
-unsigned cpu_sr;
+uint32_t cpu_sr;
+
+uint32_t _xt_tick_divisor;
 
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */
@@ -64,8 +66,6 @@ uint64_t g_os_ticks = 0;
 
 void vPortEnterCritical(void);
 void vPortExitCritical(void);
-
-void _xt_timer_int1(void);
 
 
 uint8_t *__cpu_init_stk(uint8_t *stack_top, void (*_entry)(void *), void *param, void (*_exit)(void))
@@ -121,7 +121,7 @@ void TASK_SW_ATTR SoftIsrHdl(void* arg)
     extern int MacIsrSigPostDefHdl(void);
 
     if (MacIsrSigPostDefHdl() || (SWReq == 1)) {
-        _xt_timer_int1();
+        vTaskSwitchContext();
         SWReq = 0;
     }
 }
@@ -138,8 +138,12 @@ void esp_increase_tick_cnt(const TickType_t ticks)
     soc_restore_local_irq(flag);
 }
 
-void TASK_SW_ATTR xPortSysTickHandle(void)
+void TASK_SW_ATTR xPortSysTickHandle(void *p)
 {
+    const uint32_t cpu_clk_cnt = soc_get_ccount() + _xt_tick_divisor;
+
+    soc_set_ccompare(cpu_clk_cnt);
+
     g_cpu_ticks = soc_get_ticks();
     g_os_ticks++;
 
@@ -175,8 +179,11 @@ portBASE_TYPE xPortStartScheduler(void)
     _xt_isr_attach(ETS_SOFT_INUM, SoftIsrHdl, NULL);
     _xt_isr_unmask(1 << ETS_SOFT_INUM);
 
+    _xt_isr_attach(ETS_MAX_INUM, xPortSysTickHandle, NULL);
+
     /* Initialize system tick timer interrupt and schedule the first tick. */
-    _xt_tick_divisor_init();
+    _xt_tick_divisor = xtbsp_clock_freq_hz() / XT_TICK_PER_SEC;
+
     _xt_tick_timer_init();
 
     vTaskSwitchContext();
@@ -263,44 +270,40 @@ bool interrupt_is_disable(void)
     return tmp & 0xFUL ? true : false;
 }
 
-_xt_isr_entry isr[16];
-char _xt_isr_status = 0;
+static _xt_isr_entry s_isr[16];
+static uint8_t s_xt_isr_status = 0;
 
 void _xt_isr_attach(uint8_t i, _xt_isr func, void* arg)
 {
-    isr[i].handler = func;
-    isr[i].arg = arg;
+    s_isr[i].handler = func;
+    s_isr[i].arg = arg;
 }
 
-uint16_t TASK_SW_ATTR _xt_isr_handler(uint16_t i)
+void IRAM_ATTR _xt_isr_handler(void)
 {
-    uint8_t index;
+    do {
+        uint32_t mask = soc_get_int_mask();
 
-    if (i & (1 << ETS_WDT_INUM)) {
-        index = ETS_WDT_INUM;
-    } else if (i & (1 << ETS_GPIO_INUM)) {
-        index = ETS_GPIO_INUM;
-    } else {
-        index = __builtin_ffs(i) - 1;
+        for (int i = 0; i < ETS_INT_MAX && mask; i++) {
+            int bit = 1 << i;
 
-        if (index == ETS_MAX_INUM) {
-            i &= ~(1 << ETS_MAX_INUM);
-            index = __builtin_ffs(i) - 1;
+            if (!(bit & mask) || !s_isr[i].handler)
+                continue;
+
+            soc_clear_int_mask(bit);
+
+            s_xt_isr_status = 1;
+            s_isr[i].handler(s_isr[i].arg);
+            s_xt_isr_status = 0;
+
+            mask &= ~bit;
         }
-    }
-
-    _xt_clear_ints(1 << index);
-
-    _xt_isr_status = 1;
-    isr[index].handler(isr[index].arg);
-    _xt_isr_status = 0;
-
-    return i & ~(1 << index);
+    } while (soc_get_int_mask());
 }
 
 int xPortInIsrContext(void)
 {
-    return _xt_isr_status != 0;
+    return s_xt_isr_status != 0;
 }
 
 void __attribute__((weak, noreturn)) vApplicationStackOverflowHook(xTaskHandle xTask, const char *pcTaskName)

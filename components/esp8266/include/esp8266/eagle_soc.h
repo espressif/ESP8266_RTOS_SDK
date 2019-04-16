@@ -26,6 +26,7 @@
 #define _EAGLE_SOC_H_
 
 #include <stdint.h>
+#include "driver/soc.h"
 
 /* IO definitions (access restrictions to peripheral registers) */
 
