@@ -22,6 +22,57 @@
 #include "FreeRTOS.h"
 #include "esp_log.h"
 
+#ifdef CONFIG_USING_ESP_VFS
+
+#include "esp_vfs.h"
+
+int _open_r(struct _reent *r, const char *filename, int flags, int mode)
+{
+    return esp_vfs_open(r, filename, flags, mode);
+}
+
+_ssize_t _read_r(struct _reent *r, int fd, void *buf, size_t len)
+{
+    return esp_vfs_read(r, fd, buf, len);
+}
+
+_ssize_t _write_r(struct _reent *r, int fd, const void *buf, size_t len)
+{
+    return esp_vfs_write(r, fd, buf, len);
+}
+
+_off_t _lseek_r(struct _reent *r, int fd, _off_t where, int whence)
+{
+    return esp_vfs_lseek(r, fd, where, whence);
+}
+
+int _close_r(struct _reent *r, int fd)
+{
+    return esp_vfs_close(r, fd);
+}
+
+int _rename_r(struct _reent *r, const char *from, const char *to)
+{
+    return esp_vfs_rename(r, from, to);
+}
+
+int _unlink_r(struct _reent *r, const char *filename)
+{
+    return esp_vfs_unlink(r, filename);
+}
+
+int _fstat_r(struct _reent *r, int fd, struct stat *s)
+{
+    return esp_vfs_fstat(r, fd, s);
+}
+
+int _stat_r(struct _reent *r, const char *path, struct stat *st)
+{
+    return esp_vfs_stat(r, path, st);
+}
+
+#else
+
 int _open_r(struct _reent *r, const char *filename, int flags, int mode)
 {
     return 0;
@@ -70,10 +121,12 @@ int _fstat_r(struct _reent *r, int fd, struct stat *s)
     return 0;
 }
 
-void *_sbrk_r(struct _reent *r, ptrdiff_t incr)
+int _stat_r(struct _reent *r, const char *path, struct stat *st)
 {
-    return NULL;
+    return 0;
 }
+
+#endif /* CONFIG_USING_ESP_VFS */
 
 void *_malloc_r(struct _reent *r, size_t n)
 {
@@ -103,11 +156,6 @@ void _free_r(struct _reent *r, void *ptr)
     _heap_caps_free(ptr, return_addr, 0);
 }
 
-void _exit(int status)
-{
-    while (1);
-}
-
 void abort(void)
 {
     ESP_LOGE("ABORT","Error found and abort!");
@@ -116,4 +164,14 @@ void abort(void)
     while (1) {
         *((int *)NULL) = 0;
     }
+}
+
+void _exit(int status)
+{
+    abort();
+}
+
+void *_sbrk_r(struct _reent *r, ptrdiff_t incr)
+{
+    abort();
 }

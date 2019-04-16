@@ -1412,7 +1412,11 @@ size_t memp_malloc_get_size(size_t type);
  * Disable this option if you use a POSIX operating system that uses the same
  * names (read, write & close). (only used if you use sockets.c)
  */
+#ifdef CONFIG_USING_ESP_VFS
+#define LWIP_POSIX_SOCKETS_IO_NAMES     0
+#else
 #define LWIP_POSIX_SOCKETS_IO_NAMES     1
+#endif
 
 /**
  * LWIP_SOCKET_OFFSET==n: Increases the file descriptor number created by LwIP with n.
@@ -1421,7 +1425,7 @@ size_t memp_malloc_get_size(size_t type);
  * re implement read/write/close/ioctl/fnctl to send the requested action to the right
  * library (sharing select will need more work though).
  */
-#define LWIP_SOCKET_OFFSET              0
+#define LWIP_SOCKET_OFFSET              (FD_SETSIZE - CONFIG_LWIP_MAX_SOCKETS)
 
 /**
  * LWIP_TCP_KEEPALIVE==1: Enable TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT

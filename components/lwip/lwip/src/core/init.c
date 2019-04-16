@@ -347,6 +347,11 @@ lwip_init(void)
 
   /* Modules initialization */
   stats_init();
+
+#ifdef CONFIG_USING_ESP_VFS
+  esp_vfs_lwip_sockets_register();
+#endif
+
 #if !NO_SYS
   sys_init();
 #endif /* !NO_SYS */

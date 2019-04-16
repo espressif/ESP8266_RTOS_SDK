@@ -1,4 +1,4 @@
-// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2017 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __ESP_SYS_SELECT_H__
-#define __ESP_SYS_SELECT_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include "lwip/sockets.h"
+void esp_vfs_lwip_sockets_register();
 
-#endif //__ESP_SYS_SELECT_H__
+#ifdef __cplusplus
+}
+#endif

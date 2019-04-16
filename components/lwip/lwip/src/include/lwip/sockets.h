@@ -448,7 +448,9 @@ typedef struct fd_set
 } fd_set;
 
 #elif LWIP_SOCKET_OFFSET
+#ifndef CONFIG_USING_ESP_VFS
 #error LWIP_SOCKET_OFFSET does not work with external FD_SET!
+#endif
 #elif FD_SETSIZE < MEMP_NUM_NETCONN
 #error "external FD_SETSIZE too small for number of sockets"
 #endif /* FD_SET */
