@@ -1425,7 +1425,11 @@ size_t memp_malloc_get_size(size_t type);
  * re implement read/write/close/ioctl/fnctl to send the requested action to the right
  * library (sharing select will need more work though).
  */
+#ifdef CONFIG_USING_ESP_VFS
 #define LWIP_SOCKET_OFFSET              (FD_SETSIZE - CONFIG_LWIP_MAX_SOCKETS)
+#else
+#define LWIP_SOCKET_OFFSET              0
+#endif
 
 /**
  * LWIP_TCP_KEEPALIVE==1: Enable TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT
