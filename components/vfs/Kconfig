@@ -2,7 +2,7 @@ menu "Virtual file system"
 
 config USING_ESP_VFS
     bool "Using espressif VFS"
-    default y
+    default n
     help
         Enable this option, espressif  VFS can be used. Users can use APIs like "open", "read", "write"
         and so on to operate I/O device which is registered.

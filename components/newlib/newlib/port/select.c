@@ -13,10 +13,11 @@
 // limitations under the License.
 
 #include <sys/select.h>
-#include "esp_vfs.h"
 #include "sdkconfig.h"
 
 #ifdef CONFIG_USING_ESP_VFS
+#include "esp_vfs.h"
+
 #ifdef CONFIG_USE_ONLY_LWIP_SELECT
 #include "lwip/sockets.h"
 
