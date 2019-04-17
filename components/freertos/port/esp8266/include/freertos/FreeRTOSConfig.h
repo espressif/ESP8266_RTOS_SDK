@@ -172,5 +172,9 @@ uint32_t esp_get_time(void);
 
 #define traceINCREASE_TICK_COUNT(_ticks)    esp_increase_tick_cnt(_ticks)
 
+#ifndef configIDLE_TASK_STACK_SIZE
+#define configIDLE_TASK_STACK_SIZE CONFIG_FREERTOS_IDLE_TASK_STACKSIZE
+#endif /* configIDLE_TASK_STACK_SIZE */
+
 #endif /* FREERTOS_CONFIG_H */
 
