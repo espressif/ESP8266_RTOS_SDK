@@ -13,44 +13,20 @@
 #include "esp_log.h"
 #include "esp_console.h"
 #include "esp_vfs_dev.h"
+#include "FreeRTOS.h"
 #include "driver/uart.h"
 #include "linenoise/linenoise.h"
 #include "argtable3/argtable3.h"
 #include "cmd_decl.h"
-#include "esp_vfs_fat.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 
-static const char* TAG = "example";
-
-/* Console command history can be stored to and loaded from a file.
- * The easiest way to do this is to use FATFS filesystem on top of
- * wear_levelling library.
- */
-#if CONFIG_STORE_HISTORY
-
-#define MOUNT_PATH "/data"
-#define HISTORY_PATH MOUNT_PATH "/history.txt"
-
-static void initialize_filesystem()
-{
-    static wl_handle_t wl_handle;
-    const esp_vfs_fat_mount_config_t mount_config = {
-            .max_files = 4,
-            .format_if_mount_failed = true
-    };
-    esp_err_t err = esp_vfs_fat_spiflash_mount(MOUNT_PATH, "storage", &mount_config, &wl_handle);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to mount FATFS (%s)", esp_err_to_name(err));
-        return;
-    }
-}
-#endif // CONFIG_STORE_HISTORY
+#define TAG "example"
 
 static void initialize_nvs()
 {
     esp_err_t err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES) {
         ESP_ERROR_CHECK( nvs_flash_erase() );
         err = nvs_flash_init();
     }
@@ -70,18 +46,17 @@ static void initialize_console()
     /* Configure UART. Note that REF_TICK is used so that the baud rate remains
      * correct while APB frequency is changing in light sleep mode.
      */
-    const uart_config_t uart_config = {
+    uart_config_t uart_config = {
             .baud_rate = CONFIG_CONSOLE_UART_BAUDRATE,
             .data_bits = UART_DATA_8_BITS,
             .parity = UART_PARITY_DISABLE,
             .stop_bits = UART_STOP_BITS_1,
-            .use_ref_tick = true
     };
     ESP_ERROR_CHECK( uart_param_config(CONFIG_CONSOLE_UART_NUM, &uart_config) );
 
     /* Install UART driver for interrupt-driven reads and writes */
     ESP_ERROR_CHECK( uart_driver_install(CONFIG_CONSOLE_UART_NUM,
-            256, 0, 0, NULL, 0) );
+            256, 0, 0, NULL) );
 
     /* Tell VFS to use UART driver */
     esp_vfs_dev_uart_use_driver(CONFIG_CONSOLE_UART_NUM);
@@ -108,20 +83,11 @@ static void initialize_console()
 
     /* Set command history size */
     linenoiseHistorySetMaxLen(100);
-
-#if CONFIG_STORE_HISTORY
-    /* Load command history from filesystem */
-    linenoiseHistoryLoad(HISTORY_PATH);
-#endif
 }
 
 void app_main()
 {
     initialize_nvs();
-
-#if CONFIG_STORE_HISTORY
-    initialize_filesystem();
-#endif
 
     initialize_console();
 
@@ -133,7 +99,7 @@ void app_main()
     /* Prompt to be printed before each line.
      * This can be customized, made dynamic, etc.
      */
-    const char* prompt = LOG_COLOR_I "esp32> " LOG_RESET_COLOR;
+    const char* prompt = LOG_COLOR_I "esp8266> " LOG_RESET_COLOR;
 
     printf("\n"
            "This is an example of ESP-IDF console component.\n"
@@ -153,7 +119,7 @@ void app_main()
         /* Since the terminal doesn't support escape sequences,
          * don't use color codes in the prompt.
          */
-        prompt = "esp32> ";
+        prompt = "esp8266> ";
 #endif //CONFIG_LOG_COLORS
     }
 
@@ -168,10 +134,6 @@ void app_main()
         }
         /* Add the command to the history */
         linenoiseHistoryAdd(line);
-#if CONFIG_STORE_HISTORY
-        /* Save command history to filesystem */
-        linenoiseHistorySave(HISTORY_PATH);
-#endif
 
         /* Try to run the command */
         int ret;

@@ -776,3 +776,8 @@ uintptr_t spi_flash_cache2phys(const void *cached)
     
     return segment * CACHE_2M_SIZE + (addr + addr_offset - CACHE_BASE_ADDR);
 }
+
+size_t spi_flash_get_chip_size()
+{
+    return flashchip.chip_size;
+}
