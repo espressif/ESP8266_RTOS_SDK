@@ -231,6 +231,31 @@ void esp_early_log_write(esp_log_level_t level, const char* tag, const char* for
 #define esp_log_buffer_hex      ESP_LOG_BUFFER_HEX
 #define esp_log_buffer_char     ESP_LOG_BUFFER_CHAR
 
+#if CONFIG_LOG_COLORS
+#define LOG_COLOR_BLACK   "30"
+#define LOG_COLOR_RED     "31"
+#define LOG_COLOR_GREEN   "32"
+#define LOG_COLOR_BROWN   "33"
+#define LOG_COLOR_BLUE    "34"
+#define LOG_COLOR_PURPLE  "35"
+#define LOG_COLOR_CYAN    "36"
+#define LOG_COLOR(COLOR)  "\033[0;" COLOR "m"
+#define LOG_BOLD(COLOR)   "\033[1;" COLOR "m"
+#define LOG_RESET_COLOR   "\033[0m"
+#define LOG_COLOR_E       LOG_COLOR(LOG_COLOR_RED)
+#define LOG_COLOR_W       LOG_COLOR(LOG_COLOR_BROWN)
+#define LOG_COLOR_I       LOG_COLOR(LOG_COLOR_GREEN)
+#define LOG_COLOR_D
+#define LOG_COLOR_V
+#else //CONFIG_LOG_COLORS
+#define LOG_COLOR_E
+#define LOG_COLOR_W
+#define LOG_COLOR_I
+#define LOG_COLOR_D
+#define LOG_COLOR_V
+#define LOG_RESET_COLOR
+#endif //CONFIG_LOG_COLORS
+
 /** @endcond */
 
 /// macro to output logs in startup code, before heap allocator and syscalls have been initialized. log at ``ESP_LOG_ERROR`` level. @see ``printf``,``ESP_LOGE``
