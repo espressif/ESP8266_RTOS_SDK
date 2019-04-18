@@ -80,6 +80,8 @@ static ssize_t tls_read(esp_tls_t *tls, char *data, size_t datalen)
         }
         if (ret != MBEDTLS_ERR_SSL_WANT_READ  && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             ESP_LOGE(TAG, "read error :%d:", ret);
+        } else {
+            ret = (ret == MBEDTLS_ERR_SSL_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
 #elif CONFIG_SSL_USING_WOLFSSL
@@ -94,6 +96,8 @@ static ssize_t tls_read(esp_tls_t *tls, char *data, size_t datalen)
 
         if (ret != WOLFSSL_ERROR_WANT_READ && ret != WOLFSSL_ERROR_WANT_WRITE) {
             ESP_LOGE(TAG, "read error :%d:", ret);
+        } else {
+            ret = (ret == WOLFSSL_ERROR_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
 #endif
@@ -481,14 +485,19 @@ static ssize_t tls_write(esp_tls_t *tls, const char *data, size_t datalen)
     if (ret < 0) {
         if (ret != MBEDTLS_ERR_SSL_WANT_READ  && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             ESP_LOGE(TAG, "write error :%d:", ret);
+        } else {
+            ret = (ret == MBEDTLS_ERR_SSL_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
     return ret;
 #elif CONFIG_SSL_USING_WOLFSSL
     ssize_t ret = wolfSSL_write(tls->ssl, (unsigned char*) data, datalen);
     if (ret < 0) {
+        ret = wolfSSL_get_error(tls->ssl, ret);
         if (ret != WOLFSSL_ERROR_WANT_READ  && ret != WOLFSSL_ERROR_WANT_WRITE) {
             ESP_LOGE(TAG, "write error :%d:", ret);
+        } else {
+            ret = (ret == WOLFSSL_ERROR_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
     return ret;
