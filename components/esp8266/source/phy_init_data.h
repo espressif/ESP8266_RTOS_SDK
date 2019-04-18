@@ -17,6 +17,8 @@
 #include "esp_phy_init.h"
 #include "sdkconfig.h"
 
+// constrain a value between 'low' and 'high', inclusive
+#define LIMIT(val, low, high) ((val < low) ? low : (val > high) ? high : val)
 #define PHY_INIT_MAGIC "PHYINIT"
 
 static const char phy_init_magic_pre[] = PHY_INIT_MAGIC;
@@ -59,12 +61,12 @@ static const esp_phy_init_data_t phy_init_data= { {
         0x00,
         0xf8,
         0xf8,
-        0x52,
-        0x4e,
-        0x4a,
-        0x44,
-        0x40,
-        0x38,
+        LIMIT(CONFIG_ESP8266_PHY_MAX_WIFI_TX_POWER * 4, 0, 0x52),
+        LIMIT(CONFIG_ESP8266_PHY_MAX_WIFI_TX_POWER * 4, 0, 0x4e),
+        LIMIT(CONFIG_ESP8266_PHY_MAX_WIFI_TX_POWER * 4, 0, 0x4a),
+        LIMIT(CONFIG_ESP8266_PHY_MAX_WIFI_TX_POWER * 4, 0, 0x44),
+        LIMIT(CONFIG_ESP8266_PHY_MAX_WIFI_TX_POWER * 4, 0, 0x40),
+        LIMIT(CONFIG_ESP8266_PHY_MAX_WIFI_TX_POWER * 4, 0, 0x38),
         0x00,
         0x00,
         0x01,
