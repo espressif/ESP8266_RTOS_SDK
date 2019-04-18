@@ -35,6 +35,11 @@
 extern "C" {
 #endif
 
+typedef enum {
+    ESP_TLS_ERROR_WANT_READ = -2,
+    ESP_TLS_ERROR_WANT_WRITE = -3,
+} esp_tls_error_t;
+
 /**
  *  @brief ESP-TLS Connection State
  */
