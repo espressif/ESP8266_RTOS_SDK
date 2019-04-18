@@ -22,6 +22,7 @@ extern "C"
 {
 #endif
 
+#include "sdkconfig.h"
 #include "esp_flash_data_types.h"
 
 #define SPI_SEC_SIZE 0x1000
@@ -34,6 +35,9 @@ typedef struct {
     esp_partition_pos_t ota_info;
     esp_partition_pos_t factory;
     esp_partition_pos_t test;
+#ifdef CONFIG_LOAD_OLD_RF_PARAMETER
+    esp_partition_pos_t rf;
+#endif
     esp_partition_pos_t ota[MAX_OTA_SLOTS];
     uint32_t app_count;
     uint32_t selected_subtype;
