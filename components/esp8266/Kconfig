@@ -465,5 +465,13 @@ config ESP_PHY_INIT_DATA_VDD33_CONST
         When the ADC reference voltage is set to the actual VDD33 power supply voltage, the value range of vdd33_const is [18,36], the unit is 0.1V.
         When the ADC reference voltage is set to the default value of 3.3V as the supply voltage, the range of vdd33_const is [0, 18] or (36, 255).
 
+config ESP8266_PHY_MAX_WIFI_TX_POWER
+    int "Max WiFi TX power (dBm)"
+    range 0 21
+    default 20
+    help
+        Set maximum transmit power for WiFi radio. Actual transmit power for high
+        data rates may be lower than this setting.
+
 endmenu  # PHY
 
