@@ -1,6 +1,6 @@
 gwen:
     core:       33a48e5
-    net80211:   33a48e5
+    net80211:   79572b4
     pp:         da96924
     wpa:        33a48e5
     espnow:     da96924
