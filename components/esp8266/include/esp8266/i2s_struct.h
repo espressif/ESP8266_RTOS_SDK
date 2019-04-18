@@ -85,8 +85,8 @@ typedef volatile struct {
     } int_ena;
     union {
         struct {
-            uint32_t take_data:     1;
-            uint32_t put_data:      1;
+            uint32_t rx_take_data:  1;
+            uint32_t tx_put_data:   1;
             uint32_t rx_wfull:      1;
             uint32_t rx_rempty:     1;
             uint32_t tx_wfull:      1;
@@ -137,7 +137,7 @@ typedef volatile struct {
     } conf_chan;
 } i2s_struct_t;
 
-extern volatile i2s_struct_t I2S;
+extern volatile i2s_struct_t I2S0;
 
 #ifdef __cplusplus
 }

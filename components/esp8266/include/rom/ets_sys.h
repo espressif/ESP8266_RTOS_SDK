@@ -35,6 +35,7 @@ extern "C" {
 #endif
 
 /* interrupt related */
+#define ETS_SLC_INUM        1
 #define ETS_SPI_INUM        2
 #define ETS_GPIO_INUM       4
 #define ETS_UART_INUM       5
