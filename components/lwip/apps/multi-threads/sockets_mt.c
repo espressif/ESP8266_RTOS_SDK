@@ -536,6 +536,8 @@ static void lwip_socket_set_so_link(int s, int linger)
 #else
 #error "LWIP_SO_LINGER must be enable"
 #endif /* LWIP_SO_LINGER */
+#else /* SET_SOLINGER_DEFAULT */
+#define lwip_socket_set_so_link(_s, _linger)
 #endif /* SET_SOLINGER_DEFAULT */
 
 int lwip_socket(int domain, int type, int protocol)
