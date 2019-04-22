@@ -342,6 +342,8 @@ void esp_internal_idle_hook(void)
 
     esp_task_wdt_reset();
     pmIdleHook();
+
+    soc_wait_int();
 }
 
 #ifndef DISABLE_FREERTOS
