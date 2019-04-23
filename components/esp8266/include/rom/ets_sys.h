@@ -110,6 +110,18 @@ void os_delay_us(uint16_t us);
 void ets_delay_us(uint32_t us);
 
 /**
+  * @brief  Printf the strings to uart or other devices, similar with printf, simple than printf.
+  *         Can not print float point data format, or longlong data format.
+  *
+  * @param  const char *fmt : See printf.
+  *
+  * @param  ... : See printf.
+  *
+  * @return int : the length printed to the output device.
+  */
+int ets_printf(const char *fmt, ...);
+
+/**
   * @brief     Register the print output function.
   *
   * @attention os_install_putc1((void *)uart1_write_char) in uart_init will set

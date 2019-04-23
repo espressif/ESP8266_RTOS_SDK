@@ -35,7 +35,7 @@ void Cache_Read_Enable_2()
 }
 void Cache_Read_Enable_New(void) __attribute__((alias("Cache_Read_Enable_2")));
 
-uint32_t spi_flash_get_id_raw(esp_spi_flash_chip_t *chip)
+uint32_t spi_flash_get_id_raw(esp_rom_spiflash_chip_t *chip)
 {
     uint32_t rdid = 0;
 
@@ -54,7 +54,7 @@ uint32_t spi_flash_get_id_raw(esp_spi_flash_chip_t *chip)
     return rdid;
 }
 
-esp_err_t spi_flash_read_status_raw(esp_spi_flash_chip_t *chip, uint32_t *status)
+esp_err_t spi_flash_read_status_raw(esp_rom_spiflash_chip_t *chip, uint32_t *status)
 {
     esp_err_t ret;
 
@@ -67,7 +67,7 @@ esp_err_t spi_flash_read_status_raw(esp_spi_flash_chip_t *chip, uint32_t *status
     return ret;
 }
 
-esp_err_t spi_flash_write_status_raw(esp_spi_flash_chip_t *chip, uint32_t status_value)
+esp_err_t spi_flash_write_status_raw(esp_rom_spiflash_chip_t *chip, uint32_t status_value)
 {
     Cache_Read_Disable_2();
 
@@ -86,7 +86,7 @@ esp_err_t spi_flash_write_status_raw(esp_spi_flash_chip_t *chip, uint32_t status
     return ESP_OK;
 }
 
-esp_err_t spi_flash_erase_sector_raw(esp_spi_flash_chip_t *chip, size_t sec, size_t sec_size)
+esp_err_t spi_flash_erase_sector_raw(esp_rom_spiflash_chip_t *chip, size_t sec, size_t sec_size)
 {
     esp_err_t ret = ESP_OK;
 
@@ -105,7 +105,7 @@ esp_err_t spi_flash_erase_sector_raw(esp_spi_flash_chip_t *chip, size_t sec, siz
     return ret;
 }
 
-esp_err_t spi_flash_enable_qmode_raw(esp_spi_flash_chip_t *chip)
+esp_err_t spi_flash_enable_qmode_raw(esp_rom_spiflash_chip_t *chip)
 {
     esp_err_t ret;
 
@@ -120,7 +120,7 @@ esp_err_t spi_flash_enable_qmode_raw(esp_spi_flash_chip_t *chip)
     return ret;
 }
 
-esp_err_t spi_flash_write_raw(esp_spi_flash_chip_t *chip, size_t dest_addr, const void *src, size_t size)
+esp_err_t spi_flash_write_raw(esp_rom_spiflash_chip_t *chip, size_t dest_addr, const void *src, size_t size)
 {
     esp_err_t ret;
 
@@ -133,7 +133,7 @@ esp_err_t spi_flash_write_raw(esp_spi_flash_chip_t *chip, size_t dest_addr, cons
     return ret;
 }
 
-esp_err_t spi_flash_read_raw(esp_spi_flash_chip_t *chip, size_t src_addr, void *dest, size_t size)
+esp_err_t spi_flash_read_raw(esp_rom_spiflash_chip_t *chip, size_t src_addr, void *dest, size_t size)
 {
     esp_err_t ret;
 
@@ -146,7 +146,7 @@ esp_err_t spi_flash_read_raw(esp_spi_flash_chip_t *chip, size_t src_addr, void *
     return ret;
 }
 
-bool spi_user_cmd_raw(esp_spi_flash_chip_t *chip, spi_cmd_dir_t mode, spi_cmd_t *p_cmd)
+bool spi_user_cmd_raw(esp_rom_spiflash_chip_t *chip, spi_cmd_dir_t mode, spi_cmd_t *p_cmd)
 {
     int idx = 0;
 
