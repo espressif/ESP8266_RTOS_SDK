@@ -149,6 +149,37 @@ config DISABLE_ROM_UART_PRINT
     help
         "Disable main part of ROM UART print when rom bootloader process."
 
+config PANIC_FULL_STACK
+    bool "Output full stack data of task"
+    default n
+    help
+        Output full stack data of task although some stack space is not used.
+
+choice ESP_PANIC
+    prompt "Panic handler behaviour"
+    default ESP_PANIC_PRINT_REBOOT
+    help
+        If an unhandled exception, the panic handler is invoked.
+        Configure the panic handlers action here.
+
+config ESP_PANIC_PRINT_HALT
+    bool "Print registers and halt"
+    help
+        Outputs the relevant registers over the serial port and halt the
+        processor. Needs a manual reset to restart.
+
+config ESP_PANIC_PRINT_REBOOT
+    bool "Print registers and reboot"
+    help
+        Outputs the relevant registers over the serial port and immediately
+        reset the processor.
+
+config ESP_PANIC_SILENT_REBOOT
+    bool "Silent reboot"
+    help
+        Just resets the processor without outputting anything
+endchoice
+
 config MAIN_TASK_STACK_SIZE
     int "Main task stack size"
     default 3584
