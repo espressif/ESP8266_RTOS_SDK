@@ -13,10 +13,10 @@
 // limitations under the License.
 
 #include <sys/errno.h>
-#include <assert.h>
 #include <string.h>
 #include "esp_aes.h"
 #include "ibus_data.h"
+#include "util_assert.h"
 
 /*
  * 32-bit integer manipulation macros (little endian)
@@ -586,11 +586,11 @@ int esp_aes_encrypt(esp_aes_t *aes,
     const uint8_t *input = (const uint8_t *)p_src;
     uint8_t *output = (uint8_t *)p_dst;
 
-    assert(aes);
-    assert(p_src);
-    assert(p_dst);
-    assert((slen > 0) && ((slen % 16) == 0));
-    assert(dlen >= slen);
+    util_assert(aes);
+    util_assert(p_src);
+    util_assert(p_dst);
+    util_assert((slen > 0) && ((slen % 16) == 0));
+    util_assert(dlen >= slen);
 
     for (size_t i = 0; i < slen; i += 16)
         __esp_aes_encrypt(aes, input + i, output + i);
@@ -607,11 +607,11 @@ int esp_aes_decrypt(esp_aes_t *aes,
     const uint8_t *input = (const uint8_t *)p_src;
     uint8_t *output = (uint8_t *)p_dst;
 
-    assert(aes);
-    assert(p_src);
-    assert(p_dst);
-    assert((slen > 0) && ((slen % 16) == 0));
-    assert(dlen >= slen);
+    util_assert(aes);
+    util_assert(p_src);
+    util_assert(p_dst);
+    util_assert((slen > 0) && ((slen % 16) == 0));
+    util_assert(dlen >= slen);
 
     for (size_t i = 0; i < slen; i += 16)
         __esp_aes_decrypt(aes, input + i, output + i);
@@ -630,12 +630,12 @@ int esp_aes_encrypt_cbc(esp_aes_t *aes,
     uint8_t *iv = (uint8_t *)p_iv;
     uint8_t *output = (uint8_t *)p_dst;
 
-    assert(aes);
-    assert(p_src);
-    assert(p_dst);
-    assert(p_iv);
-    assert((slen > 0) && ((slen % 16) == 0));
-    assert(dlen >= slen);
+    util_assert(aes);
+    util_assert(p_src);
+    util_assert(p_dst);
+    util_assert(p_iv);
+    util_assert((slen > 0) && ((slen % 16) == 0));
+    util_assert(dlen >= slen);
 
     for (int i = 0; i < slen; i += 16) {
         for(int j = 0; j < 16; j++ )
@@ -662,12 +662,12 @@ int esp_aes_decrypt_cbc(esp_aes_t *aes,
     uint8_t *iv = (uint8_t *)p_iv;
     uint8_t *output = (uint8_t *)p_dst;
 
-    assert(aes);
-    assert(p_src);
-    assert(p_dst);
-    assert(p_iv);
-    assert((slen > 0) && ((slen % 16) == 0));
-    assert(dlen >= slen);
+    util_assert(aes);
+    util_assert(p_src);
+    util_assert(p_dst);
+    util_assert(p_iv);
+    util_assert((slen > 0) && ((slen % 16) == 0));
+    util_assert(dlen >= slen);
 
     for (int i = 0; i < slen; i += 16) {
         uint8_t temp[16];
@@ -725,12 +725,12 @@ int esp_aes_decrypt_cfb8(esp_aes_t *aes,
     uint8_t *iv = (uint8_t *)p_iv;
     uint8_t *output = (uint8_t *)p_dst;
 
-    assert(aes);
-    assert(p_src);
-    assert(p_dst);
-    assert(p_iv);
-    assert((slen > 0) && ((slen % 16) == 0));
-    assert(dlen >= slen);
+    util_assert(aes);
+    util_assert(p_src);
+    util_assert(p_dst);
+    util_assert(p_iv);
+    util_assert((slen > 0) && ((slen % 16) == 0));
+    util_assert(dlen >= slen);
 
     for (int i = 0; i < slen; i++) {
         memcpy(ov, iv, 16);
@@ -758,13 +758,13 @@ int esp_aes_encrypt_cfb128(esp_aes_t *aes,
     uint8_t *iv = (uint8_t *)p_iv;
     uint8_t *output = (uint8_t *)p_dst;
 
-    assert(aes);
-    assert(p_src);
-    assert(p_dst);
-    assert(p_iv);
-    assert(iv_off);
-    assert((slen > 0) && ((slen % 16) == 0));
-    assert(dlen >= slen);
+    util_assert(aes);
+    util_assert(p_src);
+    util_assert(p_dst);
+    util_assert(p_iv);
+    util_assert(iv_off);
+    util_assert((slen > 0) && ((slen % 16) == 0));
+    util_assert(dlen >= slen);
 
     n = *iv_off;
     for (int i = 0; i < slen; i++) {
@@ -795,13 +795,13 @@ int esp_aes_decrypt_cfb128(esp_aes_t *aes,
     uint8_t *iv = (uint8_t *)p_iv;
     uint8_t *output = (uint8_t *)p_dst;
 
-    assert(aes);
-    assert(p_src);
-    assert(p_dst);
-    assert(p_iv);
-    assert(iv_off);
-    assert((slen > 0) && ((slen % 16) == 0));
-    assert(dlen >= slen);
+    util_assert(aes);
+    util_assert(p_src);
+    util_assert(p_dst);
+    util_assert(p_iv);
+    util_assert(iv_off);
+    util_assert((slen > 0) && ((slen % 16) == 0));
+    util_assert(dlen >= slen);
 
     n = *iv_off;
     for (int i = 0; i < slen; i++) {
@@ -836,14 +836,14 @@ int esp_aes_encrypt_ctr(esp_aes_t *aes,
     uint8_t *stream_block = (uint8_t *)p_stream_block;
     const uint8_t *input = (const uint8_t *)p_src;
 
-    assert(aes);
-    assert(nc_off);
-    assert(p_nonce_counter);
-    assert(p_stream_block);
-    assert(p_src);
-    assert(p_dst);
-    assert((slen > 0) && ((slen % 16) == 0));
-    assert(dlen >= slen);
+    util_assert(aes);
+    util_assert(nc_off);
+    util_assert(p_nonce_counter);
+    util_assert(p_stream_block);
+    util_assert(p_src);
+    util_assert(p_dst);
+    util_assert((slen > 0) && ((slen % 16) == 0));
+    util_assert(dlen >= slen);
 
     n = *nc_off;
     for (int i = 0; i < slen; i++) {

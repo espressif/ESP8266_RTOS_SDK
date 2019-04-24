@@ -15,7 +15,7 @@
 #include "sdkconfig.h"
 #include "esp_base64.h"
 #include "ibus_data.h"
-#include <assert.h>
+#include "util_assert.h"
 #include <sys/errno.h>
 
 typedef union _cache {
