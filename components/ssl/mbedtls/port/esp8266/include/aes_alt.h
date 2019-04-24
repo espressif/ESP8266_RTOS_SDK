@@ -99,9 +99,9 @@ typedef esp_aes_t mbedtls_aes_context;
 
 #if defined(MBEDTLS_CIPHER_MODE_CTR)
 #define mbedtls_aes_crypt_ctr(_ctx, _length, _nc_off, _nonce_counter,                               \
-                              _stream_block, _input _output                                         \
+                              _stream_block, _input, _output)                                       \
                                                                                                     \
-        esp_aes_encrypt_ctr(_ctx, _nc_off, _nonce_counter, _length, _input,                         \
+        esp_aes_encrypt_ctr(_ctx, _nc_off, _nonce_counter, _stream_block, _input,                   \
                             _length, _output, _length)
 #endif
 
