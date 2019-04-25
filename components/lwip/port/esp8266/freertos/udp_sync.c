@@ -256,6 +256,11 @@ void udp_sync_ack_sock(void *in_msg)
     struct api_msg *msg = (struct api_msg *)in_msg;
     struct udp_pcb *pcb = _get_msg_pcb(msg);
 
+    if (UDP_SYNC_NONE == s_msg_type) {
+        TCPIP_APIMSG_ACK(msg);
+        return ;
+    }
+
     ret = _udp_sync_ack_sock_ret(msg, 0);
     if (ret == ERR_OK && _udp_need_proc(pcb)) {
         udp_sync_method_t *method = (udp_sync_method_t *)_udp_priv_data(pcb);
