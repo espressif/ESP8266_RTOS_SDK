@@ -229,12 +229,12 @@ static int tcpip_adapter_recv_cb(void *index, void *buffer, uint16_t len, void *
 
     p = os_malloc(sizeof(struct tcpip_adapter_pbuf));
     if (!p)
-        return -ENOMEM;
+        goto no_mem;
 
     // PBUF_RAW means payload = (char *)aio->pbuf + offset(=0)
     pbuf = pbuf_alloced_custom(PBUF_RAW, len, PBUF_REF, &p->pbuf, buffer, len);
     if (!pbuf)
-        return -ENOMEM;
+        goto pbuf_err;
 
     p->pbuf.custom_free_function = tcpip_adapter_free_pbuf;
     p->eb = (void *)eb;
@@ -243,6 +243,11 @@ static int tcpip_adapter_recv_cb(void *index, void *buffer, uint16_t len, void *
     ethernetif_input(netif, pbuf);
 
     return 0;
+
+pbuf_err:
+    os_free(p);
+no_mem:
+    return -ENOMEM;
 }
 
 /*
