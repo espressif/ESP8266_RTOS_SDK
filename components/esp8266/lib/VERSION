@@ -1,7 +1,7 @@
 gwen:
-    core:       33a48e5
-    net80211:   71f5b94
-    pp:         c32a629
+    core:       381d974
+    net80211:   381d974
+    pp:         381d974
     wpa:        33a48e5
     espnow:     da96924
     wps:        da96924
