@@ -53,9 +53,39 @@ typedef enum {
     CANCEL,
 } STATUS;
 
-void vPortETSIntrLock(void);
+extern char NMIIrqIsOn;
+extern uint32_t WDEV_INTEREST_EVENT;
 
-void vPortETSIntrUnlock(void);
+#define INT_ENA_WDEV        0x3ff20c18
+#define WDEV_TSF0_REACH_INT (BIT(27))
+
+#define ETS_NMI_LOCK()  \
+    do {    \
+        do {    \
+            REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
+        } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT); \
+    } while (0)
+
+#define ETS_NMI_UNLOCK()    \
+    do {    \
+        REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);   \
+    } while (0)
+
+#define ETS_INTR_LOCK() do {    \
+    if (NMIIrqIsOn == 0) { \
+        vPortEnterCritical();   \
+        do {    \
+            REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
+        } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT); \
+    }   \
+    } while(0)
+
+#define ETS_INTR_UNLOCK()   do {    \
+    if (NMIIrqIsOn == 0) { \
+        REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);   \
+        vPortExitCritical(); \
+    }   \
+    } while(0)
 
 #define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
