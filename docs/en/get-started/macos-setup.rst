@@ -19,13 +19,13 @@ Toolchain Setup
 
 ESP8266 toolchain for macOS is available for download from Espressif website:
 
-https://dl.espressif.com/dl/xtensa-lx106-elf-osx-1.22.0-88-gde0bdc1-4.8.5.tar.gz
+https://dl.espressif.com/dl/xtensa-lx106-elf-osx-1.22.0-92-g8facf4c-5.2.0.tar.gz
 
 Download this file, then extract it in ``~/esp`` directory::
 
     mkdir -p ~/esp
     cd ~/esp
-    tar -xzf ~/Downloads/xtensa-lx106-elf-osx-1.22.0-88-gde0bdc1-4.8.5.tar.gz
+    tar -xzf ~/Downloads/xtensa-lx106-elf-osx-1.22.0-92-g8facf4c-5.2.0.tar.gz
 
 .. _setup-macos-toolchain-add-it-to-path:
 
