@@ -40,7 +40,7 @@ static void test_timer_cb(void *cpu_clk_cnt) {
 }
 
 TEST_CASE("Test interrupt overhead time", "[log]") {
-  uint32_t cpu_clk_cnt_interrupt_enter;
+  volatile uint32_t cpu_clk_cnt_interrupt_enter;
   uint32_t cpu_clk_cnt_start;
   uint32_t cpu_clk_cnt_stop;
 
@@ -67,8 +67,15 @@ TEST_CASE("Test interrupt overhead time", "[log]") {
 
   uint32_t overhead_enter = cpu_clk_cnt_interrupt_enter - cpu_clk_cnt_start;
   uint32_t overhead_total = cpu_clk_cnt_stop - cpu_clk_cnt_start;
-#define INTERRUPT_OVERHEAD_ENTER_TIME 334
-#define INTERRUPT_OVERHEAD_TOTAL_TIME 455
+
+#if CONFIG_OPTIMIZATION_LEVEL_DEBUG
+#  define INTERRUPT_OVERHEAD_ENTER_TIME 334
+#  define INTERRUPT_OVERHEAD_TOTAL_TIME 459
+#else // CONFIG_OPTIMIZATION_LEVEL_RELEASE
+#  define INTERRUPT_OVERHEAD_ENTER_TIME 258
+#  define INTERRUPT_OVERHEAD_TOTAL_TIME 385
+#endif
+
   if (overhead_enter != INTERRUPT_OVERHEAD_ENTER_TIME ||
       overhead_total != INTERRUPT_OVERHEAD_TOTAL_TIME) {
     char buf[128];
