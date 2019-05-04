@@ -14,7 +14,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
+#include "util_assert.h"
 #include <sys/errno.h>
 #include "esp_sha.h"
 #include "esp_log.h"
@@ -425,7 +425,7 @@ int __esp_sha512_process(void *in_ctx, const void *src)
  */
 int __esp_sha_init(esp_sha_t *ctx, esp_sha_type_t type, const uint32_t *state_ctx, size_t size, sha_cal_t sha_cal)
 {
-    assert(ctx);
+    util_assert(ctx);
 
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -444,7 +444,7 @@ int __esp_sha_init(esp_sha_t *ctx, esp_sha_type_t type, const uint32_t *state_ct
  */
 int __esp_sha512_init(esp_sha512_t *ctx, esp_sha_type_t type, const uint64_t *state_ctx, size_t size)
 {
-    assert(ctx);
+    util_assert(ctx);
 
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -471,8 +471,8 @@ int __esp_sha_update(esp_sha_t *ctx, const void *src, size_t size)
     size_t ilen = size;
     const uint8_t *input = (const uint8_t *)src;
 
-    assert(ctx);
-    assert(src);
+    util_assert(ctx);
+    util_assert(src);
 
     if (ilen == 0)
         return 0;
@@ -541,8 +541,8 @@ int __esp_sha_finish(esp_sha_t *ctx, void *dest)
     void *state;
     uint8_t msglen[16];
 
-    assert(ctx);
-    assert(dest);
+    util_assert(ctx);
+    util_assert(dest);
 
     if (SHA1 == ctx->type)
         bytes = 20;

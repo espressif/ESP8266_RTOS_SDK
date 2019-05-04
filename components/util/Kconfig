@@ -1,5 +1,14 @@
 menu "Util"
 
+config util_assert
+    bool "Enable assert for util components"
+    default n
+    help
+        Enable this option, util components will use assert to check if input
+        parameters are correct.
+
+        Disable this option will speed up the process of some calculation a lot.
+
 config ESP_SHA
    bool "Enable Espressif SHA"
    default y
