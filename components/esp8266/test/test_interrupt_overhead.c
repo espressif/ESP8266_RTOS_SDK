@@ -26,12 +26,6 @@
 #define TIMER1_INTERRUPT_TYPE_LEVEL 1
 #define hw_timer_intr_register(a, b) \
   _xt_isr_attach(ETS_FRC_TIMER1_INUM, (a), (b))
-  
-static inline uint32_t soc_get_ccount(void) {
-  uint32_t ccount;
-  __asm__ __volatile__("rsr %0,ccount" : "=a"(ccount));
-  return ccount;
-}
 
 struct timer_regs {
   uint32_t frc1_load;  /* 0x60000600 */
@@ -73,8 +67,8 @@ TEST_CASE("Test interrupt overhead time", "[log]") {
 
   uint32_t overhead_enter = cpu_clk_cnt_interrupt_enter - cpu_clk_cnt_start;
   uint32_t overhead_total = cpu_clk_cnt_stop - cpu_clk_cnt_start;
-#define INTERRUPT_OVERHEAD_ENTER_TIME 184
-#define INTERRUPT_OVERHEAD_TOTAL_TIME 300
+#define INTERRUPT_OVERHEAD_ENTER_TIME 334
+#define INTERRUPT_OVERHEAD_TOTAL_TIME 455
   if (overhead_enter != INTERRUPT_OVERHEAD_ENTER_TIME ||
       overhead_total != INTERRUPT_OVERHEAD_TOTAL_TIME) {
     char buf[128];
