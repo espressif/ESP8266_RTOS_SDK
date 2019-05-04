@@ -340,7 +340,7 @@ typedef struct {
     uint32_t host_conf_w5;
 } slc_struct_t;
 
-extern volatile slc_struct_t SLC;
+extern volatile slc_struct_t SLC0;
 
 #ifdef __cplusplus
 }

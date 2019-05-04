@@ -208,13 +208,17 @@ typedef enum {
  * @brief Chip models
  */
 typedef enum {
-    CHIP_ESP8266 = 1, //!< ESP8266
+    CHIP_ESP8266 = 0, //!< ESP8266
+    CHIP_ESP32 = 1, //!< ESP32
 } esp_chip_model_t;
 
 /**
  * Chip feature flags, used in esp_chip_info_t
  */
-#define CHIP_FEATURE_WIFI_BGN       (1 << 0)
+#define CHIP_FEATURE_EMB_FLASH      BIT(0)      //!< Chip has embedded flash memory
+#define CHIP_FEATURE_WIFI_BGN       BIT(1)      //!< Chip has 2.4GHz WiFi
+#define CHIP_FEATURE_BLE            BIT(4)      //!< Chip has Bluetooth LE
+#define CHIP_FEATURE_BT             BIT(5)      //!< Chip has Bluetooth Classic
 
 /**
  * @brief The structure represents information about the chip

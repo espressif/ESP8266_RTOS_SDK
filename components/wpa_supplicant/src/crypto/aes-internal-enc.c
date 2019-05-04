@@ -21,6 +21,10 @@
  * See README and COPYING for more details.
  */
 
+#include "sdkconfig.h"
+
+#ifndef CONFIG_ESP_AES
+
 #include "crypto/includes.h"
 #include "crypto/common.h"
 #include "crypto/crypto.h"
@@ -132,3 +136,41 @@ void  aes_encrypt_deinit(void *ctx)
 	os_memset(ctx, 0, AES_PRIV_SIZE);
 	os_free(ctx);
 }
+
+#else /* CONFIG_ESP_AES */
+
+#include <stdint.h>
+#include "esp_aes.h"
+#include "esp_heap_caps.h"
+
+void *aes_encrypt_init(const uint8_t *key, size_t len)
+{
+    int ret;
+    esp_aes_t *ctx;
+
+    ctx = heap_caps_malloc(sizeof(esp_aes_t), MALLOC_CAP_8BIT);
+    if (!ctx)
+        return NULL;
+
+    ret = esp_aes_set_encrypt_key(ctx, key, len * 8);
+    if (ret)
+        goto fail;
+
+    return ctx;
+
+fail:
+    heap_caps_free(ctx);
+    return NULL;
+}
+
+void aes_encrypt(void *ctx, const uint8_t *crypt, uint8_t *plain)
+{
+    esp_aes_encrypt_ecb(ctx, crypt, plain);
+}
+
+void aes_encrypt_deinit(void *ctx)
+{
+    heap_caps_free(ctx);
+}
+
+#endif /* CONFIG_ESP_AES */

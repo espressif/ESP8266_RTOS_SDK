@@ -25,8 +25,9 @@ extern "C" {
  * @brief ADC working mode enumeration
  */
 typedef enum {
-    ADC_READ_TOUT_MODE,
-    ADC_READ_VDD_MODE
+    ADC_READ_TOUT_MODE = 0,
+    ADC_READ_VDD_MODE,
+    ADC_READ_MAX_MODE
 } adc_mode_t;
 
 /**

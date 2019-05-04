@@ -149,6 +149,37 @@ config DISABLE_ROM_UART_PRINT
     help
         "Disable main part of ROM UART print when rom bootloader process."
 
+config PANIC_FULL_STACK
+    bool "Output full stack data of task"
+    default n
+    help
+        Output full stack data of task although some stack space is not used.
+
+choice ESP_PANIC
+    prompt "Panic handler behaviour"
+    default ESP_PANIC_PRINT_REBOOT
+    help
+        If an unhandled exception, the panic handler is invoked.
+        Configure the panic handlers action here.
+
+config ESP_PANIC_PRINT_HALT
+    bool "Print registers and halt"
+    help
+        Outputs the relevant registers over the serial port and halt the
+        processor. Needs a manual reset to restart.
+
+config ESP_PANIC_PRINT_REBOOT
+    bool "Print registers and reboot"
+    help
+        Outputs the relevant registers over the serial port and immediately
+        reset the processor.
+
+config ESP_PANIC_SILENT_REBOOT
+    bool "Silent reboot"
+    help
+        Just resets the processor without outputting anything
+endchoice
+
 config MAIN_TASK_STACK_SIZE
     int "Main task stack size"
     default 3584
@@ -266,6 +297,16 @@ config ESP8266_BOOT_COPY_APP
 
         Enable this option, when it is that "OTA1" application is to run after update by OTA,
         bootloader will copy "OTA1" application to "OTA0" partition and run "OTA0".
+
+config ESP_ERR_TO_NAME_LOOKUP
+    bool "Enable lookup of error code strings"
+    default "y"
+    help
+        Functions esp_err_to_name() and esp_err_to_name_r() return string
+        representations of error codes from a pre-generated lookup table.
+        This option can be used to turn off the use of the look-up table in
+        order to save memory but this comes at the price of sacrificing
+        distinguishable (meaningful) output string representations.
 
 endmenu
 
@@ -454,6 +495,14 @@ config ESP_PHY_INIT_DATA_VDD33_CONST
         To read the external voltage on TOUT(ADC) pin, vdd33_const need less than 255
         When the ADC reference voltage is set to the actual VDD33 power supply voltage, the value range of vdd33_const is [18,36], the unit is 0.1V.
         When the ADC reference voltage is set to the default value of 3.3V as the supply voltage, the range of vdd33_const is [0, 18] or (36, 255).
+
+config ESP8266_PHY_MAX_WIFI_TX_POWER
+    int "Max WiFi TX power (dBm)"
+    range 0 21
+    default 20
+    help
+        Set maximum transmit power for WiFi radio. Actual transmit power for high
+        data rates may be lower than this setting.
 
 endmenu  # PHY
 

@@ -50,12 +50,14 @@
 #define SET_STKREG(r,v)     sp[(r) >> 2] = (uint32_t)(v)
 #define PORT_ASSERT(x)      do { if (!(x)) {ets_printf("%s %u\n", "rtos_port", __LINE__); while(1){}; }} while (0)
 
-extern char NMIIrqIsOn;
+extern uint8_t NMIIrqIsOn;
 static int SWReq = 0;
 
 uint32_t cpu_sr;
 
 uint32_t _xt_tick_divisor;
+
+int __g_is_task_overflow;
 
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */
@@ -248,12 +250,22 @@ void show_critical_info(void)
 
 void IRAM_ATTR vPortETSIntrLock(void)
 {
-    ETS_INTR_LOCK();
+    if (NMIIrqIsOn == 0) {
+        vPortEnterCritical();
+        do {
+            REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);
+        } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT);
+    }
 }
 
 void IRAM_ATTR vPortETSIntrUnlock(void)
 {
-    ETS_INTR_UNLOCK();
+    if (NMIIrqIsOn == 0) {
+        extern uint32_t WDEV_INTEREST_EVENT;
+
+        REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);
+        vPortExitCritical();
+    }
 }
 
 /*
@@ -309,7 +321,7 @@ int xPortInIsrContext(void)
 void __attribute__((weak, noreturn)) vApplicationStackOverflowHook(xTaskHandle xTask, const char *pcTaskName)
 {
     ets_printf("***ERROR*** A stack overflow in task %s has been detected.\r\n", pcTaskName);
-
+    __g_is_task_overflow = 1;
     abort();
 }
 
@@ -342,6 +354,8 @@ void esp_internal_idle_hook(void)
 
     esp_task_wdt_reset();
     pmIdleHook();
+
+    soc_wait_int();
 }
 
 #ifndef DISABLE_FREERTOS

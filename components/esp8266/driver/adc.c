@@ -130,8 +130,10 @@ esp_err_t adc_init(adc_config_t *config)
 
     phy_init_data = (esp_phy_init_data_t *)esp_phy_get_init_data();
     vdd33_const = phy_init_data->params[107];
-    ADC_CHECK((config->mode == ADC_READ_TOUT_MODE) ? (vdd33_const <= 255) : true, "To read the external voltage on TOUT(ADC) pin, vdd33_const need less than 255", ESP_FAIL);
+    
+    ADC_CHECK((config->mode == ADC_READ_TOUT_MODE) ? (vdd33_const < 255) : true, "To read the external voltage on TOUT(ADC) pin, vdd33_const need less than 255", ESP_FAIL);
     ADC_CHECK((config->mode == ADC_READ_VDD_MODE) ? (vdd33_const == 255) : true, "When adc measuring system voltage, vdd33_const must be set to 255,", ESP_FAIL);
+    ADC_CHECK(config->mode <= ADC_READ_MAX_MODE, "adc mode err", ESP_FAIL);
 
     adc_handle = heap_caps_malloc(sizeof(adc_handle_t), MALLOC_CAP_8BIT);
     ADC_CHECK(adc_handle, "adc handle malloc error", ESP_ERR_NO_MEM);

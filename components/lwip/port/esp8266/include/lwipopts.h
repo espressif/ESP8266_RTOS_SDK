@@ -49,6 +49,7 @@
 #include <stdbool.h>
 #include "esp_libc.h"
 #include "esp_system.h"
+#include "driver/soc.h"
 
 #define ESP_LWIP 1
 
@@ -75,6 +76,13 @@
 //#define SOCKETS_TCP_TRACE
 
 #define TCP_HIGH_SPEED_RETRANSMISSION CONFIG_TCP_HIGH_SPEED_RETRANSMISSION
+
+/**
+ * @brief System
+ */
+#define SYS_ARCH_DECL_PROTECT(_lev)    esp_irqflag_t _lev
+#define SYS_ARCH_PROTECT(_lev)         _lev = soc_save_local_irq()
+#define SYS_ARCH_UNPROTECT(_lev)       soc_restore_local_irq(_lev)
 
  /*
    ------------------------------------
@@ -237,7 +245,7 @@ size_t memp_malloc_get_size(size_t type);
  * 
  * @return memory pool pointer
  */
-#define memp_malloc_ll(type)     heap_caps_malloc(memp_malloc_get_size(type), MALLOC_CAP_8BIT)
+#define memp_malloc_ll(type)     heap_caps_malloc(memp_pools[type]->size, MALLOC_CAP_8BIT)
 #endif
 
 /**
@@ -1425,7 +1433,11 @@ size_t memp_malloc_get_size(size_t type);
  * re implement read/write/close/ioctl/fnctl to send the requested action to the right
  * library (sharing select will need more work though).
  */
+#ifdef CONFIG_USING_ESP_VFS
 #define LWIP_SOCKET_OFFSET              (FD_SETSIZE - CONFIG_LWIP_MAX_SOCKETS)
+#else
+#define LWIP_SOCKET_OFFSET              0
+#endif
 
 /**
  * LWIP_TCP_KEEPALIVE==1: Enable TCP_KEEPIDLE, TCP_KEEPINTVL and TCP_KEEPCNT

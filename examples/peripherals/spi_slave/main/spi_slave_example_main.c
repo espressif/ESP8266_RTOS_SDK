@@ -8,13 +8,15 @@
 */
 
 #include <stdio.h>
-
+#include <sys/time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/queue.h"
 #include "freertos/semphr.h"
+#include "ringbuf.h"
 
+#include "esp8266/spi_struct.h"
 #include "esp8266/gpio_struct.h"
+#include "esp_system.h"
 #include "esp_log.h"
 
 #include "driver/gpio.h"
@@ -25,20 +27,25 @@ static const char *TAG = "spi_slave_example";
 #define SPI_SLAVE_HANDSHARK_GPIO     4
 #define SPI_SLAVE_HANDSHARK_SEL      (1ULL<<SPI_SLAVE_HANDSHARK_GPIO)
 
-static SemaphoreHandle_t spi_wr_sta_done_sem = NULL;
-static SemaphoreHandle_t spi_rd_buf_done_sem = NULL;
-static SemaphoreHandle_t spi_wr_buf_done_sem = NULL;
+RingbufHandle_t spi_slave_tx_ring_buf;
+RingbufHandle_t spi_slave_rx_ring_buf;
+static SemaphoreHandle_t spi_slave_tx_done_sem = NULL;
+static SemaphoreHandle_t spi_slave_wr_sta_done_sem = NULL;
+static struct timeval now;
 
 void IRAM_ATTR spi_event_callback(int event, void *arg)
 {
+    int x;
     BaseType_t xHigherPriorityTaskWoken;
     uint32_t status;
     uint32_t trans_done;
+    uint32_t *write_data = NULL;
+    uint32_t read_data[8];
+    uint32_t size;
 
     switch (event) {
         case SPI_INIT_EVENT: {
-            status = false;
-            spi_slave_set_status(HSPI_HOST, &status);
+
         }
         break;
 
@@ -51,21 +58,31 @@ void IRAM_ATTR spi_event_callback(int event, void *arg)
             trans_done = *(uint32_t *)arg;
 
             if (trans_done & SPI_SLV_RD_BUF_DONE) {
-                xSemaphoreGiveFromISR(spi_rd_buf_done_sem, &xHigherPriorityTaskWoken);
+                gpio_set_level(SPI_SLAVE_HANDSHARK_GPIO, 0);
+                write_data = (uint32_t *) xRingbufferReceiveFromISR(spi_slave_tx_ring_buf, &size);
+                if (write_data) {
+                    for (x = 0; x < 8; x++) {
+                        SPI1.data_buf[x + 8] = write_data[x];
+                    }
+                    vRingbufferReturnItemFromISR(spi_slave_tx_ring_buf, write_data, &xHigherPriorityTaskWoken);
+                    gpio_set_level(SPI_SLAVE_HANDSHARK_GPIO, 1);
+                } else {
+                    xSemaphoreGiveFromISR(spi_slave_tx_done_sem, &xHigherPriorityTaskWoken);
+                }
             }
             if (trans_done & SPI_SLV_WR_BUF_DONE) {
-                status = false;
-                spi_slave_set_status(HSPI_HOST, &status);
-                xSemaphoreGiveFromISR(spi_wr_buf_done_sem, &xHigherPriorityTaskWoken);
+                for (x = 0; x < 8; x++) {
+                    read_data[x] = SPI1.data_buf[x];
+                }
+                xRingbufferSendFromISR(spi_slave_rx_ring_buf, (void *) read_data, sizeof(uint32_t) * 8, &xHigherPriorityTaskWoken);
             }
             if (trans_done & SPI_SLV_RD_STA_DONE) {
-                status = false;
-                spi_slave_set_status(HSPI_HOST, &status);
+
             }
             if (trans_done & SPI_SLV_WR_STA_DONE) {
                 spi_slave_get_status(HSPI_HOST, &status);
                 if (status == true) {
-                    xSemaphoreGiveFromISR(spi_wr_sta_done_sem, &xHigherPriorityTaskWoken);
+                    xSemaphoreGiveFromISR(spi_slave_wr_sta_done_sem, &xHigherPriorityTaskWoken);
                 }
             }
 
@@ -85,14 +102,16 @@ void IRAM_ATTR spi_event_callback(int event, void *arg)
 
 static void spi_slave_write_master_task(void *arg)
 {
+    int x;
     uint16_t cmd;
     uint32_t addr;
     uint32_t write_data[8];
     spi_trans_t trans;
+    uint32_t size;
+    uint64_t time_start, time_end;
 
     trans.cmd = &cmd;
     trans.addr = &addr;
-    trans.miso = write_data;
     trans.bits.val = 0;
     // In Slave mode, spi cmd must be longer than 3 bits and shorter than 16 bits
     trans.bits.cmd = 8 * 1;
@@ -108,60 +127,45 @@ static void spi_slave_write_master_task(void *arg)
     write_data[4] = 0xEEEEEEEE;
     write_data[5] = 0xFFFFFFFF;
     write_data[6] = 0xAAAABBBB;
-    write_data[7] = 0;
+    write_data[7] = 1;
 
     // Waiting for master idle
-    xSemaphoreTake(spi_wr_sta_done_sem, portMAX_DELAY);
+    xSemaphoreTake(spi_slave_wr_sta_done_sem, portMAX_DELAY);
 
     while (1) {
-        gpio_set_level(SPI_SLAVE_HANDSHARK_GPIO, 0);
-
-        if (write_data[7] % 50 == 0) {
-            vTaskDelay(1000 / portTICK_RATE_MS);
+        for (x = 0;x < 100;x++) {
+            xRingbufferSend(spi_slave_tx_ring_buf, (void *) write_data, sizeof(uint32_t) * 8, portMAX_DELAY);
+            write_data[7]++;
         }
-        
-        // load new data
+
+        trans.miso = (uint32_t *) xRingbufferReceive(spi_slave_tx_ring_buf, &size, portMAX_DELAY);
+        gettimeofday(&now, NULL); 
+        time_start = now.tv_usec;
+        gpio_set_level(SPI_SLAVE_HANDSHARK_GPIO, 0);
         spi_trans(HSPI_HOST, trans);
-        write_data[7]++;
-        // The rising edge informs the master to get the data
         gpio_set_level(SPI_SLAVE_HANDSHARK_GPIO, 1);
-        xSemaphoreTake(spi_rd_buf_done_sem, portMAX_DELAY);
-        vTaskDelay(10 / portTICK_RATE_MS);
+        vRingbufferReturnItem(spi_slave_tx_ring_buf, trans.miso);
+        xSemaphoreTake(spi_slave_tx_done_sem, portMAX_DELAY);
+        gettimeofday(&now, NULL); 
+        time_end = now.tv_usec;
+
+        ESP_LOGI(TAG, "Slave wrote 3200 bytes in %d us", (int)(time_end - time_start));
+        vTaskDelay(100 / portTICK_RATE_MS);
     }
 }
 
 static void spi_slave_read_master_task(void *arg)
 {
-    int x;
-    uint16_t cmd;
-    uint32_t addr;
-    uint32_t read_data[8];
-    spi_trans_t trans;
-    uint32_t status = true;
+    uint32_t *read_data = NULL;
+    uint32_t size;
 
-    trans.cmd = &cmd;
-    trans.addr = &addr;
-    trans.mosi = read_data;
-    trans.bits.val = 0;
-    // In Slave mode, spi cmd must be longer than 3 bits and shorter than 16 bits
-    trans.bits.cmd = 8 * 1;
-    // In Slave mode, spi addr must be longer than 1 bits and shorter than 32 bits
-    trans.bits.addr = 32 * 1;
-    trans.bits.mosi = 32 * 8;
-
-    spi_trans(HSPI_HOST, trans); // init spi slave buf
     while (1) {
-        spi_slave_set_status(HSPI_HOST, &status);
-        xSemaphoreTake(spi_wr_buf_done_sem, portMAX_DELAY);
+        read_data = (uint32_t *) xRingbufferReceive(spi_slave_rx_ring_buf, &size, portMAX_DELAY);
 
-        spi_trans(HSPI_HOST, trans);
-
-        if (cmd == SPI_MASTER_WRITE_DATA_TO_SLAVE_CMD) {
-            ESP_LOGI(TAG, "------Slave read------\n");
-            ESP_LOGI(TAG, "addr: 0x%x\n", addr);
-
-            for (x = 0; x < 8; x++) {
-                ESP_LOGI(TAG, "read_data[%d]: 0x%x\n", x, read_data[x]);
+        if (read_data) {
+            vRingbufferReturnItem(spi_slave_rx_ring_buf, read_data);
+            if (read_data[7] % 100 == 0) {
+                vTaskDelay(100 / portTICK_RATE_MS);
             }
         }
     }
@@ -169,9 +173,11 @@ static void spi_slave_read_master_task(void *arg)
 
 void app_main(void)
 {
-    spi_wr_sta_done_sem = xSemaphoreCreateBinary();
-    spi_rd_buf_done_sem = xSemaphoreCreateBinary();
-    spi_wr_buf_done_sem = xSemaphoreCreateBinary();
+    spi_trans_t trans = {0};
+    spi_slave_tx_ring_buf = xRingbufferCreate(4096, RINGBUF_TYPE_NOSPLIT);
+    spi_slave_rx_ring_buf = xRingbufferCreate(4096, RINGBUF_TYPE_NOSPLIT);
+    spi_slave_wr_sta_done_sem = xSemaphoreCreateBinary();
+    spi_slave_tx_done_sem = xSemaphoreCreateBinary();
 
     ESP_LOGI(TAG, "init gpio");
     gpio_config_t io_conf;
@@ -181,7 +187,7 @@ void app_main(void)
     io_conf.pull_down_en = 0;
     io_conf.pull_up_en = 0;
     gpio_config(&io_conf);
-    gpio_set_level(SPI_SLAVE_HANDSHARK_GPIO, 1);
+    gpio_set_level(SPI_SLAVE_HANDSHARK_GPIO, 0);
 
     ESP_LOGI(TAG, "init spi");
 
@@ -194,11 +200,17 @@ void app_main(void)
     spi_config.intr_enable.val = SPI_SLAVE_DEFAULT_INTR_ENABLE;
     // Set SPI to slave mode
     spi_config.mode = SPI_SLAVE_MODE;
-    // Set the SPI clock frequency division factor
-    spi_config.clk_div = SPI_10MHz_DIV;
     // Register SPI event callback function
     spi_config.event_cb = spi_event_callback;
     spi_init(HSPI_HOST, &spi_config);
+
+    trans.bits.val = 0;
+    // In Slave mode, spi cmd must be longer than 3 bits and shorter than 16 bits
+    trans.bits.cmd = 8 * 1;
+    // In Slave mode, spi addr must be longer than 1 bits and shorter than 32 bits
+    trans.bits.addr = 32 * 1;
+    trans.bits.mosi = 32 * 8;
+    spi_trans(HSPI_HOST, trans); // init spi slave buf
 
     // create spi_slave_write_master_task
     xTaskCreate(spi_slave_write_master_task, "spi_slave_write_master_task", 2048, NULL, 10, NULL);

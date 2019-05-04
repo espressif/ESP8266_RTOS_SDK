@@ -35,6 +35,7 @@ extern "C" {
 #endif
 
 /* interrupt related */
+#define ETS_SLC_INUM        1
 #define ETS_SPI_INUM        2
 #define ETS_GPIO_INUM       4
 #define ETS_UART_INUM       5
@@ -52,39 +53,9 @@ typedef enum {
     CANCEL,
 } STATUS;
 
-extern char NMIIrqIsOn;
-extern uint32_t WDEV_INTEREST_EVENT;
+void vPortETSIntrLock(void);
 
-#define INT_ENA_WDEV        0x3ff20c18
-#define WDEV_TSF0_REACH_INT (BIT(27))
-
-#define ETS_NMI_LOCK()  \
-    do {    \
-        do {    \
-            REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
-        } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT); \
-    } while (0)
-
-#define ETS_NMI_UNLOCK()    \
-    do {    \
-        REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);   \
-    } while (0)
-
-#define ETS_INTR_LOCK() do {    \
-    if (NMIIrqIsOn == 0) { \
-        vPortEnterCritical();   \
-        do {    \
-            REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);   \
-        } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT); \
-    }   \
-    } while(0)
-
-#define ETS_INTR_UNLOCK()   do {    \
-    if (NMIIrqIsOn == 0) { \
-        REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);   \
-        vPortExitCritical(); \
-    }   \
-    } while(0)
+void vPortETSIntrUnlock(void);
 
 #define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
@@ -107,6 +78,18 @@ void os_delay_us(uint16_t us);
   * @return None
   */
 void ets_delay_us(uint32_t us);
+
+/**
+  * @brief  Printf the strings to uart or other devices, similar with printf, simple than printf.
+  *         Can not print float point data format, or longlong data format.
+  *
+  * @param  const char *fmt : See printf.
+  *
+  * @param  ... : See printf.
+  *
+  * @return int : the length printed to the output device.
+  */
+int ets_printf(const char *fmt, ...);
 
 /**
   * @brief     Register the print output function.

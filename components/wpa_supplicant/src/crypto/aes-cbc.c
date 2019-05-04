@@ -13,6 +13,10 @@
  * See README and COPYING for more details.
  */
 
+#include "sdkconfig.h"
+
+#ifndef CONFIG_ESP_AES
+
 #include "crypto/includes.h"
 
 #include "crypto/common.h"
@@ -86,3 +90,5 @@ aes_128_cbc_decrypt(const u8 *key, const u8 *iv, u8 *data, size_t data_len)
 	aes_decrypt_deinit(ctx);
 	return 0;
 }
+
+#endif /* CONFIG_ESP_AES */

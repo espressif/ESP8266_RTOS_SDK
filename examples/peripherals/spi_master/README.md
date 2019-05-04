@@ -51,68 +51,24 @@ See the Getting Started Guide for full steps to configure and use ESP-IDF to bui
 * LOG:  
 
 ```
-I (214) spi_master_example: init gpio
-I (216) gpio: GPIO[4]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:1 
-I (238) spi_master_example: init spi
-I (1238) spi_master_example: ------Master read------
-
-I (1231) spi_master_example: addr: 0x0
-
-I (1233) spi_master_example: read_data[0]: 0xaaaaaaaa
-
-I (1249) spi_master_example: read_data[1]: 0xbbbbbbbb
-
-I (1248) spi_master_example: read_data[2]: 0xcccccccc
-
-I (1257) spi_master_example: read_data[3]: 0xdddddddd
-
-I (1266) spi_master_example: read_data[4]: 0xeeeeeeee
-
-I (1275) spi_master_example: read_data[5]: 0xffffffff
-
-I (1284) spi_master_example: read_data[6]: 0xaaaabbbb
-
-I (1293) spi_master_example: read_data[7]: 0x0
-
-I (1301) spi_master_example: ------Master read------
-
-I (1310) spi_master_example: addr: 0x1
-
-I (1317) spi_master_example: read_data[0]: 0xaaaaaaaa
-
-I (1326) spi_master_example: read_data[1]: 0xbbbbbbbb
-
-I (1335) spi_master_example: read_data[2]: 0xcccccccc
-
-I (1344) spi_master_example: read_data[3]: 0xdddddddd
-
-I (1353) spi_master_example: read_data[4]: 0xeeeeeeee
-
-I (1363) spi_master_example: read_data[5]: 0xffffffff
-
-I (1372) spi_master_example: read_data[6]: 0xaaaabbbb
-
-I (1381) spi_master_example: read_data[7]: 0x1
-
-I (1399) spi_master_example: ------Master read------
-
-I (1408) spi_master_example: addr: 0x2
-
-I (1405) spi_master_example: read_data[0]: 0xaaaaaaaa
-
-I (1414) spi_master_example: read_data[1]: 0xbbbbbbbb
-
-I (1423) spi_master_example: read_data[2]: 0xcccccccc
-
-I (1432) spi_master_example: read_data[3]: 0xdddddddd
-
-I (1441) spi_master_example: read_data[4]: 0xeeeeeeee
-
-I (1450) spi_master_example: read_data[5]: 0xffffffff
-
-I (1469) spi_master_example: read_data[6]: 0xaaaabbbb
-
-I (1478) spi_master_example: read_data[7]: 0x2
+I (516) spi_master_example: init gpio
+I (526) gpio: GPIO[4]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:1 
+I (536) spi_master_example: init spi
+I (556) spi_master_example: Master wrote 3200 bytes in 4302 us
+I (656) spi_master_example: Master wrote 3200 bytes in 4519 us
+I (766) spi_master_example: Master wrote 3200 bytes in 4522 us
+I (866) spi_master_example: Master wrote 3200 bytes in 4520 us
+I (966) spi_master_example: Master wrote 3200 bytes in 4521 us
+I (1066) spi_master_example: Master wrote 3200 bytes in 4520 us
+I (1166) spi_master_example: Master wrote 3200 bytes in 4522 us
+I (1266) spi_master_example: Master wrote 3200 bytes in 4521 us
+I (1366) spi_master_example: Master wrote 3200 bytes in 4520 us
+I (1466) spi_master_example: Master wrote 3200 bytes in 4520 us
+I (1566) spi_master_example: Master wrote 3200 bytes in 4520 us
+I (1666) spi_master_example: Master wrote 3200 bytes in 4519 us
+I (1766) spi_master_example: Master wrote 3200 bytes in 4521 us
+I (1866) spi_master_example: Master wrote 3200 bytes in 4519 us
+I (1966) spi_master_example: Master wrote 3200 bytes in 4520 us
 ```
 
 * WAVE FORM:  

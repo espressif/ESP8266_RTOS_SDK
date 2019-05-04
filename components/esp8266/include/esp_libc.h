@@ -29,6 +29,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include "rom/ets_sys.h"
 #ifndef BOOTLOADER_BUILD
 #include "esp_heap_caps.h"
 #endif
@@ -59,18 +60,6 @@ int ets_putc(int c);
   * @return int : the length printed to the output device.
   */
 int ets_vprintf(const char *fmt, va_list ap);
-
-/**
-  * @brief  Printf the strings to uart or other devices, similar with printf, simple than printf.
-  *         Can not print float point data format, or longlong data format.
-  *
-  * @param  const char *fmt : See printf.
-  *
-  * @param  ... : See printf.
-  *
-  * @return int : the length printed to the output device.
-  */
-int ets_printf(const char *fmt, ...);
 
 #ifndef os_printf
 #define os_printf   printf

@@ -128,6 +128,16 @@ static inline uint32_t soc_get_int_mask(void)
     return mask & enable & ETS_INT_MASK;
 }
 
+static inline void soc_wait_int(void)
+{
+    __asm__ __volatile__(
+            "waiti  0\n"
+            :
+            :
+            : "memory"
+    );
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -61,12 +61,11 @@ typedef int sys_prot_t;
 #define PACK_STRUCT_END
 
 #include <stdio.h>
+#include <assert.h>
 
 #ifdef LWIP_DEBUG
-extern void sys_arch_assert(const char *file, int line);
-
 #define LWIP_PLATFORM_DIAG(x)   do {printf x;} while(0)
-#define LWIP_PLATFORM_ASSERT(x) do {printf(x); sys_arch_assert(__ESP_FILE__, __LINE__);} while(0)
+#define LWIP_PLATFORM_ASSERT(x) do {printf(x); assert(0);} while(0)
 #else
 #define LWIP_PLATFORM_DIAG(x)
 #define LWIP_PLATFORM_ASSERT(x)

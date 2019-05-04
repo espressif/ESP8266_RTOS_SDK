@@ -793,6 +793,7 @@ esp_err_t esp_wifi_set_vendor_ie_cb(esp_vendor_ie_cb_t cb, void *ctx);
 /**
   * @brief     Set maximum WiFi transmiting power
   *
+  * @attention Please Call this API after calling esp_wifi_start()
   * @attention WiFi transmiting power is divided to six levels in phy init data.
   *            Level0 represents highest transmiting power and level5 represents lowest
   *            transmiting power. Packets of different rates are transmitted in
@@ -804,18 +805,18 @@ esp_err_t esp_wifi_set_vendor_ie_cb(esp_vendor_ie_cb_t cb, void *ctx);
   *            whether to use phy init data in partition or not) will be used. Default
   *            value is level0. Values passed in power are mapped to transmit power
   *            levels as follows:
-  *            - [78, 127]: level0
-  *            - [76, 77]: level1
-  *            - [74, 75]: level2
-  *            - [68, 73]: level3
-  *            - [60, 67]: level4
-  *            - [52, 59]: level5
-  *            - [44, 51]: level5 - 2dBm
-  *            - [34, 43]: level5 - 4.5dBm
-  *            - [28, 33]: level5 - 6dBm
-  *            - [20, 27]: level5 - 8dBm
-  *            - [8, 19]: level5 - 11dBm
-  *            - [-128, 7]: level5 - 14dBm
+  *            - [82, 127]: level0
+  *            - [78,  81]: level1
+  *            - [74,  77]: level2
+  *            - [68,  73]: level3
+  *            - [64,  67]: level4
+  *            - [56,  63]: level5
+  *            - [49,  55]: level5 - 2dBm
+  *            - [33,  48]: level5 - 6dBm
+  *            - [25,  32]: level5 - 8dBm
+  *            - [13,  24]: level5 - 11dBm
+  *            - [ 1,  12]: level5 - 14dBm
+  *            - [-128, 0]: level5 - 17.5dBm
   *
   * @param     power  Maximum WiFi transmiting power.
   *
