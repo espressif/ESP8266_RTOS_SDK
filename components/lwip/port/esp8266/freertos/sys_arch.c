@@ -109,6 +109,14 @@ sys_sem_signal(sys_sem_t *sem)
     xSemaphoreGive(*sem);
 }
 
+/*-----------------------------------------------------------------------------------*/
+// Signals a semaphore (from ISR)
+int sys_sem_signal_isr(sys_sem_t *sem)
+{
+    BaseType_t woken = pdFALSE;
+    xSemaphoreGiveFromISR(*sem, &woken);
+    return woken == pdTRUE;
+}
 
 /*-----------------------------------------------------------------------------------*/
 /*

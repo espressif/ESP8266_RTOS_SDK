@@ -132,7 +132,11 @@ static const esp_phy_init_data_t phy_init_data= { {
         0x00,
         0x00,
         0x00,
+#ifdef CONFIG_ESP_PHY_INIT_DATA_VDD33_CONST
+        CONFIG_ESP_PHY_INIT_DATA_VDD33_CONST,
+#else   
         0x00,
+#endif
         0x00,
         0x00,
         0x00,

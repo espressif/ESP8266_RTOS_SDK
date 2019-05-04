@@ -60,7 +60,6 @@
 #define lwip_select       lwip_select_esp
 #define lwip_ioctlsocket  lwip_ioctl_esp
 
-#if LWIP_POSIX_SOCKETS_IO_NAMES
 #undef lwip_read
 #undef lwip_write
 #undef lwip_writev
@@ -75,7 +74,6 @@
 #define lwip_close        lwip_close_esp
 #define lwip_fcntl        lwip_fcntl_esp
 #define lwip_ioctl        lwip_ioctl_esp
-#endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
 
 #include "../../lwip/src/api/sockets.c"
 
@@ -100,7 +98,6 @@
 #undef lwip_select
 #undef lwip_ioctlsocket
 
-#if LWIP_POSIX_SOCKETS_IO_NAMES
 #undef lwip_read
 #undef lwip_write
 #undef lwip_writev
@@ -108,7 +105,6 @@
 #undef closesocket
 #undef lwip_fcntl
 #undef lwip_ioctl
-#endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
 
 /********************************************************************/
 #define LWIP_SYNC_MT_SLEEP_MS 10

@@ -33,6 +33,7 @@
 #include "rom/ets_sys.h"
 
 #include "driver/uart.h"
+#include "driver/uart_select.h"
 
 #define portYIELD_FROM_ISR() taskYIELD()
 
@@ -87,6 +88,8 @@ typedef struct {
     uart_tx_data_t *tx_head;            /*!< TX data pointer to head of the current buffer in TX ring buffer*/
     uint32_t tx_len_tot;                /*!< Total length of current item in ring buffer*/
     uint32_t tx_len_cur;
+    bool wait_tx_done_flg;
+    uart_select_notif_callback_t uart_select_notif_callback; /*!< Notification about select() events */
 } uart_obj_t;
 
 static uart_obj_t *p_uart_obj[UART_NUM_MAX] = {0};
@@ -264,6 +267,11 @@ esp_err_t uart_wait_tx_done(uart_port_t uart_num, TickType_t ticks_to_wait)
         return ESP_ERR_TIMEOUT;
     }
 
+    if(false == p_uart_obj[uart_num]->wait_tx_done_flg) {
+        xSemaphoreGive(p_uart_obj[uart_num]->tx_mux);
+        return ESP_OK;
+    }
+
     uart_get_baudrate(uart_num, &baudrate);
     byte_delay_us = (uint32_t)(10000000 / baudrate); // (1/baudrate)*10*1000_000 us
 
@@ -276,6 +284,7 @@ esp_err_t uart_wait_tx_done(uart_port_t uart_num, TickType_t ticks_to_wait)
                 break;
             }
         }
+        p_uart_obj[uart_num]->wait_tx_done_flg = false;
     } else {
         xSemaphoreGive(p_uart_obj[uart_num]->tx_mux);
         return ESP_ERR_TIMEOUT;
@@ -495,6 +504,7 @@ static void uart_rx_intr_handler_default(void *param)
     BaseType_t task_woken = 0;
 
     while (uart_intr_status != 0x0) {
+        uart_select_notif_t notify = UART_SELECT_ERROR_NOTIF;
 
         buf_idx = 0;
         uart_event.type = UART_EVENT_MAX;
@@ -621,6 +631,8 @@ static void uart_rx_intr_handler_default(void *param)
                     p_uart->rx_buffered_len += p_uart->rx_stash_len;
                 }
 
+                notify = UART_SELECT_READ_NOTIF;
+
                 if (task_woken == pdTRUE) {
                     portYIELD_FROM_ISR();
                 }
@@ -633,16 +645,31 @@ static void uart_rx_intr_handler_default(void *param)
             uart_reset_rx_fifo(uart_num);
             uart_reg->int_clr.rxfifo_ovf = 1;
             uart_event.type = UART_FIFO_OVF;
+            notify = UART_SELECT_ERROR_NOTIF;
         } else if (uart_intr_status & UART_FRM_ERR_INT_ST_M) {
             uart_reg->int_clr.frm_err = 1;
             uart_event.type = UART_FRAME_ERR;
+            notify = UART_SELECT_ERROR_NOTIF;
         } else if (uart_intr_status & UART_PARITY_ERR_INT_ST_M) {
             uart_reg->int_clr.parity_err = 1;
             uart_event.type = UART_PARITY_ERR;
+            notify = UART_SELECT_ERROR_NOTIF;
         } else {
             uart_reg->int_clr.val = uart_intr_status; // simply clear all other intr status
             uart_event.type = UART_EVENT_MAX;
+            notify = UART_SELECT_ERROR_NOTIF;
         }
+
+#ifdef CONFIG_USING_ESP_VFS
+        if (uart_event.type != UART_EVENT_MAX && p_uart->uart_select_notif_callback) {
+            p_uart->uart_select_notif_callback(uart_num, notify, &task_woken);
+            if (task_woken == pdTRUE) {
+                portYIELD_FROM_ISR();
+            }
+        }
+#else
+        (void)notify;
+#endif
 
         if (uart_event.type != UART_EVENT_MAX && p_uart->xQueueUart) {
             if (pdFALSE == xQueueSendFromISR(p_uart->xQueueUart, (void *)&uart_event, &task_woken)) {
@@ -700,7 +727,7 @@ static int uart_tx_all(uart_port_t uart_num, const char *src, size_t size)
 
     // lock for uart_tx
     xSemaphoreTake(p_uart_obj[uart_num]->tx_mux, (portTickType)portMAX_DELAY);
-
+    p_uart_obj[uart_num]->wait_tx_done_flg = true;
     if (p_uart_obj[uart_num]->tx_buf_size > 0) {
         int max_size = xRingbufferGetMaxItemSize(p_uart_obj[uart_num]->tx_ring_buf);
         int offset = 0;
@@ -918,6 +945,7 @@ esp_err_t uart_driver_install(uart_port_t uart_num, int rx_buffer_size, int tx_b
         p_uart_obj[uart_num]->tx_head = NULL;
         p_uart_obj[uart_num]->tx_len_tot = 0;
         p_uart_obj[uart_num]->rx_buffered_len = 0;
+        p_uart_obj[uart_num]->wait_tx_done_flg = false;
 
         if (uart_queue) {
             p_uart_obj[uart_num]->xQueueUart = xQueueCreate(queue_size, sizeof(uart_event_t));
@@ -942,6 +970,8 @@ esp_err_t uart_driver_install(uart_port_t uart_num, int rx_buffer_size, int tx_b
             p_uart_obj[uart_num]->tx_ring_buf = NULL;
             p_uart_obj[uart_num]->tx_buf_size = 0;
         }
+
+        p_uart_obj[uart_num]->uart_select_notif_callback = NULL;
     } else {
         ESP_LOGE(UART_TAG, "UART driver already installed");
         return ESP_FAIL;
@@ -1029,6 +1059,13 @@ esp_err_t uart_driver_delete(uart_port_t uart_num)
     p_uart_obj[uart_num] = NULL;
 
     return ESP_OK;
+}
+
+void uart_set_select_notif_callback(uart_port_t uart_num, uart_select_notif_callback_t uart_select_notif_callback)
+{
+    if (uart_num < UART_NUM_MAX && p_uart_obj[uart_num]) {
+        p_uart_obj[uart_num]->uart_select_notif_callback = (uart_select_notif_callback_t) uart_select_notif_callback;
+    }
 }
 
 esp_err_t uart_set_rx_timeout(uart_port_t uart_num, const uint8_t tout_thresh)

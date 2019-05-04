@@ -1,0 +1,15 @@
+menu "Util"
+
+config ESP_SHA
+   bool "Enable Espressif SHA"
+   default y
+   help
+       Enable Espressif SHA1, SHA256, SHA384 & SHA512 for other components to
+       save code size for ESP8285(ESP8266 + 1MB flash) users.
+
+       Although this option is disable, bootloader will use it if booloader
+       is configured to use SHA256 to check hash.
+
+       Disabling the "assert" function at menuconfig can speed up the calculation.
+
+endmenu # Util

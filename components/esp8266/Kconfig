@@ -288,6 +288,127 @@ config WIFI_TX_RATE_SEQUENCE_FROM_HIGH
         If this option is enabled, Wifi will try to send packets first from high rate(54M). If it fails, it will 
         try at low rate until the transmission is successful.
 
+config ESP8266_WIFI_DEBUG_LOG_ENABLE
+    bool "Enable WiFi debug log"
+    default n
+    help
+        Select this option to enable WiFi debug log
+
+choice ESP8266_WIFI_DEBUG_LOG_LEVEL
+    depends on ESP8266_WIFI_DEBUG_LOG_ENABLE
+    prompt "The DEBUG level is enabled"
+    default ESP8266_WIFI_DEBUG_LOG_ERROR
+    help
+        The WiFi log is divided into the following levels: ERROR,WARNING,INFO,DEBUG,VERBOSE.
+        The ERROR level is enabled by default, and the WARNING,INFO,DEBUG,VERBOSE levels can be enabled here.
+
+    config ESP8266_WIFI_DEBUG_LOG_ERROR
+        bool "Error"
+    config ESP8266_WIFI_DEBUG_LOG_WARNING
+        bool "Warning"
+    config ESP8266_WIFI_DEBUG_LOG_INFO
+        bool "Info"
+    config ESP8266_WIFI_DEBUG_LOG_DEBUG
+        bool "Debug"
+    config ESP8266_WIFI_DEBUG_LOG_VERBOSE
+        bool "Verbose"
+endchoice
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    depends on ESP8266_WIFI_DEBUG_LOG_ENABLE
+    bool "WiFi debug log submodule"
+    default n
+    help
+        Enable this option to set the WiFi debug log submodule.
+        Currently the log submodule contains the following parts: INIT,IOCTL,CONN,SCAN.
+        The INIT submodule indicates the initialization process.The IOCTL submodule indicates the API calling
+        process.
+        The CONN submodule indicates the connecting process.The SCAN submodule indicates the scaning process.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_CORE
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "core"
+    default n
+    help
+        When this option is enabled, log for core module will be enabled..
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_SCAN
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "scan"
+    default n
+    help
+        When this option is enabled, log for scan module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_PM
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "power management"
+    default n
+    help
+        When this option is enabled, log for power management module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_NVS
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "NVS"
+    default n
+    help
+        When this option is enabled, log for NVS module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_TRC
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "TRC"
+    default n
+    help
+        When this option is enabled, log for TRC module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_EBUF
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "EBUF"
+    default n
+    help
+        When this option is enabled, log for EBUF module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_NET80211
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "NET80211"
+    default n
+    help
+        When this option is enabled, log for net80211 module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_TIMER
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "TIMER"
+    default n
+    help
+        When this option is enabled, log for timer module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_ESPNOW
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "ESPNOW"
+    default n
+    help
+        When this option is enabled, log for espnow module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_MAC
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "MAC layer"
+    default n
+    help
+        When this option is enabled, log for mac layer module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_WPA
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "wpa"
+    default n
+    help
+        When this option is enabled, log for wpa module will be enabled.
+
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_WPS
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "wps"
+    default n
+    help
+        When this option is enabled, log for wps module will be enabled.
+
 endmenu
 
 menu PHY
@@ -322,6 +443,17 @@ config ESP_PHY_INIT_DATA_IN_PARTITION
         into the application binary.
 
         If unsure, choose 'n'.
+
+config ESP_PHY_INIT_DATA_VDD33_CONST
+    int "vdd33_const value"
+    range 0 255
+    default 33
+    help
+        vdd33_const provides ADC mode settings, i.e. selecting system voltage or external voltage measurements. 
+        When measuring system voltage, it must be set to 255. 
+        To read the external voltage on TOUT(ADC) pin, vdd33_const need less than 255
+        When the ADC reference voltage is set to the actual VDD33 power supply voltage, the value range of vdd33_const is [18,36], the unit is 0.1V.
+        When the ADC reference voltage is set to the default value of 3.3V as the supply voltage, the range of vdd33_const is [0, 18] or (36, 255).
 
 endmenu  # PHY
 

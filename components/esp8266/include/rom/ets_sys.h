@@ -42,6 +42,7 @@ extern "C" {
 #define ETS_SOFT_INUM       7
 #define ETS_WDT_INUM        8
 #define ETS_FRC_TIMER1_INUM 9
+#define ETS_INT_MAX         14
 
 typedef enum {
     OK = 0,

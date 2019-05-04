@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
 #include <reent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef CONFIG_USING_ESP_VFS
+#include "esp_vfs_dev.h"
+#endif
 
 /*
  * @brief Initialize global and thread's private reent object data. We add this instead of
@@ -47,15 +51,19 @@ int esp_newlib_init(void)
 {
     esp_reent_init(_global_impure_ptr);
 
-    _GLOBAL_REENT->_stdout = fopen("uart/0", "w");
+#ifdef CONFIG_USING_ESP_VFS
+    esp_vfs_dev_uart_register();
+#endif
+
+    _GLOBAL_REENT->_stdout = fopen("/dev/uart/0", "w");
     if (!_GLOBAL_REENT->_stdout)
         goto err;
 
-    _GLOBAL_REENT->_stderr = fopen("uart/0", "w");
+    _GLOBAL_REENT->_stderr = fopen("/dev/uart/0", "w");
     if (!_GLOBAL_REENT->_stderr)
         goto err_fail;
 
-    _GLOBAL_REENT->_stdin = fopen("uart/0", "r");
+    _GLOBAL_REENT->_stdin = fopen("/dev/uart/0", "r");
     if (!_GLOBAL_REENT->_stdin)
         goto err_in;
 

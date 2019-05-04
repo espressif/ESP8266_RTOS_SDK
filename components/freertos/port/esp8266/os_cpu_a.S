@@ -117,119 +117,6 @@ _xt_int_exit:
     l32i    a0,  sp,  XT_STK_EXIT
     ret
 
-/*
-**********************************************************************************************************
-*                                           _xt_timer_int
-*                                      void _xt_timer_int(void)
-*
-* Implements the Xtensa RTOS porting layer's XT_RTOS_TIMER_INT function for uC/OS-II.
-* Called every timer interrupt. 
-* Manages the tick timer and calls OSTimeTick() every tick, and calls OSTmrSignal() when required.
-* See the detailed description of the XT_RTOS_ENTER macro in xtensa_rtos.h.
-*
-* Callable from C (obeys ABI conventions). Implemented in assmebly code for performance.
-*
-**********************************************************************************************************
-*/
-    /* Define local variable offsets in stack frame for Call0 ABI. */
-    #define __xt_timer_int_a0     0   /* ENTRY()/RET() saves/restores       */
-    #define __xt_timer_int_a2     4   /* preserve a2                        */
-    #define __xt_timer_int_a3     8   /* preserve a3                        */
-
-    .globl  _xt_timer_int
-    .type   _xt_timer_int,@function
-    .align  4
-_xt_timer_int:
-
-    /*
-    Xtensa timers work by comparing a cycle counter with a preset value.  Once the match occurs
-    an interrupt is generated, and the handler has to set a new cycle count into the comparator.
-    To avoid clock drift due to interrupt latency, the new cycle count is computed from the old,
-    not the time the interrupt was serviced. However if a timer interrupt is ever serviced more
-    than one tick late, it is necessary to process multiple ticks until the new cycle count is 
-    in the future, otherwise the next timer interrupt would not occur until after the cycle
-    counter had wrapped (2^32 cycles later).
-
-    do {
-        ticks++;
-        old_ccompare = read_ccompare_i();
-        write_ccompare_i( old_ccompare + divisor );
-        service one tick;
-        diff = read_ccount() - old_ccompare;
-    } while ( diff > divisor );
-    */
-
-    ENTRY(16)
-
-.L_xt_timer_int_catchup:
-
-    /* Update the timer comparator for the next tick. */
-    #ifdef XT_CLOCK_FREQ
-    movi    a2,  XT_TICK_DIVISOR         /* a2 = comparator increment          */
-    #else
-    movi    a3,  _xt_tick_divisor
-    l32i    a2,  a3,  0                   /* a2 = comparator increment          */
-    #endif
-    rsr     a3,  XT_CCOMPARE             /* a3 = old comparator value          */
-    add     a4,  a3,  a2                  /* a4 = new comparator value          */
-    wsr     a4,  XT_CCOMPARE             /* update comp. and clear interrupt   */
-    esync
-
-    /* Preserve a2 and a3 across C calls. */
-    s32i    a2,  sp,  __xt_timer_int_a2
-    s32i    a3,  sp,  __xt_timer_int_a3
-
-#ifndef CONFIG_TASK_SWITCH_FASTER
-    movi 	a0,  xPortSysTickHandle
-    callx0 	a0
-#else
-    call0   xPortSysTickHandle
-#endif
-
-    /* Restore a2 and a3. */
-    l32i    a2,  sp,  __xt_timer_int_a2
-    l32i    a3,  sp,  __xt_timer_int_a3
-
-    /* Check if we need to process more ticks to catch up. */
-    esync                               /* ensure comparator update complete  */
-    rsr     a4,  CCOUNT                  /* a4 = cycle count                   */
-    sub     a4,  a4,  a3                  /* diff = ccount - old comparator     */
-    blt     a2,  a4,  .L_xt_timer_int_catchup  /* repeat while diff > divisor */
-
-    RET(16)
-
-
-
-    #define __xt_timer_int1_a0     0   /* ENTRY()/RET() saves/restores       */
-    #define __xt_timer_int1_a2     4   /* preserve a2                        */
-    #define __xt_timer_int1_a3     8   /* preserve a3                        */
-
-    .globl  _xt_timer_int1
-    .type   _xt_timer_int1,@function
-    .align  4
-_xt_timer_int1:
-
-    ENTRY(16)
-
-    /* Preserve a2 and a3 across C calls. */
-    s32i    a2,  sp,  __xt_timer_int1_a2
-    s32i    a3,  sp,  __xt_timer_int1_a3
-
-    /* Call the uCOS-II tick handler. */
-#ifndef CONFIG_TASK_SWITCH_FASTER
-    movi 	a0,  vTaskSwitchContext
-    callx0	a0
-#else
-    call0   vTaskSwitchContext
-#endif
-
-    /* Restore a2 and a3. */
-    l32i    a2,  sp,  __xt_timer_int1_a2
-    l32i    a3,  sp,  __xt_timer_int1_a3
-
-    RET(16)
-
-
 
 /*
 **********************************************************************************************************
@@ -241,9 +128,10 @@ _xt_timer_int1:
 *
 **********************************************************************************************************
 */
-    .globl  _xt_tick_timer_init
-    .type   _xt_tick_timer_init,@function
-    .align  4
+    .section    .text._xt_tick_timer_init, "ax"
+    .globl      _xt_tick_timer_init
+    .type       _xt_tick_timer_init,@function
+    .align      4
 _xt_tick_timer_init:
 
     ENTRY(16)
@@ -268,10 +156,10 @@ _xt_tick_timer_init:
 
     RET(16)
 
-
-    .globl  _xt_set_xt_ccompare_val
-    .type   _xt_set_xt_ccompare_val,@function
-    .align  4
+    .section    .text._xt_set_xt_ccompare_val, "ax"
+    .globl      _xt_set_xt_ccompare_val
+    .type       _xt_set_xt_ccompare_val,@function
+    .align      4
 _xt_set_xt_ccompare_val:
     ENTRY(16)
 
@@ -282,9 +170,10 @@ _xt_set_xt_ccompare_val:
 	esync
     RET(16)
 
-    .globl  ResetCcountVal
-    .type   ResetCcountVal,@function
-    .align  4
+    .section    .text.ResetCcountVal, "ax"
+    .globl      ResetCcountVal
+    .type       ResetCcountVal,@function
+    .align      4
 ResetCcountVal:
     ENTRY(16)
     wsr     a2,  ccount
@@ -296,10 +185,10 @@ ResetCcountVal:
 **********************************************************************************************************
 */
 
-
-	.globl  _xt_isr_unmask
-    .type   _xt_isr_unmask,@function
-    .align  4
+    .section    .text._xt_isr_unmask, "ax"
+    .globl      _xt_isr_unmask
+    .type       _xt_isr_unmask,@function
+    .align      4
 _xt_isr_unmask:
     ENTRY(16)
 
@@ -313,9 +202,10 @@ _xt_isr_unmask:
     RET(16)
 
 
-	.globl  _xt_isr_mask
-    .type   _xt_isr_mask,@function
-    .align  4
+    .section    .text._xt_isr_mask, "ax"
+    .globl      _xt_isr_mask
+    .type       _xt_isr_mask,@function
+    .align      4
 _xt_isr_mask:
     ENTRY(16)
 
@@ -327,23 +217,6 @@ _xt_isr_mask:
 	wsr     a5,  INTENABLE
 	xtos_unlock	a7
 	mov     a2,	 a3
-    RET(16)
-
-
-    .global _xt_read_ints
-    .type   _xt_read_ints,@function
-    .align  4
-_xt_read_ints:
-    ENTRY(16)
-    rsr a2, INTERRUPT
-    RET(16)
-
-    .global _xt_clear_ints
-    .type   _xt_clear_ints,@function
-    .align  4
-_xt_clear_ints:
-    ENTRY(16)
-    wsr     a2, INTCLEAR
     RET(16)
 
 

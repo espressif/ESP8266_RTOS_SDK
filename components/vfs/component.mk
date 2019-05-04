@@ -1,7 +1,10 @@
 #
 # Component Makefile
 #
+# (Uses default behaviour of compiling all source files in directory, adding 'include' to include path.)
 
-COMPONENT_ADD_INCLUDEDIRS := include
+ifndef CONFIG_USING_ESP_VFS
+COMPONENT_ADD_INCLUDEDIRS :=
+COMPONENT_SRCDIRS :=
+endif
 
-COMPONENT_SRCDIRS := src

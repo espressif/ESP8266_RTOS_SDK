@@ -545,7 +545,7 @@ list-components:
 	$(foreach cp,$(COMPONENT_PATHS),$(info $(cp)))
 
 # print flash command, so users can dump this to config files and download somewhere without idf
-print_flash_cmd:
+print_flash_cmd: global-macro
 	echo $(ESPTOOL_WRITE_FLASH_OPTIONS) $(ESPTOOL_ALL_FLASH_ARGS) | sed -e 's:'$(PWD)/build/'::g'
 
 # Check toolchain version using the output of xtensa-esp32-elf-gcc --version command.

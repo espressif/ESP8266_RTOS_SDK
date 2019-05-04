@@ -106,7 +106,11 @@ SECTIONS
     *(.init)
     *(.iram1 .iram1.*)
     *libspi_flash.a:spi_flash_raw.o(.literal .text .literal.* .text.*)
+#ifdef CONFIG_ESP8266_WIFI_DEBUG_LOG_ENABLE
+    *libpp_dbg.a:(.literal .text .literal.* .text.*)
+#else
     *libpp.a:(.literal .text .literal.* .text.*)
+#endif
     *libphy.a:(.literal .text .literal.* .text.*)
     *(.literal .text .stub .gnu.warning .gnu.linkonce.literal.* .gnu.linkonce.t.*.literal .gnu.linkonce.t.*)
     *(.fini.literal)
@@ -122,7 +126,11 @@ SECTIONS
 #endif
 
 #ifdef CONFIG_ESP8266_CORE_GLOBAL_DATA_LINK_IRAM
+#ifdef CONFIG_ESP8266_WIFI_DEBUG_LOG_ENABLE
+    *libcore_dbg.a:(.bss .data .bss.* .data.* COMMON)
+#else
     *libcore.a:(.bss .data .bss.* .data.* COMMON)
+#endif
 #endif
 
 #ifdef CONFIG_FREERTOS_GLOBAL_DATA_LINK_IRAM
@@ -157,7 +165,11 @@ SECTIONS
   .rodata : ALIGN(4)
   {
     _rodata_start = ABSOLUTE(.);
+#ifdef CONFIG_ESP8266_WIFI_DEBUG_LOG_ENABLE
+    *libpp_dbg.a:(.rodata.* .rodata)
+#else
     *libpp.a:(.rodata.* .rodata)
+#endif
     *liblog.a:(.rodata.* .rodata)
     *(.gnu.linkonce.r.*)
     *(.rodata1)

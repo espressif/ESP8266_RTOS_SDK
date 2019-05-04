@@ -20,6 +20,10 @@ COMPONENT_SRCDIRS += apps/dhcpserver \
                      port/esp8266/freertos \
                      port/esp8266/netif
 
+ifdef CONFIG_USING_ESP_VFS
+COMPONENT_SRCDIRS += port
+endif
+
 CFLAGS += -Wno-address #lots of LWIP source files evaluate macros that check address of stack variables
 
 lwip/src/apps/sntp/sntp.o: CFLAGS += -Wno-implicit-function-declaration

@@ -1,4 +1,4 @@
-// Copyright 2018-2019 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdarg.h>
-#include <fcntl.h>
+#ifndef __ESP_SYS_SELECT_H__
+#define __ESP_SYS_SELECT_H__
 
-int fcntl(int fd, int request, ...)
-{
-    int val, ret;
-    va_list va;
+#include "sdkconfig.h"
 
-    va_start(va, request);
-    
-    val = va_arg(va, int);
-    ret = lwip_fcntl(fd, request, val);
+#ifdef CONFIG_USING_ESP_VFS
 
-    va_end(va);
+#include <sys/types.h>
+#include <sys/time.h>
 
-    return ret;    
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds, struct timeval *timeout);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#else
+
+#include "lwip/sockets.h"
+
+#endif
+
+#endif //__ESP_SYS_SELECT_H__
+
