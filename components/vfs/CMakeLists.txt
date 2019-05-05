@@ -1,3 +1,4 @@
+
 if(CONFIG_USING_ESP_VFS)
     set(COMPONENT_SRCS "vfs.c"
                        "vfs_uart.c")
@@ -7,6 +8,6 @@ endif()
 
 set(COMPONENT_ADD_INCLUDEDIRS "include")
 
-set(COMPONENT_REQUIRES)
+set(COMPONENT_REQUIRES "lwip")
 
 register_component()

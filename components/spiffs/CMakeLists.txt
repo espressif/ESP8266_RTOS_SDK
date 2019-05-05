@@ -10,8 +10,8 @@ set(COMPONENT_SRCS "esp_spiffs.c"
                    "spiffs/src/spiffs_nucleus.c")
 endif()
 
-set(COMPONENT_REQUIRES spi_flash)
-set(COMPONENT_PRIV_REQUIRES bootloader_support)
+set(COMPONENT_REQUIRES  "freertos" "spi_flash")
+set(COMPONENT_PRIV_REQUIRES "esp8266" "bootloader_support")
 
 register_component()
 

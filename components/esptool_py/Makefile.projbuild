@@ -70,9 +70,6 @@ APP_BIN_UNSIGNED ?= $(APP_BIN)
 
 $(APP_BIN_UNSIGNED): $(APP_ELF) $(ESPTOOLPY_SRC)
 	$(ESPTOOLPY) elf2image $(ESPTOOL_FLASH_OPTIONS) $(ESPTOOL_ELF2IMAGE_OPTIONS) -o $@ $<
-ifdef IS_BOOTLOADER_BUILD
-	@mv $@0x00000.bin $@
-endif
 
 flash: all_binaries $(ESPTOOLPY_SRC) $(call prereq_if_explicit,erase_flash)
 	@echo "Flashing binaries to serial port $(ESPPORT) (app at offset $(APP_OFFSET))..."

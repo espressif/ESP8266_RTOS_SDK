@@ -105,7 +105,7 @@ SECTIONS
     *(.init.literal)
     *(.init)
     *(.iram1 .iram1.*)
-    *libspi_flash.a:spi_flash_raw.o(.literal .text .literal.* .text.*)
+    *libspi_flash.a:spi_flash_raw.*(.literal .text .literal.* .text.*)
 #ifdef CONFIG_ESP8266_WIFI_DEBUG_LOG_ENABLE
     *libpp_dbg.a:(.literal .text .literal.* .text.*)
 #else
@@ -134,13 +134,13 @@ SECTIONS
 #endif
 
 #ifdef CONFIG_FREERTOS_GLOBAL_DATA_LINK_IRAM
-    *libfreertos.a:tasks.o(.bss .data .bss.* .data.* COMMON)
-    *libfreertos.a:timers.o(.bss .data .bss.* .data.* COMMON)
-    *libfreertos.a:freertos_hooks.o(.bss .data .bss.* .data.* COMMON)
+    *libfreertos.a:tasks.*(.bss .data .bss.* .data.* COMMON)
+    *libfreertos.a:timers.*(.bss .data .bss.* .data.* COMMON)
+    *libfreertos.a:freertos_hooks.*(.bss .data .bss.* .data.* COMMON)
 #endif
 
 #ifdef CONFIG_LINK_ETS_PRINTF_TO_IRAM
-    *libesp8266.a:ets_printf.o(.literal .text .literal.* .text.* .rodata.* .rodata)
+    *libesp8266.a:ets_printf.*(.literal .text .literal.* .text.* .rodata.* .rodata)
 #endif
 
     _text_end = ABSOLUTE(.);
@@ -182,13 +182,13 @@ SECTIONS
     . = (. + 3) & ~ 3;
     /*  C++ constructor and destructor tables, properly ordered:  */
     __init_array_start = ABSOLUTE(.);
-    KEEP (*crtbegin.o(.ctors))
-    KEEP (*(EXCLUDE_FILE (*crtend.o) .ctors))
+    KEEP (*crtbegin.*(.ctors))
+    KEEP (*(EXCLUDE_FILE (*crtend.*) .ctors))
     KEEP (*(SORT(.ctors.*)))
     KEEP (*(.ctors))
     __init_array_end = ABSOLUTE(.);
-    KEEP (*crtbegin.o(.dtors))
-    KEEP (*(EXCLUDE_FILE (*crtend.o) .dtors))
+    KEEP (*crtbegin.*(.dtors))
+    KEEP (*(EXCLUDE_FILE (*crtend.*) .dtors))
     KEEP (*(SORT(.dtors.*)))
     KEEP (*(.dtors))
     /*  C++ exception handlers table:  */

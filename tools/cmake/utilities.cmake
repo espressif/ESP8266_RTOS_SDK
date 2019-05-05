@@ -9,7 +9,7 @@
 #
 function(set_default variable default_value)
     if(NOT ${variable})
-        if($ENV{${variable}})
+        if(DEFINED ENV{${variable}} AND NOT "$ENV{${variable}}" STREQUAL "")
             set(${variable} $ENV{${variable}} PARENT_SCOPE)
         else()
             set(${variable} ${default_value} PARENT_SCOPE)
@@ -30,7 +30,6 @@ function(spaces2list variable_name)
     string(REPLACE " " ";" tmp "${${variable_name}}")
     set("${variable_name}" "${tmp}" PARENT_SCOPE)
 endfunction()
-
 
 # lines2list
 #
@@ -74,30 +73,6 @@ function(move_if_different source destination)
 
 endfunction()
 
-
-# add_compile_options variant for C++ code only
-#
-# This adds global options, set target properties for
-# component-specific flags
-function(add_cxx_compile_options)
-    foreach(option ${ARGV})
-        # note: the Visual Studio Generator doesn't support this...
-        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${option}>)
-    endforeach()
-endfunction()
-
-# add_compile_options variant for C code only
-#
-# This adds global options, set target properties for
-# component-specific flags
-function(add_c_compile_options)
-    foreach(option ${ARGV})
-        # note: the Visual Studio Generator doesn't support this...
-        add_compile_options($<$<COMPILE_LANGUAGE:C>:${option}>)
-    endforeach()
-endfunction()
-
-
 # target_add_binary_data adds binary data into the built target,
 # by converting it to a generated source file which is then compiled
 # to a binary object as part of the build
@@ -132,7 +107,7 @@ endmacro()
 # Append a single line to the file specified
 # The line ending is determined by the host OS
 function(file_append_line file line)
-    if(ENV{MSYSTEM} OR CMAKE_HOST_WIN32)
+    if(DEFINED ENV{MSYSTEM} OR CMAKE_HOST_WIN32)
         set(line_ending "\r\n")
     else() # unix
         set(line_ending "\n")
@@ -178,4 +153,15 @@ endfunction()
 function(make_json_list list variable)
     string(REPLACE ";" "\", \"" result "[ \"${list}\" ]")
     set("${variable}" "${result}" PARENT_SCOPE)
+endfunction()
+
+# add_prefix
+#
+# Adds a prefix to each item in the specified list.
+#
+function(add_prefix var prefix)
+    foreach(elm ${ARGN})
+        list(APPEND newlist "${prefix}${elm}")
+    endforeach()
+    set(${var} "${newlist}" PARENT_SCOPE)
 endfunction()

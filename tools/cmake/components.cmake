@@ -16,13 +16,20 @@ endfunction()
 #
 function(register_component)
     get_filename_component(component_dir ${CMAKE_CURRENT_LIST_FILE} DIRECTORY)
-    get_filename_component(component ${component_dir} NAME)
+    set(component ${COMPONENT_NAME})
 
     spaces2list(COMPONENT_SRCDIRS)
     spaces2list(COMPONENT_ADD_INCLUDEDIRS)
+    spaces2list(COMPONENT_SRCEXCLUDE)
 
-    # Add to COMPONENT_SRCS by globbing in COMPONENT_SRCDIRS
-    if(NOT COMPONENT_SRCS)
+    if(COMPONENT_SRCDIRS)
+        # Warn user if both COMPONENT_SRCDIRS and COMPONENT_SRCS are set
+        if(COMPONENT_SRCS)
+            message(WARNING "COMPONENT_SRCDIRS and COMPONENT_SRCS are both set, COMPONENT_SRCS will be ignored")
+        endif()
+
+        set(COMPONENT_SRCS "")
+
         foreach(dir ${COMPONENT_SRCDIRS})
             get_filename_component(abs_dir ${dir} ABSOLUTE BASE_DIR ${component_dir})
             if(NOT IS_DIRECTORY ${abs_dir})
@@ -38,6 +45,17 @@ function(register_component)
             endif()
         endforeach()
     endif()
+
+    # Remove COMPONENT_SRCEXCLUDE matches
+    foreach(exclude ${COMPONENT_SRCEXCLUDE})
+        get_filename_component(exclude "${exclude}" ABSOLUTE ${component_dir})
+        foreach(src ${COMPONENT_SRCS})
+            get_filename_component(abs_src "${src}" ABSOLUTE ${component_dir})
+            if("${exclude}" STREQUAL "${abs_src}")  # compare as canonical paths
+                list(REMOVE_ITEM COMPONENT_SRCS "${src}")
+            endif()
+        endforeach()
+    endforeach()
 
     # add as a PUBLIC library (if there are source files) or INTERFACE (if header only)
     if(COMPONENT_SRCS OR embed_binaries)
@@ -84,6 +102,11 @@ function(register_component)
         endif()
         target_include_directories(${component} PRIVATE ${abs_dir})
     endforeach()
+
+    if(component IN_LIST BUILD_TEST_COMPONENTS)
+        target_link_libraries(${component} "-L${CMAKE_CURRENT_BINARY_DIR}")
+        target_link_libraries(${component} "-Wl,--whole-archive -l${component} -Wl,--no-whole-archive")
+    endif()
 endfunction()
 
 function(register_config_only_component)
@@ -135,7 +158,7 @@ function(components_finish_registration)
 
             get_target_property(a_type ${a} TYPE)
             if(${a_type} MATCHES .+_LIBRARY)
-                set(COMPONENT_LIBRARIES "${COMPONENT_LIBRARIES};${a}")
+                list(APPEND COMPONENT_LIBRARIES ${a})
             endif()
         endif()
     endforeach()
