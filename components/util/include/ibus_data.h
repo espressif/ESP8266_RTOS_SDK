@@ -52,6 +52,8 @@
 
 #ifdef USING_IBUS_FASTER_GET
 
+#include "esp_attr.h"
+
 #ifndef DISABLE_IBUS_INLINE_FUNC
 #define IBUS_INLINE inline
 #else
@@ -83,9 +85,13 @@ typedef union _ibus_data {
 __ESP_IBUS_GET_DATA(uint8_t)
 __ESP_IBUS_GET_DATA(uint16_t)
 
+#define ESP_IBUS_ATTR                               WORD_ALIGNED_ATTR
+
 #define ESP_IBUS_GET_U8_DATA(_index, _pbuf)         __esp_ibus_get_uint8_t_data(_index, _pbuf) 
 #define ESP_IBUS_GET_U16_DATA(_index, _pbuf)        __esp_ibus_get_uint16_t_data(_index, _pbuf)
 #else
+#define ESP_IBUS_ATTR
+
 #define ESP_IBUS_GET_U8_DATA(_index, _pbuf)         ((const uint8_t *)_pbuf)[_index]
 #define ESP_IBUS_GET_U16_DATA(_index, _pbuf)        ((const uint16_t *)_pbuf)[_index]
 #endif
