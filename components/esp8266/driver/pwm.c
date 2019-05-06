@@ -45,9 +45,13 @@ static const char *TAG = "pwm";
 
 #define US_TO_MAC_TICK(t) (t)
 #define US_TO_TICKS(t) US_TO_MAC_TICK(t)
+// Time to switch PWM ahead of time
 #define AHEAD_TICKS0 0
-#define AHEAD_TICKS1 6
-#define AHEAD_TICKS2 8
+// Advance timing of the timer
+#define AHEAD_TICKS1 8
+// The time that remains in the interrupt function (the adjacent target loops in the interrupt)
+#define AHEAD_TICKS2 10
+// Minimum timing time
 #define AHEAD_TICKS3 2
 #define MAX_TICKS    10000000ul
 
