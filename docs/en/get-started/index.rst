@@ -129,7 +129,7 @@ Install the Required Python Packages
 
 Python packages required by ESP8266\_RTOS\_SDK are located in the ``$IDF_PATH/requirements.txt`` file. You can install them by running::
 
-    python -m pip install --user -r $IDF_PATH/requirements.txt
+    python -m pip install --user -r $IDF_PATH/docs/requirements.txt
 
 .. note::
 
@@ -137,7 +137,7 @@ Python packages required by ESP8266\_RTOS\_SDK are located in the ``$IDF_PATH/re
     interpreter can be checked by running command ``python --version`` and depending on the result, you might want to
     use ``python2``, ``python2.7`` or similar instead of ``python``, e.g.::
 
-        python2.7 -m pip install --user -r $IDF_PATH/requirements.txt
+        python2.7 -m pip install --user -r $IDF_PATH/docs/requirements.txt
 
 .. _get-started-start-project:
 
