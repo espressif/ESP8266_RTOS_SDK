@@ -1291,21 +1291,21 @@ size_t memp_malloc_get_size(size_t type);
  * The stack size value itself is platform-dependent, but is passed to
  * sys_thread_new() when the thread is created.
  */
-#define DEFAULT_THREAD_STACKSIZE        0
+#define DEFAULT_THREAD_STACKSIZE        TCPIP_THREAD_STACKSIZE
 
 /**
  * DEFAULT_THREAD_PRIO: The priority assigned to any other lwIP thread.
  * The priority value itself is platform-dependent, but is passed to
  * sys_thread_new() when the thread is created.
  */
-#define DEFAULT_THREAD_PRIO             1
+#define DEFAULT_THREAD_PRIO             TCPIP_THREAD_PRIO
 
 /**
  * DEFAULT_RAW_RECVMBOX_SIZE: The mailbox size for the incoming packets on a
  * NETCONN_RAW. The queue size value itself is platform-dependent, but is passed
  * to sys_mbox_new() when the recvmbox is created.
  */
-#define DEFAULT_RAW_RECVMBOX_SIZE       0
+#define DEFAULT_RAW_RECVMBOX_SIZE       6
 
 /**
  * DEFAULT_UDP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a
