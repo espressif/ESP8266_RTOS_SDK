@@ -25,8 +25,10 @@
 #ifndef _EAGLE_SOC_H_
 #define _EAGLE_SOC_H_
 
+#ifndef __ASSEMBLER__
 #include <stdint.h>
 #include "driver/soc.h"
+#endif
 
 /* IO definitions (access restrictions to peripheral registers) */
 
