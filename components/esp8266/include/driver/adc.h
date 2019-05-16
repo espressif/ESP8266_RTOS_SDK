@@ -34,8 +34,8 @@ typedef enum {
  * @brief ADC initialization parameter structure type definition
  */
 typedef struct {
-    adc_mode_t mode;
-    uint8_t clk_div;  // ADC sample collection clock=80M/clk_div, range[8, 32]
+    adc_mode_t mode;  /*!< ADC mode */
+    uint8_t clk_div;  /*!< ADC sample collection clock=80M/clk_div, range[8, 32] */
 } adc_config_t;
 
 /**

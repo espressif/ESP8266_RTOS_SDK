@@ -131,7 +131,7 @@ void *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, size_t lin
  *
  * @param ptr Pointer to memory previously returned from heap_caps_(m/c/re/z)alloc(). Can be NULL.
  */
-#define heap_caps_free(p) _heap_caps_free(p, __ESP_FILE__, __LINE__)
+#define heap_caps_free(ptr) _heap_caps_free(ptr, __ESP_FILE__, __LINE__)
 
 void _heap_caps_free(void *ptr, const char *file, size_t line);
 
@@ -179,7 +179,6 @@ void *_heap_caps_realloc(void *mem, size_t newsize, uint32_t caps, const char *f
  *
  * In IDF, ``calloc(c, s)`` is equivalent to ``heap_caps_calloc(c, s, MALLOC_CAP_32BIT)``.
  *
- * @param n Number of continuing chunks of memory to allocate
  * @param size Size, in bytes, of a chunk of memory to allocate
  * @param caps Bitwise OR of MALLOC_CAP_* flags indicating the type of memory to be returned
  *

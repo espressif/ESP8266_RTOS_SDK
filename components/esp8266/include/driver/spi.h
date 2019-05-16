@@ -105,14 +105,14 @@ typedef enum {
  */
 typedef union {
     struct {
-        uint32_t read_buffer:  1;
-        uint32_t write_buffer: 1;
-        uint32_t read_status:  1;
-        uint32_t write_status: 1;
-        uint32_t trans_done:   1;
-        uint32_t reserved5:    27;
-    };
-    uint32_t val;
+        uint32_t read_buffer:  1;    /*!< configurate intterrupt to enable reading */ 
+        uint32_t write_buffer: 1;    /*!< configurate intterrupt to enable writing */ 
+        uint32_t read_status:  1;    /*!< configurate intterrupt to enable reading status */ 
+        uint32_t write_status: 1;    /*!< configurate intterrupt to enable writing status */ 
+        uint32_t trans_done:   1;    /*!< configurate intterrupt to enable transmission done */ 
+        uint32_t reserved5:    27;   /*!< reserved */
+    };                               /*!< not filled */
+    uint32_t val;                    /*!< union fill */ 
 } spi_intr_enable_t;
 
 /**
@@ -130,38 +130,38 @@ typedef union {
         uint32_t miso_en:       1;   /*!< MISO line enable */
         uint32_t cs_en:         1;   /*!< CS line enable */
         uint32_t reserved9:    23;   /*!< resserved */
-    };
-    uint32_t val;
+    };                               /*!< not filled */
+    uint32_t val;                    /*!< union fill */ 
 } spi_interface_t;
 
 /**
  * @brief SPI transmission parameter structure type definition
  */
 typedef struct {
-    uint16_t *cmd;
-    uint32_t *addr;
-    uint32_t *mosi;
-    uint32_t *miso;
+    uint16_t *cmd;                  /*!< SPI transmission command */  
+    uint32_t *addr;                 /*!< SPI transmission address */  
+    uint32_t *mosi;                 /*!< SPI transmission MOSI buffer */  
+    uint32_t *miso;                 /*!< SPI transmission MISO buffer */  
     union {
         struct {
-            uint32_t cmd:   5;
-            uint32_t addr:  7;
-            uint32_t mosi: 10;
-            uint32_t miso: 10;
-        };
-        uint32_t val;
-    } bits;
+            uint32_t cmd:   5;      /*!< SPI transmission command bits */  
+            uint32_t addr:  7;      /*!< SPI transmission address bits */ 
+            uint32_t mosi: 10;      /*!< SPI transmission MOSI buffer bits */  
+            uint32_t miso: 10;      /*!< SPI transmission MISO buffer bits */ 
+        };                          /*!< not filled */
+        uint32_t val;               /*!< union fill */ 
+    } bits;                         /*!< SPI transmission packet members' bits */  
 } spi_trans_t;
 
 /**
  * @brief SPI initialization parameter structure type definition
  */
 typedef struct {
-    spi_interface_t interface;
-    spi_intr_enable_t intr_enable;
-    spi_event_callback_t event_cb;
-    spi_mode_t mode;
-    spi_clk_div_t clk_div;
+    spi_interface_t interface;      /*!< SPI bus interface */  
+    spi_intr_enable_t intr_enable;  /*!< check if enable SPI interrupt */  
+    spi_event_callback_t event_cb;  /*!< SPI interrupt event callback */  
+    spi_mode_t mode;                /*!< SPI mode */  
+    spi_clk_div_t clk_div;          /*!< SPI clock divider */     
 } spi_config_t;
 
 /**

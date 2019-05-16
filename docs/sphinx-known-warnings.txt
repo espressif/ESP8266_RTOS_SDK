@@ -81,3 +81,8 @@ wear-levelling.rst:line: WARNING: Duplicate declaration, bool esp_vfs_fat_mount_
 wear-levelling.rst:line: WARNING: Duplicate declaration, int esp_vfs_fat_mount_config_t::max_files
 wear-levelling.rst:line: WARNING: Duplicate declaration, size_t esp_vfs_fat_mount_config_t::allocation_unit_size
 wear-levelling.rst:line: WARNING: Duplicate declaration, esp_vfs_fat_mount_config_t
+
+spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::cmd
+spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::addr
+spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::mosi
+spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::miso

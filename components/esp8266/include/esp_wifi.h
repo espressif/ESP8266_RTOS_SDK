@@ -897,11 +897,14 @@ esp_err_t esp_wifi_get_event_mask(uint32_t *mask);
   *               the next packet is allowed to send. Otherwise, wifi_send_pkt_freedom
   *               will return fail.
   *
-  * @param     const void *buffer: pointer of packet
-  * @param     int len: packet length
-  * @param     bool en_sys_seq: follow the system's 802.11 packets sequence number or not,
-  *                           if it is true, the sequence number will be increased 1 every
-  *                           time a packet sent.
+  * @param     ifx        interface if the Wi-Fi mode is Station, the ifx should be WIFI_IF_STA. If the Wi-Fi
+  *                       mode is SoftAP, the ifx should be WIFI_IF_AP. If the Wi-Fi mode is Station+SoftAP, the 
+  *                       ifx should be WIFI_IF_STA or WIFI_IF_AP. If the ifx is wrong, the API returns ESP_ERR_WIFI_IF.
+  * @param     buffer     pointer of packet
+  * @param     len        packet length
+  * @param     en_sys_seq follow the system's 802.11 packets sequence number or not,
+  *                       if it is true, the sequence number will be increased 1 every
+  *                       time a packet sent.
   *
   * @return    ESP_OK, succeed;
   * @return    ESP_FAIL, fail.
