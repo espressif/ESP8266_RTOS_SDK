@@ -73,3 +73,31 @@ push_master_to_github:
     # (aka objectname) at tip of each branch, and if any SHAs match then it checks out the local branch
     # and then pushes that ref to a corresponding github branch
     - eval $(git for-each-ref --shell bash --format 'if [ $CI_COMMIT_SHA == %(objectname) ]; then git checkout -B %(refname:strip=3); git push --follow-tags github %(refname:strip=3); fi;' $GITHUB_PUSH_REFS)
+
+build_docs:
+  stage: build
+  image: $CI_DOCKER_REGISTRY/esp32-ci-env$BOT_DOCKER_IMAGE_TAG
+  tags:
+    - build_docs
+  artifacts:
+    when: always
+    paths:
+      # English version of documentation
+      - docs/en/doxygen-warning-log.txt
+      - docs/en/sphinx-warning-log.txt
+      - docs/en/sphinx-warning-log-sanitized.txt
+      - docs/en/_build/html
+      - docs/sphinx-err-*
+    expire_in: 1 day
+  only:
+    variables:
+      - $BOT_TRIGGER_WITH_LABEL == null
+      - $BOT_LABEL_BUILD
+      - $BOT_LABEL_BUILD_DOCS
+      - $BOT_LABEL_REGULAR_TEST
+  script:
+    - cd docs
+    - cd en
+    - make gh-linkcheck
+    - make html
+    - ../check_doc_warnings.sh

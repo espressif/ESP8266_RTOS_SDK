@@ -242,8 +242,6 @@ void esp_chip_info(esp_chip_info_t* out_info);
   *         Flash map depends on the selection when compiling, more details in document
   *         "2A-ESP8266__IOT_SDK_User_Manual"
   *
-  * @param  null
-  *
   * @return enum flash_size_map
   */
 flash_size_map system_get_flash_size_map(void);
