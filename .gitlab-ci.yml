@@ -39,7 +39,6 @@ build_ssc:
       - ./SSC/ssc_bin
     expire_in: 6 mos
   script:
-    - /usr/bin/python -m pip install --user -r ${IDF_PATH}/requirements.txt
     - git clone $GITLAB_SSH_SERVER/yinling/SSC.git
     - cd SSC
     # try checkout same branch
