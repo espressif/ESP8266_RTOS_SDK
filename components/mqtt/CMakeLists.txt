@@ -1,27 +1,30 @@
 if(CONFIG_MQTT_USING_IBM)
 set(COMPONENT_ADD_INCLUDEDIRS
-    paho/MQTTClient-C/src
-    paho/MQTTClient-C/src/FreeRTOS
-    paho/MQTTPacket/src)
+    "ibm-mqtt/MQTTClient-C/src"
+    "ibm-mqtt/MQTTClient-C/src/FreeRTOS"
+    "ibm-mqtt/MQTTPacket/src")
 
 set(COMPONENT_SRCDIRS
-    paho/MQTTClient-C/src
-    paho/MQTTClient-C/src/FreeRTOS
-    paho/MQTTPacket/src)
+    "ibm-mqtt/MQTTClient-C/src"
+    "ibm-mqtt/MQTTClient-C/src/FreeRTOS"
+    "ibm-mqtt/MQTTPacket/src")
 
-set(COMPONENT_REQUIRES freertos lwip ssl)
-elif (CONFIG_MQTT_USING_ESP)
-set(COMPONENT_ADD_INCLUDEDIRS esp-mqtt/include)
+endif()
+
+if (CONFIG_MQTT_USING_ESP)
+set(COMPONENT_ADD_INCLUDEDIRS "esp-mqtt/include")
 set(COMPONENT_PRIV_INCLUDEDIRS "esp-mqtt/lib/include")
 set(COMPONENT_SRCS "esp-mqtt/mqtt_client.c"
                    "esp-mqtt/lib/mqtt_msg.c"
                    "esp-mqtt/lib/mqtt_outbox.c"
-                   "esp-mqtt/lib/platform_esp32_idf.c")
+                   "esp-mqtt/lib/platform_idf.c")
 
-set(COMPONENT_REQUIRES lwip http_parser mbedtls tcp_transport)
 endif()
+
+set(COMPONENT_REQUIRES lwip http_parser ssl tcp_transport freertos lwip ssl)
 
 register_component()
 
-target_compile_options(${COMPONENT_NAME} PUBLIC -DMQTT_TASK)
-
+if(CONFIG_MQTT_USING_IBM)
+target_compile_options(${COMPONENT_NAME} PUBLIC -DMQTT_TASK -DMQTTCLIENT_PLATFORM_HEADER=MQTTFreeRTOS.h)
+endif()

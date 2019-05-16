@@ -83,7 +83,7 @@ partition_table-flash: $(PARTITION_TABLE_BIN)
 partition_table-clean:
 	rm -f $(PARTITION_TABLE_BIN)
 
-global-macro: partition_table_get_info
+make_prepare: partition_table_get_info
 
 clean: partition_table-clean
 

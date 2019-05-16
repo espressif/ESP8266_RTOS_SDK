@@ -41,7 +41,7 @@ Name: python32; Description: Download and Run Python 2.7.14 Installer and instal
 Name: python64; Description: Download and Run Python 2.7.14 Installer and install pyserial; GroupDescription: "Other Required Tools:"; Check: IsWin64 and not Python27Installed
 
 [Files]
-Components: toolchain; Source: "input\xtensa-esp32-elf\*"; DestDir: "{app}\toolchain\"; Flags: recursesubdirs;
+Components: toolchain; Source: "input\xtensa-esp8266-elf\*"; DestDir: "{app}\toolchain\"; Flags: recursesubdirs;
 Components: mconf; Source: "input\mconf-v4.6.0.0-idf-20180319-win32\*"; DestDir: "{app}\mconf\";
 Components: ninja; Source: "input\ninja.exe"; DestDir: "{app}";
 

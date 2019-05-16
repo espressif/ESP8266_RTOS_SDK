@@ -6,11 +6,12 @@ cmake_minimum_required(VERSION 3.5)
 set(IDF_PATH "$ENV{IDF_PATH}")
 if(NOT IDF_PATH)
     # Documentation says you should set IDF_PATH in your environment, but we
-    # can infer it here if it's not set.
-    set(IDF_PATH ${CMAKE_CURRENT_LIST_DIR})
+    # can infer it relative to tools/cmake directory if it's not set.
+    get_filename_component(IDF_PATH "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
 endif()
 file(TO_CMAKE_PATH "${IDF_PATH}" IDF_PATH)
-set($ENV{IDF_PATH} "${IDF_PATH}")
+set(ENV{IDF_PATH} ${IDF_PATH})
+
 
 #
 # Load cmake modules
@@ -27,6 +28,15 @@ include(git_submodules)
 include(idf_functions)
 
 set_default(PYTHON "python")
+
+if(NOT PYTHON_DEPS_CHECKED AND NOT BOOTLOADER_BUILD)
+    message(STATUS "Checking Python dependencies...")
+    execute_process(COMMAND "${PYTHON}" "${IDF_PATH}/tools/check_python_dependencies.py"
+        RESULT_VARIABLE result)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR "Some Python dependencies must be installed. Check above message for details.")
+    endif()
+endif()
 
 # project
 #
@@ -46,20 +56,24 @@ macro(project name)
     # Set global variables used by rest of the build
     idf_set_global_variables()
 
-    # Establish dependencies for components in the build
-    # (this happens before we even generate config...)
-    if(COMPONENTS)
-        # Make sure if an explicit list of COMPONENTS is given, it contains the "common" component requirements
-        # (otherwise, if COMPONENTS is empty then all components will be included in the build.)
-        set(COMPONENTS "${COMPONENTS} ${COMPONENT_REQUIRES_COMMON}")
-    endif()
+    # Sort the components list, as it may be found via filesystem
+    # traversal and therefore in a non-deterministic order
+    list(SORT COMPONENTS)
+
     execute_process(COMMAND "${CMAKE_COMMAND}"
         -D "COMPONENTS=${COMPONENTS}"
+        -D "COMPONENT_REQUIRES_COMMON=${COMPONENT_REQUIRES_COMMON}"
+        -D "EXCLUDE_COMPONENTS=${EXCLUDE_COMPONENTS}"
+        -D "TEST_COMPONENTS=${TEST_COMPONENTS}"
+        -D "TEST_EXCLUDE_COMPONENTS=${TEST_EXCLUDE_COMPONENTS}"
+        -D "TESTS_ALL=${TESTS_ALL}"
         -D "DEPENDENCIES_FILE=${CMAKE_BINARY_DIR}/component_depends.cmake"
         -D "COMPONENT_DIRS=${COMPONENT_DIRS}"
         -D "BOOTLOADER_BUILD=${BOOTLOADER_BUILD}"
+        -D "IDF_PATH=${IDF_PATH}"
+        -D "DEBUG=${DEBUG}"
         -P "${IDF_PATH}/tools/cmake/scripts/expand_requirements.cmake"
-        WORKING_DIRECTORY "${IDF_PATH}/tools/cmake")
+        WORKING_DIRECTORY "${PROJECT_PATH}")
     include("${CMAKE_BINARY_DIR}/component_depends.cmake")
 
     # We now have the following component-related variables:
@@ -73,6 +87,14 @@ macro(project name)
     unset(BUILD_COMPONENTS_SPACES)
     message(STATUS "Component paths: ${BUILD_COMPONENT_PATHS}")
 
+    # Print list of test components
+    if(TESTS_ALL EQUAL 1 OR TEST_COMPONENTS)
+        string(REPLACE ";" " " BUILD_TEST_COMPONENTS_SPACES "${BUILD_TEST_COMPONENTS}")
+        message(STATUS "Test component names: ${BUILD_TEST_COMPONENTS_SPACES}")
+        unset(BUILD_TEST_COMPONENTS_SPACES)
+        message(STATUS "Test component paths: ${BUILD_TEST_COMPONENT_PATHS}")
+    endif()
+
     kconfig_set_variables()
 
     kconfig_process_config()
@@ -83,7 +105,6 @@ macro(project name)
     # Now the configuration is loaded, set the toolchain appropriately
     #
     # TODO: support more toolchains than just ESP32
-    #set(CMAKE_TOOLCHAIN_FILE $ENV{IDF_PATH}/tools/cmake/toolchain-esp32.cmake)
     set(CMAKE_TOOLCHAIN_FILE $ENV{IDF_PATH}/tools/cmake/toolchain-esp8266.cmake)
 
     # Declare the actual cmake-level project
@@ -106,14 +127,24 @@ macro(project name)
 
     # Include any top-level project_include.cmake files from components
     foreach(component ${BUILD_COMPONENT_PATHS})
+        set(COMPONENT_PATH "${component}")
         include_if_exists("${component}/project_include.cmake")
+        unset(COMPONENT_PATH)
     endforeach()
 
     #
     # Add each component to the build as a library
     #
     foreach(COMPONENT_PATH ${BUILD_COMPONENT_PATHS})
-        get_filename_component(COMPONENT_NAME ${COMPONENT_PATH} NAME)
+        list(FIND BUILD_TEST_COMPONENT_PATHS ${COMPONENT_PATH} idx)
+
+        if(NOT idx EQUAL -1)
+            list(GET BUILD_TEST_COMPONENTS ${idx} test_component)
+            set(COMPONENT_NAME ${test_component})
+        else()
+            get_filename_component(COMPONENT_NAME ${COMPONENT_PATH} NAME)
+        endif()
+
         add_subdirectory(${COMPONENT_PATH} ${COMPONENT_NAME})
     endforeach()
     unset(COMPONENT_NAME)
