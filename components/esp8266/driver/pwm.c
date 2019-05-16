@@ -514,7 +514,7 @@ static esp_err_t pwm_obj_free(void)
     return ESP_OK;
 }
 
-static esp_err_t pwm_obj_malloc(uint32_t channel_num)
+static esp_err_t pwm_obj_malloc(uint8_t channel_num)
 {
     pwm_obj = (pwm_obj_t *)heap_caps_malloc(sizeof(pwm_obj_t), MALLOC_CAP_8BIT);
 
@@ -539,7 +539,7 @@ static esp_err_t pwm_obj_malloc(uint32_t channel_num)
     return ESP_OK;
 }
 
-esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint32_t channel_num, const uint32_t *pin_num)
+esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint8_t channel_num, const uint32_t *pin_num)
 {
     PWM_CHECK(pwm_obj == NULL, "pwm has been initialized", ESP_FAIL);
     PWM_CHECK(channel_num <= MAX_PWM_CHANNEL, "Channel num out of range", ESP_ERR_INVALID_ARG);

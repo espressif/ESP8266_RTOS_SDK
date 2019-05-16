@@ -27,7 +27,7 @@ extern "C" {
   * @param  period PWM period, unit: us.
   *         e.g. For 1KHz PWM, period is 1000 us. Do not set the period below 20us.
   * @param  duties duty cycle of each channels.
-  * @param  pwm_channel_num PWM channel number, maximum is 8
+  * @param  channel_num PWM channel number, maximum is 8
   * @param  pin_num GPIO number of PWM channel
   * 
   * @return
@@ -35,7 +35,7 @@ extern "C" {
   *     - ESP_ERR_INVALID_ARG Parameter error
   *     - ESP_FAIL Init error
   */
-esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint32_t pwm_channel_num, const uint32_t *pin_num);
+esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint8_t channel_num, const uint32_t *pin_num);
 
 /**
   * @brief  PWM function uninstall

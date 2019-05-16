@@ -30,8 +30,8 @@
 #define PWM_2_OUT_IO_NUM   14
 #define PWM_3_OUT_IO_NUM   15
 
-// PWM period 500us(2Khz), same as depth
-#define PWM_PERIOD    (500)
+// PWM period 1000us(1Khz), same as depth
+#define PWM_PERIOD    (1000)
 
 static const char *TAG = "pwm_example";
 
@@ -45,7 +45,7 @@ const uint32_t pin_num[4] = {
 
 // duties table, real_duty = duties[x]/PERIOD
 uint32_t duties[4] = {
-    250, 250, 250, 250,
+    500, 500, 500, 500,
 };
 
 // phase table, delay = (phase[x]/360)*PERIOD
