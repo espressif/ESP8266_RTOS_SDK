@@ -23,6 +23,11 @@
 #include "lwip/ip_addr.h"
 #include "tcpip_adapter.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "freertos/semphr.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

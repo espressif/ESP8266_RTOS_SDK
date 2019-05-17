@@ -4,3 +4,7 @@ COMPONENT_PRIV_INCLUDEDIRS := private_include
 ifdef CONFIG_ENABLE_MDNS
 COMPONENT_SRCDIRS := src
 endif
+
+ifndef CONFIG_ENABLE_MDNS_CONSOLE
+COMPONENT_OBJEXCLUDE := src/mdns_console.o
+endif
