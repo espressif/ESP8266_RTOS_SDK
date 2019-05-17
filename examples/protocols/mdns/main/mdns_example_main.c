@@ -137,13 +137,13 @@ static void mdns_print_results(mdns_result_t * results){
         if(r->txt_count){
             printf("  TXT : [%u] ", r->txt_count);
             for(t=0; t<r->txt_count; t++){
-                printf("%s=%s; ", r->txt[t].key, r->txt[t].value);
+                printf("%s=%s; ", r->txt[t].key, r->txt[t].value?r->txt[t].value:"NULL");
             }
             printf("\n");
         }
         a = r->addr;
         while(a){
-            if(a->addr.type == MDNS_IP_PROTOCOL_V6){
+            if(a->addr.type == IPADDR_TYPE_V6){
                 printf("  AAAA: " IPV6STR "\n", IPV62STR(a->addr.u_addr.ip6));
             } else {
                 printf("  A   : " IPSTR "\n", IP2STR(&(a->addr.u_addr.ip4)));
@@ -162,7 +162,7 @@ static void query_mdns_service(const char * service_name, const char * proto)
     mdns_result_t * results = NULL;
     esp_err_t err = mdns_query_ptr(service_name, proto, 3000, 20,  &results);
     if(err){
-        ESP_LOGE(TAG, "Query Failed");
+        ESP_LOGE(TAG, "Query Failed: %s", esp_err_to_name(err));
         return;
     }
     if(!results){
@@ -184,10 +184,10 @@ static void query_mdns_host(const char * host_name)
     esp_err_t err = mdns_query_a(host_name, 2000,  &addr);
     if(err){
         if(err == ESP_ERR_NOT_FOUND){
-            ESP_LOGW(TAG, "Host was not found!");
+            ESP_LOGW(TAG, "%s: Host was not found!", esp_err_to_name(err));
             return;
         }
-        ESP_LOGE(TAG, "Query Failed");
+        ESP_LOGE(TAG, "Query Failed: %s", esp_err_to_name(err));
         return;
     }
 
