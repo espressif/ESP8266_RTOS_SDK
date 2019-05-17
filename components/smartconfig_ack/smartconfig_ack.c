@@ -53,8 +53,14 @@ static void sc_ack_send_task(void *pvParameters)
 {
     sc_ack_t *ack = (sc_ack_t *)pvParameters;
     tcpip_adapter_ip_info_t local_ip;
+    sc_callback_data_t sc_callback_data;
     uint8_t remote_ip[4];
+    memset(&sc_callback_data, 0x0, sizeof(sc_callback_data_t));
+    if (ack->type == SC_ACK_TYPE_ESPTOUCH) {
+        memcpy(sc_callback_data.ip, ack->ctx.ip, sizeof(sc_callback_data.ip));
+    }
     memcpy(remote_ip, ack->ctx.ip, sizeof(remote_ip));
+    sc_callback_data.type = ack->type;
     int remote_port = (ack->type == SC_ACK_TYPE_ESPTOUCH) ? SC_ACK_TOUCH_SERVER_PORT : SC_ACK_AIRKISS_SERVER_PORT;
     struct sockaddr_in server_addr;
     socklen_t sin_size = sizeof(server_addr);
@@ -117,7 +123,7 @@ static void sc_ack_send_task(void *pvParameters)
                     server_addr.sin_addr.s_addr = from.sin_addr.s_addr;
                 } else {
                     if (ack->cb) {
-                        ack->cb(SC_STATUS_LINK_OVER, remote_ip);
+                        ack->cb(SC_STATUS_LINK_OVER, &sc_callback_data);
                     }
                     goto _end;
                 }
@@ -140,7 +146,7 @@ static void sc_ack_send_task(void *pvParameters)
                             *ack->link_flag = 1;
                         }
                         if (ack->cb) {
-                            ack->cb(SC_STATUS_LINK_OVER, remote_ip);
+                            ack->cb(SC_STATUS_LINK_OVER, &sc_callback_data);
                         }
                         goto _end;
                     }
