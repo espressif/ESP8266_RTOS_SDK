@@ -468,7 +468,7 @@ int8_t ethernetif_init(struct netif* netif)
 
 #if LWIP_NETIF_HOSTNAME
 
-    netif->hostname = "lwip";
+    netif->hostname = "LWIP";
 
 #endif /* LWIP_NETIF_HOSTNAME */
 
