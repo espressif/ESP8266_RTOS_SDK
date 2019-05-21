@@ -335,3 +335,23 @@ void esp_phy_load_cal_and_init(phy_rf_module_t module)
 
     free(cal_data); // PHY maintains a copy of calibration data, so we can free this
 }
+
+uint16_t esp_wifi_get_vdd33(void)
+{
+    if (phy_init_data.params[107] != 0xFF ) {
+        ESP_LOGE(TAG, "Please set VDD33 const to 0xff");
+        return 0xFFFF;
+    }
+    extern uint16_t phy_get_vdd33();
+    uint16_t ret = phy_get_vdd33();
+    if (ret != 0xFFFF) {
+        ret = ret *12 / 11;
+    }
+    return ret;
+}
+
+void esp_wifi_set_max_tx_power_via_vdd33(uint16_t vdd33)
+{
+    extern void phy_vdd33_set_tpw(uint16_t vdd33);
+    phy_vdd33_set_tpw(vdd33);
+}
