@@ -19,10 +19,6 @@ set(COMPONENT_SRCDIRS
     mbedtls/port/openssl/source/platform
     mbedtls/mbedtls/library
     mbedtls/port/esp8266)
-else()
-set(COMPONENT_ADD_INCLUDEDIRS axtls/include)
-
-set(COMPONENT_SRCDIRS axtls/source/ssl axtls/source/crypto)
 endif()
 endif()
 

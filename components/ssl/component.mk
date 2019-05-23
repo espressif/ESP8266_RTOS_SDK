@@ -20,8 +20,5 @@ ifdef CONFIG_SSL_USING_MBEDTLS
 COMPONENT_PRIV_INCLUDEDIRS := mbedtls/port/openssl/include/internal mbedtls/port/openssl/include/openssl mbedtls/port/openssl/include/platform
 COMPONENT_ADD_INCLUDEDIRS += mbedtls/mbedtls/include mbedtls/port/esp8266/include mbedtls/port/openssl/include
 COMPONENT_SRCDIRS += mbedtls/mbedtls/library mbedtls/port/esp8266 mbedtls/port/openssl/source/library mbedtls/port/openssl/source/platform
-else
-COMPONENT_ADD_INCLUDEDIRS := axtls/include
-COMPONENT_SRCDIRS := axtls/source/ssl axtls/source/crypto
 endif
 endif
