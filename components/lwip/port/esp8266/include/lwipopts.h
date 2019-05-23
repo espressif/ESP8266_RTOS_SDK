@@ -47,6 +47,7 @@
 #include "sdkconfig.h"
 #include <stddef.h>
 #include <stdbool.h>
+#include <time.h>
 #include "esp_libc.h"
 #include "esp_system.h"
 #include "driver/soc.h"
