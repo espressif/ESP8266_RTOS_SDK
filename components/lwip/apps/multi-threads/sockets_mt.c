@@ -661,6 +661,9 @@ int lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optl
 {
     int ret;
 
+    if (tryget_socket(s) == NULL)
+        return -1;
+
     if (optname == SO_ERROR) {
         int retval = 0;
 
@@ -772,14 +775,25 @@ int lwip_shutdown(int s, int how)
 int lwip_close(int s)
 {
     int ret;
+    SYS_ARCH_DECL_PROTECT(lev);
+
+    if (tryget_socket(s) == NULL)
+        return -1;
+
+    SYS_ARCH_PROTECT(lev);
+    if (_sock_is_opened(s)) {
+        _sock_set_open(s, 0);
+        SYS_ARCH_UNPROTECT(lev);
+    } else {
+        SYS_ARCH_UNPROTECT(lev);
+        return -1;
+    }
 
 #if ESP_UDP
     struct lwip_sock *sock = get_socket(s);
     if (sock)
         udp_sync_close_netconn(sock->conn);
 #endif
-
-    _sock_set_open(s, 0);
 
     lwip_sync_mt(s, SHUT_RDWR);
 
