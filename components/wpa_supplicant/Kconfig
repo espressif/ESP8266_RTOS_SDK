@@ -3,6 +3,7 @@ menu "wpa_supplicant"
 config LTM_FAST
     bool "Use faster div, esptmod, sqr, montgomery multiplication algorithm"
     default y
+    depends on !SSL_USING_WOLFSSL
     help
         Enable the option can enable faster div, faster exptmod, faster sqr, fast
         montgomery multiplication algorithm. Enable this option will cost about 
