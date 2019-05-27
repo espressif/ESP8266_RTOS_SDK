@@ -2,14 +2,6 @@
 #
 .PHONY: dump_otadata erase_ota blank_ota_data
 
-ifdef CONFIG_APP_UPDATE_CHECK_APP_SUM
-CFLAGS += -DCONFIG_ENABLE_BOOT_CHECK_SUM=1
-endif
-
-ifdef CONFIG_APP_UPDATE_CHECK_APP_HASH
-CFLAGS += -DCONFIG_ENABLE_BOOT_CHECK_SHA256=1
-endif
-
 GEN_EMPTY_PART := $(PYTHON) $(COMPONENT_PATH)/gen_empty_partition.py
 BLANK_OTA_DATA_FILE = $(BUILD_DIR_BASE)/ota_data_initial.bin
 
