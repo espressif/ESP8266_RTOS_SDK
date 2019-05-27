@@ -476,22 +476,25 @@ esp_http_client_handle_t esp_http_client_init(const esp_http_client_config_t *co
         esp_http_client_cleanup(client);
         return NULL;
     }
+
 #ifdef CONFIG_ESP_HTTP_CLIENT_ENABLE_HTTPS
-    esp_transport_handle_t ssl;
-    _success = (
-                   (ssl = esp_transport_ssl_init()) &&
-                   (esp_transport_set_default_port(ssl, DEFAULT_HTTPS_PORT) == ESP_OK) &&
-                   (esp_transport_list_add(client->transport_list, ssl, "https") == ESP_OK)
-               );
+    if (strncasecmp(config->url, "https", 5) == 0) {
+        esp_transport_handle_t ssl;
+        _success = (
+                       (ssl = esp_transport_ssl_init()) &&
+                       (esp_transport_set_default_port(ssl, DEFAULT_HTTPS_PORT) == ESP_OK) &&
+                       (esp_transport_list_add(client->transport_list, ssl, "https") == ESP_OK)
+                   );
 
-    if (!_success) {
-        ESP_LOGE(TAG, "Error initialize SSL Transport");
-        esp_http_client_cleanup(client);
-        return NULL;
-    }
+        if (!_success) {
+            ESP_LOGE(TAG, "Error initialize SSL Transport");
+            esp_http_client_cleanup(client);
+            return NULL;
+        }
 
-    if (config->cert_pem) {
-        esp_transport_ssl_set_cert_data(ssl, config->cert_pem, strlen(config->cert_pem));
+        if (config->cert_pem) {
+            esp_transport_ssl_set_cert_data(ssl, config->cert_pem, strlen(config->cert_pem));
+        }
     }
 #endif
 
