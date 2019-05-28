@@ -54,6 +54,12 @@
 
 #define ESP_LWIP 1
 
+#ifdef CONFIG_ESP_DNS
+#define ESP_DNS  1
+#else
+#define ESP_DNS  0
+#endif
+
 #ifdef CONFIG_LWIP_IPV6_MLD_SOCK
 #define ESP_LWIP_IPV6_MLD 1
 #else
@@ -831,6 +837,7 @@ size_t memp_malloc_get_size(size_t type);
  * DNS_SERVER_ADDRESS(ipaddr), where 'ipaddr' is an 'ip_addr_t*'
  */
 #define DNS_MAX_SERVERS                 CONFIG_DNS_MAX_SERVERS
+#define DNS_FALLBACK_SERVER_INDEX       (DNS_MAX_SERVERS - 1)
 
 /** DNS do a name checking between the query and the response. */
 #define DNS_DOES_NAME_CHECK             1
