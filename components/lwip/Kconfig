@@ -275,10 +275,18 @@ config LWIP_IGMP
     bool "Enable IGMP module"
     default y
 
+config ESP_DNS
+    bool "Enable espressif advansed DNS"
+    default y
+    help
+        Enable this option, espressif advansed DNS functions will be enable. User can set the
+        reserved DNS server(its index is DNS_FALLBACK_SERVER_INDEX) which will not be changed by DHCP.
+
 config DNS_MAX_SERVERS
     int "The maximum of DNS servers"
-    range 1 5
-    default 2
+    range 2 5
+    default 3 if ESP_DNS
+    default 2 if !ESP_DNS
 
 menuconfig LWIP_NETIF_LOOPBACK
     bool "Enable per-interface loopback"

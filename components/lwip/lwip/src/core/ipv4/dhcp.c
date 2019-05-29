@@ -657,6 +657,12 @@ dhcp_handle_ack(struct netif *netif)
 #if LWIP_DHCP_PROVIDE_DNS_SERVERS
   /* DNS servers */
   for (n = 0; (n < LWIP_DHCP_PROVIDE_DNS_SERVERS) && dhcp_option_given(dhcp, DHCP_OPTION_IDX_DNS_SERVER + n); n++) {
+#if ESP_DNS
+    if (n == DNS_FALLBACK_SERVER_INDEX) {
+        continue;
+    }
+#endif
+
     ip_addr_t dns_addr;
     ip_addr_set_ip4_u32(&dns_addr, lwip_htonl(dhcp_get_option_value(dhcp, DHCP_OPTION_IDX_DNS_SERVER + n)));
     dns_setserver(n, &dns_addr);
