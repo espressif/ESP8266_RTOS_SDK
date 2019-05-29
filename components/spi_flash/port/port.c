@@ -27,6 +27,7 @@
 #include "esp8266/rom_functions.h"
 #include "esp8266/eagle_soc.h"
 #include "internal/phy_init_data.h"
+#include "internal/esp_system_internal.h"
 
 #define PARTITION_DATA_OFFSET   (s_v2_flash_bin_size / 2)
 
@@ -60,7 +61,7 @@ typedef union s_boot_param {
         uint8_t enhance_boot_flag : 1;
     } boot_base;
 
-    ROM_FLASH_BUF_DECLARE(__data, 32);
+    ROM_FLASH_BUF_DECLARE(__data, 1280); // To copy all old SDK configuration data
 } boot_param_t;
 
 static const char *TAG = "partition_port";
@@ -240,6 +241,9 @@ static uint32_t esp_get_updated_partition_table_addr(void)
     ESP_LOGD(TAG, "V2 system flag is %x", s_sys_param.flag);
 
     offset = s_sys_param.flag ? 1 : 0;
+
+    rtc_sys_info.old_sysconf_addr = ((s_sys_param.flag ? 0 : 1)  + sect) * SPI_FLASH_SEC_SIZE;
+    ESP_LOGD(TAG, "Set old SDK system parameter address is %x @ %p", rtc_sys_info.old_sysconf_addr, &rtc_sys_info.old_sysconf_addr);
 
     ret = spi_flash_read_data((sect + offset) * SPI_FLASH_SEC_SIZE, &s_boot_param, sizeof(boot_param_t));
     if (ret) {
@@ -527,11 +531,18 @@ int esp_patition_table_init_data(void *partition_info)
     const bootloader_state_t *bs = (const bootloader_state_t *)partition_info;
     const uint32_t boot_size = bs->ota[0].offset + bs->ota[0].size - boot_base;
 
+    ESP_LOGD(TAG, "OTA partition table %x %x\n", bs->ota[0].offset, bs->ota[0].size);
+
+    if (boot_size >= 0x10000000) {
+        ESP_LOGE(TAG, "OTA partition table data is error %x %x\n", bs->ota[0].offset, bs->ota[0].size);
+        return -1;
+    }
+
     if (!esp_sdk_update_from_v2())
         return 0;
 
     if (esp_get_updated_partition_table_addr() != CONFIG_PARTITION_TABLE_OFFSET) {
-        ESP_LOGD(TAG, "Copy firmware1 from %d total %d", boot_base + PARTITION_DATA_OFFSET, boot_size);
+        ESP_LOGD(TAG, "Copy firmware1 from 0x%x total %d", boot_base + PARTITION_DATA_OFFSET, boot_size);
 
         ESP_LOGI(TAG, "Start unpacking V3 firmware ...");
 

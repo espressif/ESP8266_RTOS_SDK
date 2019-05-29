@@ -17,6 +17,7 @@
 
 #include "esp_log.h"
 #include "esp_system.h"
+#include "internal/esp_system_internal.h"
 
 #include "crc.h"
 
@@ -351,4 +352,12 @@ uint32_t esp_get_free_heap_size(void)
 uint32_t esp_get_minimum_free_heap_size(void)
 {
     return heap_caps_get_minimum_free_size(MALLOC_CAP_32BIT);
+}
+
+/**
+ * @brief Get old SDK configuration parameters base address
+ */
+uint32_t esp_get_old_sysconf_addr(void)
+{
+    return rtc_sys_info.old_sysconf_addr;
 }

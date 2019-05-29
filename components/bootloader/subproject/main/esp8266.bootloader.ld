@@ -124,3 +124,5 @@ SECTIONS
     _heap_start = ABSOLUTE(.);
   } >dram_seg
 }
+
+PROVIDE ( rtc_sys_info = 0x60001100 );
