@@ -55,6 +55,14 @@ typedef struct sc_ack {
 } sc_ack_t;
 
 /**
+ * @brief Smartconfig parameters passed sc_callback call.
+ */
+typedef struct sc_callback_ack {
+    uint8_t ip[4];            /*!< IP address of cellphone */
+    sc_ack_type_t type;           /*!< Smartconfig ACK type */
+} sc_callback_data_t;
+
+/**
   * @brief  Send smartconfig ACK to cellphone.
   *
   * @attention The API is only used in libsmartconfig.a.
