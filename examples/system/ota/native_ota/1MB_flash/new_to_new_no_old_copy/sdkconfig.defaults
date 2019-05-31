@@ -1,0 +1,21 @@
+#
+# Serial flasher config
+#
+CONFIG_ESPTOOLPY_FLASHSIZE_1MB=y
+
+#
+# Partition Table
+#
+CONFIG_PARTITION_TABLE_TWO_OTA=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions_two_ota.1MB.csv"
+
+#
+# ESP8266-specific
+#
+CONFIG_ESP8266_BOOT_COPY_APP=y
+
+#
+# Example Configuration
+#
+CONFIG_EXAMPLE_FILENAME="ota.ota.bin"
