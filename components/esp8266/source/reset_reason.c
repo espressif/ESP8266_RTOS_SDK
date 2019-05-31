@@ -41,12 +41,8 @@ static inline void esp_reset_reason_clear_hint()
 
 static inline uint32_t esp_reset_reason_get_hint(uint32_t hw_reset)
 {
-    if (hw_reset == POWERON_RESET && rtc_sys_info.hint != ESP_RST_SW) {
-        uint32_t *p = (uint32_t *)&rtc_sys_info;
-
-        for (int i = 0; i < RTC_SYS_RAM_SIZE / sizeof(uint32_t); i++)
-            *p++ = 0;
-    }
+    if (hw_reset == POWERON_RESET && rtc_sys_info.hint != ESP_RST_SW)
+        rtc_sys_info.hint = 0;
 
     return rtc_sys_info.hint;
 }
