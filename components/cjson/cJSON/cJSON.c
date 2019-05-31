@@ -60,6 +60,10 @@
 #define CJSON_SPRINTF_FLOAT 0
 #endif
 
+#if !CJSON_SPRINTF_FLOAT
+#include <assert.h>
+#endif
+
 #include "cJSON.h"
 
 /* define our own boolean type */
@@ -510,7 +514,13 @@ static cJSON_bool print_number(const cJSON * const item, printbuffer * const out
             length = sprintf((char*)number_buffer, "%1.17g", d);
         }
 #else
+        long long d64 = (long long)d;
         long d32 = (long)d;
+
+        /**
+         * Check if 32-bit type data is overflow.
+         */
+        assert(d32 == d64 && "Library newlib of nano mode does not support double or long-long format, please enable newlib normal mode.");
 
         length = sprintf((char*)number_buffer, "%ld", d32);
 
