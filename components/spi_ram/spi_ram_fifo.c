@@ -45,7 +45,7 @@ typedef struct {
         return (ret_val); \
     }
 
-esp_err_t spi_ram_fifo_write(spi_ram_fifo_handle_t handle, uint8_t *data, int len)
+esp_err_t spi_ram_fifo_write(spi_ram_fifo_handle_t handle, uint8_t *data, int len, uint32_t timeout_ticks)
 {
     spi_ram_fifo_obj_t *obj = (spi_ram_fifo_obj_t *)handle;
     int n;
@@ -69,7 +69,10 @@ esp_err_t spi_ram_fifo_write(spi_ram_fifo_handle_t handle, uint8_t *data, int le
             // Not enough free room in FIFO. Wait till there's some read and try again.
             obj->overflow_num++;
             xSemaphoreGive(obj->mux);
-            xSemaphoreTake(obj->write_sem, portMAX_DELAY);
+            if (pdFALSE == xSemaphoreTake(obj->write_sem, timeout_ticks)) {
+                xSemaphoreGive(obj->mux);
+                return ESP_ERR_TIMEOUT;
+            }
         } else {
             //Write the data.
             spi_ram_write(obj->ram_num, obj->start_addr + obj->write_pos, data, n);
@@ -90,7 +93,7 @@ esp_err_t spi_ram_fifo_write(spi_ram_fifo_handle_t handle, uint8_t *data, int le
     return ESP_OK;
 }
 
-esp_err_t spi_ram_fifo_read(spi_ram_fifo_handle_t handle, uint8_t *data, int len)
+esp_err_t spi_ram_fifo_read(spi_ram_fifo_handle_t handle, uint8_t *data, int len, uint32_t timeout_ticks)
 {
     spi_ram_fifo_obj_t *obj = (spi_ram_fifo_obj_t *)handle;
     int n;
@@ -114,7 +117,10 @@ esp_err_t spi_ram_fifo_read(spi_ram_fifo_handle_t handle, uint8_t *data, int len
             // Not enough data in FIFO. Wait till there's some written and try again.
             obj->underrun_num++;
             xSemaphoreGive(obj->mux);
-            xSemaphoreTake(obj->read_sem, portMAX_DELAY);
+            if (pdFALSE == xSemaphoreTake(obj->read_sem, timeout_ticks)) {
+                xSemaphoreGive(obj->mux);
+                return ESP_ERR_TIMEOUT;
+            }
         } else {
             // Read the data.
             spi_ram_read(obj->ram_num, obj->start_addr + obj->read_pos, data, n);
