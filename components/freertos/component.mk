@@ -8,6 +8,7 @@ COMPONENT_ADD_INCLUDEDIRS += include \
                              port/esp8266/include \
                              port/esp8266/include/freertos
 
+COMPONENT_SRCDIRS := port/esp8266
 ifndef CONFIG_DISABLE_FREERTOS
-COMPONENT_SRCDIRS := freertos port/esp8266
+COMPONENT_SRCDIRS += freertos
 endif

@@ -1,10 +1,10 @@
 gwen:
-    core:       eacdf2c
-    net80211:   eacdf2c
-    pp:         eacdf2c
-    wpa:        eacdf2c
-    espnow:     eacdf2c
-    wps:        eacdf2c
+    core:       0dd3307
+    net80211:   381d974
+    pp:         522f8df
+    wpa:        33a48e5
+    espnow:     da96924
+    wps:        da96924
 
     smartconfig:  2.8.1
     phy:         1055_22

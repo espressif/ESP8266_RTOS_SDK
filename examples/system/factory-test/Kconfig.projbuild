@@ -1,0 +1,10 @@
+menu "Factory-test config"
+
+config FACTORY_TEST
+    bool "Enable factory test"
+    default n
+    select BOOTLOADER_INIT_SPI_FLASH
+    help
+        Enable this option, project compiling script will generate factory test firmware.
+
+endmenu

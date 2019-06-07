@@ -60,7 +60,6 @@
 #define lwip_select       lwip_select_esp
 #define lwip_ioctlsocket  lwip_ioctl_esp
 
-#if LWIP_POSIX_SOCKETS_IO_NAMES
 #undef lwip_read
 #undef lwip_write
 #undef lwip_writev
@@ -75,7 +74,6 @@
 #define lwip_close        lwip_close_esp
 #define lwip_fcntl        lwip_fcntl_esp
 #define lwip_ioctl        lwip_ioctl_esp
-#endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
 
 #include "../../lwip/src/api/sockets.c"
 
@@ -100,7 +98,6 @@
 #undef lwip_select
 #undef lwip_ioctlsocket
 
-#if LWIP_POSIX_SOCKETS_IO_NAMES
 #undef lwip_read
 #undef lwip_write
 #undef lwip_writev
@@ -108,7 +105,6 @@
 #undef closesocket
 #undef lwip_fcntl
 #undef lwip_ioctl
-#endif /* LWIP_POSIX_SOCKETS_IO_NAMES */
 
 /********************************************************************/
 #define LWIP_SYNC_MT_SLEEP_MS 10
@@ -174,12 +170,12 @@ static volatile sock_mt_t DRAM_ATTR sockets_mt[NUM_SOCKETS];
 
 static inline void _sock_mt_init(int s)
 {
-    memset((void *)&sockets_mt[s], 0, sizeof(sock_mt_t));
+    memset((void *)&sockets_mt[s - LWIP_SOCKET_OFFSET], 0, sizeof(sock_mt_t));
 }
 
 static inline int _sock_is_opened(int s)
 {
-    return sockets_mt[s].opened != 0;
+    return sockets_mt[s - LWIP_SOCKET_OFFSET].opened != 0;
 }
 
 static inline void _sock_set_open(int s, int opened)
@@ -187,7 +183,7 @@ static inline void _sock_set_open(int s, int opened)
     SYS_ARCH_DECL_PROTECT(lev);
 
     SYS_ARCH_PROTECT(lev);
-    sockets_mt[s].opened = opened;
+    sockets_mt[s - LWIP_SOCKET_OFFSET].opened = opened;
     SYS_ARCH_UNPROTECT(lev);
 }
 
@@ -196,23 +192,23 @@ static inline void _sock_set_state(int s, int state)
     SYS_ARCH_DECL_PROTECT(lev);
 
     SYS_ARCH_PROTECT(lev);
-    sockets_mt[s].state = state;
+    sockets_mt[s - LWIP_SOCKET_OFFSET].state = state;
     SYS_ARCH_UNPROTECT(lev);
 }
 
 static inline int _sock_get_state(int s)
 {
-    return sockets_mt[s].state;
+    return sockets_mt[s - LWIP_SOCKET_OFFSET].state;
 }
 
 static inline int _sock_get_select(int s, int select)
 {
-    return sockets_mt[s].select & select;
+    return sockets_mt[s - LWIP_SOCKET_OFFSET].select & select;
 }
 
 static int inline _sock_is_lock(int s, int l)
 {
-    return sockets_mt[s].lock & l;
+    return sockets_mt[s - LWIP_SOCKET_OFFSET].lock & l;
 }
 
 static int inline _sock_next_lock(int lock)
@@ -225,7 +221,7 @@ static void inline _sock_set_select(int s, int select)
     SYS_ARCH_DECL_PROTECT(lev);
 
     SYS_ARCH_PROTECT(lev);
-    sockets_mt[s].select |= select;
+    sockets_mt[s - LWIP_SOCKET_OFFSET].select |= select;
     SYS_ARCH_UNPROTECT(lev);
 }
 
@@ -234,7 +230,7 @@ static void inline _sock_reset_select(int s, int select)
     SYS_ARCH_DECL_PROTECT(lev);
 
     SYS_ARCH_PROTECT(lev);
-    sockets_mt[s].select &= ~select;
+    sockets_mt[s - LWIP_SOCKET_OFFSET].select &= ~select;
     SYS_ARCH_UNPROTECT(lev);
 }
 
@@ -248,13 +244,13 @@ static int _sock_try_lock(int s, int l)
         goto exit;
     }
 
-    if (sockets_mt[s].lock & l) {
+    if (sockets_mt[s - LWIP_SOCKET_OFFSET].lock & l) {
         ret = ERR_INPROGRESS;
         goto exit;
     }
 
     SYS_ARCH_PROTECT(lev);
-    sockets_mt[s].lock |= l;
+    sockets_mt[s - LWIP_SOCKET_OFFSET].lock |= l;
     SYS_ARCH_UNPROTECT(lev);
 
 exit:
@@ -291,7 +287,7 @@ static int _sock_unlock(int s, int l)
     SOCK_MT_DEBUG(1, "s %d l %d exit ", s, l);
 
     SYS_ARCH_PROTECT(lev);
-    sockets_mt[s].lock &= ~l;
+    sockets_mt[s - LWIP_SOCKET_OFFSET].lock &= ~l;
     SYS_ARCH_UNPROTECT(lev);
 
     if (!_sock_is_opened(s)) {
@@ -309,7 +305,7 @@ static int lwip_enter_mt_select(int s, fd_set *read_set, fd_set *write_set)
 {
     int i;
 
-    if (s > NUM_SOCKETS || s < 0)
+    if (s > NUM_SOCKETS + LWIP_SOCKET_OFFSET || s < LWIP_SOCKET_OFFSET)
         return -1;
 
     for (i = 0; i < s; i++) {
@@ -540,6 +536,8 @@ static void lwip_socket_set_so_link(int s, int linger)
 #else
 #error "LWIP_SO_LINGER must be enable"
 #endif /* LWIP_SO_LINGER */
+#else /* SET_SOLINGER_DEFAULT */
+#define lwip_socket_set_so_link(_s, _linger)
 #endif /* SET_SOLINGER_DEFAULT */
 
 int lwip_socket(int domain, int type, int protocol)
@@ -663,6 +661,9 @@ int lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optl
 {
     int ret;
 
+    if (tryget_socket(s) == NULL)
+        return -1;
+
     if (optname == SO_ERROR) {
         int retval = 0;
 
@@ -774,14 +775,25 @@ int lwip_shutdown(int s, int how)
 int lwip_close(int s)
 {
     int ret;
+    SYS_ARCH_DECL_PROTECT(lev);
+
+    if (tryget_socket(s) == NULL)
+        return -1;
+
+    SYS_ARCH_PROTECT(lev);
+    if (_sock_is_opened(s)) {
+        _sock_set_open(s, 0);
+        SYS_ARCH_UNPROTECT(lev);
+    } else {
+        SYS_ARCH_UNPROTECT(lev);
+        return -1;
+    }
 
 #if ESP_UDP
     struct lwip_sock *sock = get_socket(s);
     if (sock)
         udp_sync_close_netconn(sock->conn);
 #endif
-
-    _sock_set_open(s, 0);
 
     lwip_sync_mt(s, SHUT_RDWR);
 

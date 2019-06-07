@@ -36,6 +36,11 @@ void *__wifi_task_create(void *task_func, const char *name, uint32_t stack_depth
     return ret == pdPASS ? handle : NULL;
 }
 
+void __wifi_task_delete(void *task)
+{
+    vTaskDelete(task);
+}
+
 void __wifi_task_yield_from_isr(void)
 {
     portYIELD();
@@ -69,6 +74,11 @@ void __wifi_task_resume_all(void)
 void *__wifi_queue_create(uint32_t queue_len, uint32_t item_size)
 {
     return (void *)xQueueCreate(queue_len, item_size);
+}
+
+void __wifi_queue_delete(void *queue)
+{
+    vQueueDelete(queue);
 }
 
 int __wifi_queue_send(void *queue, void *item, uint32_t block_time_tick, uint32_t pos)

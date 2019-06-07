@@ -13,6 +13,10 @@
  * See README and COPYING for more details.
  */
 
+#include "sdkconfig.h"
+
+#ifndef CONFIG_ESP_AES
+
 #include "crypto/includes.h"
 
 #include "crypto/common.h"
@@ -86,3 +90,52 @@ aes_128_cbc_decrypt(const u8 *key, const u8 *iv, u8 *data, size_t data_len)
 	aes_decrypt_deinit(ctx);
 	return 0;
 }
+
+#else /* CONFIG_ESP_AES */
+
+#include <string.h>
+#include "esp_aes.h"
+
+#ifndef AES_BLOCK_SIZE
+#define AES_BLOCK_SIZE 16
+#endif
+
+int aes_128_cbc_encrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data, size_t data_len)
+{
+    int ret;
+    esp_aes_t ctx;
+    uint8_t iv_tmp[AES_BLOCK_SIZE];
+
+    ret = esp_aes_set_encrypt_key(&ctx, key, 128);
+    if (ret)
+        return ret;
+
+    memcpy(iv_tmp, iv, AES_BLOCK_SIZE);
+
+    ret = esp_aes_encrypt_cbc(&ctx, data, data_len, data, data_len, iv_tmp);
+    if (ret)
+        return ret;
+
+    return 0;
+}
+
+int aes_128_cbc_decrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data, size_t data_len)
+{
+    int ret;
+    esp_aes_t ctx;
+    uint8_t iv_tmp[AES_BLOCK_SIZE];
+
+    ret = esp_aes_set_decrypt_key(&ctx, key, 128);
+    if (ret)
+        return ret;
+
+    memcpy(iv_tmp, iv, AES_BLOCK_SIZE);
+
+    ret = esp_aes_decrypt_cbc(&ctx, data, data_len, data, data_len, iv_tmp);
+    if (ret)
+        return ret;
+
+    return 0;
+}
+
+#endif /* CONFIG_ESP_AES */

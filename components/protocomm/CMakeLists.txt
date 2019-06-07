@@ -1,3 +1,4 @@
+if(CONFIG_ENABLE_UNIFIED_PROVISIONING)
 set(COMPONENT_ADD_INCLUDEDIRS include/common
                               include/security
                               include/transports)
@@ -10,7 +11,8 @@ set(COMPONENT_SRCS  "src/common/protocomm.c"
                     "proto-c/sec1.pb-c.c"
                     "proto-c/session.pb-c.c"
                     "src/transports/protocomm_httpd.c")
+endif()
 
-set(COMPONENT_PRIV_REQUIRES protobuf-c mbedtls wifi_provisioning)
+set(COMPONENT_PRIV_REQUIRES protobuf-c ssl esp_http_server http_parser)
 
 register_component()

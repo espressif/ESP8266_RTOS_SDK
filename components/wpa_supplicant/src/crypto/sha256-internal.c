@@ -18,19 +18,31 @@
 #include "crypto/sha256.h"
 #include "crypto/crypto.h"
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_ESP_SHA
+#include "esp_sha.h"
+
+typedef esp_sha_t sha256_state_t;
+
+#define sha256_init(_sha)               esp_sha256_init(_sha)
+#define sha256_process(_sha, _s, _l)    esp_sha256_update(_sha, _s, _l)
+#define sha256_done(_sha, _d)           esp_sha1_finish(_sha, _d)
+#else /* CONFIG_ESP_SHA */
 #define SHA256_BLOCK_SIZE 64
 
-struct sha256_state {
+typedef struct sha256_state {
 	u64 length;
 	u32 state[8], curlen;
 	u8 buf[SHA256_BLOCK_SIZE];
-};
+} sha256_state_t;
 
 static void sha256_init(struct sha256_state *md);
 static int sha256_process(struct sha256_state *md, const unsigned char *in,
 			  unsigned long inlen);
 static int sha256_done(struct sha256_state *md, unsigned char *out);
 
+#endif /* CONFIG_ESP_SHA */
 
 /**
  * sha256_vector - SHA256 hash for data vector
@@ -44,7 +56,7 @@ int
 sha256_vector(size_t num_elem, const u8 *addr[], const size_t *len,
 		  u8 *mac)
 {
-	struct sha256_state ctx;
+	sha256_state_t ctx;
 	size_t i;
 
 	sha256_init(&ctx);
@@ -57,6 +69,7 @@ sha256_vector(size_t num_elem, const u8 *addr[], const size_t *len,
 }
 
 
+#ifndef CONFIG_ESP_SHA
 /* ===== start - public domain SHA256 implementation ===== */
 
 /* This is based on SHA256 implementation in LibTomCrypt that was released into
@@ -247,3 +260,4 @@ sha256_done(struct sha256_state *md, unsigned char *out)
 }
 
 /* ===== end - public domain SHA256 implementation ===== */
+#endif /* CONFIG_ESP_SHA */

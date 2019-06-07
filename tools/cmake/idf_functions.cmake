@@ -15,15 +15,22 @@ macro(idf_set_global_variables)
 
     # Commmon components, required by every component in the build
     #
-    set_default(COMPONENT_REQUIRES_COMMON "cxx esp32 newlib freertos heap log soc")
+    set_default(COMPONENT_REQUIRES_COMMON "esp8266 newlib freertos heap log")
 
     # PROJECT_PATH has the path to the IDF project (top-level cmake directory)
     #
     # (cmake calls this CMAKE_SOURCE_DIR, keeping old name for compatibility.)
     set(PROJECT_PATH "${CMAKE_SOURCE_DIR}")
 
-    # Note: Unlike older build system, "main" is no longer a component. See build docs for details.
-    set_default(COMPONENT_DIRS "${PROJECT_PATH}/components ${EXTRA_COMPONENT_DIRS} ${IDF_PATH}/components")
+    if(MAIN_SRCS)
+        message(WARNING "main is now a component, use of MAIN_SRCS is deprecated")
+        set_default(COMPONENT_DIRS "${PROJECT_PATH}/components ${EXTRA_COMPONENT_DIRS} \
+                                    ${IDF_PATH}/components")
+    else()
+        set_default(COMPONENT_DIRS "${PROJECT_PATH}/components ${EXTRA_COMPONENT_DIRS} \
+                                    ${IDF_PATH}/components ${PROJECT_PATH}/main")
+    endif()
+
     spaces2list(COMPONENT_DIRS)
 
     spaces2list(COMPONENTS)
@@ -33,6 +40,13 @@ macro(idf_set_global_variables)
 
     # path to idf.py tool
     set(IDFTOOL ${PYTHON} "${IDF_PATH}/tools/idf.py")
+
+    # Temporary trick to support both gcc5 and gcc8 builds
+    if(CMAKE_C_COMPILER_VERSION VERSION_EQUAL 5.2.0)
+        set(GCC_NOT_5_2_0 0)
+    else()
+        set(GCC_NOT_5_2_0 1)
+    endif()
 endmacro()
 
 # Add all the IDF global compiler & preprocessor options
@@ -51,14 +65,16 @@ function(idf_set_global_compiler_options)
         add_compile_options(-Og)
     endif()
 
-    add_c_compile_options(-std=gnu99)
+    # Note: the visual studio generator doesn't support this syntax
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:-std=gnu99>")
 
-    add_cxx_compile_options(-std=gnu++11 -fno-rtti)
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-std=gnu++11>")
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>")
 
     if(CONFIG_CXX_EXCEPTIONS)
-        add_cxx_compile_options(-fexceptions)
+        add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-fexceptions>")
     else()
-        add_cxx_compile_options(-fno-exceptions)
+        add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>")
     endif()
 
     # Default compiler configuration
@@ -75,9 +91,16 @@ function(idf_set_global_compiler_options)
         -Wextra
         -Wno-unused-parameter
         -Wno-sign-compare)
-    add_c_compile_options(
-        -Wno-old-style-declaration
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-old-style-declaration>")
+
+    if(CONFIG_DISABLE_GCC8_WARNINGS)
+        add_compile_options(
+            -Wno-parentheses
+            -Wno-sizeof-pointer-memaccess
+            -Wno-clobbered
         )
+
+    endif()
 
     # Stack protection
     if(NOT BOOTLOADER_BUILD)
@@ -98,8 +121,6 @@ function(idf_set_global_compiler_options)
     # go into the final binary so have no impact on size)
     add_compile_options(-ggdb)
 
-    add_compile_options("-I${CMAKE_BINARY_DIR}") # for sdkconfig.h
-
     # Enable ccache if it's on the path
     if(NOT CCACHE_DISABLE)
         find_program(CCACHE_FOUND ccache)
@@ -109,6 +130,8 @@ function(idf_set_global_compiler_options)
         endif()
     endif()
 
+    # Temporary trick to support both gcc5 and gcc8 builds
+    add_definitions(-DGCC_NOT_5_2_0=${GCC_NOT_5_2_0})
 endfunction()
 
 
@@ -121,15 +144,17 @@ function(idf_verify_environment)
 
     # Check toolchain is configured properly in cmake
     if(NOT ( ${CMAKE_SYSTEM_NAME} STREQUAL "Generic" AND ${CMAKE_C_COMPILER} MATCHES xtensa))
-        message(FATAL_ERROR "Internal error, toolchain has not been set correctly by project")
+        message(FATAL_ERROR "Internal error, toolchain has not been set correctly by project "
+            "(or an invalid CMakeCache.txt file has been generated somehow)")
     endif()
 
     #
     # Warn if the toolchain version doesn't match
     #
     # TODO: make these platform-specific for diff toolchains
-    #gcc_version_check("5.2.0")
-    #crosstool_version_check("1.22.0-80-g6c4433a")
+    get_expected_ctng_version(expected_toolchain expected_gcc)
+    gcc_version_check("${expected_gcc}")
+    crosstool_version_check("${expected_toolchain}")
 
 endfunction()
 
@@ -141,8 +166,22 @@ endfunction()
 function(idf_add_executable)
     set(exe_target ${PROJECT_NAME}.elf)
 
-    spaces2list(MAIN_SRCS)
-    add_executable(${exe_target} "${MAIN_SRCS}")
+    if(MAIN_SRCS)
+        spaces2list(MAIN_SRCS)
+        add_executable(${exe_target} ${MAIN_SRCS})
+    else()
+        # Create a dummy file to work around CMake requirement of having a source
+        # file while adding an executable
+        add_executable(${exe_target} "${CMAKE_CURRENT_BINARY_DIR}/dummy_main_src.c")
+        add_custom_command(OUTPUT dummy_main_src.c
+            COMMAND ${CMAKE_COMMAND} -E touch dummy_main_src.c
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            VERBATIM)
+
+        add_custom_target(dummy_main_src DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/dummy_main_src.c)
+
+        add_dependencies(${exe_target} dummy_main_src)
+    endif()
 
     add_map_file(${exe_target})
 endfunction()
@@ -196,7 +235,11 @@ endfunction()
 # Running git_describe() here automatically triggers rebuilds
 # if the ESP-IDF git version changes
 function(idf_get_git_revision)
-    git_describe(IDF_VER "${IDF_PATH}")
+    if(EXISTS "${IDF_PATH}/version.txt")
+        file(STRINGS "${IDF_PATH}/version.txt" IDF_VER)
+    else()
+        git_describe(IDF_VER "${IDF_PATH}")
+    endif()
     add_definitions(-DIDF_VER=\"${IDF_VER}\")
     git_submodule_check("${IDF_PATH}")
     set(IDF_VER ${IDF_VER} PARENT_SCOPE)

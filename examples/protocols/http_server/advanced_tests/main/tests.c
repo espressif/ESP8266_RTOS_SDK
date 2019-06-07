@@ -22,7 +22,7 @@ struct async_resp_arg {
 esp_err_t hello_get_handler(httpd_req_t *req)
 {
 #define STR "Hello World!"
-    ESP_LOGI(TAG, "Free Stack for server task: '%d'", uxTaskGetStackHighWaterMark(NULL));
+    ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
     httpd_resp_send(req, STR, strlen(STR));
     return ESP_OK;
 #undef STR

@@ -81,6 +81,20 @@ putchar_like_t esp_log_set_putchar(putchar_like_t func);
 /**
  * @brief Function which returns timestamp to be used in log output
  *
+ * This function is used in expansion of ESP_LOGx macros.
+ * In the 2nd stage bootloader, and at early application startup stage
+ * this function uses CPU cycle counter as time source. Later when
+ * FreeRTOS scheduler start running, it switches to FreeRTOS tick count.
+ *
+ * For now, we ignore millisecond counter overflow.
+ *
+ * @return timestamp, in milliseconds
+ */
+uint32_t esp_log_timestamp(void);
+
+/**
+ * @brief Function which returns timestamp to be used in log output
+ *
  * This function uses HW cycle counter and does not depend on OS,
  * so it can be safely used after application crash.
  *
@@ -216,6 +230,31 @@ void esp_early_log_write(esp_log_level_t level, const char* tag, const char* for
 //to be back compatible
 #define esp_log_buffer_hex      ESP_LOG_BUFFER_HEX
 #define esp_log_buffer_char     ESP_LOG_BUFFER_CHAR
+
+#if CONFIG_LOG_COLORS
+#define LOG_COLOR_BLACK   "30"
+#define LOG_COLOR_RED     "31"
+#define LOG_COLOR_GREEN   "32"
+#define LOG_COLOR_BROWN   "33"
+#define LOG_COLOR_BLUE    "34"
+#define LOG_COLOR_PURPLE  "35"
+#define LOG_COLOR_CYAN    "36"
+#define LOG_COLOR(COLOR)  "\033[0;" COLOR "m"
+#define LOG_BOLD(COLOR)   "\033[1;" COLOR "m"
+#define LOG_RESET_COLOR   "\033[0m"
+#define LOG_COLOR_E       LOG_COLOR(LOG_COLOR_RED)
+#define LOG_COLOR_W       LOG_COLOR(LOG_COLOR_BROWN)
+#define LOG_COLOR_I       LOG_COLOR(LOG_COLOR_GREEN)
+#define LOG_COLOR_D
+#define LOG_COLOR_V
+#else //CONFIG_LOG_COLORS
+#define LOG_COLOR_E
+#define LOG_COLOR_W
+#define LOG_COLOR_I
+#define LOG_COLOR_D
+#define LOG_COLOR_V
+#define LOG_RESET_COLOR
+#endif //CONFIG_LOG_COLORS
 
 /** @endcond */
 

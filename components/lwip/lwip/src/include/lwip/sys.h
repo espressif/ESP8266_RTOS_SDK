@@ -179,6 +179,14 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count);
  * @param sem the semaphore to signal
  */
 void sys_sem_signal(sys_sem_t *sem);
+
+#if ESP_LWIP
+/** Signals a semaphore (ISR version)
+ * @param sem the semaphore to signal
+ * @return non-zero if a higher priority task has been woken  */
+int sys_sem_signal_isr(sys_sem_t *sem);
+#endif
+
 /**
  * @ingroup sys_sem
  * Wait for a semaphore for the specified timeout

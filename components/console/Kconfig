@@ -1,0 +1,10 @@
+menu "Console"
+
+config USING_ESP_CONSOLE
+    bool "Using Espressif Console"
+    default n
+    select USING_ESP_VFS
+    help
+        Enable this option, espressif console can be used.
+
+endmenu

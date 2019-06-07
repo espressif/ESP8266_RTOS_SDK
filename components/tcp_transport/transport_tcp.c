@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lwip/sockets.h"
+#include <sys/socket.h>
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
 

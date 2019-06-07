@@ -109,6 +109,14 @@ sys_sem_signal(sys_sem_t *sem)
     xSemaphoreGive(*sem);
 }
 
+/*-----------------------------------------------------------------------------------*/
+// Signals a semaphore (from ISR)
+int sys_sem_signal_isr(sys_sem_t *sem)
+{
+    BaseType_t woken = pdFALSE;
+    xSemaphoreGiveFromISR(*sem, &woken);
+    return woken == pdTRUE;
+}
 
 /*-----------------------------------------------------------------------------------*/
 /*
@@ -188,11 +196,6 @@ sys_mbox_new(sys_mbox_t *mbox, int size)
 void
 sys_mbox_free(sys_mbox_t *mbox)
 {
-    if (uxQueueMessagesWaiting(*mbox)) {
-        /* Line for breakpoint.  Should never break here! */
-//		__asm volatile ( "NOP" );
-    }
-
     vQueueDelete(*mbox);
 }
 
@@ -386,50 +389,6 @@ int sys_current_task_is_tcpip(void)
 char *sys_current_task_name(void)
 {
     return pcTaskGetTaskName(xTaskGetCurrentTaskHandle());
-}
-
-/*
-  This optional function does a "fast" critical region protection and returns
-  the previous protection level. This function is only called during very short
-  critical regions. An embedded system which supports ISR-based drivers might
-  want to implement this function by disabling interrupts. Task-based systems
-  might want to implement this by using a mutex or disabling tasking. This
-  function should support recursive calls from the same task or interrupt. In
-  other words, sys_arch_protect() could be called while already protected. In
-  that case the return value indicates that it is already protected.
-
-  sys_arch_protect() is only required if your port is supporting an operating
-  system.
-*/
-sys_prot_t
-sys_arch_protect(void)
-{
-    vPortEnterCritical();
-    return (sys_prot_t) 1;
-}
-
-/*
-  This optional function does a "fast" set of critical region protection to the
-  value specified by pval. See the documentation for sys_arch_protect() for
-  more information. This function is only required if your port is supporting
-  an operating system.
-*/
-void
-sys_arch_unprotect(sys_prot_t pval)
-{
-    (void) pval;
-    vPortExitCritical();
-}
-
-/*
- * Prints an assertion messages and aborts execution.
- */
-void
-sys_arch_assert(const char *file, int line)
-{
-    printf("\nAssertion: %d in %s\n", line, file);
-
-    while(1);
 }
 
 void

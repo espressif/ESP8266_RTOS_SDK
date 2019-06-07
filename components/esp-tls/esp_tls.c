@@ -20,6 +20,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include <http_parser.h>
 #include "esp_tls.h"
 #include <errno.h>
 
@@ -80,6 +81,8 @@ static ssize_t tls_read(esp_tls_t *tls, char *data, size_t datalen)
         }
         if (ret != MBEDTLS_ERR_SSL_WANT_READ  && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             ESP_LOGE(TAG, "read error :%d:", ret);
+        } else {
+            ret = (ret == MBEDTLS_ERR_SSL_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
 #elif CONFIG_SSL_USING_WOLFSSL
@@ -94,6 +97,8 @@ static ssize_t tls_read(esp_tls_t *tls, char *data, size_t datalen)
 
         if (ret != WOLFSSL_ERROR_WANT_READ && ret != WOLFSSL_ERROR_WANT_WRITE) {
             ESP_LOGE(TAG, "read error :%d:", ret);
+        } else {
+            ret = (ret == WOLFSSL_ERROR_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
 #endif
@@ -119,7 +124,6 @@ static int esp_tcp_connect(const char *host, int hostlen, int port, int *sockfd,
         ESP_LOGE(TAG, "Failed to create socket (family %d socktype %d protocol %d)", res->ai_family, res->ai_socktype, res->ai_protocol);
         goto err_freeaddr;
     }
-    *sockfd = fd;
 
     void *addr_ptr;
     if (res->ai_family == AF_INET) {
@@ -151,12 +155,13 @@ static int esp_tcp_connect(const char *host, int hostlen, int port, int *sockfd,
     }
 
     ret = connect(fd, addr_ptr, res->ai_addrlen);
-    if (ret < 0 && !(errno == EINPROGRESS && cfg->non_block)) {
+    if (ret < 0 && !(errno == EINPROGRESS && cfg && cfg->non_block)) {
 
-        ESP_LOGE(TAG, "Failed to connnect to host (errno %d)", errno);
+        ESP_LOGE(TAG, "Failed to connect to host (errno %d)", errno);
         goto err_freesocket;
     }
 
+    *sockfd = fd;
     freeaddrinfo(res);
     return 0;
 
@@ -167,6 +172,20 @@ err_freeaddr:
     return ret;
 }
 
+#if CONFIG_SSL_USING_MBEDTLS
+esp_err_t esp_tls_init_global_ca_store()
+{
+    if (global_cacert == NULL) {
+        global_cacert = (mbedtls_x509_crt *)calloc(1, sizeof(mbedtls_x509_crt));
+        if (global_cacert == NULL) {
+            ESP_LOGE(TAG, "global_cacert not allocated");
+            return ESP_ERR_NO_MEM;
+        }
+        mbedtls_x509_crt_init(global_cacert);
+    }
+    return ESP_OK;
+}
+#endif
 
 esp_err_t esp_tls_set_global_ca_store(const unsigned char *cacert_pem_buf, const unsigned int cacert_pem_bytes)
 {
@@ -174,17 +193,17 @@ esp_err_t esp_tls_set_global_ca_store(const unsigned char *cacert_pem_buf, const
         ESP_LOGE(TAG, "cacert_pem_buf is null");
         return ESP_ERR_INVALID_ARG;
     }
+
 #if CONFIG_SSL_USING_MBEDTLS
-    if (global_cacert != NULL) {
-        mbedtls_x509_crt_free(global_cacert);
-    }
-    global_cacert = (mbedtls_x509_crt *)calloc(1, sizeof(mbedtls_x509_crt));
+    int ret;
+
     if (global_cacert == NULL) {
-        ESP_LOGE(TAG, "global_cacert not allocated");
-        return ESP_ERR_NO_MEM;
+        ret = esp_tls_init_global_ca_store();
+        if (ret != ESP_OK) {
+            return ret;
+        }
     }
-    mbedtls_x509_crt_init(global_cacert);
-    int ret = mbedtls_x509_crt_parse(global_cacert, cacert_pem_buf, cacert_pem_bytes);
+    ret = mbedtls_x509_crt_parse(global_cacert, cacert_pem_buf, cacert_pem_bytes);
     if (ret < 0) {
         ESP_LOGE(TAG, "mbedtls_x509_crt_parse returned -0x%x\n\n", -ret);
         mbedtls_x509_crt_free(global_cacert);
@@ -268,11 +287,9 @@ static void esp_tls_cleanup(esp_tls_t *tls)
     mbedtls_ssl_config_free(&tls->conf);
     mbedtls_ctr_drbg_free(&tls->ctr_drbg);
     mbedtls_ssl_free(&tls->ssl);
-    mbedtls_net_free(&tls->server_fd);
 #elif CONFIG_SSL_USING_WOLFSSL
     wolfSSL_shutdown(tls->ssl);
     wolfSSL_free(tls->ssl);
-    close(tls->sockfd);
     wolfSSL_CTX_free(tls->ctx);
     wolfSSL_Cleanup();
 #endif
@@ -281,8 +298,8 @@ static void esp_tls_cleanup(esp_tls_t *tls)
 static int create_ssl_handle(esp_tls_t *tls, const char *hostname, size_t hostlen, const esp_tls_cfg_t *cfg)
 {
     int ret;
+
 #if CONFIG_SSL_USING_MBEDTLS
-    mbedtls_net_init(&tls->server_fd);
     tls->server_fd.fd = tls->sockfd;
     mbedtls_ssl_init(&tls->ssl);
     mbedtls_ctr_drbg_init(&tls->ctr_drbg);
@@ -295,18 +312,26 @@ static int create_ssl_handle(esp_tls_t *tls, const char *hostname, size_t hostle
         goto exit;        
     }
     
-    /* Hostname set here should match CN in server certificate */    
-    char *use_host = strndup(hostname, hostlen);
-    if (!use_host) {
-        goto exit;
-    }
+    if (!cfg->skip_common_name) {
+        char *use_host = NULL;
+        if (cfg->common_name != NULL) {
+            use_host = strndup(cfg->common_name, strlen(cfg->common_name));
+        } else {
+            use_host = strndup(hostname, hostlen);
+        }
 
-    if ((ret = mbedtls_ssl_set_hostname(&tls->ssl, use_host)) != 0) {
-        ESP_LOGE(TAG, "mbedtls_ssl_set_hostname returned -0x%x", -ret);
+        if (use_host == NULL) {
+            goto exit;
+        }
+
+        /* Hostname set here should match CN in server certificate */
+        if ((ret = mbedtls_ssl_set_hostname(&tls->ssl, use_host)) != 0) {
+            ESP_LOGE(TAG, "mbedtls_ssl_set_hostname returned -0x%x", -ret);
+            free(use_host);
+            goto exit;
+        }
         free(use_host);
-        goto exit;
     }
-    free(use_host);
 
     if ((ret = mbedtls_ssl_config_defaults(&tls->conf,
                     MBEDTLS_SSL_IS_CLIENT,
@@ -462,7 +487,12 @@ void esp_tls_conn_delete(esp_tls_t *tls)
 {
     if (tls != NULL) {
         esp_tls_cleanup(tls);
-        if (tls->sockfd) {
+#if CONFIG_SSL_USING_MBEDTLS
+        if (tls->is_tls) {
+            mbedtls_net_free(&tls->server_fd);
+        } else
+#endif
+        if (tls->sockfd >= 0) {
             close(tls->sockfd);
         }
         free(tls);
@@ -481,14 +511,19 @@ static ssize_t tls_write(esp_tls_t *tls, const char *data, size_t datalen)
     if (ret < 0) {
         if (ret != MBEDTLS_ERR_SSL_WANT_READ  && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
             ESP_LOGE(TAG, "write error :%d:", ret);
+        } else {
+            ret = (ret == MBEDTLS_ERR_SSL_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
     return ret;
 #elif CONFIG_SSL_USING_WOLFSSL
     ssize_t ret = wolfSSL_write(tls->ssl, (unsigned char*) data, datalen);
     if (ret < 0) {
+        ret = wolfSSL_get_error(tls->ssl, ret);
         if (ret != WOLFSSL_ERROR_WANT_READ  && ret != WOLFSSL_ERROR_WANT_WRITE) {
             ESP_LOGE(TAG, "write error :%d:", ret);
+        } else {
+            ret = (ret == WOLFSSL_ERROR_WANT_READ) ? ESP_TLS_ERROR_WANT_READ : ESP_TLS_ERROR_WANT_WRITE;
         }
     }
     return ret;
@@ -505,16 +540,20 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
     and in case of blocking connect these cases will get executed one after the other */
     switch (tls->conn_state) {
         case ESP_TLS_INIT:
-            ;
-            int sockfd;
-            int ret = esp_tcp_connect(hostname, hostlen, port, &sockfd, cfg);
+            tls->sockfd = -1;
+            if (cfg != NULL) {
+#if CONFIG_SSL_USING_MBEDTLS
+                mbedtls_net_init(&tls->server_fd);
+#endif
+                tls->is_tls = true;
+            }
+            int ret = esp_tcp_connect(hostname, hostlen, port, &tls->sockfd, cfg);
             if (ret < 0) {
                 return -1;
             }
-            tls->sockfd = sockfd;
             if (!cfg) {
-                tls->esp_tls_read = tcp_read;
-                tls->esp_tls_write = tcp_write;
+                tls->_read = tcp_read;
+                tls->_write = tcp_write;
                 ESP_LOGD(TAG, "non-tls connection established");
                 return 1;
             }
@@ -556,8 +595,8 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
                 tls->conn_state = ESP_TLS_FAIL;
                 return -1;
             }
-            tls->esp_tls_read = tls_read;
-            tls->esp_tls_write = tls_write;
+            tls->_read = tls_read;
+            tls->_write = tls_write;
             tls->conn_state = ESP_TLS_HANDSHAKE;
             /* falls through */
         case ESP_TLS_HANDSHAKE:
@@ -645,6 +684,35 @@ int esp_tls_conn_new_async(const char *hostname, int hostlen, int port, const es
     return esp_tls_low_level_conn(hostname, hostlen, port, cfg, tls);
 }
 
+static int get_port(const char *url, struct http_parser_url *u)
+{
+    if (u->field_data[UF_PORT].len) {
+        return strtol(&url[u->field_data[UF_PORT].off], NULL, 10);
+    } else {
+        if (strncasecmp(&url[u->field_data[UF_SCHEMA].off], "http", u->field_data[UF_SCHEMA].len) == 0) {
+            return 80;
+        } else if (strncasecmp(&url[u->field_data[UF_SCHEMA].off], "https", u->field_data[UF_SCHEMA].len) == 0) {
+            return 443;
+        }
+    }
+    return 0;
+}
+
+/**
+ * @brief      Create a new TLS/SSL connection with a given "HTTP" url
+ */
+esp_tls_t *esp_tls_conn_http_new(const char *url, const esp_tls_cfg_t *cfg)
+{
+    /* Parse URI */
+    struct http_parser_url u;
+    http_parser_url_init(&u);
+    http_parser_parse_url(url, strlen(url), 0, &u);
+
+    /* Connect to host */
+    return esp_tls_conn_new(&url[u.field_data[UF_HOST].off], u.field_data[UF_HOST].len,
+			    get_port(url, &u), cfg);
+}
+
 size_t esp_tls_get_bytes_avail(esp_tls_t *tls)
 {
     if (!tls) {
@@ -656,4 +724,19 @@ size_t esp_tls_get_bytes_avail(esp_tls_t *tls)
 #elif CONFIG_SSL_USING_WOLFSSL
     return wolfSSL_pending(tls->ssl);
 #endif
+}
+
+/**
+ * @brief      Create a new non-blocking TLS/SSL connection with a given "HTTP" url
+ */
+int esp_tls_conn_http_new_async(const char *url, const esp_tls_cfg_t *cfg, esp_tls_t *tls)
+{
+    /* Parse URI */
+    struct http_parser_url u;
+    http_parser_url_init(&u);
+    http_parser_parse_url(url, strlen(url), 0, &u);
+
+    /* Connect to host */
+    return esp_tls_conn_new_async(&url[u.field_data[UF_HOST].off], u.field_data[UF_HOST].len,
+			    get_port(url, &u), cfg, tls);
 }

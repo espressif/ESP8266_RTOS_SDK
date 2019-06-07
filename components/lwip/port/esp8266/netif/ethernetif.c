@@ -403,6 +403,7 @@ void ethernetif_input(struct netif* netif, struct pbuf* p)
 
     if (netif == NULL) {
         LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: netif is NULL\n"));
+        pbuf_free(p);
         goto _exit;
     }
 
@@ -467,7 +468,7 @@ int8_t ethernetif_init(struct netif* netif)
 
 #if LWIP_NETIF_HOSTNAME
 
-    netif->hostname = "lwip";
+    netif->hostname = "LWIP";
 
 #endif /* LWIP_NETIF_HOSTNAME */
 

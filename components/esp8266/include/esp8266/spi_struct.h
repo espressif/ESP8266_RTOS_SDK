@@ -113,10 +113,10 @@ typedef volatile struct {
             uint32_t reserved8:         2;                  /*reserved*/
             uint32_t rd_byte_order:     1;                  /*In read-data (MISO) phase 1: big-endian 0: little_endian*/
             uint32_t wr_byte_order:     1;                  /*In command address write-data (MOSI) phases 1: big-endian 0: litte_endian*/
-            uint32_t fwrite_dual:       1;                  /*In the write operations read-data phase apply 2 signals*/
-            uint32_t fwrite_quad:       1;                  /*In the write operations read-data phase apply 4 signals*/
-            uint32_t fwrite_dio:        1;                  /*In the write operations address phase and read-data phase apply 2 signals.*/
-            uint32_t fwrite_qio:        1;                  /*In the write operations address phase and read-data phase apply 4 signals.*/
+            uint32_t fwrite_dual:       1;                  /*In the write operations write-data phase apply 2 signals*/
+            uint32_t fwrite_quad:       1;                  /*In the write operations write-data phase apply 4 signals*/
+            uint32_t fwrite_dio:        1;                  /*In the write operations address phase and write-data phase apply 2 signals.*/
+            uint32_t fwrite_qio:        1;                  /*In the write operations address phase and write-data phase apply 4 signals.*/
             uint32_t sio:               1;                  /*Set the bit to enable 3-line half duplex communication  mosi and miso signals share the same pin. 1: enable 0: disable.*/
             uint32_t reserved17:        7;                  /*reserved*/
             uint32_t usr_miso_highpart: 1;                  /*read-data phase only access to high-part of the buffer spi_w8~spi_w15. 1: enable 0: disable.*/

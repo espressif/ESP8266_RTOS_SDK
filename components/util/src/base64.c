@@ -14,7 +14,8 @@
 
 #include "sdkconfig.h"
 #include "esp_base64.h"
-#include <assert.h>
+#include "ibus_data.h"
+#include "util_assert.h"
 #include <sys/errno.h>
 
 typedef union _cache {
@@ -43,26 +44,6 @@ static const uint32_t s_base64_dec_lut[32] = {
     0x1c1b1a7f, 0x201f1e1d, 0x24232221, 0x28272625,
     0x2c2b2a29, 0x302f2e2d, 0x7f333231, 0x7f7f7f7f
 };
-
-static inline uint8_t __map_base64_enc_data(uint8_t index)
-{
-    cache_t tmp;
-    uint8_t num = index / 4;
-    uint8_t off = index % 4;
-    tmp.u32d = s_base64_enc_lut[num];
-
-    return tmp.u8d[off];
-}
-
-static inline uint8_t __map_base64_dec_data(uint8_t index)
-{
-    cache_t tmp;
-    uint8_t num = index / 4;
-    uint8_t off = index % 4;
-    tmp.u32d = s_base64_dec_lut[num];
-
-    return tmp.u8d[off];
-}
 
 /*
  * Encode a buffer into base64 format
@@ -93,21 +74,21 @@ int esp_base64_encode(const void *p_src, uint32_t slen, void *p_dst, uint32_t dl
         C2 = *src++;
         C3 = *src++;
 
-        *p++ = __map_base64_enc_data((C1 >> 2) & 0x3F);
-        *p++ = __map_base64_enc_data((((C1 &  3) << 4) + (C2 >> 4)) & 0x3F);
-        *p++ = __map_base64_enc_data((((C2 & 15) << 2) + (C3 >> 6)) & 0x3F);
-        *p++ = __map_base64_enc_data(C3 & 0x3F);
+        *p++ = ESP_IBUS_GET_U8_DATA((C1 >> 2) & 0x3F, s_base64_enc_lut);
+        *p++ = ESP_IBUS_GET_U8_DATA((((C1 &  3) << 4) + (C2 >> 4)) & 0x3F, s_base64_enc_lut);
+        *p++ = ESP_IBUS_GET_U8_DATA((((C2 & 15) << 2) + (C3 >> 6)) & 0x3F, s_base64_enc_lut);
+        *p++ = ESP_IBUS_GET_U8_DATA(C3 & 0x3F, s_base64_enc_lut);
     }
 
     if (i < slen) {
         C1 = *src++;
         C2 = ((i + 1) < slen) ? *src++ : 0;
 
-        *p++ = __map_base64_enc_data((C1 >> 2) & 0x3F);
-        *p++ = __map_base64_enc_data((((C1 & 3) << 4) + (C2 >> 4)) & 0x3F);
+        *p++ = ESP_IBUS_GET_U8_DATA((C1 >> 2) & 0x3F, s_base64_enc_lut);
+        *p++ = ESP_IBUS_GET_U8_DATA((((C1 & 3) << 4) + (C2 >> 4)) & 0x3F, s_base64_enc_lut);
 
         if ((i + 1) < slen)
-            *p++ = __map_base64_enc_data(((C2 & 15) << 2) & 0x3F);
+            *p++ = ESP_IBUS_GET_U8_DATA(((C2 & 15) << 2) & 0x3F, s_base64_enc_lut);
         else
             *p++ = '=';
 
@@ -161,10 +142,10 @@ int esp_base64_decode(const void *p_src, uint32_t slen, void *p_dst, uint32_t dl
         if (src[i] == '=' && ++j > 2)
             return -EINVAL;
 
-        if (src[i] > 127 || __map_base64_dec_data(src[i]) == 127)
+        if (src[i] > 127 || ESP_IBUS_GET_U8_DATA(src[i], s_base64_dec_lut) == 127)
             return -EINVAL;
 
-        if (__map_base64_dec_data(src[i]) < 64 && j != 0)
+        if (ESP_IBUS_GET_U8_DATA(src[i], s_base64_dec_lut) < 64 && j != 0)
             return -EINVAL;
 
         n++;
@@ -183,8 +164,8 @@ int esp_base64_decode(const void *p_src, uint32_t slen, void *p_dst, uint32_t dl
         if (*src == '\r' || *src == '\n' || *src == ' ')
             continue;
 
-        j -= (__map_base64_dec_data(*src) == 64);
-        x  = (x << 6) | (__map_base64_dec_data(*src) & 0x3F);
+        j -= (ESP_IBUS_GET_U8_DATA(*src, s_base64_dec_lut) == 64);
+        x  = (x << 6) | (ESP_IBUS_GET_U8_DATA(*src, s_base64_dec_lut) & 0x3F);
 
         if (++n == 4) {
             n = 0;

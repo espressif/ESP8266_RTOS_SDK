@@ -49,7 +49,7 @@ ESPTOOL_ELF2IMAGE_OPTIONS :=
 endif
 
 ifdef CONFIG_DISABLE_ROM_UART_PRINT
-ESPTOOL_ELF2IMAGE_OPTIONS := $(ESPTOOL_FLASH_OPTIONS) --rom_print 0
+ESPTOOL_ELF2IMAGE_OPTIONS += --rom_print 0
 endif
 
 ESPTOOLPY_WRITE_FLASH=$(ESPTOOLPY_SERIAL) write_flash $(if $(CONFIG_ESPTOOLPY_COMPRESSED),-z,-u) $(ESPTOOL_WRITE_FLASH_OPTIONS)
@@ -70,9 +70,6 @@ APP_BIN_UNSIGNED ?= $(APP_BIN)
 
 $(APP_BIN_UNSIGNED): $(APP_ELF) $(ESPTOOLPY_SRC)
 	$(ESPTOOLPY) elf2image $(ESPTOOL_FLASH_OPTIONS) $(ESPTOOL_ELF2IMAGE_OPTIONS) -o $@ $<
-ifdef IS_BOOTLOADER_BUILD
-	@mv $@0x00000.bin $@
-endif
 
 flash: all_binaries $(ESPTOOLPY_SRC) $(call prereq_if_explicit,erase_flash)
 	@echo "Flashing binaries to serial port $(ESPPORT) (app at offset $(APP_OFFSET))..."

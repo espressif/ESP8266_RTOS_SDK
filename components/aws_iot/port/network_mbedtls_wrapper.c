@@ -90,9 +90,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
         .clientcert_pem_buf = (const unsigned char *)pNetwork->tlsConnectParams.pDeviceCertLocation,
         .clientcert_pem_bytes = strlen(pNetwork->tlsConnectParams.pDeviceCertLocation) + 1,
         .clientkey_pem_buf = (const unsigned char *)pNetwork->tlsConnectParams.pDevicePrivateKeyLocation,
-        .clientkey_pem_bytes = strlen(pNetwork->tlsConnectParams.pDevicePrivateKeyLocation) + 1,
-        .timeout_ms = pNetwork->tlsConnectParams.timeout_ms,
-        .non_block = true
+        .clientkey_pem_bytes = strlen(pNetwork->tlsConnectParams.pDevicePrivateKeyLocation) + 1
     };
 
     /* Use the AWS IoT ALPN extension for MQTT, if port 443 is requested */
@@ -131,8 +129,8 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
         written_so_far < len && !has_timer_expired(timer); written_so_far += ret, frags++) {
         while(!has_timer_expired(timer) &&
               (ret = esp_tls_conn_write(tls, pMsg + written_so_far, len - written_so_far)) <= 0) {
-            if(ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-                ESP_LOGE(TAG, "failed! mbedtls_ssl_write returned -0x%x", -ret);
+            if(ret != ESP_TLS_ERROR_WANT_READ && ret != ESP_TLS_ERROR_WANT_WRITE) {
+                ESP_LOGE(TAG, "failed! esp_tls_conn_write returned -0x%x", -ret);
                 /* All other negative return values indicate connection needs to be reset.
                 * Will be caught in ping request so ignored here */
                 isErrorFlag = true;
@@ -183,7 +181,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
             rxLen += ret;
             pMsg += ret;
             len -= ret;
-        } else if (ret == 0 || (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret != MBEDTLS_ERR_SSL_TIMEOUT)) {
+        } else if (ret == 0 || (ret != ESP_TLS_ERROR_WANT_READ && ret != ESP_TLS_ERROR_WANT_WRITE)) {
             return NETWORK_SSL_READ_ERROR;
         }
 
@@ -206,13 +204,13 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 }
 
 IoT_Error_t iot_tls_disconnect(Network *pNetwork) {
-    TLSDataParams *tlsDataParams = &(pNetwork->tlsDataParams);
-    struct esp_tls *tls = (struct esp_tls *)tlsDataParams->handle;
-    if (!tls) {
-        return NULL_VALUE_ERROR;
+    if (pNetwork) {
+        TLSDataParams *tlsDataParams = &(pNetwork->tlsDataParams);
+        struct esp_tls *tls = (struct esp_tls *) tlsDataParams->handle;
+        if (tls) {
+            esp_tls_conn_delete(tls);
+        }
     }
-
-    esp_tls_conn_delete(tls);
 
     /* All other negative return values indicate connection needs to be reset.
      * No further action required since this is disconnect call */
@@ -221,13 +219,13 @@ IoT_Error_t iot_tls_disconnect(Network *pNetwork) {
 }
 
 IoT_Error_t iot_tls_destroy(Network *pNetwork) {
-    TLSDataParams *tlsDataParams = &(pNetwork->tlsDataParams);
-    struct esp_tls *tls = (struct esp_tls *)tlsDataParams->handle;
-    if (!tls) {
-        return NULL_VALUE_ERROR;
+    if (pNetwork) {
+        TLSDataParams *tlsDataParams = &(pNetwork->tlsDataParams);
+        struct esp_tls *tls = (struct esp_tls *) tlsDataParams->handle;
+        if (tls) {
+            esp_tls_conn_delete(tls);
+        }
     }
-
-    esp_tls_conn_delete(tls);
 
     return SUCCESS;
 }

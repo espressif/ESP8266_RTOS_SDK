@@ -24,10 +24,32 @@ extern "C" {
 #define RTC_SYS_RAM_SIZE            256
 
 /**
+ * @brief Station's AP base information of old SDK
+ */
+struct old_ap_ssid {
+    uint32_t                    len;                    //!< SSID length
+    uint8_t                     ssid[32];               //!< SSID data
+    uint8_t                     passwd[64];             //!< password data
+} __attribute__((packed));
+
+/**
+ * @brief System information of old SDK
+ */
+struct old_sysconf {
+    uint8_t                     reserved_1[0x13C];      //!< reserved data
+    uint8_t                     ap_number;              //!< number of stored AP
+    uint8_t                     ap_index;               //!< index of current used AP
+    uint8_t                     reserved_2[0x2];        //!< reserved data
+    struct old_ap_ssid          ap_ssid[5];             //!< station's AP base information
+} __attribute__((packed));
+
+/**
  * The size of structure must not be larger than 256 bytes and all member varible must be uint32_t type
  */
 struct _rtc_sys_info {
     uint32_t        hint;   // software reset reason
+    uint32_t        old_sysconf_addr;   /*<! old SDK system configuration parameters base address, 
+                                             if your bootloader is older than v3.2, please don't use this */
 };
 
 extern struct _rtc_sys_info rtc_sys_info;
@@ -55,6 +77,13 @@ void esp_reset_reason_set_hint(esp_reset_reason_t hint);
  * @return See description of esp_reset_reason_t for explanation of each value.
  */
 esp_reset_reason_t esp_reset_reason_early(void);
+
+/**
+ * @brief Get old SDK configuration parameters base address
+ *
+ * @return 0 if it is not upgraded from old SDK or the absolute address of the flash 
+ */
+uint32_t esp_get_old_sysconf_addr(void);
 
 #ifdef __cplusplus
 }

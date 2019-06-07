@@ -26,6 +26,7 @@
 #define _EAGLE_SOC_H_
 
 #include <stdint.h>
+#include "driver/soc.h"
 
 /* IO definitions (access restrictions to peripheral registers) */
 
@@ -122,6 +123,8 @@
 #define TM1_EDGE_INT_DISABLE()      CLEAR_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT1)
 //}}
 
+#define INT_ENA_WDEV                0x3ff20c18
+#define WDEV_TSF0_REACH_INT         (BIT(27))
 
 //Watch dog reg {{
 #define PERIPHS_WDT_BASEADDR        0x60000900

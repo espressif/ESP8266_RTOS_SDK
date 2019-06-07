@@ -275,7 +275,6 @@
  *            digests and ciphers instead.
  *
  */
-//#define MBEDTLS_AES_ALT
 //#define MBEDTLS_ARC4_ALT
 //#define MBEDTLS_BLOWFISH_ALT
 //#define MBEDTLS_CAMELLIA_ALT
@@ -290,10 +289,18 @@
 //#define MBEDTLS_MD5_ALT
 //#define MBEDTLS_RIPEMD160_ALT
 //#define MBEDTLS_RSA_ALT
-//#define MBEDTLS_SHA1_ALT
-//#define MBEDTLS_SHA256_ALT
-//#define MBEDTLS_SHA512_ALT
 //#define MBEDTLS_XTEA_ALT
+
+#ifdef CONFIG_ESP_AES
+#define MBEDTLS_AES_ALT
+#endif
+
+#ifdef CONFIG_ESP_SHA
+#define MBEDTLS_SHA1_ALT
+#define MBEDTLS_SHA256_ALT
+#define MBEDTLS_SHA512_ALT
+#endif
+
 /*
  * When replacing the elliptic curve module, pleace consider, that it is
  * implemented with two .c files:

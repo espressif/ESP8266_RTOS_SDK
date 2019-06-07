@@ -35,6 +35,11 @@
 extern "C" {
 #endif
 
+typedef enum {
+    ESP_TLS_ERROR_WANT_READ = -2,
+    ESP_TLS_ERROR_WANT_WRITE = -3,
+} esp_tls_error_t;
+
 /**
  *  @brief ESP-TLS Connection State
  */
@@ -60,17 +65,20 @@ typedef struct esp_tls_cfg {
                                                  - where the first '2' is the length of the protocol and
                                                  - the subsequent 'h2' is the protocol name */
  
-    const unsigned char *cacert_pem_buf;    /*!< Certificate Authority's certificate in a buffer */
+    const unsigned char *cacert_pem_buf;    /*!< Certificate Authority's certificate in a buffer.
+                                                 This buffer should be NULL terminated */
  
     unsigned int cacert_pem_bytes;          /*!< Size of Certificate Authority certificate
                                                  pointed to by cacert_pem_buf */
 
-    const unsigned char *clientcert_pem_buf;/*!< Client certificate in a buffer */
+    const unsigned char *clientcert_pem_buf;/*!< Client certificate in a buffer
+                                                 This buffer should be NULL terminated */
  
     unsigned int clientcert_pem_bytes;      /*!< Size of client certificate pointed to by
                                                  clientcert_pem_buf */
 
-    const unsigned char *clientkey_pem_buf; /*!< Client key in a buffer */
+    const unsigned char *clientkey_pem_buf; /*!< Client key in a buffer
+                                                 This buffer should be NULL terminated */
 
     unsigned int clientkey_pem_bytes;       /*!< Size of client key pointed to by
                                                  clientkey_pem_buf */
@@ -88,6 +96,11 @@ typedef struct esp_tls_cfg {
 
     bool use_global_ca_store;               /*!< Use a global ca_store for all the connections in which
                                                  this bool is set. */
+
+    const char *common_name;                /*!< If non-NULL, server certificate CN must match this name.
+                                                 If NULL, server certificate CN must match hostname. */
+
+    bool skip_common_name;                  /*!< Skip any validation of server certificate CN field */
 } esp_tls_cfg_t;
 
 /**
@@ -123,10 +136,10 @@ typedef struct esp_tls {
 #endif
     int sockfd;                                                                 /*!< Underlying socket file descriptor. */
  
-    ssize_t (*esp_tls_read)(struct esp_tls  *tls, char *data, size_t datalen);          /*!< Callback function for reading data from TLS/SSL
+    ssize_t (*_read)(struct esp_tls  *tls, char *data, size_t datalen);         /*!< Callback function for reading data from TLS/SSL
                                                                                      connection. */
  
-    ssize_t (*esp_tls_write)(struct esp_tls *tls, const char *data, size_t datalen);    /*!< Callback function for writing data to TLS/SSL
+    ssize_t (*_write)(struct esp_tls *tls, const char *data, size_t datalen);   /*!< Callback function for writing data to TLS/SSL
                                                                                      connection. */
 
     esp_tls_conn_state_t  conn_state;                                           /*!< ESP-TLS Connection state */
@@ -134,6 +147,8 @@ typedef struct esp_tls {
     fd_set rset;                                                                /*!< read file descriptors */
 
     fd_set wset;                                                                /*!< write file descriptors */
+
+    bool is_tls;                                                                /*!< indicates connection type (TLS or NON-TLS) */
 } esp_tls_t;
 
 /**
@@ -151,6 +166,20 @@ typedef struct esp_tls {
  * @return pointer to esp_tls_t, or NULL if connection couldn't be opened.
  */
 esp_tls_t *esp_tls_conn_new(const char *hostname, int hostlen, int port, const esp_tls_cfg_t *cfg);
+
+/**
+ * @brief      Create a new blocking TLS/SSL connection with a given "HTTP" url
+ *
+ * The behaviour is same as esp_tls_conn_new() API. However this API accepts host's url.
+ * 
+ * @param[in]  url  url of host.
+ * @param[in]  cfg  TLS configuration as esp_tls_cfg_t. If you wish to open
+ *                  non-TLS connection, keep this NULL. For TLS connection,
+ *                  a pass pointer to 'esp_tls_cfg_t'. At a minimum, this
+ *                  structure should be zero-initialized.
+ * @return pointer to esp_tls_t, or NULL if connection couldn't be opened.
+ */
+esp_tls_t *esp_tls_conn_http_new(const char *url, const esp_tls_cfg_t *cfg);
    
 /**
  * @brief      Create a new non-blocking TLS/SSL connection
@@ -173,6 +202,22 @@ esp_tls_t *esp_tls_conn_new(const char *hostname, int hostlen, int port, const e
 int esp_tls_conn_new_async(const char *hostname, int hostlen, int port, const esp_tls_cfg_t *cfg, esp_tls_t *tls);
 
 /**
+ * @brief      Create a new non-blocking TLS/SSL connection with a given "HTTP" url
+ *
+ * The behaviour is same as esp_tls_conn_new() API. However this API accepts host's url.
+ *
+ * @param[in]  url     url of host.
+ * @param[in]  cfg     TLS configuration as esp_tls_cfg_t.
+ * @param[in]  tls     pointer to esp-tls as esp-tls handle.
+ *
+ * @return
+ *             - -1     If connection establishment fails.
+ *             -  0     If connection establishment is in progress.
+ *             -  1     If connection establishment is successful.
+ */
+int esp_tls_conn_http_new_async(const char *url, const esp_tls_cfg_t *cfg, esp_tls_t *tls);
+
+/**
  * @brief      Write from buffer 'data' into specified tls connection.
  * 
  * @param[in]  tls      pointer to esp-tls as esp-tls handle.
@@ -189,7 +234,7 @@ int esp_tls_conn_new_async(const char *hostname, int hostlen, int port, const es
  */
 static inline ssize_t esp_tls_conn_write(esp_tls_t *tls, const void *data, size_t datalen)
 {
-    return tls->esp_tls_write(tls, (char *)data, datalen);
+    return tls->_write(tls, (char *)data, datalen);
 }
 
 /**
@@ -209,7 +254,7 @@ static inline ssize_t esp_tls_conn_write(esp_tls_t *tls, const void *data, size_
  */
 static inline ssize_t esp_tls_conn_read(esp_tls_t *tls, void  *data, size_t datalen)
 {
-    return tls->esp_tls_read(tls, (char *)data, datalen);
+    return tls->_read(tls, (char *)data, datalen);
 }
 
 /**
@@ -238,10 +283,25 @@ void esp_tls_conn_delete(esp_tls_t *tls);
 size_t esp_tls_get_bytes_avail(esp_tls_t *tls);
 
 /**
- * @brief      Create a global CA store with the buffer provided in cfg.
+ * @brief      Create a global CA store, initially empty.
  *
- * This function should be called if the application wants to use the same CA store for
- * multiple connections. The application must call this function before calling esp_tls_conn_new().
+ * This function should be called if the application wants to use the same CA store for multiple connections.
+ * This function initialises the global CA store which can be then set by calling esp_tls_set_global_ca_store().
+ * To be effective, this function must be called before any call to esp_tls_set_global_ca_store().
+ *
+ * @return
+ *             - ESP_OK             if creating global CA store was successful.
+ *             - ESP_ERR_NO_MEM     if an error occured when allocating the mbedTLS resources.
+ */
+esp_err_t esp_tls_init_global_ca_store();
+
+/**
+ * @brief      Set the global CA store with the buffer provided in pem format.
+ *
+ * This function should be called if the application wants to set the global CA store for
+ * multiple connections i.e. to add the certificates in the provided buffer to the certificate chain.
+ * This function implicitly calls esp_tls_init_global_ca_store() if it has not already been called.
+ * The application must call this function before calling esp_tls_conn_new().
  *
  * @param[in]  cacert_pem_buf    Buffer which has certificates in pem format. This buffer
  *                               is used for creating a global CA store, which can be used
@@ -249,7 +309,7 @@ size_t esp_tls_get_bytes_avail(esp_tls_t *tls);
  * @param[in]  cacert_pem_bytes  Length of the buffer.
  *
  * @return
- *             - ESP_OK  if creating global CA store was successful.
+ *             - ESP_OK  if adding certificates was successful.
  *             - Other   if an error occured or an action must be taken by the calling process.
  */
 esp_err_t esp_tls_set_global_ca_store(const unsigned char *cacert_pem_buf, const unsigned int cacert_pem_bytes);

@@ -37,6 +37,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
+#include "arch/vfs_lwip.h"
 
 typedef xSemaphoreHandle sys_sem_t;
 typedef xSemaphoreHandle sys_mutex_t;

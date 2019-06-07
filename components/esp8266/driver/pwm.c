@@ -26,7 +26,6 @@
 #include "esp_heap_caps.h"
 
 #include "driver/pwm.h"
-
 #include "driver/gpio.h"
 
 // Temporary use the FreeRTOS critical function
@@ -46,9 +45,13 @@ static const char *TAG = "pwm";
 
 #define US_TO_MAC_TICK(t) (t)
 #define US_TO_TICKS(t) US_TO_MAC_TICK(t)
+// Time to switch PWM ahead of time
 #define AHEAD_TICKS0 0
-#define AHEAD_TICKS1 6
-#define AHEAD_TICKS2 8
+// Advance timing of the timer
+#define AHEAD_TICKS1 8
+// The time that remains in the interrupt function (the adjacent target loops in the interrupt)
+#define AHEAD_TICKS2 10
+// Minimum timing time
 #define AHEAD_TICKS3 2
 #define MAX_TICKS    10000000ul
 
@@ -61,7 +64,7 @@ static const char *TAG = "pwm";
 #define WDEVTSF0TIMER_ENA    0x3ff21098
 #define WDEV_TSF0TIMER_ENA   BIT(31)
 
-#define PWM_VERSION          "PWM v3.0"
+#define PWM_VERSION          "PWM v3.2"
 
 typedef struct {
     uint32_t duty;  /*!< pwm duty for each channel */
@@ -114,16 +117,16 @@ int wDev_MacTimSetFunc(void (*handle)(void));
 
 static void pwm_phase_init(void)
 {
-    int16_t time_delay;
+    int32_t time_delay;
     uint8_t i;
 
     for (i = 0; i < pwm_obj->channel_num; i++) {
         if (-180 < pwm_obj->pwm_info[i].phase && pwm_obj->pwm_info[i].phase < 0) {
-            time_delay = 0 - ((0 - pwm_obj->pwm_info[i].phase) * pwm_obj->depth / 180);
+            time_delay = 0 - ((0 - pwm_obj->pwm_info[i].phase) * pwm_obj->depth / 360);
         } else if (pwm_obj->pwm_info[i].phase == 0) {
             continue;
         } else if (180 > pwm_obj->pwm_info[i].phase && pwm_obj->pwm_info[i].phase > 0) {
-            time_delay = pwm_obj->pwm_info[i].phase * pwm_obj->depth / 180;
+            time_delay = pwm_obj->pwm_info[i].phase * pwm_obj->depth / 360;
         } else {
             ESP_LOGE(TAG, "channel[%d]  phase error %d, valid ramge from (-180,180)\n", i, pwm_obj->pwm_info[i].phase);
             continue;
@@ -511,7 +514,7 @@ static esp_err_t pwm_obj_free(void)
     return ESP_OK;
 }
 
-static esp_err_t pwm_obj_malloc(uint32_t channel_num)
+static esp_err_t pwm_obj_malloc(uint8_t channel_num)
 {
     pwm_obj = (pwm_obj_t *)heap_caps_malloc(sizeof(pwm_obj_t), MALLOC_CAP_8BIT);
 
@@ -536,7 +539,7 @@ static esp_err_t pwm_obj_malloc(uint32_t channel_num)
     return ESP_OK;
 }
 
-esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint32_t channel_num, const uint32_t *pin_num)
+esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint8_t channel_num, const uint32_t *pin_num)
 {
     PWM_CHECK(pwm_obj == NULL, "pwm has been initialized", ESP_FAIL);
     PWM_CHECK(channel_num <= MAX_PWM_CHANNEL, "Channel num out of range", ESP_ERR_INVALID_ARG);

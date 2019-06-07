@@ -19,6 +19,7 @@
 #include "esp_task_wdt.h"
 #include "portmacro.h"
 #include "esp8266/eagle_soc.h"
+#include "driver/soc.h"
 
 static const char *TAG = "wdt";
 
@@ -46,7 +47,7 @@ esp_err_t esp_task_wdt_init(void)
     const uint32_t panic_time_param = 11;
 
     // Just for soft restart
-    _xt_clear_ints(1 << ETS_WDT_INUM);
+    soc_clear_int_mask(1 << ETS_WDT_INUM);
 
     _xt_isr_attach(ETS_WDT_INUM, esp_task_wdt_isr, NULL);
     _xt_isr_unmask(1 << ETS_WDT_INUM);

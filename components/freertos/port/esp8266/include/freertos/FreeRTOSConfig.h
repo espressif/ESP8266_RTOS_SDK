@@ -58,7 +58,11 @@
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 80000000 )	
 #define configTICK_RATE_HZ			( ( portTickType ) CONFIG_FREERTOS_HZ )
 #define configMAX_PRIORITIES		15
+#if CONFIG_ESP8266_WIFI_DEBUG_LOG_ENABLE
+#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 2048 )
+#else
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 768 )
+#endif
 //#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 17 * 1024 ) )
 #define configMAX_TASK_NAME_LEN		( 16 )
 
@@ -167,6 +171,10 @@ uint32_t esp_get_time(void);
 #endif /* CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS */
 
 #define traceINCREASE_TICK_COUNT(_ticks)    esp_increase_tick_cnt(_ticks)
+
+#ifndef configIDLE_TASK_STACK_SIZE
+#define configIDLE_TASK_STACK_SIZE CONFIG_FREERTOS_IDLE_TASK_STACKSIZE
+#endif /* configIDLE_TASK_STACK_SIZE */
 
 #endif /* FREERTOS_CONFIG_H */
 

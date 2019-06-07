@@ -68,35 +68,50 @@ extern "C" {
 
 #define IPV6STR "%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x"
 
+/**
+ *  @brief TCP-IP adapter IPV4 address information
+ */
 typedef struct {
-    ip4_addr_t ip;
-    ip4_addr_t netmask;
-    ip4_addr_t gw;
+    ip4_addr_t ip;              /**< TCP-IP adatpter IPV4 addresss */
+    ip4_addr_t netmask;         /**< TCP-IP adatpter IPV4 netmask */
+    ip4_addr_t gw;              /**< TCP-IP adatpter IPV4 gateway */
 } tcpip_adapter_ip_info_t;
 
 #if TCPIP_ADAPTER_IPV6
+/**
+ *  @brief TCP-IP adapter IPV6 address information if enable IPV6 of LwIP
+ */
 typedef struct {
-    ip6_addr_t ip;
+    ip6_addr_t ip;              /**< TCP-IP adatpter IPV6 addresss */
 } tcpip_adapter_ip6_info_t;
 #else
+/**
+ *  @brief TCP-IP adapter IPV6 address information if disable IPV6 of LwIP
+ */
 typedef struct {
     struct {
-        uint32_t addr[4];
-    } ip;
+        uint32_t addr[4];   /**< TCP-IP adatpter IPV4 addresss data */
+    } ip;                   /**< TCP-IP adatpter IPV4 addresss */
 } tcpip_adapter_ip6_info_t;
 #endif
 
 typedef dhcps_lease_t tcpip_adapter_dhcps_lease_t;
 
-#if CONFIG_DHCP_STA_LIST 
+#if CONFIG_DHCP_STA_LIST
+/**
+ *  @brief TCP-IP adapter station information
+ */
 typedef struct {
-    uint8_t mac[6];
-    ip4_addr_t ip;
+    uint8_t mac[6];                 /**< TCP-IP adatpter station MAC address */
+    ip4_addr_t ip;                  /**< TCP-IP adatpter station IPV4 addresss */
 } tcpip_adapter_sta_info_t;
 
+/**
+ *  @brief TCP-IP adapter station information table
+ */
 typedef struct {
-    tcpip_adapter_sta_info_t sta[ESP_WIFI_MAX_CONN_NUM];
-    int num;
+    tcpip_adapter_sta_info_t sta[ESP_WIFI_MAX_CONN_NUM];    /**< adapter station information array */
+    int num;                                                /**< adapter station information number */
 } tcpip_adapter_sta_list_t;
 #endif
 
@@ -114,9 +129,9 @@ typedef struct {
 
 /* TODO: add Ethernet interface */
 typedef enum {
-    TCPIP_ADAPTER_IF_STA = 0,     /**< ESP32 station interface */
-    TCPIP_ADAPTER_IF_AP,          /**< ESP32 soft-AP interface */
-    TCPIP_ADAPTER_IF_ETH,         /**< ESP32 ethernet interface */
+    TCPIP_ADAPTER_IF_STA = 0,     /**< TCP-IP adatpter station interface */
+    TCPIP_ADAPTER_IF_AP,          /**< TCP-IP adatpter soft-AP interface */
+    TCPIP_ADAPTER_IF_ETH,         /**< TCP-IP adatpter ethernet interface */
     TCPIP_ADAPTER_IF_MAX
 } tcpip_adapter_if_t;
 
@@ -128,9 +143,11 @@ typedef enum {
     TCPIP_ADAPTER_DNS_MAX            /**Max DNS */
 } tcpip_adapter_dns_type_t;
 
-/*info of DNS server*/
+/**
+ *  @brief TCP-IP adapter DNS server information
+ */
 typedef struct {
-    ip_addr_t ip;
+    ip_addr_t ip;                   /**< DNS IP addresss */
 } tcpip_adapter_dns_info_t;
 
 /* status of DHCP client or DHCP server */
@@ -159,27 +176,37 @@ typedef enum{
 
 struct tcpip_adapter_api_msg_s;
 typedef int (*tcpip_adapter_api_fn)(struct tcpip_adapter_api_msg_s *msg);
+
+/**
+ *  @brief TCP-IP adapter async messsage
+ */
 typedef struct tcpip_adapter_api_msg_s {
-    int type;  /**< The first field MUST be int */
-    int ret;
-    tcpip_adapter_api_fn api_fn;
-    tcpip_adapter_if_t tcpip_if;
-    tcpip_adapter_ip_info_t *ip_info;
-    uint8_t *mac;
-    void    *data;
+    int type;                               /**< TCP-IP adatpter API message type */
+    int ret;                                /**< TCP-IP adatpter API message process result */
+    tcpip_adapter_api_fn api_fn;            /**< TCP-IP adatpter API message function */
+    tcpip_adapter_if_t tcpip_if;            /**< TCP-IP adatpter API message interface type */
+    tcpip_adapter_ip_info_t *ip_info;       /**< TCP-IP adatpter API message IP information */
+    uint8_t *mac;                           /**< TCP-IP adatpter API message MAC address */
+    void    *data;                          /**< TCP-IP adatpter API message MAC private data */
 } tcpip_adapter_api_msg_t;
 
+/**
+ *  @brief TCP-IP adapter DNS parameters
+ */
 typedef struct tcpip_adapter_dns_param_s {
-    tcpip_adapter_dns_type_t dns_type;
-    tcpip_adapter_dns_info_t *dns_info;
+    tcpip_adapter_dns_type_t dns_type;      /**< DNS type */
+    tcpip_adapter_dns_info_t *dns_info;     /**< DNS information */
 } tcpip_adapter_dns_param_t;
 
 #define TCPIP_ADAPTER_TRHEAD_SAFE 1
 #define TCPIP_ADAPTER_IPC_LOCAL   0 
 #define TCPIP_ADAPTER_IPC_REMOTE  1
 
+/**
+ *  @brief TCP-IP adapter IP lost checking timer
+ */
 typedef struct tcpip_adatper_ip_lost_timer_s {
-    bool timer_running;
+    bool timer_running;         /**< check if the timer if running */
 } tcpip_adapter_ip_lost_timer_t;
 
 /**

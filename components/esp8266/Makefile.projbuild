@@ -40,9 +40,9 @@ ESPTOOL_ALL_FLASH_ARGS += $(PHY_DATA_OFFSET) $(PHY_INIT_DATA_BIN)
 
 ESP8266_COMPONENT_PATH := $(COMPONENT_PATH)
 
-$(PHY_INIT_DATA_OBJ): $(ESP8266_COMPONENT_PATH)/source/phy_init_data.h $(BUILD_DIR_BASE)/include/sdkconfig.h
+$(PHY_INIT_DATA_OBJ): $(ESP8266_COMPONENT_PATH)/include/internal/phy_init_data.h $(BUILD_DIR_BASE)/include/sdkconfig.h
 	$(summary) CC $(notdir $@)
-	printf "#include \"source/phy_init_data.h\"\n" | $(CC) -I $(BUILD_DIR_BASE)/include -I $(ESP8266_COMPONENT_PATH) -I $(ESP8266_COMPONENT_PATH)/include -c -o $@ -xc -
+	printf "#include \"internal/phy_init_data.h\"\n" | $(CC) -I $(BUILD_DIR_BASE)/include -I $(ESP8266_COMPONENT_PATH) -I $(ESP8266_COMPONENT_PATH)/include -c -o $@ -xc -
 
 $(PHY_INIT_DATA_BIN): $(PHY_INIT_DATA_OBJ)
 	$(summary) BIN $(notdir $@)
@@ -82,7 +82,7 @@ CFLAGS += -D__ESP_FILE__='"null"'
 CXXFLAGS += -D__ESP_FILE__='"null"'
 endif
 
-.PHONY: ota ota-clean
+.PHONY: ota ota-clean app2 app2-flash app2-flash-all
 
 RAW_BIN := ./build/$(PROJECT_NAME).bin
 OTA_BIN := ./build/$(PROJECT_NAME).ota.bin
@@ -96,6 +96,20 @@ ifdef CONFIG_ESPTOOLPY_FLASHSIZE_1MB
 __COMBILE_OTA_BIN := 1
 endif
 endif
+
+app2: all
+ifdef CONFIG_ESPTOOLPY_FLASHSIZE_1MB
+	@rm -f ./build/esp8266/esp8266_out.ld
+	@export CFLAGS= && export CXXFLAGS= && make APP_OFFSET=$(APP2_OFFSET) APP_SIZE=$(APP2_SIZE)
+endif
+	@echo "To flash all build output, run 'make flash' or:"
+	@echo $(ESPTOOLPY_WRITE_FLASH) $(APP2_OFFSET) $(APP_BIN)
+
+app2-flash: app2
+	@$(ESPTOOLPY_WRITE_FLASH) $(APP2_OFFSET) $(APP_BIN)
+
+app2-flash-all: app2
+	@$(ESPTOOLPY_WRITE_FLASH) $(patsubst $(APP_OFFSET),$(APP2_OFFSET),$(ESPTOOL_ALL_FLASH_ARGS))
 
 $(OTA1_BIN): all_binaries
 	@cp $(RAW_BIN) $(OTA1_BIN)
@@ -117,9 +131,11 @@ ifdef __COMBILE_OTA_BIN
 endif
 	@echo [GEN] $(OTA_BIN)
 
+PYTHON ?= $(call dequote,$(CONFIG_PYTHON))
+
 ifdef CONFIG_ESP8266_OTA_FROM_OLD
-$(OTA_V2_TO_V3_BIN): all_binaries
-	@python $(IDF_PATH)/tools/pack_fw.py --output $(OTA_V2_TO_V3_BIN) pack3 $(ESPTOOL_ALL_FLASH_ARGS)
+$(OTA_V2_TO_V3_BIN): all
+	@$(PYTHON) $(IDF_PATH)/tools/pack_fw.py --output $(OTA_V2_TO_V3_BIN) --app $(PROJECT_NAME).bin  pack3 $(ESPTOOL_ALL_FLASH_ARGS)
 	@echo [GEN] $(OTA_V2_TO_V3_BIN)
 endif
 
