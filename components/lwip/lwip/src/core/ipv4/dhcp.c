@@ -1954,4 +1954,23 @@ dhcp_supplied_address(const struct netif *netif)
   return 0;
 }
 
+#if ESP_LWIP
+/** Set callback for dhcp, reserved parameter for future use.
+ *
+ * @param netif the netif from which to remove the struct dhcp
+ * @param cb    callback for dhcp
+ */
+void dhcp_set_cb(struct netif *netif, void (*cb)(struct netif*))
+{
+  struct dhcp *dhcp;
+  dhcp = netif_dhcp_data(netif);
+
+  LWIP_ASSERT("netif != NULL", netif != NULL);
+
+  if (dhcp != NULL) {
+    dhcp->cb = cb;
+  }
+}
+#endif
+
 #endif /* LWIP_IPV4 && LWIP_DHCP */

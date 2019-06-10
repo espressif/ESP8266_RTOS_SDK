@@ -98,9 +98,17 @@ static void tcpip_adapter_dhcps_cb(u8_t client_ip[4])
 
 static err_t _dhcp_start(struct tcpip_api_call_data *p)
 {
+    err_t ret;
     struct tcpip_adapter_api_call_data *call = (struct tcpip_adapter_api_call_data *)p;
 
-    return dhcp_start(call->netif);
+    ret = dhcp_start(call->netif);
+
+#if ESP_LWIP
+    if (ret == ERR_OK)
+        dhcp_set_cb(call->netif, tcpip_adapter_dhcpc_cb);
+#endif
+
+    return ret;
 }
 
 static err_t _dhcp_stop(struct tcpip_api_call_data *p)
