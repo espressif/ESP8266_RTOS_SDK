@@ -57,11 +57,14 @@ class proc_addr_file(argparse.Action):
                     address = 0x1000
             except ValueError:
                 raise argparse.ArgumentError(self, 'Address "%s" must be a number' % values[i])
-            try:
-                argfile = open(values[i + 1], 'rb')
-            except IOError as e:
-                raise argparse.ArgumentError(self, e)
-            pairs.append((address, argfile))
+            
+            # ota initial data is not need
+            if 'ota_data_initial.bin' not in values[i + 1]:
+                try:
+                    argfile = open(values[i + 1], 'rb')
+                except IOError as e:
+                    raise argparse.ArgumentError(self, e)
+                pairs.append((address, argfile))
 
         end = 0
         pairs = sorted(pairs)
@@ -123,8 +126,6 @@ def pack3(args):
         output_file.close()
     except IOError as e:
         raise e
-
-    print('\r\n\033[1;31;40mOTA example should use following macro:\r\n\r\n    #define OTA_EXAMPLE_APP_OFFSET 0x%x\r\n\033[0m'%(app_offset))
 
 def main():
     parser = argparse.ArgumentParser(description='pack_fw v%s - ESP8266 ROM Bootloader Utility' % __version__, prog='pack_fw')
