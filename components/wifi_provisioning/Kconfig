@@ -8,4 +8,12 @@ config ENABLE_UNIFIED_PROVISIONING
     select MBEDTLS_ECP_C
     help
         This enables Unified Provisioning feature along with required components like Wifi-Provisioning, Protocomm and their mbedtls dependencies.
+
+config MAX_REQ_BODY_LEN
+    int "Maximum body len of protocomm request"
+    default 4192
+    depends on ENABLE_UNIFIED_PROVISIONING
+    help
+       Size (in bytes) of the protocomm request body.
+
 endmenu
