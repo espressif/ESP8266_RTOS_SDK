@@ -84,7 +84,7 @@ void app_main()
         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,                           // 2-channels
         .communication_format = I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB,
         .dma_buf_count = 6,
-        .dma_buf_len = 60
+        .dma_buf_len = 256
     };
     i2s_pin_config_t pin_config = {
         .bck_o_en = I2S_BCK_EN,
