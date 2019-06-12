@@ -144,7 +144,7 @@ Then users can input test commands to start factory testing.
     
     function: initialize RF to prepare for test
 
-2. ``tx_contin_func <parameter 1>``::
+2. ``tx_contin_en <parameter 1>``::
 
     parameter 1: value 1 means that chip transmits packets continuously with 92% duty cycle,
                  value 0 means that "iqview" test mode
