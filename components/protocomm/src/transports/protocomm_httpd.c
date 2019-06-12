@@ -29,8 +29,6 @@ static protocomm_t *pc_httpd; /* The global protocomm instance for HTTPD */
 static bool pc_ext_httpd_handle_provided = false;
 static uint32_t session_id = PROTOCOMM_NO_SESSION_ID;
 
-#define MAX_REQ_BODY_LEN 4096
-
 static esp_err_t common_post_handler(httpd_req_t *req)
 {
     esp_err_t ret;
@@ -73,8 +71,8 @@ static esp_err_t common_post_handler(httpd_req_t *req)
         ESP_LOGE(TAG, "Content length not found");
         ret = ESP_FAIL;
         goto out;
-    } else if (req->content_len > MAX_REQ_BODY_LEN) {
-        ESP_LOGE(TAG, "Request content length should be less than 4kb");
+    } else if (req->content_len > CONFIG_MAX_REQ_BODY_LEN) {
+        ESP_LOGE(TAG, "Request content length should be less than %d bytes", CONFIG_MAX_REQ_BODY_LEN);
         ret = ESP_FAIL;
         goto out;
     }
