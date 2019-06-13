@@ -90,6 +90,9 @@ extern "C" {
 
 #define ESP_WIFI_PARAM_USE_NVS  0
 
+#define WIFI_PROTOCAL_11B  1
+#define WIFI_PROTOCAL_11G  2
+#define WIFI_PROTOCAL_11N  4
 /**
  * @brief WiFi stack configuration parameters passed to esp_wifi_init call.
  */
