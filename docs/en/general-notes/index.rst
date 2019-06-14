@@ -15,11 +15,10 @@ and now upgrade to the new SDK, please disable the following configuration in th
     "Bootloader config  --->
         [ ] Bootloader init SPI flash"
 
-2. ESP8285 or ESP8266 + 1MB flash
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2. OTA
+^^^^^^
 
-ESP8285 or ESP8266 + 1MB flash can use "Copy OTA Mode" for OTA, more details are in the `examples/system/ota <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/system/ota/>`_.
-
+We split the native OTA example into several sub-examples to let custemors to choose which application matches the scenario they really want. `examples/system/ota/native_ota <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/system/ota/native_ota/>`_.
 
 3. 802.11n only AP
 ^^^^^^^^^^^^^^^^^^
