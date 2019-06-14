@@ -19,3 +19,9 @@ and now upgrade to the new SDK, please disable the following configuration in th
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ESP8285 or ESP8266 + 1MB flash can use "Copy OTA Mode" for OTA, more details are in the `examples/system/ota <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/system/ota/>`_.
+
+
+3. 802.11n only AP
+^^^^^^^^^^^^^^^^^^
+
+For better compatibility, the SDK is in bg mode by default. And application can set it to be bgn mode for reconnecting when it fails to connect some 11n only APs, refer to the `examples/wifi/simple_wifi <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/wifi/simple_wifi/>`_.
