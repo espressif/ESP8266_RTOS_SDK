@@ -1,0 +1,9 @@
+menu "Nano Console"
+
+config NC_ECHO_CMD
+    bool "echo input command"
+    default y
+    help
+        Enable this option, the console terminal will echo the input command.
+
+endmenu

@@ -248,22 +248,42 @@ void show_critical_info(void)
     ets_printf("SWReq:%u\n", SWReq);
 }
 
+#ifdef ESP_DPORT_CLOSE_NMI
+static int s_nmi_is_closed;
+
+void esp_dport_close_nmi(void)
+{
+    vPortEnterCritical();
+    REG_WRITE(PERIPHS_DPORT_BASEADDR, REG_READ(PERIPHS_DPORT_BASEADDR) & ~0x1);
+    s_nmi_is_closed = 1;
+    vPortExitCritical();
+}
+
+#define ESP_NMI_IS_CLOSED()     s_nmi_is_closed
+#else
+#define ESP_NMI_IS_CLOSED()     0
+#endif
+
 void IRAM_ATTR vPortETSIntrLock(void)
 {
     if (NMIIrqIsOn == 0) {
         vPortEnterCritical();
-        do {
-            REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);
-        } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT);
+        if (!ESP_NMI_IS_CLOSED()) {
+            do {
+                REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);
+            } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT);
+        }
     }
 }
 
 void IRAM_ATTR vPortETSIntrUnlock(void)
 {
     if (NMIIrqIsOn == 0) {
-        extern uint32_t WDEV_INTEREST_EVENT;
+        if (!ESP_NMI_IS_CLOSED()) {
+            extern uint32_t WDEV_INTEREST_EVENT;
 
-        REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);
+            REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);
+        }
         vPortExitCritical();
     }
 }

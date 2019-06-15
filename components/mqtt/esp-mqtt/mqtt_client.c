@@ -406,6 +406,7 @@ esp_err_t esp_mqtt_client_set_uri(esp_mqtt_client_handle_t client, const char *u
         client->config->path = create_string(uri + puri.field_data[UF_PATH].off, puri.field_data[UF_PATH].len);
     }
     if (client->config->path) {
+#if MQTT_ENABLE_WSS || MQTT_ENABLE_WS
         esp_transport_handle_t trans = esp_transport_list_get_transport(client->transport_list, "ws");
         if (trans) {
             esp_transport_ws_set_path(trans, client->config->path);
@@ -414,6 +415,7 @@ esp_err_t esp_mqtt_client_set_uri(esp_mqtt_client_handle_t client, const char *u
         if (trans) {
             esp_transport_ws_set_path(trans, client->config->path);
         }
+#endif
     }
 
     if (puri.field_data[UF_PORT].len) {

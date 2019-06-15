@@ -15,11 +15,3 @@ if(${OTADATA_PARTITION_OFFSET})
     add_custom_target(blank_ota_data ALL DEPENDS "${PROJECT_BINARY_DIR}/${BLANK_OTADATA_FILE}")
     add_dependencies(flash blank_ota_data)
 endif()
-
-if(CONFIG_APP_UPDATE_CHECK_APP_SUM)
-target_compile_definitions(${COMPONENT_NAME} PUBLIC -D CONFIG_ENABLE_BOOT_CHECK_SUM=1)
-endif()
-
-if(CONFIG_APP_UPDATE_CHECK_APP_HASH)
-target_compile_definitions(${COMPONENT_NAME} PUBLIC -D CONFIG_ENABLE_BOOT_CHECK_SHA256=1)
-endif()

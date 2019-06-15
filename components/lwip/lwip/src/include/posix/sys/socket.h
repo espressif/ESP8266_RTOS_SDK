@@ -33,8 +33,3 @@
 #include "sdkconfig.h"
 
 #include "lwip/sockets.h"
-
-#ifdef CONFIG_USING_ESP_VFS
-#include <unistd.h>
-#include <fcntl.h>
-#endif

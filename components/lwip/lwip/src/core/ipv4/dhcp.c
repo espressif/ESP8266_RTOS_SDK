@@ -657,6 +657,12 @@ dhcp_handle_ack(struct netif *netif)
 #if LWIP_DHCP_PROVIDE_DNS_SERVERS
   /* DNS servers */
   for (n = 0; (n < LWIP_DHCP_PROVIDE_DNS_SERVERS) && dhcp_option_given(dhcp, DHCP_OPTION_IDX_DNS_SERVER + n); n++) {
+#if ESP_DNS
+    if (n == DNS_FALLBACK_SERVER_INDEX) {
+        continue;
+    }
+#endif
+
     ip_addr_t dns_addr;
     ip_addr_set_ip4_u32(&dns_addr, lwip_htonl(dhcp_get_option_value(dhcp, DHCP_OPTION_IDX_DNS_SERVER + n)));
     dns_setserver(n, &dns_addr);
@@ -1947,5 +1953,24 @@ dhcp_supplied_address(const struct netif *netif)
   }
   return 0;
 }
+
+#if ESP_LWIP
+/** Set callback for dhcp, reserved parameter for future use.
+ *
+ * @param netif the netif from which to remove the struct dhcp
+ * @param cb    callback for dhcp
+ */
+void dhcp_set_cb(struct netif *netif, void (*cb)(struct netif*))
+{
+  struct dhcp *dhcp;
+  dhcp = netif_dhcp_data(netif);
+
+  LWIP_ASSERT("netif != NULL", netif != NULL);
+
+  if (dhcp != NULL) {
+    dhcp->cb = cb;
+  }
+}
+#endif
 
 #endif /* LWIP_IPV4 && LWIP_DHCP */

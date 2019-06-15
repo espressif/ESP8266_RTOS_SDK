@@ -493,6 +493,7 @@ static void set_cache_and_start_app(
 #include "esp_log.h"
 
 #include "esp_flash_partitions.h"
+#include "internal/esp_system_internal.h"
 
 #ifdef CONFIG_SOC_FULL_ICACHE
 #define SOC_CACHE_SIZE 1 // 32KB
@@ -512,6 +513,7 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
     esp_err_t err;
     int num_partitions;
 
+    rtc_sys_info.old_sysconf_addr = 0;
 #ifdef CONFIG_ESP8266_OTA_FROM_OLD
     if (esp_patition_table_init_location()) {
         ESP_LOGE(TAG, "Failed to update partition table location");

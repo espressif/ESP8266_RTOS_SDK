@@ -19,6 +19,7 @@
 #include "nvs_flash.h"
 #include "tcpip_adapter.h"
 #include "esp_smartconfig.h"
+#include "smartconfig_ack.h"
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
@@ -34,6 +35,9 @@ void smartconfig_example_task(void * parm);
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
+    /* For accessing reason codes in case of disconnection */
+    system_event_info_t *info = &event->event_info;
+
     switch(event->event_id) {
     case SYSTEM_EVENT_STA_START:
         xTaskCreate(smartconfig_example_task, "smartconfig_example_task", 4096, NULL, 3, NULL);
@@ -42,6 +46,11 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
+        ESP_LOGE(TAG, "Disconnect reason : %d", info->disconnected.reason);
+        if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
+            /*Switch to 802.11 bgn mode */
+            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+        }
         esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
         break;
@@ -88,9 +97,19 @@ static void sc_callback(smartconfig_status_t status, void *pdata)
         case SC_STATUS_LINK_OVER:
             ESP_LOGI(TAG, "SC_STATUS_LINK_OVER");
             if (pdata != NULL) {
-                uint8_t phone_ip[4] = { 0 };
-                memcpy(phone_ip, (uint8_t* )pdata, 4);
-                ESP_LOGI(TAG, "Phone ip: %d.%d.%d.%d\n", phone_ip[0], phone_ip[1], phone_ip[2], phone_ip[3]);
+                sc_callback_data_t *sc_callback_data = (sc_callback_data_t *)pdata;
+                switch (sc_callback_data->type) {
+                    case SC_ACK_TYPE_ESPTOUCH:
+                        ESP_LOGI(TAG, "Phone ip: %d.%d.%d.%d", sc_callback_data->ip[0], sc_callback_data->ip[1], sc_callback_data->ip[2], sc_callback_data->ip[3]);
+                        ESP_LOGI(TAG, "TYPE: ESPTOUCH");
+                        break;
+                    case SC_ACK_TYPE_AIRKISS:
+                        ESP_LOGI(TAG, "TYPE: AIRKISS");
+                        break;
+                    default:
+                        ESP_LOGE(TAG, "TYPE: ERROR");
+                        break;
+                }
             }
             xEventGroupSetBits(wifi_event_group, ESPTOUCH_DONE_BIT);
             break;
@@ -102,7 +121,7 @@ static void sc_callback(smartconfig_status_t status, void *pdata)
 void smartconfig_example_task(void * parm)
 {
     EventBits_t uxBits;
-    ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH) );
+    ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH_AIRKISS) );
     ESP_ERROR_CHECK( esp_smartconfig_start(sc_callback) );
     while (1) {
         uxBits = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT | ESPTOUCH_DONE_BIT, true, false, portMAX_DELAY); 
