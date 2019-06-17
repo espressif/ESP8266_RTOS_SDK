@@ -33,3 +33,9 @@
 #include "sdkconfig.h"
 
 #include "lwip/sockets.h"
+
+#if !LWIP_POSIX_SOCKETS_IO_NAMES
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#endif /* !LWIP_POSIX_SOCKETS_IO_NAMES */
