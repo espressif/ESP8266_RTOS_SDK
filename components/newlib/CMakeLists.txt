@@ -18,11 +18,5 @@ target_compile_definitions(newlib PUBLIC
     -D_CLOCKS_PER_SEC_=CONFIG_FREERTOS_HZ -D_POSIX_THREADS=1 -D_UNIX98_THREAD_MUTEX_ATTRIBUTES=1
     )
 
-if(CONFIG_ENABLE_PTHREAD)
-    target_compile_definitions(newlib PUBLIC
-        -D_POSIX_THREADS=1 -D_UNIX98_THREAD_MUTEX_AT
-        )
-endif()
-
 target_link_libraries(newlib "-L ${CMAKE_CURRENT_SOURCE_DIR}/newlib/lib")
 target_link_libraries(newlib "${LIBC}" "${LIBM}")
