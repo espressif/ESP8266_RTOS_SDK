@@ -54,18 +54,6 @@ static esp_err_t oled_write_cmd(uint8_t data)
     return ESP_OK;
 }
 
-// Write an 8-bit data
-static esp_err_t oled_write_byte(uint8_t data)
-{
-    uint32_t buf = data << 24;
-    spi_trans_t trans = {0};
-    trans.mosi = &buf;
-    trans.bits.mosi = 8;
-    oled_set_dc(1);
-    spi_trans(HSPI_HOST, trans);
-    return ESP_OK;
-}
-
 static esp_err_t oled_rst()
 {
     gpio_set_level(OLED_RST_GPIO, 0);
