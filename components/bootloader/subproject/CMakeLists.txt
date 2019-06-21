@@ -10,13 +10,11 @@ if(NOT IDF_PATH)
         "in by the parent build process.")
 endif()
 
-set(COMPONENTS esptool_py bootloader bootloader_support spi_flash log esp8266 util partition_table)
+set(COMPONENTS esptool_py bootloader bootloader_support spi_flash log esp8266 util partition_table main)
 set(BOOTLOADER_BUILD 1)
 add_definitions(-DBOOTLOADER_BUILD=1)
 
 set(COMPONENT_REQUIRES_COMMON log esp8266 spi_flash)
-
-set(MAIN_SRCS main/bootloader_start.c)
 
 include("${IDF_PATH}/tools/cmake/project.cmake")
 project(bootloader)
