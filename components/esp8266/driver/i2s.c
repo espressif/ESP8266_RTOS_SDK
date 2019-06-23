@@ -650,6 +650,9 @@ static esp_err_t i2s_param_config(i2s_port_t i2s_num, const i2s_config_t *i2s_co
     I2S[i2s_num]->conf.rx_reset = 1;
     I2S[i2s_num]->conf.rx_reset = 0;
 
+    // disable all i2s interrupt
+    I2S[i2s_num]->int_ena.val = 0;
+
     //reset dma
     p_i2s_obj[i2s_num]->dma->conf0.rx_rst = 1;
     p_i2s_obj[i2s_num]->dma->conf0.rx_rst = 0;

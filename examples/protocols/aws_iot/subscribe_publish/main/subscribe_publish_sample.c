@@ -46,6 +46,10 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
+#ifdef CONFIG_SSL_USING_WOLFSSL
+#include "lwip/apps/sntp.h"
+#endif
+
 #include "aws_iot_config.h"
 #include "aws_iot_log.h"
 #include "aws_iot_version.h"
@@ -111,9 +115,45 @@ char HostAddress[255] = AWS_IOT_MQTT_HOST;
  */
 uint32_t port = AWS_IOT_MQTT_PORT;
 
+#ifdef CONFIG_SSL_USING_WOLFSSL
+static void get_time()
+{
+    struct timeval now;
+    int sntp_retry_cnt = 0;
+    int sntp_retry_time = 0;
+
+    sntp_setoperatingmode(0);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_init();
+
+    while (1) {
+        for (int32_t i = 0; (i < (SNTP_RECV_TIMEOUT / 100)) && now.tv_sec < 1525952900; i++) {
+            vTaskDelay(100 / portTICK_RATE_MS);
+            gettimeofday(&now, NULL);
+        }
+
+        if (now.tv_sec < 1525952900) {
+            sntp_retry_time = SNTP_RECV_TIMEOUT << sntp_retry_cnt;
+
+            if (SNTP_RECV_TIMEOUT << (sntp_retry_cnt + 1) < SNTP_RETRY_TIMEOUT_MAX) {
+                sntp_retry_cnt ++;
+            }
+
+            ESP_LOGE(TAG, "SNTP get time failed, retry after %d ms\n", sntp_retry_time);
+            vTaskDelay(sntp_retry_time / portTICK_RATE_MS);
+        } else {
+            ESP_LOGI(TAG, "SNTP get time success\n");
+            break;
+        }
+    }
+}
+#endif
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
+    /* For accessing reason codes in case of disconnection */
+    system_event_info_t *info = &event->event_info;
+    
     switch(event->event_id) {
     case SYSTEM_EVENT_STA_START:
         esp_wifi_connect();
@@ -122,8 +162,11 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
-        /* This is a workaround as ESP32 WiFi libs don't currently
-           auto-reassociate. */
+        ESP_LOGE(TAG, "Disconnect reason : %d", info->disconnected.reason);
+        if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
+            /*Switch to 802.11 bgn mode */
+            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+        }
         esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
         break;
@@ -222,6 +265,10 @@ void aws_iot_task(void *param) {
     /* Wait for WiFI to show as connected */
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
+
+#ifdef CONFIG_SSL_USING_WOLFSSL
+    get_time();
+#endif
 
     connectParams.keepAliveIntervalInSec = 10;
     connectParams.isCleanSession = true;

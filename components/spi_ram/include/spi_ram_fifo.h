@@ -41,13 +41,15 @@ typedef struct {
   * @param handle spi ram fifo handle
   * @param data Pointer to the write data buffer
   * @param len Length of write data, range: len > 0
+  * @param timeout_ticks freertos timeout ticks
   *
   * @return
   *     - ESP_OK Success
   *     - ESP_ERR_INVALID_ARG Parameter error
+  *     - ESP_ERR_TIMEOUT spi ram fifo write timeout
   *     - ESP_FAIL spi ram fifo not created yet
   */
-esp_err_t spi_ram_fifo_write(spi_ram_fifo_handle_t handle, uint8_t *data, int len);
+esp_err_t spi_ram_fifo_write(spi_ram_fifo_handle_t handle, uint8_t *data, int len, uint32_t timeout_ticks);
 
 /**
   * @brief spi ram fifo read function
@@ -57,13 +59,15 @@ esp_err_t spi_ram_fifo_write(spi_ram_fifo_handle_t handle, uint8_t *data, int le
   * @param handle spi ram fifo handle
   * @param data Pointer to the read data buffer
   * @param len Length of read data, range: len > 0
+  * @param timeout_ticks freertos timeout ticks
   *
   * @return
   *     - ESP_OK Success
   *     - ESP_ERR_INVALID_ARG Parameter error
+  *     - ESP_ERR_TIMEOUT spi ram fifo read timeout
   *     - ESP_FAIL spi ram fifo not created yet
   */
-esp_err_t spi_ram_fifo_read(spi_ram_fifo_handle_t handle, uint8_t *data, int len);
+esp_err_t spi_ram_fifo_read(spi_ram_fifo_handle_t handle, uint8_t *data, int len, uint32_t timeout_ticks);
 
 /**
   * @brief Get spi ram fifo filled length

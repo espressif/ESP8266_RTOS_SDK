@@ -19,6 +19,8 @@
 #include <stdarg.h>
 #include <fcntl.h>
 
+#include "lwip/sockets.h"
+
 int fcntl(int fd, int request, ...)
 {
     int val, ret;

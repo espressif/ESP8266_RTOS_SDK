@@ -103,6 +103,10 @@ struct dhcp
   ip4_addr_t offered_si_addr;
   char boot_file_name[DHCP_BOOT_FILE_LEN];
 #endif /* LWIP_DHCP_BOOTPFILE */
+
+#if ESP_LWIP
+  void (*cb)(struct netif*); /* callback for dhcp, add a parameter to show dhcp status if needed */
+#endif
 };
 
 
@@ -133,6 +137,10 @@ extern void dhcp_set_ntp_servers(u8_t num_ntp_servers, const ip4_addr_t* ntp_ser
 #endif /* LWIP_DHCP_GET_NTP_SRV */
 
 #define netif_dhcp_data(netif) ((struct dhcp*)netif_get_client_data(netif, LWIP_NETIF_CLIENT_DATA_INDEX_DHCP))
+
+#ifdef ESP_LWIP
+void dhcp_set_cb(struct netif *netif, void (*cb)(struct netif*));
+#endif
 
 #ifdef __cplusplus
 }

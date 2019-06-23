@@ -14,16 +14,13 @@ and now upgrade to the new SDK, please disable the following configuration in th
 
     "Bootloader config  --->
         [ ] Bootloader init SPI flash"
- 
-2. Sniffer or Smartconfig
-^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We moved some functions from IRAM to flash, including `malloc` and `free` fucntions, to save more memory.
-In this case, please do not read/write/erase flash during sniffer/promiscuous mode.
+2. OTA
+^^^^^^
 
-You need to disable the sniffer/promiscuous mode at first, then read/write/erase flash. 
+We split the native OTA example into several sub-examples to let custemors to choose which application matches the scenario they really want. `examples/system/ota/native_ota <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/system/ota/native_ota/>`_.
 
-3. ESP8285 or ESP8266 + 1MB flash
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+3. 802.11n only AP
+^^^^^^^^^^^^^^^^^^
 
-ESP8285 or ESP8266 + 1MB flash can use "Copy OTA Mode" for OTA, more details are in the `examples/system/ota <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/system/ota/>`_.
+For better compatibility, the SDK is in bg mode by default. And application can set it to be bgn mode for reconnecting when it fails to connect some 11n only APs, refer to the `examples/wifi/simple_wifi <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/wifi/simple_wifi/>`_.

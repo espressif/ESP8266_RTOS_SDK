@@ -75,6 +75,9 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 
 static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 {
+    /* For accessing reason codes in case of disconnection */
+    system_event_info_t *info = &event->event_info;
+    
     switch (event->event_id) {
         case SYSTEM_EVENT_STA_START:
             esp_wifi_connect();
@@ -84,6 +87,11 @@ static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 
             break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
+            ESP_LOGE(TAG, "Disconnect reason : %d", info->disconnected.reason);
+            if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
+                /*Switch to 802.11 bgn mode */
+                esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+            }
             esp_wifi_connect();
             xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
             break;

@@ -165,18 +165,32 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
     }
 
     while (len > 0) {
-        /* Make sure we never block on read for longer than timer has left,
-           but also that we don't block indefinitely (ie read_timeout > 0) */
-        read_timeout = MAX(1, MIN(read_timeout, left_ms(timer)));
-        timeout.tv_sec = read_timeout / 1000;
-        timeout.tv_usec = (read_timeout % 1000) * 1000;
+        if (esp_tls_get_bytes_avail(tls) <= 0) {
+            fd_set read_fs, error_fs;
 
-        ret = setsockopt(tls->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(struct timeval));
+            /* Make sure we never block on read for longer than timer has left,
+            but also that we don't block indefinitely (ie read_timeout > 0) */
+            read_timeout = MAX(1, MIN(read_timeout, left_ms(timer)));
+            timeout.tv_sec = read_timeout / 1000;
+            timeout.tv_usec = (read_timeout % 1000) * 1000;
+
+            FD_CLR(tls->sockfd, &read_fs);
+            FD_CLR(tls->sockfd, &error_fs);
+
+            FD_SET(tls->sockfd, &read_fs);
+            FD_SET(tls->sockfd, &error_fs);
+
+            ret = select(tls->sockfd + 1, &read_fs, NULL, &error_fs, &timeout);
+            if (!ret)
+                goto check_time;
+            else if (ret < 0)
+                return NETWORK_SSL_READ_ERROR;
+
+            if (FD_ISSET(tls->sockfd, &error_fs))
+                return NETWORK_SSL_READ_ERROR;
+        }
+
         ret = esp_tls_conn_read(tls, pMsg, len);
-
-        /* Restore the old timeout */
-        tlsDataParams->timeout = read_timeout;
-
         if (ret > 0) {
             rxLen += ret;
             pMsg += ret;
@@ -185,6 +199,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
             return NETWORK_SSL_READ_ERROR;
         }
 
+check_time:
         // Evaluate timeout after the read to make sure read is done at least once
         if (has_timer_expired(timer)) {
             break;
