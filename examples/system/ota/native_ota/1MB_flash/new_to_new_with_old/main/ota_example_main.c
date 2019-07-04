@@ -15,6 +15,9 @@
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 
+#ifdef CONFIG_CONNECT_ORIGINAL_AP
+#include "internal/esp_system_internal.h"
+#endif
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
@@ -105,18 +108,48 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 
 static void initialise_wifi(void)
 {
-    tcpip_adapter_init();
-    wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+#ifdef CONFIG_CONNECT_ORIGINAL_AP
+    int ret;
+    uint32_t addr;
+    struct old_sysconf *sysconf;
+    wifi_config_t wifi_config = { 0 };
+
+    if (!(addr = esp_get_old_sysconf_addr())) {
+        ESP_LOGE(TAG, "Current firmware does not update from old SDK firmware");
+        return ;
+    }
+
+    if (!(sysconf = malloc(sizeof(struct old_sysconf)))) {
+        ESP_LOGE(TAG, "No enough memory for old system config");
+        return ;
+    }
+
+    if ((ret = spi_flash_read(addr, sysconf, sizeof(struct old_sysconf))) != ESP_OK) {
+        free(sysconf);
+        ESP_LOGE(TAG, "read old system config from flash error %d", ret);
+        return ;
+    }
+
+    memcpy(&wifi_config.sta.ssid, sysconf->ap_ssid[sysconf->ap_index].ssid, sysconf->ap_ssid[sysconf->ap_index].len);
+    memcpy(&wifi_config.sta.password, sysconf->ap_ssid[sysconf->ap_index].passwd, 32);
+
+    free(sysconf);
+#else
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = EXAMPLE_WIFI_SSID,
             .password = EXAMPLE_WIFI_PASS,
         },
     };
+#endif
+
+    tcpip_adapter_init();
+    wifi_event_group = xEventGroupCreate();
+    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+
     ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
