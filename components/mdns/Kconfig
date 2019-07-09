@@ -7,6 +7,14 @@ config ENABLE_MDNS
     help
         Enable this option and then mDNS is to be used.
 
+config ENABLE_MDNS_CONSOLE
+    bool "Enable mDNS console"
+    default n
+    depends on ENABLE_MDNS
+    select USING_ESP_CONSOLE
+    help
+        Enable this option and then mDNS console is to be used.
+
 config MDNS_MAX_SERVICES
     int "Max number of services"
     range 1 64
