@@ -53,6 +53,7 @@
 #include "driver/soc.h"
 
 #define ESP_LWIP 1
+#define ESP_IP4_ATON 1
 
 #ifdef CONFIG_ESP_DNS
 #define ESP_DNS  1
