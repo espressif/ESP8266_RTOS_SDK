@@ -93,6 +93,13 @@ If you old SDK storing RF parameters is customized and want the new firmware to 
             [*]   Load old RF Parameters
 ```
 
+If you want to connect to the original AP of old SDK, then configurate as following:
+
+```
+    Example Configuration  --->
+        [*] Connect to the original AP 
+```
+
 Save your changes, and type `make ota` to build the example to generate the real OTA binary firmware.
 
 The name of final generated binary firmware is `ota.v2_to_v3.ota.bin` and the binary firmware locates at directory of `build`.
