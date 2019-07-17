@@ -103,9 +103,11 @@ static inline size_t blk_link_size(mem_blk_t *blk)
 static inline size_t get_blk_region(void *ptr)
 {
     size_t num;
-    extern heap_region_t g_heap_region[HEAP_REGIONS_MAX];
+    extern size_t g_heap_region_num;
+    extern heap_region_t g_heap_region[];
 
-    for (num = 0; num < HEAP_REGIONS_MAX; num++) {
+
+    for (num = 0; num < g_heap_region_num; num++) {
         if ((uint8_t *)ptr > (uint8_t *)g_heap_region[num].start_addr
             && (uint8_t *)ptr < ((uint8_t *)g_heap_region[num].start_addr + g_heap_region[num].total_size)) {
             break;
