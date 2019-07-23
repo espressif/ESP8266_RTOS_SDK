@@ -9,9 +9,9 @@ choice MQTT_LIBRARY_CHOOSE
         Currently we support ESP-MQTT and IBM-MQTT(paho).
 
 config MQTT_USING_ESP
-    bool "ESP-MQTT"
+    bool "ESP-MQTT(Recommended)"
 config MQTT_USING_IBM
-    bool "IBM-MQTT(paho)"
+    bool "IBM-MQTT(not recommended and will be removed at v4.0)"
 endchoice
 
 menu "IBM-MQTT(paho)"
