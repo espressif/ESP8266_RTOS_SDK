@@ -54,6 +54,7 @@
 
 #define ESP_LWIP 1
 #define ESP_IP4_ATON 1
+#define ESP_DHCP 1
 
 #ifdef CONFIG_ESP_DNS
 #define ESP_DNS  1
@@ -720,6 +721,14 @@ size_t memp_malloc_get_size(size_t type);
  * (up to the maximum limit defined here).
  */
 #define LWIP_DHCP_MAX_DNS_SERVERS       DNS_MAX_SERVERS
+
+/**
+ * LWIP_DHCP_DISCOVER_RETRANSMISSION_INTERVAL: DHCP discover retry backoff time. 
+ * (default is 250, a conservative default, the maximum is 1000.)
+ * Since for embedded devices it's not that hard to miss a discover packet, so 
+ * it is necessary to reduce the discovery retry backoff time.
+ */
+#define LWIP_DHCP_DISCOVER_RETRANSMISSION_INTERVAL       CONFIG_LWIP_DHCP_DISCOVER_RETRANSMISSION_INTERVAL
 /**
  * @}
  */
