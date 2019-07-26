@@ -172,6 +172,9 @@ static void openssl_client_task(void* p)
 
     printf("OpenSSL client thread start...\n");
 
+    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
+                        false, true, portMAX_DELAY);
+    ESP_LOGI(TAG, "Connected to AP");
 #if CONFIG_SSL_USING_WOLFSSL
     /* CA date verification need system time */
     get_time();
