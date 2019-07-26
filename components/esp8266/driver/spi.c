@@ -15,10 +15,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-
 #include "FreeRTOS.h"
+#include "freertos/task.h"
 #include "freertos/semphr.h"
-
 #include "esp8266/eagle_soc.h"
 #include "esp8266/spi_struct.h"
 #include "esp8266/pin_mux_register.h"
@@ -27,20 +26,44 @@
 #include "esp_attr.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 #include "rom/ets_sys.h"
-
 #include "spi.h"
+
 
 #define ENTER_CRITICAL() portENTER_CRITICAL()
 #define EXIT_CRITICAL() portEXIT_CRITICAL()
+#define SPI_CHECK(a, str, ret_val) \
+    do { \
+        if (!(a)) { \
+            ESP_LOGE(TAG,"%s(%d): %s", __FUNCTION__, __LINE__, str); \
+            return (ret_val); \
+        } \
+    } while(0)
+
+#define portYIELD_FROM_ISR() taskYIELD()
+
+#ifndef CONFIG_ESP8266_HSPI_HIGH_THROUGHPUT
+#define ENTER_CRITICAL_HIGH_THROUGHPUT() ENTER_CRITICAL()
+#define EXIT_CRITICAL_HIGH_THROUGHPUT() EXIT_CRITICAL()
+#define SPI_HIGH_THROUGHPUT_ATTR
+#define SPI_CHECK_HIGH_THROUGHPUT(a, str, ret_val)  SPI_CHECK(a, str, ret_val)
+
+#else
+#define SPI_HIGH_THROUGHPUT_ATTR                            IRAM_ATTR
+#define ENTER_CRITICAL_HIGH_THROUGHPUT()                    do{} while(0)
+#define EXIT_CRITICAL_HIGH_THROUGHPUT()                     do{} while(0)
+
+#define SPI_CHECK_HIGH_THROUGHPUT(a, str, ret_val) \
+    do { \
+        if (!(a)) { \
+            ets_printf("%s(%d): %s", __FUNCTION__, __LINE__, str); \
+            return (ret_val); \
+        } \
+    } while(0)
+#endif
 
 static const char *TAG = "spi";
-
-#define SPI_CHECK(a, str, ret_val) \
-    if (!(a)) { \
-        ESP_LOGE(TAG,"%s(%d): %s", __FUNCTION__, __LINE__, str); \
-        return (ret_val); \
-    }
 
 #define spi_intr_enable() _xt_isr_unmask(1 << ETS_SPI_INUM)
 #define spi_intr_disable() _xt_isr_mask(1 << ETS_SPI_INUM)
@@ -56,6 +79,8 @@ typedef struct {
     spi_interface_t interface;
     SemaphoreHandle_t trans_mux;
     spi_event_callback_t event_cb;
+    spi_intr_enable_t intr_enable;
+    uint32_t *buf;
 } spi_object_t;
 
 static spi_object_t *spi_object[SPI_NUM_MAX] = {NULL, NULL};
@@ -164,6 +189,8 @@ esp_err_t spi_set_intr_enable(spi_host_t host, spi_intr_enable_t *intr_enable)
     SPI[host]->slave.trans_done   = false;
     EXIT_CRITICAL();
 
+    spi_object[host]->intr_enable.val = intr_enable->val;
+
     return ESP_OK;
 }
 
@@ -209,16 +236,25 @@ esp_err_t spi_set_mode(spi_host_t host, spi_mode_t *mode)
         // Set to Slave mode
         SPI[host]->pin.slave_mode = true;
         SPI[host]->slave.slave_mode = true;
-        SPI[host]->user.usr_miso_highpart = true;
+        SPI[host]->user.usr_mosi_highpart = false;
+        SPI[host]->user.usr_miso_highpart = false;
+        SPI[host]->user.usr_addr = 1;
         // MOSI signals are delayed by APB_CLK(80MHz) mosi_delay_num cycles
         SPI[host]->ctrl2.mosi_delay_num = 2;
         SPI[host]->ctrl2.miso_delay_num = 0;
+        SPI[host]->slave.wr_rd_buf_en = 1;
         SPI[host]->slave.wr_rd_sta_en = 1;
         SPI[host]->slave1.status_bitlen = 31;
         SPI[host]->slave1.status_readback = 0;
-        // Put the slave's miso on the highpart, so you can only send 256bits
+        // Put the slave's miso on the highpart, so you can only send 512bits
         // In Slave mode miso, mosi length is the same
-        SPI[host]->slave1.buf_bitlen = 255;
+        SPI[host]->slave1.buf_bitlen = 511;
+        SPI[host]->slave1.wr_addr_bitlen = 7;
+        SPI[host]->slave1.rd_addr_bitlen = 7;
+        SPI[host]->user1.usr_addr_bitlen = 7;
+        SPI[host]->user1.usr_miso_bitlen = 31;
+        SPI[host]->user1.usr_mosi_bitlen = 31;
+        SPI[host]->user2.usr_command_bitlen = 7;
         SPI[host]->cmd.usr = 1;
     }
 
@@ -231,6 +267,7 @@ esp_err_t spi_set_mode(spi_host_t host, spi_mode_t *mode)
     SPI[host]->ctrl.fread_dio   = false;
     SPI[host]->ctrl.fread_qio   = false;
     SPI[host]->ctrl.fastrd_mode = true;
+    SPI[host]->slave.sync_reset = 1;
     EXIT_CRITICAL();
 
     return ESP_OK;
@@ -396,71 +433,81 @@ esp_err_t spi_slave_get_status(spi_host_t host, uint32_t *status)
     return ESP_OK;
 }
 
-esp_err_t spi_slave_set_status(spi_host_t host, uint32_t *status)
+esp_err_t SPI_HIGH_THROUGHPUT_ATTR spi_slave_set_status(spi_host_t host, uint32_t *status)
 {
-    SPI_CHECK(host < SPI_NUM_MAX, "host num error", ESP_ERR_INVALID_ARG);
-    SPI_CHECK(spi_object[host], "spi has not been initialized yet", ESP_FAIL);
-    SPI_CHECK(SPI_SLAVE_MODE == spi_object[host]->mode, "this function must used by spi slave mode", ESP_FAIL);
-    SPI_CHECK(status, "parameter pointer is empty", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(host < SPI_NUM_MAX, "host num error", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(spi_object[host], "spi has not been initialized yet", ESP_FAIL);
+    SPI_CHECK_HIGH_THROUGHPUT(SPI_SLAVE_MODE == spi_object[host]->mode, "this function must used by spi slave mode", ESP_FAIL);
+    SPI_CHECK_HIGH_THROUGHPUT(status, "parameter pointer is empty", ESP_ERR_INVALID_ARG);
 
-    ENTER_CRITICAL();
+    ENTER_CRITICAL_HIGH_THROUGHPUT();
 
     SPI[host]->rd_status.val = *status;
 
-    EXIT_CRITICAL();
+    EXIT_CRITICAL_HIGH_THROUGHPUT();
 
     return ESP_OK;
 }
 
-static esp_err_t spi_master_trans(spi_host_t host, spi_trans_t trans)
+static esp_err_t SPI_HIGH_THROUGHPUT_ATTR spi_master_trans(spi_host_t host, spi_trans_t *trans)
 {
-    SPI_CHECK(trans.bits.cmd <= 16, "spi cmd must be shorter than 16 bits", ESP_ERR_INVALID_ARG);
-    SPI_CHECK(trans.bits.addr <= 32, "spi addr must be shorter than 32 bits", ESP_ERR_INVALID_ARG);
-    SPI_CHECK(trans.bits.mosi <= 512, "spi mosi must be shorter than 512 bits", ESP_ERR_INVALID_ARG);
-    SPI_CHECK(trans.bits.miso <= 512, "spi miso must be shorter than 512 bits", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(trans->bits.cmd <= 16, "spi cmd must be shorter than 16 bits", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(trans->bits.addr <= 32, "spi addr must be shorter than 32 bits", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(trans->bits.mosi <= 512, "spi mosi must be shorter than 512 bits", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(trans->bits.miso <= 512, "spi miso must be shorter than 512 bits", ESP_ERR_INVALID_ARG);
 
     int x, y;
 
     // Waiting for an incomplete transfer
     while (SPI[host]->cmd.usr);
 
-    ENTER_CRITICAL();
+    ENTER_CRITICAL_HIGH_THROUGHPUT();
 
     // Set the cmd length and transfer cmd
-    if (trans.bits.cmd && trans.cmd) {
+    if (trans->bits.cmd && trans->cmd) {
         SPI[host]->user.usr_command = 1;
-        SPI[host]->user2.usr_command_bitlen = trans.bits.cmd - 1;
-        SPI[host]->user2.usr_command_value = *trans.cmd;
+        SPI[host]->user2.usr_command_bitlen = trans->bits.cmd - 1;
+        SPI[host]->user2.usr_command_value = *trans->cmd;
     } else {
         SPI[host]->user.usr_command = 0;
     }
 
     // Set addr length and transfer addr
-    if (trans.bits.addr && trans.addr) {
+    if (trans->bits.addr && trans->addr) {
         SPI[host]->user.usr_addr = 1;
-        SPI[host]->user1.usr_addr_bitlen = trans.bits.addr - 1;
-        SPI[host]->addr = *trans.addr;
+        SPI[host]->user1.usr_addr_bitlen = trans->bits.addr - 1;
+        SPI[host]->addr = *trans->addr;
     } else {
         SPI[host]->user.usr_addr = 0;
     }
 
     // Set mosi length and transmit mosi
-    if (trans.bits.mosi && trans.mosi) {
+    if (trans->bits.mosi && trans->mosi) {
         SPI[host]->user.usr_mosi = 1;
-        SPI[host]->user1.usr_mosi_bitlen = trans.bits.mosi - 1;
-
-        for (x = 0; x < trans.bits.mosi; x += 32) {
-            y = x / 32;
-            SPI[host]->data_buf[y] = trans.mosi[y];
+        SPI[host]->user1.usr_mosi_bitlen = trans->bits.mosi - 1;
+        if ((uint32_t)(trans->mosi) % 4 == 0) {
+            for (x = 0; x < trans->bits.mosi; x += 32) {
+                y = x / 32;
+                SPI[host]->data_buf[y] = trans->mosi[y];
+            }
+        } else {
+            ESP_LOGW(TAG,"Using unaligned data may reduce transmission efficiency");
+            memset(spi_object[host]->buf, 0, sizeof(uint32_t) * 16);
+            memcpy(spi_object[host]->buf, trans->mosi, trans->bits.mosi / 8 + (trans->bits.mosi % 8) ? 1 : 0);
+            for (x = 0; x < trans->bits.mosi; x += 32) {
+                y = x / 32;
+                SPI[host]->data_buf[y] = spi_object[host]->buf[y];
+            }
         }
+
     } else {
         SPI[host]->user.usr_mosi = 0;
     }
 
     // Set the length of the miso
-    if (trans.bits.miso && trans.miso) {
+    if (trans->bits.miso && trans->miso) {
         SPI[host]->user.usr_miso = 1;
-        SPI[host]->user1.usr_miso_bitlen = trans.bits.miso - 1;
+        SPI[host]->user1.usr_miso_bitlen = trans->bits.miso - 1;
     } else {
         SPI[host]->user.usr_miso = 0;
     }
@@ -474,74 +521,98 @@ static esp_err_t spi_master_trans(spi_host_t host, spi_trans_t trans)
     SPI[host]->cmd.usr = 1;
 
     // Receive miso data
-    if (trans.bits.miso && trans.miso) {
+    if (trans->bits.miso && trans->miso) {
         while (SPI[host]->cmd.usr);
 
-        for (x = 0; x < trans.bits.miso; x += 32) {
-            y = x / 32;
-            trans.miso[y] = SPI[host]->data_buf[y];
+        if ((uint32_t)(trans->miso) % 4 == 0) {
+            for (x = 0; x < trans->bits.miso; x += 32) {
+                y = x / 32;
+                trans->miso[y] = SPI[host]->data_buf[y];
+            }
+        } else {
+            ESP_LOGW(TAG,"Using unaligned data may reduce transmission efficiency");
+            memset(spi_object[host]->buf, 0, sizeof(uint32_t) * 16);
+            for (x = 0; x < trans->bits.miso; x += 32) {
+                y = x / 32;
+                spi_object[host]->buf[y] = SPI[host]->data_buf[y];
+            }
+            memcpy(trans->miso, spi_object[host]->buf, trans->bits.miso / 8 + (trans->bits.miso % 8) ? 1 : 0);
         }
     }
 
-    EXIT_CRITICAL();
+    EXIT_CRITICAL_HIGH_THROUGHPUT();
 
     return ESP_OK;
 }
 
-static esp_err_t spi_slave_trans(spi_host_t host, spi_trans_t trans)
+static esp_err_t SPI_HIGH_THROUGHPUT_ATTR spi_slave_trans(spi_host_t host, spi_trans_t *trans)
 {
-    SPI_CHECK(trans.bits.cmd >= 3 && trans.bits.cmd <= 16, "spi cmd must be longer than 3 bits and shorter than 16 bits", ESP_ERR_INVALID_ARG);
-    SPI_CHECK(trans.bits.addr >= 1 && trans.bits.addr <= 32, "spi addr must be longer than 1 bits and shorter than 32 bits", ESP_ERR_INVALID_ARG);
-    SPI_CHECK(trans.bits.miso <= 256, "spi miso must be shorter than 256 bits", ESP_ERR_INVALID_ARG);
-    SPI_CHECK(trans.bits.mosi <= 256, "spi mosi must be shorter than 256 bits", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(trans->bits.cmd >= 3 && trans->bits.cmd <= 16, "spi cmd must be longer than 3 bits and shorter than 16 bits", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(trans->bits.addr >= 1 && trans->bits.addr <= 32, "spi addr must be longer than 1 bits and shorter than 32 bits", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(trans->bits.miso <= 512, "spi miso must be shorter than 512 bits", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(trans->bits.mosi <= 512, "spi mosi must be shorter than 512 bits", ESP_ERR_INVALID_ARG);
 
     int x, y;
-    ENTER_CRITICAL();
+    ENTER_CRITICAL_HIGH_THROUGHPUT();
     // Set cmd length and receive cmd
-    SPI[host]->user2.usr_command_bitlen = trans.bits.cmd - 1;
+    SPI[host]->user2.usr_command_bitlen = trans->bits.cmd - 1;
 
-    if (trans.cmd) {
-        *trans.cmd = SPI[host]->user2.usr_command_value;
+    if (trans->cmd) {
+        *trans->cmd = SPI[host]->user2.usr_command_value;
     }
 
     // Set addr length and transfer addr
-    SPI[host]->slave1.wr_addr_bitlen = trans.bits.addr - 1;
-    SPI[host]->slave1.rd_addr_bitlen = trans.bits.addr - 1;
+    SPI[host]->slave1.wr_addr_bitlen = trans->bits.addr - 1;
+    SPI[host]->slave1.rd_addr_bitlen = trans->bits.addr - 1;
 
-    if (trans.addr) {
-        *trans.addr = SPI[host]->addr;
+    if (trans->addr) {
+        *trans->addr = SPI[host]->addr;
     }
 
     // Set the length of the miso and transfer the miso
-    if (trans.bits.miso && trans.miso) {
-        for (x = 0; x < trans.bits.miso; x += 32) {
-            y = x / 32;
-            SPI[host]->data_buf[y + 8] = trans.miso[y];
+    if (trans->bits.miso && trans->miso) {
+        if ((uint32_t)(trans->miso) % 4 == 0) {
+            for (x = 0; x < trans->bits.miso; x += 32) {
+                y = x / 32;
+                SPI[host]->data_buf[y] = trans->miso[y];
+            }
+        } else {
+            ESP_LOGW(TAG,"Using unaligned data may reduce transmission efficiency");
+            memset(spi_object[host]->buf, 0, sizeof(uint32_t) * 16);
+            memcpy(spi_object[host]->buf, trans->miso, trans->bits.miso / 8 + (trans->bits.miso % 8) ? 1 : 0);
+            for (x = 0; x < trans->bits.miso; x += 32) {
+                y = x / 32;
+                SPI[host]->data_buf[y] = spi_object[host]->buf[y];
+            }
         }
-    }
-
-    // Call the event callback function to send a transfer start event
-    if (spi_object[host]->event_cb) {
-        spi_object[host]->event_cb(SPI_TRANS_START_EVENT, NULL);
     }
 
     // Receive mosi data
-    if (trans.bits.mosi && trans.mosi) {
-        for (x = 0; x < trans.bits.mosi; x += 32) {
-            y = x / 32;
-            trans.mosi[y] = SPI[host]->data_buf[y];
+    if (trans->bits.mosi && trans->mosi) {
+        if ((uint32_t)(trans->mosi) % 4 == 0) {
+            for (x = 0; x < trans->bits.mosi; x += 32) {
+                y = x / 32;
+                trans->mosi[y] = SPI[host]->data_buf[y];
+            }
+        } else {
+            ESP_LOGW(TAG,"Using unaligned data may reduce transmission efficiency");
+            memset(spi_object[host]->buf, 0, sizeof(uint32_t) * 16);
+            for (x = 0; x < trans->bits.mosi; x += 32) {
+                y = x / 32;
+                spi_object[host]->buf[y] = SPI[host]->data_buf[y];
+            }
+            memcpy(trans->mosi, spi_object[host]->buf, trans->bits.mosi / 8 + (trans->bits.mosi % 8) ? 1 : 0);
         }
     }
 
-    EXIT_CRITICAL();
+    EXIT_CRITICAL_HIGH_THROUGHPUT();
 
     return ESP_OK;
 }
 
-static esp_err_t spi_trans_static(spi_host_t host, spi_trans_t trans)
+static esp_err_t SPI_HIGH_THROUGHPUT_ATTR spi_trans_static(spi_host_t host, spi_trans_t *trans)
 {
     int ret;
-
     if (SPI_MASTER_MODE == spi_object[host]->mode) {
         ret = spi_master_trans(host, trans);
     } else {
@@ -551,17 +622,30 @@ static esp_err_t spi_trans_static(spi_host_t host, spi_trans_t trans)
     return ret;
 }
 
-esp_err_t spi_trans(spi_host_t host, spi_trans_t trans)
+esp_err_t SPI_HIGH_THROUGHPUT_ATTR spi_trans(spi_host_t host, spi_trans_t *trans)
 {
-    SPI_CHECK(host < SPI_NUM_MAX, "host num error", ESP_ERR_INVALID_ARG);
-    SPI_CHECK(spi_object[host], "spi has not been initialized yet", ESP_FAIL);
-    SPI_CHECK(trans.bits.val, "trans bits is empty", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(host < SPI_NUM_MAX, "host num error", ESP_ERR_INVALID_ARG);
+    SPI_CHECK_HIGH_THROUGHPUT(spi_object[host], "spi has not been initialized yet", ESP_FAIL);
+    SPI_CHECK_HIGH_THROUGHPUT(trans->bits.val, "trans bits is empty", ESP_ERR_INVALID_ARG);
 
     int ret;
-
-    xSemaphoreTake(spi_object[host]->trans_mux, portMAX_DELAY);
-    ret = spi_trans_static(host, trans);
-    xSemaphoreGive(spi_object[host]->trans_mux);
+    if (xPortInIsrContext()) {
+        /* In ISR Context */
+        BaseType_t higher_task_woken = false;
+        if (xSemaphoreTakeFromISR(spi_object[host]->trans_mux, NULL) != pdTRUE) {
+            return ESP_FAIL;
+        }
+        ret = spi_trans_static(host, trans);
+        xSemaphoreGiveFromISR(spi_object[host]->trans_mux, &higher_task_woken);
+        if (higher_task_woken) {
+            portYIELD_FROM_ISR();
+        }
+    }
+    else {
+        xSemaphoreTake(spi_object[host]->trans_mux, portMAX_DELAY);
+        ret = spi_trans_static(host, trans);
+        xSemaphoreGive(spi_object[host]->trans_mux);
+    }
     return ret;
 }
 
@@ -569,7 +653,6 @@ static IRAM_ATTR void spi_intr(void *arg)
 {
     spi_host_t host;
     uint32_t trans_done;
-
     if (READ_PERI_REG(DPORT_SPI_INT_STATUS_REG) & DPORT_SPI_INT_STATUS_SPI0) { // DPORT_SPI_INT_STATUS_SPI0
         trans_done = SPI0.slave.val & 0x1F;
         SPI0.slave.val &= ~0x3FF;
@@ -583,7 +666,9 @@ static IRAM_ATTR void spi_intr(void *arg)
     }
 
     if (spi_object[host]) {
-        if (spi_object[host]->event_cb) {
+        // Hardware has no interrupt flag, which can be generated by software.
+        trans_done &=  spi_object[host]->intr_enable.val;
+        if (spi_object[host]->event_cb && trans_done != 0) {
             spi_object[host]->event_cb(SPI_TRANS_DONE_EVENT, &trans_done);
         }
     }
@@ -621,7 +706,10 @@ esp_err_t spi_deinit(spi_host_t host)
     if (spi_object[host]->trans_mux) {
         vSemaphoreDelete(spi_object[host]->trans_mux);
     }
-    free(spi_object[host]);
+    heap_caps_free(spi_object[host]->buf);
+    spi_object[host]->buf = NULL;
+
+    heap_caps_free(spi_object[host]);
     spi_object[host] = NULL;
 
     return ESP_OK;
@@ -633,20 +721,25 @@ esp_err_t spi_init(spi_host_t host, spi_config_t *config)
     SPI_CHECK(host > CSPI_HOST, "CSPI_HOST can't support now", ESP_FAIL);
     SPI_CHECK(NULL == spi_object[host], "spi has been initialized", ESP_FAIL);
 
-    spi_object[host] = (spi_object_t *)malloc(sizeof(spi_object_t));
+    spi_object[host] = (spi_object_t *)heap_caps_malloc(sizeof(spi_object_t), MALLOC_CAP_8BIT);
     SPI_CHECK(spi_object[host], "malloc fail", ESP_ERR_NO_MEM);
     spi_object[host]->trans_mux = xSemaphoreCreateMutex();
-    if (NULL == spi_object[host]->trans_mux) {
+#ifdef CONFIG_ESP8266_HSPI_HIGH_THROUGHPUT
+    spi_object[host]->buf = (uint32_t *)heap_caps_malloc(sizeof(uint32_t) * 16, MALLOC_CAP_8BIT);
+#else
+    spi_object[host]->buf = (uint32_t *)heap_caps_malloc(sizeof(uint32_t) * 16, MALLOC_CAP_32BIT);
+#endif
+    if (NULL == spi_object[host]->trans_mux || NULL == spi_object[host]->buf) {
         spi_deinit(host);
-        SPI_CHECK(false, "Semaphore create fail", ESP_ERR_NO_MEM);
+        SPI_CHECK(false, "no memory", ESP_ERR_NO_MEM);
     }
     uint16_t dummy_bitlen = 0;
-    
     spi_set_event_callback(host, &config->event_cb);
     spi_set_mode(host, &config->mode);
     spi_set_interface(host, &config->interface);
     spi_set_clk_div(host, &config->clk_div);
     spi_set_dummy(host, &dummy_bitlen);
+
     spi_set_intr_enable(host, &config->intr_enable);
     spi_intr_register(spi_intr, NULL);
     spi_intr_enable();
@@ -654,6 +747,5 @@ esp_err_t spi_init(spi_host_t host, spi_config_t *config)
     if (spi_object[host]->event_cb) {
         spi_object[host]->event_cb(SPI_INIT_EVENT, NULL);
     }
-
     return ESP_OK;
 }

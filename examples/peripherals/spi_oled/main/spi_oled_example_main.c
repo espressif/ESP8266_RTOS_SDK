@@ -45,12 +45,12 @@ static esp_err_t oled_set_dc(uint8_t dc)
 // Write an 8-bit cmd
 static esp_err_t oled_write_cmd(uint8_t data)
 {
-    uint32_t buf = data << 24;
+    uint32_t buf = data << 24; // In order to improve the transmission efficiency, it is recommended that the external incoming data is (uint32_t *) type data, do not use other type data.
     spi_trans_t trans = {0};
     trans.mosi = &buf;
     trans.bits.mosi = 8;
     oled_set_dc(0);
-    spi_trans(HSPI_HOST, trans);
+    spi_trans(HSPI_HOST, &trans);
     return ESP_OK;
 }
 
@@ -121,8 +121,8 @@ static esp_err_t oled_clear(uint8_t data)
     for (x = 0; x < 8; x++) {
         oled_set_pos(0, x);
         oled_set_dc(1);
-        spi_trans(HSPI_HOST, trans);
-        spi_trans(HSPI_HOST, trans);
+        spi_trans(HSPI_HOST, &trans);
+        spi_trans(HSPI_HOST, &trans);
     }
 
     return ESP_OK;

@@ -46,6 +46,7 @@ else()
         "driver/i2s.c"
         "driver/pwm.c"
         "driver/spi.c"
+        "driver/hspi_logic_layer.c"
         "driver/uart.c"
         "driver/ir_tx.c"
         "driver/ir_rx.c"

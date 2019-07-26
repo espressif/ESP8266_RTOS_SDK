@@ -36,7 +36,7 @@ extern "C" {
 #define SPI_BYTE_ORDER_LSB_FIRST 0
 
 /* SPI default bus interface parameter definition */
-#define SPI_DEFAULT_INTERFACE   0x1F0    /* CS_EN:1, MISO_EN:1, MOSI_EN:1, BYTE_TX_ORDER:1, BYTE_TX_ORDER:1, BIT_RX_ORDER:0, BIT_TX_ORDER:0, CPHA:0, CPOL:0 */
+#define SPI_DEFAULT_INTERFACE   0x1C0    /* CS_EN:1, MISO_EN:1, MOSI_EN:1, BYTE_TX_ORDER:0, BYTE_TX_ORDER:0, BIT_RX_ORDER:0, BIT_TX_ORDER:0, CPHA:0, CPOL:0 */
 
 /* SPI master default interrupt enable definition */
 #define SPI_MASTER_DEFAULT_INTR_ENABLE 0x10    /* TRANS_DONE: true, WRITE_STATUS: false, READ_STATUS: false, WRITE_BUFFER: false, READ_BUFFER: false */
@@ -140,8 +140,8 @@ typedef union {
 typedef struct {
     uint16_t *cmd;                  /*!< SPI transmission command */  
     uint32_t *addr;                 /*!< SPI transmission address */  
-    uint32_t *mosi;                 /*!< SPI transmission MOSI buffer */  
-    uint32_t *miso;                 /*!< SPI transmission MISO buffer */  
+    uint32_t *mosi;                 /*!< SPI transmission MOSI buffer, in order to improve the transmission efficiency, it is recommended that the external incoming data is (uint32_t *) type data, do not use other type data. */  
+    uint32_t *miso;                 /*!< SPI transmission MISO buffer, in order to improve the transmission efficiency, it is recommended that the external incoming data is (uint32_t *) type data, do not use other type data. */  
     union {
         struct {
             uint32_t cmd:   5;      /*!< SPI transmission command bits */  
@@ -403,14 +403,14 @@ esp_err_t spi_slave_set_status(spi_host_t host, uint32_t *status);
   *     - CSPI_HOST SPI0
   *     - HSPI_HOST SPI1
   *
-  * @param trans Transmission parameter structure
+  * @param trans Pointer to transmission parameter structure
   *
   * @return
   *     - ESP_OK Success
   *     - ESP_ERR_INVALID_ARG Parameter error
   *     - ESP_FAIL spi has not been initialized yet
   */
-esp_err_t spi_trans(spi_host_t host, spi_trans_t trans);
+esp_err_t spi_trans(spi_host_t host, spi_trans_t *trans);
 
 /**
   * @brief Deinit the spi
