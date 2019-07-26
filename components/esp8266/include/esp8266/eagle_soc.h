@@ -181,7 +181,7 @@
 #define IRAM_SIZE                       (48 * 1024)
 
 #define FLASH_BASE                      (0x40200000)
-#define FLASH_SIZE                      (1 * 1024 * 1024)
+#define FLASH_SIZE                      (2 * 1024 * 1024)
 
 #define RTC_SYS_BASE                    (0x60001000)
 #define RTC_SYS_SIZE                    (0x200)

@@ -1,0 +1,4 @@
+[mapping:spi_flash]
+archive: libspi_flash.a
+entries:
+    spi_flash_raw (noflash)

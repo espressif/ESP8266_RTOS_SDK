@@ -1,0 +1,4 @@
+[mapping:log]
+archive: liblog.a
+entries:
+    * (noflash_data)

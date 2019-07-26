@@ -1,14 +1,14 @@
+set(srcs "src/partition"
+         "src/spi_flash_raw.c"
+         "src/spi_flash.c")
 if(BOOTLOADER_BUILD)
-    # Bootloader needs SPIUnlock from this file, but doesn't
-    # need other parts of this component
-    set(COMPONENT_SRCDIRS "src" "port")
-    set(COMPONENT_PRIV_REQUIRES "bootloader_support")
+    set(srcs "${srcs}" "port/port.c")
+    set(priv_requires "bootloader_support")
 else()
-    set(COMPONENT_SRCDIRS "src" "port")
-    set(COMPONENT_PRIV_REQUIRES "esp8266" "freertos" "bootloader_support")
+    set(priv_requires "esp8266" "freertos" "bootloader_support")
 endif()
 
-set(COMPONENT_ADD_INCLUDEDIRS include)
-set(COMPONENT_REQUIRES)
-
-register_component()
+idf_component_register(SRCS "${srcs}"
+                       PRIV_REQUIRES "${priv_requires}"
+                       INCLUDE_DIRS "include"
+                       LDFRAGMENTS "linker.lf")

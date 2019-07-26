@@ -1543,8 +1543,8 @@ class ESP8266V3FirmwareImage(BaseFirmwareImage):
             checksum = ESPLoader.ESP_CHECKSUM_MAGIC
 
             # split segments into flash-mapped vs ram-loaded, and take copies so we can mutate them
-            flash_segments = [copy.deepcopy(s) for s in sorted(self.segments, key=lambda s:s.addr) if self.is_flash_addr(s.addr)]
-            ram_segments = [copy.deepcopy(s) for s in sorted(self.segments, key=lambda s:s.addr) if not self.is_flash_addr(s.addr)]
+            flash_segments = [copy.deepcopy(s) for s in sorted(self.segments, key=lambda s:s.addr) if self.is_flash_addr(s.addr) and len(s.data)]
+            ram_segments = [copy.deepcopy(s) for s in sorted(self.segments, key=lambda s:s.addr) if not self.is_flash_addr(s.addr) and len(s.data)]
 
             IROM_ALIGN = 65536
 
@@ -1559,6 +1559,7 @@ class ESP8266V3FirmwareImage(BaseFirmwareImage):
                 #print('%x' % last_addr)
                 for segment in flash_segments[1:]:
                     if segment.addr // IROM_ALIGN == last_addr // IROM_ALIGN:
+                        print(segment)
                         raise FatalError(("Segment loaded at 0x%08x lands in same 64KB flash mapping as segment loaded at 0x%08x. " +
                                           "Can't generate binary. Suggest changing linker script or ELF to merge sections.") %
                                          (segment.addr, last_addr))
@@ -1599,6 +1600,9 @@ class ESP8266V3FirmwareImage(BaseFirmwareImage):
                     checksum = self.save_segment(f, pad_segment, checksum)
                     total_segments += 1
                 else:
+                    # remove 8 bytes empty data for insert segment header
+                    if segment.name == '.flash.rodata':
+                        segment.data = segment.data[8:]
                     # write the flash segment
                     #assert (f.tell() + 8) % IROM_ALIGN == segment.addr % IROM_ALIGN
                     checksum = self.save_segment(f, segment, checksum)

@@ -1,34 +1,44 @@
-/* user1.bin @ 0x1000, user2.bin @ 0x10000 */
+/* ESP8266 Linker Script Memory Layout
 
-/* Flash Map (1024KB + 1024KB), support 2MB/4MB SPI Flash */
-/* |..|........................|.....|.....|..|........................|.....|....|                        */
-/* ^  ^                        ^     ^     ^  ^                        ^     ^                             */
-/* |_boot start(0x0000)        |     |     |_pad start(0x100000)       |     |                             */
-/*    |_user1 start(0x1000)    |_user1 end    |_user2 start(0x101000)  |_user2 end                         */
-/*                                   |_system param symmetric area(0xfb000)  |_system param area(0x1fb000) */
+   This file describes the memory layout (memory blocks).
 
-/* NOTICE: */ 
-/* 1. You can change irom0 len, but MUST make sure user1 end not overlap system param symmetric area. */
-/* 2. Space between user1 end and pad start can be used as user param area.                           */
-/* 3. Space between user2 end and system param area can be used as user param area.                   */
-/* 4. Don't change any other seg.                                                                     */
-/* 5. user1.bin and user2.bin are same in this mode, so upgrade only need one of them.                */
+   esp8266.project.ld contains output sections to link compiler output
+   into these memory blocks.
 
+   ***
+
+   This linker script is passed through the C preprocessor to include
+   configuration options.
+
+   Please use preprocessor features sparingly! Restrict
+   to simple macros with numeric values, and/or #if/#endif blocks.
+*/
 #include "sdkconfig.h"
+
 
 MEMORY
 {
-  dport0_0_seg :    org = 0x3FF00000, len = 0x10
+  /* All these values assume the flash cache is on, and have the blocks this uses subtracted from the length
+  of the various regions. */
 
-  /* All .data/.bss/heap are in this segment. */
-  dram0_0_seg  :    org = 0x3FFE8000, len = 0x18000
+  /* IRAM for cpu. The length is due to the cache mode which is able to be set half or full mode. */
+  iram0_0_seg (RX) :                 org = 0x40100000, len = CONFIG_SOC_IRAM_SIZE
 
-  /* Functions which are critical should be put in this segment. */
-  iram1_0_seg  :    org = 0x40100000, len = CONFIG_SOC_IRAM_SIZE
+  /* Even though the segment name is iram, it is actually mapped to flash and mapped constant data */
+  iram0_2_seg (RX) :                 org = 0x40200010 + APP_OFFSET,
+                                     len = APP_SIZE - 0x10
 
-  /* It is actually mapped to flash. */
-  irom0_0_seg  :    org = 0x40200010 + APP_OFFSET, len = APP_SIZE - 0x10
+  /*
+    (0x18 offset above is a convenience for the app binary image generation. The .bin file which is flashed
+    to the chip has a 0x10 byte file header. Setting this offset makes it simple to meet the flash cache.)
+  */
 
-  /* RTC memory, persists over deep sleep. */
-  rtc_seg      :    org = 0x60001200, len = 0x200
+
+  /* Length of this section is 96KB */
+  dram0_0_seg (RW) :                 org = 0x3FFE8000, len = 0x18000
+
+  /* (See iram0_2_seg for meaning of 0x10 offset in the above.) */
+
+  /* RTC memory. Persists over deep sleep */
+  rtc_data_seg(RW) :                 org = 0x60001200, len = 0x200
 }

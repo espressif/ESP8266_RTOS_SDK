@@ -21,18 +21,18 @@ heap_region_t g_heap_region[HEAP_REGIONS_MAX];
  */
 void heap_caps_init(void)
 {
-    extern char _heap_start;
+    extern char _bss_end;
 
 #ifndef CONFIG_SOC_FULL_ICACHE
-    extern char _lit4_end;
+    extern char _iram_end;
 
-    g_heap_region[0].start_addr = (uint8_t *)&_lit4_end;
-    g_heap_region[0].total_size = ((size_t)(0x4010C000 - (uint32_t)&_lit4_end));
+    g_heap_region[0].start_addr = (uint8_t *)&_iram_end;
+    g_heap_region[0].total_size = ((size_t)(0x4010C000 - (uint32_t)&_iram_end));
     g_heap_region[0].caps = MALLOC_CAP_32BIT;
 #endif
 
-    g_heap_region[HEAP_REGIONS_MAX - 1].start_addr = (uint8_t *)&_heap_start;
-    g_heap_region[HEAP_REGIONS_MAX - 1].total_size = ((size_t)(0x40000000 - (uint32_t)&_heap_start));
+    g_heap_region[HEAP_REGIONS_MAX - 1].start_addr = (uint8_t *)&_bss_end;
+    g_heap_region[HEAP_REGIONS_MAX - 1].total_size = ((size_t)(0x40000000 - (uint32_t)&_bss_end));
     g_heap_region[HEAP_REGIONS_MAX - 1].caps = MALLOC_CAP_8BIT | MALLOC_CAP_32BIT | MALLOC_CAP_DMA;
 
     esp_heap_caps_init_region(g_heap_region, HEAP_REGIONS_MAX);
