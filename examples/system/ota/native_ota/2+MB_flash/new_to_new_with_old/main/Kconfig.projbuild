@@ -40,7 +40,7 @@ config SERVER_PORT
 
 config EXAMPLE_FILENAME
 	string "HTTP GET Filename"
-	default "/project_template.ota.bin"
+	default "/hello_world.ota.bin"
 	help
 		Filename of the app image file to download for
 		the OTA update.

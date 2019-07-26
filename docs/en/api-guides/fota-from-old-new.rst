@@ -111,7 +111,7 @@ Configure the flash size according to your actual development board's flash.
         (mypassword) WiFi Password
         (192.168.0.3) HTTP Server IP
         (8070)HTTP Server Port
-        (/project_template.ota.bin) HTTP GET Filename
+        (/hello_world.ota.bin) HTTP GET Filename
 
 - WiFi SSID: Wi-Fi SSID of router
 - WiFi Password: Wi-Fi password of router
