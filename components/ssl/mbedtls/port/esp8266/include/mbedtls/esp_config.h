@@ -286,7 +286,6 @@
 //#define MBEDTLS_GCM_ALT
 //#define MBEDTLS_MD2_ALT
 //#define MBEDTLS_MD4_ALT
-//#define MBEDTLS_MD5_ALT
 //#define MBEDTLS_RIPEMD160_ALT
 //#define MBEDTLS_RSA_ALT
 //#define MBEDTLS_XTEA_ALT
@@ -301,6 +300,9 @@
 #define MBEDTLS_SHA512_ALT
 #endif
 
+#ifdef CONFIG_ESP_MD5
+#define MBEDTLS_MD5_ALT
+#endif
 /*
  * When replacing the elliptic curve module, pleace consider, that it is
  * implemented with two .c files:

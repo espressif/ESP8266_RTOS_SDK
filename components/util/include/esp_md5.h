@@ -23,7 +23,7 @@ extern "C" {
 /**
  * @brief          MD5 context structure
  */
-typedef struct esp_md5_context {
+typedef struct MD5Context{
     uint32_t total[2];          /*!< number of bytes processed  */
     uint32_t state[4];          /*!< intermediate digest state  */
     uint8_t  buffer[64];        /*!< data block being processed */
