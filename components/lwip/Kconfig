@@ -229,6 +229,13 @@ config LWIP_DHCPS_MAX_STATION_NUM
         After this number is exceeded, DHCP server removes of the oldest device
         from it's address pool, without notification.
 
+config LWIP_DHCP_DISCOVER_RETRANSMISSION_INTERVAL
+    int "DHCP discover retransmission interval (milliseconds)"
+    default 250 # 4 * default retransmission interval
+    range 250 1000
+    help
+        Set time interval of retransmissions of DHCP discover.
+
 endmenu #DHCP
 
 menuconfig LWIP_AUTOIP
