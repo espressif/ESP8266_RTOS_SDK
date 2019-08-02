@@ -1,0 +1,6 @@
+# sdkconfig replacement configurations for deprecated options formatted as
+# CONFIG_DEPRECATED_OPTION CONFIG_NEW_OPTION
+
+# SDK tool configuration
+CONFIG_TARGET_PLATFORM                 CONFIG_IDF_TARGET
+CONFIG_TOOLPREFIX                      CONFIG_SDK_TOOLPREFIX

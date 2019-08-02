@@ -26,5 +26,5 @@ set(COMPONENT_REQUIRES lwip http_parser ssl tcp_transport freertos lwip ssl)
 register_component()
 
 if(CONFIG_MQTT_USING_IBM)
-target_compile_options(${COMPONENT_NAME} PUBLIC -DMQTT_TASK -DMQTTCLIENT_PLATFORM_HEADER=MQTTFreeRTOS.h)
+target_compile_options(${COMPONENT_LIB} PUBLIC -DMQTT_TASK -DMQTTCLIENT_PLATFORM_HEADER=MQTTFreeRTOS.h)
 endif()

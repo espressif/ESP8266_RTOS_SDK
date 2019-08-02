@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# Setup script to configure an MSYS2 environment for ESP8266_RTOS_SDK.
+# Setup script to configure an MSYS2 environment for ESP-IDF.
 #
 # Use of this script is optional, there is also a prebuilt MSYS2 environment available
 # which can be downloaded and used as-is.
 #
-# See https://docs.espressif.com/projects/esp8266-rtos-sdk/en/latest/get-started/windows-setup.html for full details.
+# See https://docs.espressif.com/projects/esp-idf/en/latest/get-started/windows-setup.html for full details.
 
 if [ "$OSTYPE" != "msys" ]; then
   echo "This setup script expects to be run from an MSYS2 environment on Windows."
@@ -34,26 +34,28 @@ set -e
 pacman --noconfirm -Syu # This step may require the terminal to be closed and restarted
 
 pacman --noconfirm -S --needed gettext-devel gcc git make ncurses-devel flex bison gperf vim \
-       mingw-w64-i686-python2-pip mingw-w64-i686-python2-cryptography unzip winpty tar
+       mingw-w64-i686-python2-pip mingw-w64-i686-python2-cryptography unzip winpty
 
-if [ -n $IDF_PATH ]; then
-	python -m pip install -r $IDF_PATH/requirements.txt
+# if IDF_PATH is set, install requirements now as well
+if [ -n "$IDF_PATH" ]; then
+	python -m pip install -r "$IDF_PATH/requirements.txt"
 fi
 
-# Automatically download precompiled toolchain, unpack at /opt/xtensa-lx106-elf/
-TOOLCHAIN_GZ=xtensa-lx106-elf-win32-1.22.0-92-g8facf4c-5.2.0.tar.gz
-echo "Downloading precompiled toolchain ${TOOLCHAIN_GZ}..."
+# Automatically download precompiled toolchain, unpack at /opt/xtensa-esp32-elf/
+TOOLCHAIN_ZIP=xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-win32.zip
+echo "Downloading precompiled toolchain ${TOOLCHAIN_ZIP}..."
 cd ~
-curl -LO --retry 10 http://dl.espressif.com/dl/${TOOLCHAIN_GZ}
+curl -LO --retry 10 http://dl.espressif.com/dl/${TOOLCHAIN_ZIP}
+mkdir -p /opt
 cd /opt
-rm -rf /opt/xtensa-lx106-elf  # for upgrades
-tar -xf ~/${TOOLCHAIN_GZ} || echo "Uncompressing cross toolchain has some little error, you may ignore it if it can be used."
-rm ~/${TOOLCHAIN_GZ}
+rm -rf /opt/xtensa-esp32-elf  # for upgrades
+unzip ~/${TOOLCHAIN_ZIP}
+rm ~/${TOOLCHAIN_ZIP}
 
-cat > /etc/profile.d/esp8266_toolchain.sh << EOF
-# This file was created by ESP8266_RTOS_SDK windows_install_prerequisites.sh
+cat > /etc/profile.d/esp32_toolchain.sh << EOF
+# This file was created by ESP-IDF windows_install_prerequisites.sh
 # and will be overwritten if that script is run again.
-export PATH="\$PATH:/opt/xtensa-lx106-elf/bin"
+export PATH="/opt/xtensa-esp32-elf/bin:\$PATH"
 EOF
 
 # clean up pacman package cache to save some disk space
@@ -61,19 +63,19 @@ pacman --noconfirm -Scc
 
 cat << EOF
 ************************************************
-MSYS2 environment is now ready to use ESP8266_RTOS_SDK.
+MSYS2 environment is now ready to use ESP-IDF.
 
 1) Run 'source /etc/profile' to add the toolchain to
 your path in this terminal. This command produces no output.
 You only need to do this once, future terminals do this
 automatically when opened.
 
-2) After ESP8266_RTOS_SDK is set up (see setup guide), edit the file
+2) After ESP-IDF is set up (see setup guide), edit the file
 `cygpath -w /etc/profile`
 and add a line to set the variable IDF_PATH so it points to the
 IDF directory, ie:
 
-export IDF_PATH=/c/path/to/ESP8266_RTOS_SDK/directory
+export IDF_PATH=/c/path/to/esp-idf/directory
 
 ************************************************
 EOF
