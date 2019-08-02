@@ -29,6 +29,7 @@ if(CONFIG_USING_ESP_VFS)
 set(COMPONENT_SRCDIRS ${COMPONENT_SRCDIRS} "port")
 endif()
 
+set(COMPONENT_REQUIRES vfs)
 set(COMPONENT_PRIV_REQUIRES tcpip_adapter)
 
 register_component()

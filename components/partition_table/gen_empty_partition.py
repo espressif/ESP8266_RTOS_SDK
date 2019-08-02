@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # generates an empty binary file
-# 
+#
 # This tool generates an empty binary file of the required size.
 #
 # Copyright 2018 Espressif Systems (Shanghai) PTE LTD
@@ -20,27 +20,12 @@
 from __future__ import print_function, division
 from __future__ import unicode_literals
 import argparse
-import os
-import re
-import struct
 import sys
-import hashlib
-import binascii
 
 __version__ = '1.0'
 
 quiet = False
 
-def status(msg):
-    """ Print status message to stderr """
-    if not quiet:
-        critical(msg)
-
-def critical(msg):
-    """ Print critical message to stderr """
-    if not quiet:
-        sys.stderr.write(msg)
-        sys.stderr.write('\n')
 
 def generate_blanked_file(size, output_path):
     output = b"\xFF" * size
@@ -51,27 +36,24 @@ def generate_blanked_file(size, output_path):
     with stdout_binary if output_path == '-' else open(output_path, 'wb') as f:
         f.write(output)
 
+
 def main():
-    global quiet
     parser = argparse.ArgumentParser(description='Generates an empty binary file of the required size.')
+    parser.add_argument('size', help='Size of generated the file', type=str)
 
-    parser.add_argument('--quiet', '-q', help="Don't print status messages to stderr", action='store_true')
-
-    parser.add_argument('--size', help='Size of generated the file',  type=str, required=True)
-    
     parser.add_argument('output', help='Path for binary file.', nargs='?', default='-')
     args = parser.parse_args()
 
-    quiet = args.quiet
-
     size = int(args.size, 0)
-    if size > 0 :
+    if size > 0:
         generate_blanked_file(size, args.output)
     return 0
-    
+
+
 class InputError(RuntimeError):
     def __init__(self, e):
         super(InputError, self).__init__(e)
+
 
 if __name__ == '__main__':
     try:

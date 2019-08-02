@@ -21,32 +21,72 @@ if(BOOTLOADER_BUILD)
 else()
     # Regular app build
 
-    set(COMPONENT_SRCDIRS "driver source")
-    set(COMPONENT_ADD_INCLUDEDIRS "include")
-    set(COMPONENT_PRIV_INCLUDEDIRS "include/driver")
+    set(srcs
+        "source/chip_boot.c"
+        "source/esp_err_to_name.c"
+        "source/esp_timer.c"
+        "source/esp_wifi_os_adapter.c"
+        "source/esp_wifi.c"
+        "source/ets_printf.c"
+        "source/event_default_handlers.c"
+        "source/event_loop.c"
+        "source/phy_init.c"
+        "source/reset_reason.c"
+        "source/startup.c"
+        "source/system_api.c"
+        "source/task_wdt.c"
+        "driver/adc.c"
+        "driver/gpio.c"
+        "driver/hw_timer.c"
+        "driver/i2c.c"
+        "driver/i2s.c"
+        "driver/pwm.c"
+        "driver/spi.c"
+        "driver/uart.c")
 
-    set(COMPONENT_REQUIRES newlib)
-    # driver is a public requirement because esp_sleep.h uses gpio_num_t & touch_pad_t
-    # tcpip_adapter is a public requirement because esp_event.h uses tcpip_adapter types
-    set(COMPONENT_PRIV_REQUIRES "log" "nvs_flash" "spi_flash" "tcpip_adapter" "bootloader_support" "util" "esp_ringbuf")
+    set(include_dirs "include" "include/driver")
 
-    register_component()
+    set(priv_requires "wpa_supplicant" "log" "spi_flash" "tcpip_adapter" "esp_ringbuf" "bootloader_support" "nvs_flash" "util")
 
-    target_link_libraries(esp8266 "-L ${CMAKE_CURRENT_SOURCE_DIR}/lib")
+    idf_component_register(SRCS "${srcs}"
+                    INCLUDE_DIRS "${include_dirs}"
+                    REQUIRES "${requires}"
+                    PRIV_REQUIRES "${priv_requires}"
+                    REQUIRED_IDF_TARGETS esp8266)
+
+    target_link_libraries(${COMPONENT_LIB} PUBLIC "-L ${CMAKE_CURRENT_SOURCE_DIR}/lib" "-lstdc++")
+
     if(NOT CONFIG_NO_BLOBS)
-        target_link_libraries(esp8266 gcc hal core net80211 phy pp smartconfig ssc wpa espnow wps)
+        set(blobs "gcc" "hal" "core" "net80211" "phy" "pp" "smartconfig" "ssc" "wpa" "espnow" "wps")
+        foreach(blob ${blobs})
+            add_library(${blob} STATIC IMPORTED)
+            set_property(TARGET ${blob} PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/lib/lib${blob}.a)
+            target_link_libraries(${COMPONENT_LIB} PUBLIC ${blob})
+
+            foreach(_blob ${blobs})
+                if(NOT _blob STREQUAL ${blob})
+                    set_property(TARGET ${blob} APPEND PROPERTY INTERFACE_LINK_LIBRARIES ${_blob})
+                endif()
+            endforeach()
+
+            set_property(TARGET ${blob} APPEND PROPERTY INTERFACE_LINK_LIBRARIES ${COMPONENT_LIB})
+        endforeach()
     endif()
-    target_linker_script(esp8266 "${CMAKE_CURRENT_BINARY_DIR}/esp8266_out.ld" "${CMAKE_CURRENT_BINARY_DIR}/esp8266_common_out.ld")
+    target_linker_script(${COMPONENT_LIB} INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/esp8266_out.ld")
+    target_linker_script(${COMPONENT_LIB} INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/esp8266_common_out.ld")
 
-    target_linker_script(esp8266
-        "ld/esp8266.rom.ld"
-        "ld/esp8266.peripherals.ld"
-        )
+    target_linker_script(${COMPONENT_LIB} INTERFACE "ld/esp8266.rom.ld")
+    target_linker_script(${COMPONENT_LIB} INTERFACE "ld/esp8266.peripherals.ld")
 
-    target_link_libraries(esp8266 "-u call_user_start")
+    target_link_libraries(${COMPONENT_LIB} INTERFACE "-u call_user_start")
 
     # Preprocess esp8266.ld linker script to include configuration, becomes esp8266_out.ld
     set(LD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ld)
+
+    partition_table_get_partition_info(app_offset "--partition-boot-default" "offset")
+    partition_table_get_partition_info(app_size "--partition-boot-default" "size")
+    set(CFLAGS ${CFLAGS} -DAPP_OFFSET=${app_offset} -DAPP_SIZE=${app_size})
+
     add_custom_command(
         OUTPUT esp8266_out.ld
         COMMAND "${CMAKE_C_COMPILER}" -C -P -x c -E -o esp8266_out.ld ${CFLAGS} -I ${CONFIG_DIR} ${LD_DIR}/esp8266.ld
@@ -60,7 +100,7 @@ else()
         COMMENT "Generating section linker script..."
         VERBATIM)
     add_custom_target(esp8266_linker_script DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/esp8266_out.ld" "${CMAKE_CURRENT_BINARY_DIR}/esp8266_common_out.ld")
-    add_dependencies(esp8266 esp8266_linker_script)
+    add_dependencies(${COMPONENT_LIB} esp8266_linker_script)
 
     if(CONFIG_ESP8266_PHY_INIT_DATA_IN_PARTITION)
         set(PHY_INIT_DATA_BIN phy_init_data.bin)
@@ -82,15 +122,15 @@ else()
     endif()
 
     if(CONFIG_ESP_FILENAME_MACRO_NO_PATH)
-        target_compile_definitions(${COMPONENT_NAME} PUBLIC -D __ESP_FILE__=__FILE__)
+        target_compile_definitions(${COMPONENT_LIB} PUBLIC -D __ESP_FILE__=__FILE__)
     endif()
 
     if(CONFIG_ESP_FILENAME_MACRO_RAW)
-        target_compile_definitions(${COMPONENT_NAME} PUBLIC -D __ESP_FILE__=__FILE__)
+        target_compile_definitions(${COMPONENT_LIB} PUBLIC -D __ESP_FILE__=__FILE__)
     endif()
 
     if(CONFIG_ESP_FILENAME_MACRO_NULL)
-        target_compile_definitions(${COMPONENT_NAME} PUBLIC -D __ESP_FILE__="null")
+        target_compile_definitions(${COMPONENT_LIB} PUBLIC -D __ESP_FILE__="null")
     endif()
 
 endif()

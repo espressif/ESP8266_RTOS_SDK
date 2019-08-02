@@ -20,8 +20,8 @@
 #include "bootloader_utility.h"
 #include "bootloader_common.h"
 #include "esp_image_format.h"
-#include "esp_log.h"
 #include "esp_spi_flash.h"
+#include "esp_log.h"
 
 static const char* TAG = "boot";
 

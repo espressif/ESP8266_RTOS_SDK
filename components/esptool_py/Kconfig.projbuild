@@ -48,20 +48,20 @@ config ESPTOOLPY_COMPRESSED
 
 choice FLASHMODE
 	prompt "Flash SPI mode"
-	default FLASHMODE_QIO
+	default ESPTOOLPY_FLASHMODE_QIO
 	help
 		Mode the flash chip is flashed in, as well as the default mode for the
 		binary to run in.
 
 		The esptool.py flashes firmware at DIO mode when user select "QIO", "QOUT" or "DIO" mode.
 
-config FLASHMODE_QIO
+config ESPTOOLPY_FLASHMODE_QIO
 	bool "QIO"
-config FLASHMODE_QOUT
+config ESPTOOLPY_FLASHMODE_QOUT
 	bool "QOUT"
-config FLASHMODE_DIO
+config ESPTOOLPY_FLASHMODE_DIO
 	bool "DIO"
-config FLASHMODE_DOUT
+config ESPTOOLPY_FLASHMODE_DOUT
 	bool "DOUT"
 endchoice
 
@@ -70,17 +70,17 @@ endchoice
 # itself to quad mode during initialisation
 config ESPTOOLPY_FLASHMODE
 	string
-	default "dio" if FLASHMODE_QIO
-	default "dio" if FLASHMODE_QOUT
-	default "dio" if FLASHMODE_DIO
-	default "dout" if FLASHMODE_DOUT
+	default "dio" if ESPTOOLPY_FLASHMODE_QIO
+	default "dio" if ESPTOOLPY_FLASHMODE_QOUT
+	default "dio" if ESPTOOLPY_FLASHMODE_DIO
+	default "dout" if ESPTOOLPY_FLASHMODE_DOUT
 
 config SPI_FLASH_MODE
 	hex
-	default 0x0 if FLASHMODE_QIO
-	default 0x1 if FLASHMODE_QOUT
-	default 0x2 if FLASHMODE_DIO
-	default 0x3 if FLASHMODE_DOUT	
+	default 0x0 if ESPTOOLPY_FLASHMODE_QIO
+	default 0x1 if ESPTOOLPY_FLASHMODE_QOUT
+	default 0x2 if ESPTOOLPY_FLASHMODE_DIO
+	default 0x3 if ESPTOOLPY_FLASHMODE_DOUT	
 
 choice ESPTOOLPY_FLASHFREQ
 	prompt "Flash SPI speed"
@@ -192,7 +192,7 @@ config ESPTOOLPY_AFTER
     default "soft_reset" if ESPTOOLPY_AFTER_SOFT_RESET
     default "no_reset" if ESPTOOLPY_AFTER_NORESET
 
-choice MONITOR_BAUD
+choice ESPTOOLPY_MONITOR_BAUD
     prompt "'make monitor' baud rate"
     default MONITOR_BAUD_74880B
     help
@@ -201,52 +201,38 @@ choice MONITOR_BAUD
 
         Can override by setting the MONITORBAUD environment variable.
 
-config MONITOR_BAUD_9600B
+config ESPTOOLPY_MONITOR_BAUD_9600B
     bool "9600 bps"
-config MONITOR_BAUD_57600B
+config ESPTOOLPY_MONITOR_BAUD_57600B
     bool "57600 bps"
-config MONITOR_BAUD_74880B
+config ESPTOOLPY_MONITOR_BAUD_74880B
     bool "74880 bps"
-config MONITOR_BAUD_115200B
+config ESPTOOLPY_MONITOR_BAUD_115200B
     bool "115200 bps"
-config MONITOR_BAUD_230400B
+config ESPTOOLPY_MONITOR_BAUD_230400B
     bool "230400 bps"
-config MONITOR_BAUD_921600B
+config ESPTOOLPY_MONITOR_BAUD_921600B
     bool "921600 bps"
-config MONITOR_BAUD_2MB
+config ESPTOOLPY_MONITOR_BAUD_2MB
     bool "2 Mbps"
-config MONITOR_BAUD_OTHER
+config ESPTOOLPY_MONITOR_BAUD_OTHER
     bool "Custom baud rate"
 
 endchoice
 
-config MONITOR_BAUD_OTHER_VAL
+config ESPTOOLPY_MONITOR_BAUD_OTHER_VAL
     int "Custom baud rate value" if MONITOR_BAUD_OTHER
     default 74880
 
-config MONITOR_BAUD
+config ESPTOOLPY_MONITOR_BAUD
     int
-    default 9600 if MONITOR_BAUD_9600B
-    default 57600 if MONITOR_BAUD_57600B
-    default 74880 if MONITOR_BAUD_74880B
-    default 115200 if MONITOR_BAUD_115200B
-    default 230400 if MONITOR_BAUD_230400B
-    default 921600 if MONITOR_BAUD_921600B
-    default 2000000 if MONITOR_BAUD_2MB
-    default MONITOR_BAUD_OTHER_VAL if MONITOR_BAUD_OTHER
-
-config ESPTOOLPY_ENABLE_TIME
-	bool "Enable monitor time information"
-	default n
-	help
-		Enable this option, time string will be added at the head of serial input data line.
-
-config ESPTOOLPY_ENABLE_SAVELOG
-	bool "Enable console log save"
-	default n
-	help
-		Enable this option, all console output will auto-save to current 'log' directory which same level as the 'build` directory; 
-		if 'log' directory is not exist, will create it. 
-		All console output will be saved as a log filename, named PROJECT_NAME + timestamp.log, which PROJECT_NAME defined in your demo Makefile.
+    default 9600 if ESPTOOLPY_MONITOR_BAUD_9600B
+    default 57600 if ESPTOOLPY_MONITOR_BAUD_57600B
+    default 74880 if ESPTOOLPY_MONITOR_BAUD_74880B
+    default 115200 if ESPTOOLPY_MONITOR_BAUD_115200B
+    default 230400 if ESPTOOLPY_MONITOR_BAUD_230400B
+    default 921600 if ESPTOOLPY_MONITOR_BAUD_921600B
+    default 2000000 if ESPTOOLPY_MONITOR_BAUD_2MB
+    default ESPTOOLPY_MONITOR_BAUD_OTHER_VAL if ESPTOOLPY_MONITOR_BAUD_OTHER
 
 endmenu
