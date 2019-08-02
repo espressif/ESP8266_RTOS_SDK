@@ -111,8 +111,10 @@ function(git_describe _var _repo_dir)
 		"${GIT_EXECUTABLE}"
 		"-C"
 		${_repo_dir}
-		describe --tag
-		${hash}
+		describe
+		"--always"
+		"--tags"
+		"--dirty"
 		${ARGN}
 		WORKING_DIRECTORY
 		"${CMAKE_CURRENT_SOURCE_DIR}"
