@@ -22,6 +22,9 @@
 #include "esp_vfs_dev.h"
 #endif
 
+#define _STR(_s)    #_s
+#define STR(_s)     _STR(_s)
+
 /*
  * @brief Initialize global and thread's private reent object data. We add this instead of
  *        newlib's initialization function to avoid some unnecessary cost and unused function.
@@ -49,21 +52,23 @@ void esp_reent_init(struct _reent* r)
  */
 int esp_newlib_init(void)
 {
+    const char *default_uart_dev = "/dev/uart/" STR(CONFIG_CONSOLE_UART_NUM);
+
     esp_reent_init(_global_impure_ptr);
 
 #ifdef CONFIG_USING_ESP_VFS
     esp_vfs_dev_uart_register();
 #endif
 
-    _GLOBAL_REENT->_stdout = fopen("/dev/uart/0", "w");
+    _GLOBAL_REENT->_stdout = fopen(default_uart_dev, "w");
     if (!_GLOBAL_REENT->_stdout)
         goto err;
 
-    _GLOBAL_REENT->_stderr = fopen("/dev/uart/0", "w");
+    _GLOBAL_REENT->_stderr = fopen(default_uart_dev, "w");
     if (!_GLOBAL_REENT->_stderr)
         goto err_fail;
 
-    _GLOBAL_REENT->_stdin = fopen("/dev/uart/0", "r");
+    _GLOBAL_REENT->_stdin = fopen(default_uart_dev, "r");
     if (!_GLOBAL_REENT->_stdin)
         goto err_in;
 
