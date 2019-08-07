@@ -275,7 +275,6 @@
  *            digests and ciphers instead.
  *
  */
-//#define MBEDTLS_ARC4_ALT
 //#define MBEDTLS_BLOWFISH_ALT
 //#define MBEDTLS_CAMELLIA_ALT
 //#define MBEDTLS_CCM_ALT
@@ -303,6 +302,11 @@
 #ifdef CONFIG_ESP_MD5
 #define MBEDTLS_MD5_ALT
 #endif
+
+#ifdef CONFIG_ESP_ARC4
+#define MBEDTLS_ARC4_ALT
+#endif
+
 /*
  * When replacing the elliptic curve module, pleace consider, that it is
  * implemented with two .c files:
