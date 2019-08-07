@@ -16,17 +16,21 @@
 #define _ROM_MD5_HASH_H_
 
 #include <stdint.h>
+#include "sdkconfig.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#ifdef CONFIG_ESP_MD5
+#include "esp_md5.h"
+#else
 struct MD5Context {
 	uint32_t buf[4];
 	uint32_t bits[2];
 	uint8_t in[64];
 };
-
+#endif
 void MD5Init(struct MD5Context *context);
 void MD5Update(struct MD5Context *context, unsigned char const *buf, unsigned len);
 void MD5Final(unsigned char digest[16], struct MD5Context *context);

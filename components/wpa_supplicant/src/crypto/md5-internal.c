@@ -12,6 +12,10 @@
  * See README and COPYING for more details.
  */
 
+#include "sdkconfig.h"
+
+#ifndef CONFIG_ESP_MD5
+
 #include "crypto/includes.h"
 
 #include "crypto/common.h"
@@ -296,3 +300,34 @@ MD5Transform(u32 buf[4], u32 const in[16])
     buf[3] += d;
 }
 /* ===== end - public domain MD5 implementation ===== */
+#else /* CONFIG_ESP_AES */
+#include "esp_md5.h"
+
+int md5_vector(size_t num_elem, const uint8_t *addr[], const size_t *len, uint8_t *mac)
+{
+    esp_md5_context_t ctx;
+    size_t i;
+
+    esp_md5_init(&ctx);
+    for (i = 0; i < num_elem; i++)
+        esp_md5_update(&ctx, addr[i], len[i]);
+    esp_md5_final(&ctx, mac);
+    return 0;
+}
+
+void MD5Init(esp_md5_context_t *context)
+{
+    esp_md5_init(context);
+}
+
+void MD5Update(esp_md5_context_t *context, uint8_t const *buf, size_t len)
+{
+    esp_md5_update(context, buf, len);
+}
+
+void MD5Final(uint8_t digest[16], esp_md5_context_t  *context)
+{
+    esp_md5_final(context, digest);
+}
+#endif
+

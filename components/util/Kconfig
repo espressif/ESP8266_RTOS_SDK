@@ -36,4 +36,19 @@ config ESP_AES
 
        Disabling the "assert" function at menuconfig can speed up the calculation.
 
+config ESP_MD5
+   bool "Enable Espressif MD5"
+   default y
+   help
+       Enable Espressif MD5 for other components to
+       speed up process speed and save code size.
+
+       ESP8285 is like ESP8266 + 1MB flash, but its internal I/O connection from CPU
+       core to flash is DIO not QIO, which makes it read flash data slower.
+       So the function will speed up ESP8285 obviously.
+
+       The calculation uses "ibus_data" to speed up load data from instruction bus.
+
+       Disabling the "assert" function at menuconfig can speed up the calculation.
+
 endmenu # Util
