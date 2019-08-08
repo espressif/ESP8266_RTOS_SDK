@@ -1,0 +1,9 @@
+[mapping:pp]
+archive: libpp.a
+entries:
+    * (noflash_text)
+
+[mapping:phy]
+archive: libphy.a
+entries:
+    * (noflash_text)

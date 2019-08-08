@@ -1,4 +1,3 @@
-set(COMPONENT_SRCDIRS ".")
-set(COMPONENT_ADD_INCLUDEDIRS "include")
-set(COMPONENT_REQUIRES)
-register_component()
+idf_component_register(SRCS "log.c"
+                       INCLUDE_DIRS "include"
+                       LDFRAGMENTS "linker.lf")

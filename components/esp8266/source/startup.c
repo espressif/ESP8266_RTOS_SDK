@@ -55,6 +55,9 @@ static inline int should_load(uint32_t load_addr)
             return 0;
     }
 
+    if (IS_FLASH(load_addr))
+        return 0;
+
     return 1;
 }
 
@@ -104,7 +107,7 @@ static void user_init_entry(void *param)
     vTaskDelete(NULL);
 }
 
-void call_user_start(size_t start_addr)
+void call_start_cpu(size_t start_addr)
 {
     int i;
     int *p;
