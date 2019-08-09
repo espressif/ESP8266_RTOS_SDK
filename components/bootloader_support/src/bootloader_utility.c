@@ -104,11 +104,14 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
     ESP_LOGI(TAG, "Partition Table:");
     ESP_LOGI(TAG, "## Label            Usage          Type ST Offset   Length");
 
-    for(int i = 0; i < num_partitions; i++) {
+    for(int i = 0, part_printed; part_printed < num_partitions; i++) {
         const esp_partition_info_t *partition = &partitions[i];
+        if (partition->magic == ESP_PARTITION_MAGIC_MD5) continue;
+	++part_printed;
+
         ESP_LOGD(TAG, "load partition table entry 0x%x", (intptr_t)partition);
         ESP_LOGD(TAG, "type=%x subtype=%x", partition->type, partition->subtype);
-        partition_usage = "unknown";
+        partition_usage = "Unknown";
 
         /* valid partition table */
         switch(partition->type) {
@@ -147,8 +150,14 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
             case PART_SUBTYPE_DATA_WIFI:
                 partition_usage = "WiFi data";
                 break;
+            case PART_SUBTYPE_DATA_FAT:
+                partition_usage = "FAT filesystem";
+                break;
+            case PART_SUBTYPE_DATA_SPIFFS:
+                partition_usage = "SPIFFS filesystem";
+                break;
             default:
-                partition_usage = "Unknown data";
+                partition_usage = "Other data";
                 break;
             }
             break; /* PARTITION_USAGE_DATA */
@@ -157,7 +166,7 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
         }
 
         /* print partition type info */
-        ESP_LOGI(TAG, "%2d %-16s %-16s %02x %02x %08x %08x", i, partition->label, partition_usage,
+        ESP_LOGI(TAG, "%2d %-16s %-16s %02x %02x %08x %08x", part_printed, partition->label, partition_usage,
                  partition->type, partition->subtype,
                  partition->pos.offset, partition->pos.size);
     }
@@ -549,16 +558,18 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
     ESP_LOGI(TAG, "Partition Table:");
     ESP_LOGI(TAG, "## Label            Usage          Type ST Offset   Length");
 
-    for(int i = 0; i < num_partitions; i++) {
+    for(int i = 0, part_printed = 0; part_printed < num_partitions; i++) {
 //        const esp_partition_info_t *partition = &partitions[i];
         esp_partition_info_t partiton_local;
         esp_partition_info_t *partition = &partiton_local;
 
         memcpy(&partiton_local, (void *)((intptr_t)partitions + i * sizeof(esp_partition_info_t)), sizeof(esp_partition_info_t));
+        if (partition->magic == ESP_PARTITION_MAGIC_MD5) continue;
+        ++part_printed;
 
         ESP_LOGD(TAG, "load partition table entry 0x%x", (intptr_t)partition);
         ESP_LOGD(TAG, "type=%x subtype=%x", partition->type, partition->subtype);
-        partition_usage = "unknown";
+        partition_usage = "Unknown";
 
         /* valid partition table */
         switch(partition->type) {
@@ -600,8 +611,14 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
             case PART_SUBTYPE_DATA_WIFI:
                 partition_usage = "WiFi data";
                 break;
+            case PART_SUBTYPE_DATA_FAT:
+                partition_usage = "FAT filesystem";
+                break;
+            case PART_SUBTYPE_DATA_SPIFFS:
+                partition_usage = "SPIFFS filesystem";
+                break;
             default:
-                partition_usage = "Unknown data";
+                partition_usage = "Other data";
                 break;
             }
             break; /* PARTITION_USAGE_DATA */
@@ -610,7 +627,7 @@ bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
         }
 
         /* print partition type info */
-        ESP_LOGI(TAG, "%2d %-16s %-16s %02x %02x %08x %08x", i, partition->label, partition_usage,
+        ESP_LOGI(TAG, "%2d %-16s %-16s %02x %02x %08x %08x", part_printed, partition->label, partition_usage,
                  partition->type, partition->subtype,
                  partition->pos.offset, partition->pos.size);
     }

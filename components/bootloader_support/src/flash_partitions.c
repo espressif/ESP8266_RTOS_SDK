@@ -72,8 +72,8 @@ esp_err_t esp_partition_table_basic_verify(const esp_partition_info_t *partition
         } else if (part->magic == 0xFFFF
                    && part->type == PART_TYPE_END
                    && part->subtype == PART_SUBTYPE_END) {
-            ESP_LOGD(TAG, "partition table verified, %d entries", num_parts);
-            *num_partitions = num_parts - md5_found; //do not count the partition where the MD5 checksum is held
+            *num_partitions = num_parts - md5_found - 1; //do not count the partition where the MD5 checksum is held
+            ESP_LOGD(TAG, "partition table verified, %d entries", *num_partitions);
             return ESP_OK;
         } else {
             if (log_errors) {
@@ -158,8 +158,8 @@ esp_err_t esp_partition_table_basic_verify(const esp_partition_info_t *partition
         } else if (part->magic == 0xFFFF
                    && part->type == PART_TYPE_END
                    && part->subtype == PART_SUBTYPE_END) {
-            ESP_LOGD(TAG, "partition table verified, %d entries", num_parts);
-            *num_partitions = num_parts - md5_found; //do not count the partition where the MD5 checksum is held
+            *num_partitions = num_parts - md5_found - 1; //do not count the partition where the MD5 checksum is held
+            ESP_LOGD(TAG, "partition table verified, %d entries", *num_partitions);
             return ESP_OK;
         } else {
             if (log_errors) {
