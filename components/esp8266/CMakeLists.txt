@@ -48,7 +48,8 @@ else()
         "driver/spi.c"
         "driver/uart.c"
         "driver/ir_tx.c"
-        "driver/ir_rx.c")
+        "driver/ir_rx.c"
+        "driver/ledc.c")
 
     set(include_dirs "include" "include/driver")
 
