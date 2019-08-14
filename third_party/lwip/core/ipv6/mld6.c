@@ -499,7 +499,10 @@ mld6_delayed_report(struct mld_group *group, u16_t maxresp)
 
 #ifdef LWIP_RAND
   /* Randomize maxresp. (if LWIP_RAND is supported) */
-  maxresp = (LWIP_RAND() % (maxresp - 1)) + 1;
+  maxresp = LWIP_RAND() % maxresp;
+  if (maxresp == 0) {
+    maxresp = 1;
+  }
 #endif /* LWIP_RAND */
 
   /* Apply timer value if no report has been scheduled already. */
