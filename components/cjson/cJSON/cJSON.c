@@ -56,14 +56,6 @@
 #pragma GCC visibility pop
 #endif
 
-#ifndef CJSON_SPRINTF_FLOAT
-#define CJSON_SPRINTF_FLOAT 0
-#endif
-
-#if !CJSON_SPRINTF_FLOAT
-#include <assert.h>
-#endif
-
 #include "cJSON.h"
 
 /* define our own boolean type */
@@ -501,7 +493,6 @@ static cJSON_bool print_number(const cJSON * const item, printbuffer * const out
     }
     else
     {
-#if CJSON_SPRINTF_FLOAT
         double test;
 
         /* Try 15 decimal places of precision to avoid nonsignificant nonzero digits */
@@ -513,51 +504,6 @@ static cJSON_bool print_number(const cJSON * const item, printbuffer * const out
             /* If not, print with 17 decimal places of precision */
             length = sprintf((char*)number_buffer, "%1.17g", d);
         }
-#else
-        long long d64 = (long long)d;
-        long d32 = (long)d;
-
-        /**
-         * Check if 32-bit type data is overflow.
-         */
-        assert(d32 == d64 && "Library newlib of nano mode does not support double or long-long format, please enable newlib normal mode.");
-
-        length = sprintf((char*)number_buffer, "%ld", d32);
-
-        if ((double)d32 != d) {
-            size_t precision = 14;
-            unsigned char *pbuf = number_buffer;
-
-            if (d < 0.0) {
-                d = (double)d32 - d + 0.00000000000001;
-            } else {
-                d = d - (double)d32;
-            }
-
-            pbuf = &number_buffer[length];
-            *pbuf++ = '.';
-            length++;
-
-            while (d > 0.0 && precision--) {
-                d *= 10.0;
-                unsigned char tmp = (unsigned char)d;
-
-                *pbuf++ = tmp + '0';
-                length++;
-
-                d -= (double)tmp;
-            }
-
-            pbuf = &number_buffer[length - 1];
-
-            while (*pbuf == '0') {
-                pbuf--;
-                length--;
-            }
-
-            *++pbuf = 0;
-        }
-#endif
     }
 
     /* sprintf failed or buffer overrun occured */
