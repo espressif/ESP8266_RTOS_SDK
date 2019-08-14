@@ -18,8 +18,9 @@
 #include <esp_https_ota.h>
 #include <esp_ota_ops.h>
 #include <esp_log.h>
+#include "sdkconfig.h"
 
-#define OTA_BUF_SIZE 256
+#define OTA_BUF_SIZE    CONFIG_OTA_BUF_SIZE
 static const char *TAG = "esp_https_ota";
 
 static void http_cleanup(esp_http_client_handle_t client)
