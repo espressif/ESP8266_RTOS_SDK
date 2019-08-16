@@ -178,6 +178,31 @@ void esp_wifi_enable_gpio_wakeup(uint32_t gpio_num, gpio_int_type_t intr_status)
   */
 void esp_wifi_disable_gpio_wakeup(void);
 
+/**
+ * @brief Enable wakeup by timer
+ * @param time_in_us  time before wakeup, in microseconds
+ * @return
+ *      - ESP_OK on success
+ *      - ESP_ERR_INVALID_ARG if value is out of range (TBD)
+ */
+esp_err_t esp_sleep_enable_timer_wakeup(uint32_t time_in_us);
+
+/**
+ * @brief Enter light sleep with the configured wakeup options
+ *
+ * @return
+ *  - ESP_OK on success (returned after wakeup)
+ *  - ESP_ERR_INVALID_STATE if WiFi or BT is not stopped
+ */
+esp_err_t esp_light_sleep_start(void);
+
+/**
+ * @brief Operation system start check time and enter sleep
+ * 
+ * @note This function is called by system, user should not call this
+ */
+void esp_sleep_start(void);
+
 #ifdef __cplusplus
 }
 #endif

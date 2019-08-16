@@ -32,8 +32,8 @@
 #define ssl_memcpy memcpy
 #define ssl_strlen strlen
 
-#define ssl_speed_up_enter() rtc_clk_cpu_freq_set(RTC_CPU_FREQ_160M)
-#define ssl_speed_up_exit()  rtc_clk_cpu_freq_set(RTC_CPU_FREQ_80M)
+#define ssl_speed_up_enter() esp_set_cpu_freq(ESP_CPU_FREQ_160M)
+#define ssl_speed_up_exit()  esp_set_cpu_freq(ESP_CPU_FREQ_80M)
 
 #define SSL_DEBUG_LOG printf
 

@@ -123,9 +123,9 @@ esp_err_t esp_derive_local_mac(uint8_t* local_mac, const uint8_t* universal_mac)
  * @brief CPU frequency values
  */
 typedef enum {
-    RTC_CPU_FREQ_80M = 1,       //!< 80 MHz
-    RTC_CPU_FREQ_160M = 2,      //!< 160 MHz
-} rtc_cpu_freq_t;
+    ESP_CPU_FREQ_80M = 1,       //!< 80 MHz
+    ESP_CPU_FREQ_160M = 2,      //!< 160 MHz
+} esp_cpu_freq_t;
 
 /**
  * @brief Switch CPU frequency
@@ -137,7 +137,7 @@ typedef enum {
  *
  * @param cpu_freq  new CPU frequency
  */
-void rtc_clk_cpu_freq_set(rtc_cpu_freq_t cpu_freq);
+void esp_set_cpu_freq(esp_cpu_freq_t cpu_freq);
 
 /**
   * @brief  Reset to default settings.

@@ -99,7 +99,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
         cfg.alpn_protos = alpnProtocols;
     }
 
-    rtc_clk_cpu_freq_set(RTC_CPU_FREQ_160M);
+    esp_set_cpu_freq(ESP_CPU_FREQ_160M);
 
     struct esp_tls *tls = esp_tls_conn_new(pNetwork->tlsConnectParams.pDestinationURL, strlen(pNetwork->tlsConnectParams.pDestinationURL), pNetwork->tlsConnectParams.DestinationPort, &cfg);
 
@@ -110,7 +110,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
     tlsDataParams->timeout = pNetwork->tlsConnectParams.timeout_ms;
     tlsDataParams->handle = (esp_network_handle_t)tls;
 
-    rtc_clk_cpu_freq_set(RTC_CPU_FREQ_80M);
+    esp_set_cpu_freq(ESP_CPU_FREQ_80M);
 
     return (IoT_Error_t) ret;
 }
