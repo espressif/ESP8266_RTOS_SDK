@@ -26,20 +26,6 @@ extern "C" {
 typedef uint32_t esp_tick_t;
 typedef uint32_t esp_irqflag_t;
 
-static inline esp_tick_t soc_get_ticks(void)
-{
-    esp_tick_t ticks;
-
-    __asm__ __volatile__(
-            "rsr    %0, ccount\n"
-            : "=a"(ticks)
-            :
-            : "memory"
-    );
-
-    return ticks;
-}
-
 static inline esp_irqflag_t soc_save_local_irq(void)
 {
     esp_irqflag_t flag;
@@ -100,6 +86,16 @@ static inline uint32_t soc_get_ccount(void)
     );
 
     return ticks;
+}
+
+static inline void soc_set_ccount(uint32_t ticks)
+{
+    __asm__ __volatile__(
+            "wsr    %0, ccount\n"
+            :
+            : "a"(ticks)
+            : "memory"
+    );
 }
 
 static inline void soc_clear_int_mask(uint32_t mask)
