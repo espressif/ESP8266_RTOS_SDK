@@ -95,11 +95,11 @@ $(error IDF_PATH variable is not set to a valid directory.)
 endif
 
 ifdef IDF_TARGET
-ifneq ($(IDF_TARGET),esp32)
-$(error GNU Make based build system only supports esp32 target, but IDF_TARGET is set to $(IDF_TARGET))
+ifneq ($(IDF_TARGET),esp8266)
+$(error GNU Make based build system only supports esp8266 target, but IDF_TARGET is set to $(IDF_TARGET))
 endif
 else
-export IDF_TARGET := esp32
+export IDF_TARGET := esp8266
 endif
 
 
@@ -377,21 +377,6 @@ COMMON_WARNING_FLAGS = -Wall -Werror=all \
 	-Wextra \
 	-Wno-unused-parameter -Wno-sign-compare
 
-ifdef CONFIG_COMPILER_DISABLE_GCC8_WARNINGS
-COMMON_WARNING_FLAGS += -Wno-parentheses \
-	-Wno-sizeof-pointer-memaccess \
-	-Wno-clobbered \
-	-Wno-format-overflow \
-	-Wno-stringop-truncation \
-	-Wno-misleading-indentation \
-	-Wno-cast-function-type \
-	-Wno-implicit-fallthrough \
-	-Wno-unused-const-variable \
-	-Wno-switch-unreachable \
-	-Wno-format-truncation \
-	-Wno-memset-elt-size \
-	-Wno-int-in-bool-context
-endif
 
 ifdef CONFIG_COMPILER_WARN_WRITE_STRINGS
 COMMON_WARNING_FLAGS += -Wwrite-strings
