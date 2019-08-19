@@ -161,6 +161,8 @@ static void pwm_insert_sort(void)
 esp_err_t pwm_set_period(uint32_t period)
 {
     PWM_CHECK(period >= 10, "period setting is too short", ESP_ERR_INVALID_ARG);
+
+    pwm_obj->depth = period;    // For ease of conversion, let the depth equal the period
     pwm_obj->period = period;
 
     return ESP_OK;
@@ -554,7 +556,6 @@ esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint8_t channel_num, const
         return ESP_ERR_NO_MEM;
     }
 
-    pwm_obj->depth = period;
     pwm_obj->channel_num = channel_num;
 
     for (i = 0; i < channel_num; i++) {
