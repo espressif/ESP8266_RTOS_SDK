@@ -114,6 +114,11 @@ static void i2c_master_set_dc(i2c_port_t i2c_num, uint8_t sda, uint8_t scl)
     i2c_last_state[i2c_num]->val = ((sda & 0x1) << 1) | (scl & 0x1);
     gpio_set_level(i2c_config[i2c_num]->sda_io_num, i2c_last_state[i2c_num]->sda);
     gpio_set_level(i2c_config[i2c_num]->scl_io_num, i2c_last_state[i2c_num]->scl);
+    if (scl) {
+        while (!gpio_get_level(i2c_config[i2c_num]->scl_io_num)) {
+            i2c_master_wait(1);
+        }
+    }
 }
 
 static uint8_t i2c_master_get_dc(i2c_port_t i2c_num)
