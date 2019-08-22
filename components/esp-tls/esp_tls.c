@@ -419,7 +419,7 @@ exit:
         goto exit;
     }
 
-    tls->ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method());
+    tls->ctx = wolfSSL_CTX_new(wolfSSLv23_client_method());
     if (!tls->ctx) {
         ESP_LOGE(TAG, "Set wolfSSL ctx failed");
         goto exit;
