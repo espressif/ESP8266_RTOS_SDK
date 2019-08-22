@@ -23,6 +23,7 @@ else()
 
     set(srcs
         "source/chip_boot.c"
+        "source/backtrace.c"
         "source/esp_err_to_name.c"
         "source/esp_timer.c"
         "source/esp_wifi_os_adapter.c"

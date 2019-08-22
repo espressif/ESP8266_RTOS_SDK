@@ -57,8 +57,6 @@ uint32_t cpu_sr;
 
 uint32_t _xt_tick_divisor;
 
-int __g_is_task_overflow;
-
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */
 static uint32_t uxCriticalNesting = 0;
@@ -368,7 +366,6 @@ int xPortInIsrContext(void)
 void __attribute__((weak, noreturn)) vApplicationStackOverflowHook(xTaskHandle xTask, const char *pcTaskName)
 {
     ets_printf("***ERROR*** A stack overflow in task %s has been detected.\r\n", pcTaskName);
-    __g_is_task_overflow = 1;
     abort();
 }
 
