@@ -64,6 +64,7 @@ typedef struct {
     gpio_pullup_t sda_pullup_en;  /*!< Internal GPIO pull mode for I2C sda signal*/
     gpio_num_t scl_io_num;        /*!< GPIO number for I2C scl signal */
     gpio_pullup_t scl_pullup_en;  /*!< Internal GPIO pull mode for I2C scl signal*/
+    uint32_t clk_stretch_tick;    /*!< Clock Stretch time, depending on CPU frequency*/
 } i2c_config_t;
 
 typedef void *i2c_cmd_handle_t;   /*!< I2C command handle  */
