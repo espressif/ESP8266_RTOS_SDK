@@ -64,12 +64,14 @@ endif # CONFIG_ESP_PHY_INIT_DATA_IN_PARTITION
 
 endif
 
+ifndef IS_BOOTLOADER_BUILD
 LINKER_SCRIPT_TEMPLATE := $(COMPONENT_PATH)/ld/esp8266.project.ld.in
 LINKER_SCRIPT_OUTPUT_DIR := $(abspath $(BUILD_DIR_BASE)/esp8266)
 
 # Target to generate linker script generator from fragments presented by each of
 # the components
 $(eval $(call ldgen_process_template,$(LINKER_SCRIPT_TEMPLATE),$(LINKER_SCRIPT_OUTPUT_DIR)/esp8266.project.ld))
+endif
 
 # global CFLAGS for ESP8266
 CFLAGS += -DICACHE_FLASH
