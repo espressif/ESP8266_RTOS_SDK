@@ -1,18 +1,8 @@
 menu "Newlib"
 
-config NEWLIB_ENABLE
-    bool "Enable newlib"
-    default y
-    help
-        If you need use you own C library, make this option disable. The libraries and
-        header files at this component will not be used.
-
-        Note: ABI of the C library of your own must be same as SDK.
-
 choice NEWLIB_LIBRARY_LEVEL
     prompt "newlib level"
     default NEWLIB_LIBRARY_LEVEL_FLOAT_NANO
-    depends on NEWLIB_ENABLE
     help
         Choose newlib library level.
 
@@ -49,6 +39,14 @@ config NEWLIB_LIBRARY_LEVEL_FLOAT_NANO
 
         If you do not need 64-bit integer formatting support and C99 features, but need float formats,
         select this option.
+
+config NEWLIB_LIBRARY_CUSTOMER
+    bool "customer"
+    help
+        If you need use you own C library, select this option. The libraries and
+        header files at this component will not be used.
+
+        Note: ABI of the C library of your own must be same as SDK.
 
 endchoice
 

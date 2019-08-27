@@ -34,7 +34,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+#ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER
 #include "esp_newlib.h"
 #endif
 
@@ -163,7 +163,7 @@ void call_start_cpu(size_t start_addr)
     assert(__esp_os_init() == 0);
 #endif
 
-#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+#ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER
     esp_newlib_init();
 #endif
 
