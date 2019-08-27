@@ -2,6 +2,7 @@
 # Component Makefile
 #
 
+ifdef CONFIG_ENABLE_PTHREAD
 COMPONENT_SRCDIRS := .
 
 COMPONENT_ADD_INCLUDEDIRS := include
@@ -19,3 +20,6 @@ COMPONENT_ADD_LDFLAGS += -u pthread_include_pthread_impl
 COMPONENT_ADD_LDFLAGS += -u pthread_include_pthread_cond_impl
 COMPONENT_ADD_LDFLAGS += -u pthread_include_pthread_local_storage_impl
 endif  # GCC_NOT_5_2_0
+else
+COMPONENT_SRCDIRS :=
+endif

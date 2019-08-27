@@ -1,7 +1,9 @@
+if(CONFIG_ENABLE_PTHREAD)
 idf_component_register(SRCS "pthread.c"
                             "pthread_cond_var.c"
                             "pthread_local_storage.c"
-                    INCLUDE_DIRS include)
+                    INCLUDE_DIRS include
+                    PRIV_REQUIRES newlib)
 
 if(GCC_NOT_5_2_0)
     set(extra_link_flags "-u pthread_include_pthread_impl")
@@ -15,4 +17,7 @@ endif()
 
 if(extra_link_flags)
     target_link_libraries(${COMPONENT_LIB} INTERFACE "${extra_link_flags}")
+endif()
+else()
+register_component()
 endif()

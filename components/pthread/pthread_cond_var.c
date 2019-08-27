@@ -25,7 +25,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-#include "freertos/list.h"
 
 #include <sys/queue.h>
 #include <sys/time.h>
