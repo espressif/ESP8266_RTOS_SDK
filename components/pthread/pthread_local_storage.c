@@ -14,7 +14,6 @@
 #include <errno.h>
 #include <pthread.h>
 #include <string.h>
-#include <stdlib.h>
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -24,17 +23,7 @@
 
 #include "pthread_internal.h"
 
-#ifdef CONFIG_ENABLE_PTHREAD
-
-#define PTHREAD_TLS_INDEX 1
-
-#if portNUM_PROCESSORS == 1
-#undef portENTER_CRITICAL
-#undef portEXIT_CRITICAL
-
-#define portENTER_CRITICAL(l)   vPortEnterCritical()
-#define portEXIT_CRITICAL(l)    vPortExitCritical()
-#endif
+#define PTHREAD_TLS_INDEX 0
 
 typedef void (*pthread_destructor_t)(void*);
 
@@ -53,9 +42,7 @@ typedef struct key_entry_t_ {
 // List of all keys created with pthread_key_create()
 SLIST_HEAD(key_list_t, key_entry_t_) s_keys = SLIST_HEAD_INITIALIZER(s_keys);
 
-#if portNUM_PROCESSORS > 1
 static portMUX_TYPE s_keys_lock = portMUX_INITIALIZER_UNLOCKED;
-#endif
 
 // List of all value entries associated with a thread via pthread_setspecific()
 typedef struct value_entry_t_ {
@@ -155,7 +142,7 @@ static void pthread_local_storage_thread_deleted_callback(int index, void *v_tls
     free(tls);
 }
 
-#if defined(CONFIG_ENABLE_STATIC_TASK_CLEAN_UP_HOOK)
+#if defined(CONFIG_FREERTOS_ENABLE_STATIC_TASK_CLEAN_UP)
 /* Called from FreeRTOS task delete hook */
 void pthread_local_storage_cleanup(TaskHandle_t task)
 {
@@ -179,7 +166,7 @@ void __wrap_vPortCleanUpTCB(void *tcb)
 #endif
 
 /* this function called from pthread_task_func for "early" cleanup of TLS in a pthread */
-void pthread_internal_local_storage_destructor_callback()
+void pthread_internal_local_storage_destructor_callback(void)
 {
     void *tls = pvTaskGetThreadLocalStoragePointer(NULL, PTHREAD_TLS_INDEX);
     if (tls != NULL) {
@@ -187,7 +174,7 @@ void pthread_internal_local_storage_destructor_callback()
         /* remove the thread-local-storage pointer to avoid the idle task cleanup
            calling it again...
         */
-#if defined(CONFIG_ENABLE_STATIC_TASK_CLEAN_UP_HOOK)
+#if defined(CONFIG_FREERTOS_ENABLE_STATIC_TASK_CLEAN_UP)
         vTaskSetThreadLocalStoragePointer(NULL, PTHREAD_TLS_INDEX, NULL);
 #else
         vTaskSetThreadLocalStoragePointerAndDelCallback(NULL,
@@ -236,7 +223,7 @@ int pthread_setspecific(pthread_key_t key, const void *value)
         if (tls == NULL) {
             return ENOMEM;
         }
-#if defined(CONFIG_ENABLE_STATIC_TASK_CLEAN_UP_HOOK)
+#if defined(CONFIG_FREERTOS_ENABLE_STATIC_TASK_CLEAN_UP)
         vTaskSetThreadLocalStoragePointer(NULL, PTHREAD_TLS_INDEX, tls);
 #else
         vTaskSetThreadLocalStoragePointerAndDelCallback(NULL,
@@ -269,4 +256,7 @@ int pthread_setspecific(pthread_key_t key, const void *value)
     return 0;
 }
 
-#endif
+/* Hook function to force linking this file */
+void pthread_include_pthread_local_storage_impl(void)
+{
+}
