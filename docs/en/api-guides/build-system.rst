@@ -7,7 +7,7 @@ concept of "components"
 Read this document if you want to know how to organise a new ESP8266\_RTOS\
 -SDK (ESP-IDF Style) project.
 
-We recommend using the project_template project at directory of examples/get-started as a starting point for your project.
+We recommend using the hello_world project at directory of examples/get-started as a starting point for your project.
 
 Using the Build System
 ======================

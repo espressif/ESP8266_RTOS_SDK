@@ -31,17 +31,17 @@ The OTA_workflow.png diagram demonstrates the overall workflow:
 Connect your host PC to the same AP that you will use for the ESP8266.
 
 ### Step 2: Generate the OTA Binary
-For our upgrade example OTA file, we're going to use the `get-started/project_template` example.
+For our upgrade example OTA file, we're going to use the `get-started/hello_world` example.
 
 Build the example:
 
 ```
-cd $IDF_PATH/examples/get-started/project_template
+cd $IDF_PATH/examples/get-started/hello_world
 make
 cd build
 ```
 
-Note: You've probably noticed there is nothing special about the "project_template" example when used for OTA updates. This is because any .bin app file which is built by ESP8266_RTOS_SDK can be used as an app image for OTA. The only difference is whether it is written to a factory partition or an OTA partition.
+Note: You've probably noticed there is nothing special about the "hello_world" example when used for OTA updates. This is because any .bin app file which is built by ESP8266_RTOS_SDK can be used as an app image for OTA. The only difference is whether it is written to a factory partition or an OTA partition.
 
 ### Step 3: Run HTTPS Server
 
@@ -69,7 +69,7 @@ Start the HTTPS server:
 openssl s_server -WWW -key ca_key.pem -cert ca_cert.pem -port 8070
 ```
 
-Copy the generated binary(project_template.bin) into the folder in which the HTTPS server is running.  
+Copy the generated binary(hello_world.bin) into the folder in which the HTTPS server is running.  
 If you have any firewall software running that will block incoming access to port 8070, configure it to allow access while running the example.
 
 ### Step 4: Build OTA Example
@@ -83,7 +83,7 @@ Change back to the OTA example directory, and type `make menuconfig` to configur
 https://<host-ip-address>:<host-port>/<firmware-image-filename>
 
 for e.g,
-https://192.168.0.3:8070/project_template.bin
+https://192.168.0.3:8070/hello_world.bin
 ```
 
 Save your changes, and type `make` to build the example.
@@ -112,7 +112,7 @@ When the example starts up, it will print "Starting OTA example..." then:
 
 * Check your PC can ping the ESP8266 at its IP, and that the IP, AP and other configuration settings are correct in menuconfig.
 * Check if any firewall software is preventing incoming connections on the PC.
-* Check whether you can see the configured file (default project_template.bin), by checking the output of following command:
+* Check whether you can see the configured file (default hello_world.bin), by checking the output of following command:
 
  ```
  curl -v https://<host-ip-address>:<host-port>/<firmware-image-filename>
