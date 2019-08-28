@@ -1,0 +1,10 @@
+
+menu "Heap memory"
+
+config HEAP_DISABLE_IRAM
+    bool "Disable IRAM as heap memory"
+    default n
+    help
+        Disable IRAM as heap memory, and heap memory only use DRAM.
+
+endmenu
