@@ -42,7 +42,7 @@ extern "C" {
 #include    "xtensa_rtos.h"
 
 #if defined(configUSE_NEWLIB_REENTRANT) && configUSE_NEWLIB_REENTRANT == 1
-#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+#ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER
 #include "esp_newlib.h"
 
 #define _impure_ptr _global_impure_ptr

@@ -1,5 +1,5 @@
 set(COMPONENT_SRCDIRS newlib/port)
-set(COMPONENT_ADD_INCLUDEDIRS newlib/include newlib/port/include)
+set(COMPONENT_ADD_INCLUDEDIRS newlib/port/include newlib/include)
 
 
 if(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
