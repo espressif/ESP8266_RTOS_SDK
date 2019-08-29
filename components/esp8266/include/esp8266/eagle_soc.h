@@ -25,7 +25,9 @@
 #ifndef _EAGLE_SOC_H_
 #define _EAGLE_SOC_H_
 
+#include "sdkconfig.h"
 #include <stdint.h>
+#include <stddef.h>
 #include "driver/soc.h"
 
 /* IO definitions (access restrictions to peripheral registers) */
@@ -190,7 +192,7 @@
 #define DRAM_SIZE                       (96 * 1024)
 
 #define IRAM_BASE                       (0x40100000)
-#define IRAM_SIZE                       (48 * 1024)
+#define IRAM_SIZE                       (CONFIG_SOC_IRAM_SIZE)
 
 #define FLASH_BASE                      (0x40200000)
 #define FLASH_SIZE                      (1 * 1024 * 1024)
