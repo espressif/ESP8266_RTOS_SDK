@@ -97,40 +97,77 @@ extern "C" {
  * @brief WiFi stack configuration parameters passed to esp_wifi_init call.
  */
 typedef struct {
-    system_event_handler_t event_handler;          /**< WiFi event handler */
-    void*                  osi_funcs;              /**< WiFi OS functions */
-    int                    static_rx_buf_num;      /**< WiFi static RX buffer number */
-    int                    dynamic_rx_buf_num;     /**< WiFi dynamic RX buffer number */
-    int                    tx_buf_type;            /**< WiFi TX buffer type */
-    int                    static_tx_buf_num;      /**< WiFi static TX buffer number */
-    int                    dynamic_tx_buf_num;     /**< WiFi dynamic TX buffer number */
-    int                    csi_enable;             /**< WiFi channel state information enable flag */
-    int                    ampdu_rx_enable;        /**< WiFi AMPDU RX feature enable flag */
-    int                    ampdu_tx_enable;        /**< WiFi AMPDU TX feature enable flag */
-    int                    nvs_enable;             /**< WiFi NVS flash enable flag */
-    int                    nano_enable;            /**< Nano option for printf/scan family enable flag */
-    int                    tx_ba_win;              /**< WiFi Block Ack TX window size */
-    int                    rx_ba_win;              /**< WiFi Block Ack RX window size */
-    int                    magic;                  /**< WiFi init magic number, it should be the last field */
+    system_event_handler_t event_handler;           /**< WiFi event handler */
+    void*                  osi_funcs;               /**< WiFi OS functions */
+    uint8_t                qos_enable;              /**< WiFi QOS feature enable flag */
+    uint8_t                ampdu_rx_enable;         /**< WiFi AMPDU RX feature enable flag */
+    uint8_t                rx_ba_win;               /**< WiFi Block Ack RX window size */
+    uint8_t                rx_ampdu_buf_num;        /**< WiFi AMPDU RX buffer number */
+    uint32_t               rx_ampdu_buf_len;        /**< WiFi AMPDU RX buffer length */
+    uint32_t               rx_max_single_pkt_len;   /**< WiFi RX max single packet size */
+    uint32_t               rx_buf_len;              /**< WiFi RX buffer size */
+    uint8_t                amsdu_rx_enable;         /**< WiFi AMSDU RX feature enable flag */
+    uint8_t                rx_buf_num;              /**< WiFi RX buffer number */
+    uint8_t                rx_pkt_num;              /**< WiFi RX packet number */
+    uint8_t                left_continuous_rx_buf_num; /**< WiFi Rx left continuous rx buffer number */
+    uint8_t                tx_buf_num;              /**< WiFi TX buffer number */
+    uint8_t                nvs_enable;              /**< WiFi NVS flash enable flag */
+    uint8_t                nano_enable;             /**< Nano option for printf/scan family enable flag */
+    uint32_t               magic;                 /**< WiFi init magic number, it should be the last field */
 } wifi_init_config_t;
+
+#if CONFIG_ESP8266_WIFI_AMPDU_RX_ENABLED
+#define WIFI_AMPDU_RX_ENABLED         1
+#define WIFI_AMPDU_RX_BA_WIN CONFIG_ESP8266_WIFI_RX_BA_WIN_SIZE
+#define WIFI_RX_MAX_SINGLE_PKT_LEN    1600
+#else
+#define WIFI_AMPDU_RX_ENABLED         0
+#define WIFI_AMPDU_RX_BA_WIN          0 /* unused if ampdu_rx_enable == false */
+#define WIFI_RX_MAX_SINGLE_PKT_LEN    (1600 - 524)
+#endif
+#define WIFI_AMPDU_RX_AMPDU_BUF_LEN   72
+#define WIFI_AMPDU_RX_AMPDU_BUF_NUM   3
+#define WIFI_HW_RX_BUFFER_LEN         524
+
+#if CONFIG_ESP8266_WIFI_QOS_ENABLED
+#define WIFI_QOS_ENABLED        1
+#else
+#define WIFI_QOS_ENABLED        0
+#endif
+
+#if CONFIG_ESP8266_WIFI_AMSDU_ENABLED
+#define WIFI_AMSDU_RX_ENABLED        1
+#undef WIFI_RX_MAX_SINGLE_PKT_LEN
+#define WIFI_RX_MAX_SINGLE_PKT_LEN   3000
+#else
+#define WIFI_AMSDU_RX_ENABLED        0
+#endif
+
+#if CONFIG_ESP8266_WIFI_NVS_ENABLED
+#define WIFI_NVS_ENABLED          1
+#else
+#define WIFI_NVS_ENABLED          0
+#endif
 
 #define WIFI_INIT_CONFIG_MAGIC    0x1F2F3F4F
 
 #define WIFI_INIT_CONFIG_DEFAULT() { \
     .event_handler = &esp_event_send, \
     .osi_funcs = NULL, \
-    .static_rx_buf_num = 5,\
-    .dynamic_rx_buf_num = 0,\
-    .tx_buf_type = 0,\
-    .static_tx_buf_num = 6,\
-    .dynamic_tx_buf_num = 0,\
-    .csi_enable = 0,\
-    .ampdu_rx_enable = 0,\
-    .ampdu_tx_enable = 0,\
-    .nvs_enable = 1,\
+    .qos_enable = WIFI_QOS_ENABLED,\
+    .ampdu_rx_enable = WIFI_AMPDU_RX_ENABLED,\
+    .rx_ampdu_buf_len = WIFI_AMPDU_RX_AMPDU_BUF_LEN,\
+    .rx_ampdu_buf_num = WIFI_AMPDU_RX_AMPDU_BUF_NUM,\
+    .amsdu_rx_enable = WIFI_AMSDU_RX_ENABLED,\
+    .rx_ba_win = WIFI_AMPDU_RX_BA_WIN,\
+    .rx_max_single_pkt_len = WIFI_RX_MAX_SINGLE_PKT_LEN,\
+    .rx_buf_len = WIFI_HW_RX_BUFFER_LEN,\
+    .rx_buf_num = CONFIG_ESP8266_WIFI_RX_BUFFER_NUM,\
+    .left_continuous_rx_buf_num = CONFIG_ESP8266_WIFI_LEFT_CONTINUOUS_RX_BUFFER_NUM,\
+    .rx_pkt_num = CONFIG_ESP8266_WIFI_RX_PKT_NUM,\
+    .tx_buf_num = CONFIG_ESP8266_WIFI_TX_PKT_NUM,\
+    .nvs_enable = WIFI_NVS_ENABLED,\
     .nano_enable = 0,\
-    .tx_ba_win = 0,\
-    .rx_ba_win = 0,\
     .magic = WIFI_INIT_CONFIG_MAGIC\
 };
 
