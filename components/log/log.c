@@ -63,7 +63,7 @@ uint32_t IRAM_ATTR esp_log_early_timestamp()
     extern uint64_t g_esp_os_us;
     extern uint64_t g_esp_boot_ccount;
 
-    const uint32_t ticks_per_ms = _xt_tick_divisor * configTICK_RATE_HZ / 1000;
+    const uint32_t ticks_per_ms = g_esp_ticks_per_us * 1000;
     const uint32_t ms = g_esp_os_us / 1000 + g_esp_boot_ccount / ((CRYSTAL_USED * 2) * 1000);
 #else
     const uint32_t ticks_per_ms = ((CRYSTAL_USED * 2) * 1000);

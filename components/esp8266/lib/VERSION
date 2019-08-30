@@ -1,10 +1,10 @@
 gwen:
-    core:       7f8c705
+    core:       f467b5d
     net80211:   7f8c705
     pp:         7f8c705
-    wpa:        7f8c705
+    wpa:        f467b5d
     espnow:     7f8c705
     wps:        7f8c705
 
-    smartconfig:  2.8.1
+    smartconfig:  2.8.2
     phy:         1055_22

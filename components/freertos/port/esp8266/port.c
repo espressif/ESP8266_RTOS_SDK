@@ -41,6 +41,8 @@
 
 #include "esp_attr.h"
 #include "esp_libc.h"
+#include "esp_task_wdt.h"
+#include "esp_sleep.h"
 
 #include "esp8266/eagle_soc.h"
 #include "rom/ets_sys.h"
@@ -151,13 +153,9 @@ void IRAM_ATTR xPortSysTickHandle(void *p)
      *
      * So add code here to calibrate system time.
      */
-    if (_xt_tick_divisor == (CPU_FREQ_80MHz / XT_TICK_PER_SEC)) {
-        ccount = soc_get_ccount();
-        us = ccount / CPU_80M_TICKS_PRT_US;
-    } else {
-        ccount = soc_get_ccount();
-        us = ccount / CPU_160M_TICKS_PRT_US;
-    }
+    ccount = soc_get_ccount();
+    us = ccount / g_esp_ticks_per_us;
+  
     g_esp_os_us += us;
     g_esp_os_cpu_clk += ccount;
 
@@ -166,7 +164,6 @@ void IRAM_ATTR xPortSysTickHandle(void *p)
 
     ticks = us / 1000 / portTICK_PERIOD_MS;
     if (!ticks) {
-        ets_printf("\r\nERROR: CCOMPARE timer period");
         ticks = 1;
     }
 
