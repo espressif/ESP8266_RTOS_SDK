@@ -73,7 +73,7 @@ Permission issues /dev/ttyUSB0
 ------------------------------
 
 With some Linux distributions you may get the ``Failed to open port /dev/ttyUSB0`` error message when flashing the ESP8266.
-
+If this happens you can use "sudo chmod" to set permissions on the "/dev/ttyUSB0" file before running the make command to resolve. (e.g.: "sudo chmod -R 777 /dev/ttyUSB0" will give everyone read/write/execute permisions to "/dev/ttyUSB0".)
 
 Next Steps
 ==========
