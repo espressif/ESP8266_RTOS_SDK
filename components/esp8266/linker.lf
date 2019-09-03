@@ -14,8 +14,3 @@ entries:
 archive: libphy.a
 entries:
     * (noflash_text)
-
-[mapping:rtc]
-archive: librtc_opensource.a
-entries:
-    * (noflash_text)
