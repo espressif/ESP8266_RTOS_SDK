@@ -27,17 +27,17 @@ ESP8266 toolchain for Linux is available for download from Espressif website:
 
 - for 64-bit Linux:
 
-  https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-92-g8facf4c-5.2.0.tar.gz
+  https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
 
 - for 32-bit Linux:
 
-  https://dl.espressif.com/dl/xtensa-lx106-elf-linux32-1.22.0-88-gde0bdc1-4.8.5.tar.gz
+  https://dl.espressif.com/dl/xtensa-lx106-elf-linux32-1.22.0-100-ge567ec7-5.2.0.tar.gz
 
 1.  Download this file, then extract it in ``~/esp`` directory::
 
         mkdir -p ~/esp
         cd ~/esp
-        tar -xzf ~/Downloads/xtensa-lx106-elf-linux64-1.22.0-92-g8facf4c-5.2.0.tar.gz
+        tar -xzf ~/Downloads/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
 
 .. _setup-linux-toolchain-add-it-to-path:
 
