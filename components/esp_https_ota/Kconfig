@@ -1,0 +1,12 @@
+menu "ESP HTTPS OTA"
+
+config OTA_BUF_SIZE
+    int "Default OTA Buffer Size"
+    default 256
+    range 256 1460
+    help
+        Set OTA Buffer Size. The larger buffer size will read more size packet once and can reduce upgrade cost time.
+        This buffer size depends on CONFIG_HTTP_BUF_SIZE. If you want to enlarge ota buffer size, please also enlarge CONFIG_HTTP_BUF_SIZE.
+        OTA_BUF_SIZE equals to 1460 can save 40% upgrade time in contrast to OTA_BUF_SIZE which equals to 256. 
+
+endmenu

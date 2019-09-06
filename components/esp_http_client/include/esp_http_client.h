@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#define DEFAULT_HTTP_BUF_SIZE (512)
+#define DEFAULT_HTTP_BUF_SIZE    CONFIG_HTTP_BUF_SIZE
 
 typedef struct esp_http_client *esp_http_client_handle_t;
 typedef struct esp_http_client_event *esp_http_client_event_handle_t;
