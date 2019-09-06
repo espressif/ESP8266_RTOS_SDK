@@ -440,7 +440,7 @@ config TCP_RECVMBOX_SIZE
 
 config TCP_QUEUE_OOSEQ
     bool "Queue incoming out-of-order segments"
-    default n
+    default y
     help
         Queue incoming out-of-order segments for later use.
 
