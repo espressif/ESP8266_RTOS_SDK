@@ -28,7 +28,10 @@
 
 #define FRC2_LOAD               (0x60000620)
 #define FRC2_COUNT              (0x60000624)
+#define FRC2_CTL                (0x60000628)
 #define FRC2_ALARM              (0x60000630)
+
+#define FRC2_CNTL_ENABLE        BIT7
 
 #define FRC2_TICKS_PER_US       (5)
 #define FRC2_TICKS_MAX          (UINT32_MAX / 4)
@@ -40,6 +43,8 @@
 
 typedef struct pm_soc_clk {
     uint32_t    ccount;
+
+    uint32_t    frc2_enable;
     uint32_t    frc2_cnt;
 } pm_soc_clk_t;
 
@@ -66,7 +71,10 @@ static inline void restore_local_wdev(uint32_t reg)
 static inline void save_soc_clk(pm_soc_clk_t *clk)
 {
     clk->ccount = soc_get_ccount();
-    clk->frc2_cnt = REG_READ(FRC2_COUNT);
+
+    clk->frc2_enable = REG_READ(FRC2_CTL) & FRC2_CNTL_ENABLE;
+    if (clk->frc2_enable)
+        clk->frc2_cnt = REG_READ(FRC2_COUNT);
 }
 
 static inline uint32_t min_sleep_us(pm_soc_clk_t *clk)
@@ -76,22 +84,44 @@ static inline uint32_t min_sleep_us(pm_soc_clk_t *clk)
                                         (os_idle_ticks ? os_idle_ticks - 1 : 0) * portTICK_RATE_MS * 1000;
     const uint32_t ccompare_sleep_us = os_sleep_us > 0 ? os_sleep_us : 0;
 
-    const uint32_t frc2_sleep_ticks = REG_READ(FRC2_ALARM) - clk->frc2_cnt;
-    const uint32_t frc2_sleep_us = frc2_sleep_ticks < FRC2_TICKS_MAX ? frc2_sleep_ticks / FRC2_TICKS_PER_US : 0;
+    if (clk->frc2_enable) {
+        const uint32_t frc2_sleep_ticks = REG_READ(FRC2_ALARM) - clk->frc2_cnt;
+        const uint32_t frc2_sleep_us = frc2_sleep_ticks < FRC2_TICKS_MAX ? frc2_sleep_ticks / FRC2_TICKS_PER_US : 0;
 
-    return MIN(ccompare_sleep_us, frc2_sleep_us);
+        return MIN(ccompare_sleep_us, frc2_sleep_us);
+    } else {
+        return ccompare_sleep_us;
+    }
 }
 
 static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
 {
     const uint32_t os_ccount = us * g_esp_ticks_per_us + clk->ccount;
-    const uint32_t frc2_cnt = us * FRC2_TICKS_PER_US + clk->frc2_cnt - 1;
 
     if (os_ccount >= _xt_tick_divisor) 
         soc_set_ccompare(os_ccount + 32);
     soc_set_ccount(os_ccount);
 
-    REG_WRITE(FRC2_LOAD,  frc2_cnt);
+    if (clk->frc2_enable) {
+        const uint32_t frc2_cnt = us * FRC2_TICKS_PER_US + clk->frc2_cnt - 1;
+
+        REG_WRITE(FRC2_LOAD,  frc2_cnt);
+    }
+}
+
+static void esp_sleep_wait_uart_empty(int no)
+{
+    int filled = 0;
+    const uart_dev_t *uart = (no == 0 ? &uart0 : &uart1);
+
+    while (uart->status.txfifo_cnt)
+        filled = 1;
+
+    if (filled) {
+        const uint32_t us = 10000000 / (UART_CLK_FREQ / uart->clk_div.val);
+
+        ets_delay_us(us);
+    }
 }
 
 esp_err_t esp_sleep_enable_timer_wakeup(uint32_t time_in_us)
@@ -143,6 +173,9 @@ void esp_sleep_start(void)
         soc_wait_int();
         return ;
     }
+
+    esp_sleep_wait_uart_empty(0);
+    esp_sleep_wait_uart_empty(1);
 
     int slept = 0;
     pm_soc_clk_t clk;
