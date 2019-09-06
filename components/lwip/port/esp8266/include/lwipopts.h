@@ -2245,6 +2245,19 @@ size_t memp_malloc_get_size(size_t type);
 #define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_OFF
 #endif
 
+#ifdef CONFIG_LWIP_TCP_TXRX_PBUF_DEBUG
+#define ESP_TCP_TXRX_PBUF_DEBUG         LWIP_DBG_ON
+#define LWIP_SEND_DATA_TO_WIFI                           1
+#define LWIP_RESEND_DATA_TO_WIFI_WHEN_WIFI_SEND_FAILED   2
+#define LWIP_RECV_DATA_FROM_WIFI                         3
+#define LWIP_RETRY_DATA_WHEN_RECV_ACK_TIMEOUT            4
+#define LWIP_FETCH_DATA_AT_TCPIP_THREAD                  5
+#define WIFI_SEND_DATA_FAILED                            6
+
+void tcp_print_status(int status, void* p, uint32_t tmp1, uint32_t tmp2, uint32_t tmp3);
+#else
+#define ESP_TCP_TXRX_PBUF_DEBUG         LWIP_DBG_OFF
+#endif
 /**
  * PBUF_CACHE_DEBUG: Enable debugging for SNTP.
  */
