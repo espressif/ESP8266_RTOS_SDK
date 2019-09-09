@@ -7,10 +7,8 @@
  */
 #include <string.h>
 
-#include "rom/ets_sys.h"
 #include "wpa/includes.h"
 #include "wpa/common.h"
-#include "wps/wps_i.h"
 
 #include "crypto/aes_wrap.h"
 #include "crypto/crypto.h"
@@ -19,7 +17,10 @@
 #include "crypto/sha256.h"
 #include "crypto/random.h"
 
+#include "wps/wps_i.h"
+#ifdef CONFIG_IDF_TARGET_ESP8266
 #include "esp_system.h"
+#endif
 
 #ifdef MEMLEAK_DEBUG
 static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
@@ -52,7 +53,13 @@ void ICACHE_FLASH_ATTR wps_kdf(const u8* key, const u8* label_prefix, size_t lab
 
     for (i = 1; i <= iter; i++) {
         WPA_PUT_BE32(i_buf, i);
-        hmac_sha256_vector(key, SHA256_MAC_LEN, 4, addr, len, hash);
+/*         hmac_sha256_vector(key, SHA256_MAC_LEN, 4, addr, len, hash); */
+		if (wps_crypto_funcs.hmac_sha256_vector) {
+		        wps_crypto_funcs.hmac_sha256_vector(key, SHA256_MAC_LEN, 4, addr, (int *)len, hash);
+		} else {
+			wpa_printf(MSG_ERROR, "In function %s, fail to reigster hmac sha256 vector function!\r\n", __FUNCTION__);
+			return ;
+		}
 
         if (i < iter) {
             os_memcpy(opos, hash, SHA256_MAC_LEN);
@@ -100,15 +107,29 @@ int ICACHE_FLASH_ATTR wps_derive_keys(struct wps_data* wps)
     }
 
     /* Own DH private key is not needed anymore */
+/*
+ * due to the public key calculated when wps start, it will not calculate anymore even when we build M1 message, also calculate the key need take a long time
+ * which would cause WPS fail, so we clean the key after WPS finished .
+ */
+#if !defined(ESP8266_WORKAROUND) && !defined(ESP32_WORKAROUND)
     wpabuf_free(wps->dh_privkey);
     wps->dh_privkey = NULL;
+#endif //ESP32_WORKAROUND
 
     wpa_hexdump_buf_key(MSG_DEBUG, "WPS: DH shared key", dh_shared);
 
     /* DHKey = SHA-256(g^AB mod p) */
     addr[0] = wpabuf_head(dh_shared);
     len[0] = wpabuf_len(dh_shared);
-    sha256_vector(1, addr, len, dhkey);
+/*     sha256_vector(1, addr, len, dhkey);
+ */ 
+	if (wps_crypto_funcs.sha256_vector) {
+	        wps_crypto_funcs.sha256_vector(1, addr, (int *)len, dhkey);
+	} else {
+		wpa_printf(MSG_ERROR, "In function %s, Fail to register sha256 vector function!\r\n", __FUNCTION__);
+		return -1;
+	}
+
     wpa_hexdump_key(MSG_DEBUG, "WPS: DHKey", dhkey, sizeof(dhkey));
     wpabuf_free(dh_shared);
 
@@ -119,7 +140,14 @@ int ICACHE_FLASH_ATTR wps_derive_keys(struct wps_data* wps)
     len[1] = ETH_ALEN;
     addr[2] = wps->nonce_r;
     len[2] = WPS_NONCE_LEN;
-    hmac_sha256_vector(dhkey, sizeof(dhkey), 3, addr, len, kdk);
+/*     hmac_sha256_vector(dhkey, sizeof(dhkey), 3, addr, len, kdk);
+ */
+	if (wps_crypto_funcs.hmac_sha256_vector) {
+	        wps_crypto_funcs.hmac_sha256_vector(dhkey, sizeof(dhkey), 3, addr, (int *)len, kdk);
+	} else {
+		wpa_printf(MSG_ERROR, "In function %s, Fail to register hmac sha256 vector function!\r\n", __FUNCTION__);
+		return -1;
+	}
 
     wpa_hexdump_key(MSG_DEBUG, "WPS: KDK", kdk, sizeof(kdk));
 
@@ -148,9 +176,18 @@ void ICACHE_FLASH_ATTR wps_derive_psk(struct wps_data* wps, const u8* dev_passwd
     hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN, dev_passwd,
                 (dev_passwd_len + 1) / 2, hash);
     os_memcpy(wps->psk1, hash, WPS_PSK_LEN);
-    hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN,
+/*     hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN,
                 dev_passwd + (dev_passwd_len + 1) / 2,
-                dev_passwd_len / 2, hash);
+                dev_passwd_len / 2, hash); */
+	if (wps_crypto_funcs.hmac_sha256) {
+	        wps_crypto_funcs.hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN,
+		                             dev_passwd + (dev_passwd_len + 1) / 2,
+		                             dev_passwd_len / 2, hash);
+	} else {
+		wpa_printf(MSG_ERROR, "In function %s, fail to register hmac_sha256 function!\r\n", __FUNCTION__);
+		return ;
+	}
+
     os_memcpy(wps->psk2, hash, WPS_PSK_LEN);
 
     wpa_hexdump_ascii_key(MSG_DEBUG, "WPS: Device Password",
@@ -183,11 +220,21 @@ struct wpabuf* ICACHE_FLASH_ATTR wps_decrypt_encr_settings(struct wps_data* wps,
     wpa_hexdump(MSG_MSGDUMP, "WPS: Encrypted Settings", encr, encr_len);
     wpabuf_put_data(decrypted, encr + block_size, encr_len - block_size);
 
-    if (aes_128_cbc_decrypt(wps->keywrapkey, encr, wpabuf_mhead(decrypted),
+/*     if (aes_128_cbc_decrypt(wps->keywrapkey, encr, wpabuf_mhead(decrypted),
                             wpabuf_len(decrypted))) {
         wpabuf_free(decrypted);
         return NULL;
-    }
+    } */
+	if (wps_crypto_funcs.aes_128_decrypt) {
+	        if (wps_crypto_funcs.aes_128_decrypt(wps->keywrapkey, encr, wpabuf_mhead(decrypted),
+				                     wpabuf_len(decrypted))) {
+		        wpabuf_free(decrypted);
+		        return NULL;
+	    }
+	} else {
+                wpa_printf(MSG_ERROR, "In function %s, fail to register aes 128 decrypt function!\r\n", __FUNCTION__);
+		return NULL;
+	}
 
     wpa_hexdump_buf_key(MSG_MSGDUMP, "WPS: Decrypted Encrypted Settings",
                         decrypted);
@@ -257,10 +304,17 @@ unsigned int ICACHE_FLASH_ATTR wps_generate_pin(void)
 
     /* Generate seven random digits for the PIN */
     //if (random_get_bytes((unsigned char *) &val, sizeof(val)) < 0) {
+#ifdef CONFIG_IDF_TARGET_ESP8266
     struct os_time now;
     os_get_time(&now);
     val = esp_random() ^ now.sec ^ now.usec;
     //}
+#else
+	/* Generate seven random digits for the PIN */
+	if (random_get_bytes((unsigned char *) &val, sizeof(val)) < 0) {
+		return -1;
+	}
+#endif
     val %= 10000000;
 
     /* Append checksum digit */

@@ -20,12 +20,12 @@
 #include "crypto/md5.h"
 #include "crypto/crypto.h"
 
-#ifndef CONFIG_ESP_SHA
+//#ifndef CONFIG_ESP_SHA
 typedef struct SHA1Context SHA1_CTX;
 
 void SHA1Transform(u32 state[5], const unsigned char buffer[64]);
 
-#endif
+//#endif
 
 /**
  * sha1_vector - SHA-1 hash for data vector
@@ -49,7 +49,7 @@ sha1_vector(size_t num_elem, const u8 *addr[], const size_t *len, u8 *mac)
 }
 
 
-#ifndef CONFIG_ESP_SHA
+#if 1//ndef CONFIG_ESP_SHA
 /* ===== start - public domain SHA1 implementation ===== */
 
 /*

@@ -1,4 +1,4 @@
-COMPONENT_ADD_INCLUDEDIRS := include port/include
-COMPONENT_SRCDIRS := src/crypto src/wps port
+COMPONENT_ADD_INCLUDEDIRS := include include/wps port/include
+COMPONENT_SRCDIRS := src/crypto src/wps src/fast_crypto port
 
-CFLAGS += -DEMBEDDED_SUPP -D__ets__ -DESPRESSIF_USE -DCONFIG_WPS2 -DCONFIG_WPS_PIN -DUSE_WPS_TASK -Wno-unused-but-set-variable -Wno-empty-body
+CFLAGS += -DEMBEDDED_SUPP -D__ets__ -DESPRESSIF_USE -DCONFIG_WPS2 -DCONFIG_WPS_PIN -DUSE_WPS_TASK -DESP8266_WORKAROUND -Wno-unused-but-set-variable -Wno-empty-body

@@ -103,6 +103,17 @@ int sha256_vector(size_t num_elem, const u8 *addr[], const size_t *len,
 		  u8 *mac);
 
 /**
+ * fast_sha256_vector - fast SHA256 hash for data vector
+ * @num_elem: Number of elements in the data vector
+ * @addr: Pointers to the data areas
+ * @len: Lengths of the data blocks
+ * @mac: Buffer for the hash
+ * Returns: 0 on success, -1 on failure
+ */
+int fast_sha256_vector(size_t num_elem, const uint8_t *addr[], const size_t *len,
+		       uint8_t *mac);
+			   
+/**
  * des_encrypt - Encrypt one block with DES
  * @clear: 8 octets (in)
  * @key: 7 octets (in) (no parity bits included)
@@ -452,6 +463,31 @@ int __must_check crypto_mod_exp(const u8 *base, size_t base_len,
 				const u8 *power, size_t power_len,
 				const u8 *modulus, size_t modulus_len,
 				u8 *result, size_t *result_len);
+
+/**
+ * fast_crypto_mod_exp - Modular exponentiation of large integers
+ * @base: Base integer (big endian byte array)
+ * @base_len: Length of base integer in bytes
+ * @power: Power integer (big endian byte array)
+ * @power_len: Length of power integer in bytes
+ * @modulus: Modulus integer (big endian byte array)
+ * @modulus_len: Length of modulus integer in bytes
+ * @result: Buffer for the result
+ * @result_len: Result length (max buffer size on input, real len on output)
+ * Returns: 0 on success, -1 on failure
+ *
+ * This function calculates result = base ^ power mod modulus. modules_len is
+ * used as the maximum size of modulus buffer. It is set to the used size on
+ * success.
+ *
+ * This function is only used with internal TLSv1 implementation
+ * (CONFIG_TLS=internal). If that is not used, the crypto wrapper does not need
+ * to implement this.
+ */
+int __must_check fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
+				     const uint8_t *power, size_t power_len,
+				     const uint8_t *modulus, size_t modulus_len,
+				     uint8_t *result, size_t *result_len);
 
 /**
  * rc4_skip - XOR RC4 stream to given data with skip-stream-start

@@ -5,8 +5,6 @@
  * This software may be distributed under the terms of the BSD license.
  * See README for more details.
  */
-#include "rom/ets_sys.h"
-
 #include "wpa/includes.h"
 #include "wpa/common.h"
 #include "wps/wps_i.h"

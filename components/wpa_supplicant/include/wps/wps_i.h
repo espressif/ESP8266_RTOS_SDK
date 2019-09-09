@@ -11,6 +11,7 @@
 
 #include "wps/wps.h"
 #include "wps/wps_attr_parse.h"
+#include "esp_wifi_crypto_types.h"
 
 #ifdef CONFIG_WPS_NFC
 struct wps_nfc_pw_token;
@@ -149,9 +150,11 @@ typedef struct {
 
 typedef struct {
 	WPS_TYPE_t wps_type;
+	const wps_crypto_funcs_t *crypto_funcs;
 	esp_factory_information_t factory_info;
 }esp_wps_config_t;
 
+wps_crypto_funcs_t wps_crypto_funcs;
 
 /* wps_common.c */
 void wps_kdf(const u8 *key, const u8 *label_prefix, size_t label_prefix_len,

@@ -5,12 +5,12 @@
  * This software may be distributed under the terms of the BSD license.
  * See README for more details.
  */
-#include "rom/ets_sys.h"
-
 #include "wpa/includes.h"
 #include "wpa/common.h"
+
 #include "wps/utils/uuid.h"
 #include "wpa/list.h"
+
 #include "wpa/ieee802_11_defs.h"
 #include "wps/wps_i.h"
 #include "wps/wps_dev_attr.h"
@@ -1605,7 +1605,14 @@ static int ICACHE_FLASH_ATTR wps_build_r_hash(struct wps_data* wps, struct wpabu
     len[2] = wpabuf_len(wps->dh_pubkey_e);
     addr[3] = wpabuf_head(wps->dh_pubkey_r);
     len[3] = wpabuf_len(wps->dh_pubkey_r);
-    hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
+/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash); */
+	if (wps_crypto_funcs.hmac_sha256_vector) {
+		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
+	} else {
+		wpa_printf(MSG_ERROR, "In function %s, fail to register hmac_sha256_vector function!\r\n", __FUNCTION__);
+		return -1;
+	}
+
     wpa_hexdump(MSG_DEBUG, "WPS: R-Hash1", hash, SHA256_MAC_LEN);
 
     wpa_printf(MSG_DEBUG, "WPS:  * R-Hash2");
@@ -1615,7 +1622,15 @@ static int ICACHE_FLASH_ATTR wps_build_r_hash(struct wps_data* wps, struct wpabu
     /* R-Hash2 = HMAC_AuthKey(R-S2 || PSK2 || PK_E || PK_R) */
     addr[0] = wps->snonce + WPS_SECRET_NONCE_LEN;
     addr[1] = wps->psk2;
-    hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
+/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
+ */
+	if (wps_crypto_funcs.hmac_sha256_vector) {
+		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
+	} else {
+		wpa_printf(MSG_ERROR, "In function %s, fail to register hmac_sha256_vector function!\r\n", __FUNCTION__);
+		return -1;
+	}
+
     wpa_hexdump(MSG_DEBUG, "WPS: R-Hash2", hash, SHA256_MAC_LEN);
 
     return 0;
@@ -2433,7 +2448,14 @@ static int ICACHE_FLASH_ATTR wps_process_e_snonce1(struct wps_data* wps, const u
     len[2] = wpabuf_len(wps->dh_pubkey_e);
     addr[3] = wpabuf_head(wps->dh_pubkey_r);
     len[3] = wpabuf_len(wps->dh_pubkey_r);
-    hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
+/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
+ */
+	if (wps_crypto_funcs.hmac_sha256_vector) {
+		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
+	} else {
+		wpa_printf(MSG_ERROR, "In function %s, fail to register hmac_sha256_vector function!\r\n", __FUNCTION__);
+		return -1;
+	}
 
     if (os_memcmp(wps->peer_hash1, hash, WPS_HASH_LEN) != 0) {
         wpa_printf(MSG_DEBUG, "WPS: E-Hash1 derived from E-S1 does "
@@ -2473,8 +2495,15 @@ static int ICACHE_FLASH_ATTR wps_process_e_snonce2(struct wps_data* wps, const u
     len[2] = wpabuf_len(wps->dh_pubkey_e);
     addr[3] = wpabuf_head(wps->dh_pubkey_r);
     len[3] = wpabuf_len(wps->dh_pubkey_r);
-    hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
-
+/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
+ */
+	if (wps_crypto_funcs.hmac_sha256_vector) {
+		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
+	} else {
+		wpa_printf(MSG_ERROR, "In function %s, fail to register hmac_sha256_vector function!\r\n", __FUNCTION__);
+		return -1;
+	}
+    
     if (os_memcmp(wps->peer_hash2, hash, WPS_HASH_LEN) != 0) {
         wpa_printf(MSG_DEBUG, "WPS: E-Hash2 derived from E-S2 does "
                    "not match with the pre-committed value");

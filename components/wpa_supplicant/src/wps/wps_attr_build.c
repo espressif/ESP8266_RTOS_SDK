@@ -5,19 +5,22 @@
  * This software may be distributed under the terms of the BSD license.
  * See README for more details.
  */
-#include "rom/ets_sys.h"
-#include "wps/asm/irqflags.h"
+
 #include "wpa/includes.h"
 #include "wpa/common.h"
 #include "wpa/wpa_debug.h"
-#include "wpa/ieee802_11_defs.h"
-#include "wps/wps_i.h"
+
 #include "crypto/aes_wrap.h"
 #include "crypto/crypto.h"
 #include "crypto/dh_group5.h"
 #include "crypto/sha256.h"
 #include "crypto/random.h"
-#include "esp_wifi_osi.h"
+
+#include "wpa/ieee802_11_defs.h"
+#include "wps/wps_i.h"
+
+#ifdef CONFIG_IDF_TARGET_ESP8266
+#include "wps/asm/irqflags.h"
 
 #define API_MUTEX_DECLARE(t)    local_irq_declare(t)
 #define API_MUTEX_TAKE(t)       local_irq_save(t)
@@ -25,6 +28,7 @@
 
 extern bool system_overclock(void);
 extern bool system_restoreclock(void);
+#endif
 
 int ICACHE_FLASH_ATTR wps_build_public_key(struct wps_data* wps, struct wpabuf* msg, wps_key_mode_t mode)
 {
@@ -55,21 +59,23 @@ int ICACHE_FLASH_ATTR wps_build_public_key(struct wps_data* wps, struct wpabuf* 
             dh5_free(wps->dh_ctx);
 
             wpa_printf(MSG_DEBUG, "build public key start");
+#ifdef CONFIG_IDF_TARGET_ESP8266
             API_MUTEX_DECLARE(c_tmp);
             API_MUTEX_TAKE(c_tmp);
             //pp_soft_wdt_stop();
             system_overclock();
             //REG_SET_BIT(0x3ff00014, BIT(0));        //change CPU to 160Mhz
             //ets_update_cpu_frequency(160);
-
+#endif
             wps->dh_ctx = dh5_init(&wps->dh_privkey, &pubkey);
+#ifdef CONFIG_IDF_TARGET_ESP8266
             system_restoreclock();
             //REG_CLR_BIT(0x3ff00014, BIT(0));        //change CPU to 80Mhz
             //ets_update_cpu_frequency(80);
 
             //pp_soft_wdt_restart();
             API_MUTEX_GIVE(c_tmp);
-
+#endif
             wpa_printf(MSG_DEBUG, "build public key finish");
 
             pubkey = wpabuf_zeropad(pubkey, 192);
@@ -185,8 +191,14 @@ int ICACHE_FLASH_ATTR wps_build_authenticator(struct wps_data* wps, struct wpabu
     len[0] = wpabuf_len(wps->last_msg);
     addr[1] = wpabuf_head(msg);
     len[1] = wpabuf_len(msg);
-    hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 2, addr, len, hash);
-
+    //hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 2, addr, len, hash);
+	if (wps_crypto_funcs.hmac_sha256_vector) {
+	        wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 2, addr, (int *)len, hash);
+            ets_printf("test wps\n");
+	} else {
+		wpa_printf(MSG_ERROR, "Fail to register hmac sha256 vector!\r\n");
+		return -1;
+	}
     wpa_printf(MSG_DEBUG, "WPS:  * Authenticator");
     wpabuf_put_be16(msg, ATTR_AUTHENTICATOR);
     wpabuf_put_be16(msg, WPS_AUTHENTICATOR_LEN);
@@ -347,9 +359,16 @@ int ICACHE_FLASH_ATTR wps_build_key_wrap_auth(struct wps_data* wps, struct wpabu
     u8 hash[SHA256_MAC_LEN];
 
     wpa_printf(MSG_DEBUG, "WPS:  * Key Wrap Authenticator");
-    hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN, wpabuf_head(msg),
+/*     hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN, wpabuf_head(msg),
                 wpabuf_len(msg), hash);
-
+ */
+	if (wps_crypto_funcs.hmac_sha256) {
+	        wps_crypto_funcs.hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN, wpabuf_head(msg),
+		                             wpabuf_len(msg), hash);
+	} else {
+		wpa_printf(MSG_ERROR, "Fail to register hmac sha256 function!\r\n");
+		return -1;
+	}
     wpabuf_put_be16(msg, ATTR_KEY_WRAP_AUTH);
     wpabuf_put_be16(msg, WPS_KWA_LEN);
     wpabuf_put_data(msg, hash, WPS_KWA_LEN);
@@ -382,9 +401,17 @@ int ICACHE_FLASH_ATTR wps_build_encr_settings(struct wps_data* wps, struct wpabu
     data = wpabuf_put(msg, 0);
     wpabuf_put_buf(msg, plain);
 
-    if (aes_128_cbc_encrypt(wps->keywrapkey, iv, data, wpabuf_len(plain))) {
+/*     if (aes_128_cbc_encrypt(wps->keywrapkey, iv, data, wpabuf_len(plain))) {
         return -1;
-    }
+    } */
+	wpa_printf(MSG_DEBUG,  "WPS:  * AES 128 Encrypted Settings");
+	if (wps_crypto_funcs.aes_128_encrypt) {
+	        if (wps_crypto_funcs.aes_128_encrypt(wps->keywrapkey, iv, data, wpabuf_len(plain)))
+		        return -1;
+	} else {
+		wpa_printf(MSG_ERROR, "Fail to register aes_128_encrypt function!\r\n");
+		return -1;
+	}
 
     return 0;
 }
@@ -401,8 +428,14 @@ int ICACHE_FLASH_ATTR wps_build_oob_dev_pw(struct wpabuf* msg, u16 dev_pw_id,
 
     addr[0] = wpabuf_head(pubkey);
     hash_len = wpabuf_len(pubkey);
-    sha256_vector(1, addr, &hash_len, pubkey_hash);
-
+/*     sha256_vector(1, addr, &hash_len, pubkey_hash); */
+	if (wps_crypto_funcs.sha256_vector) {
+	        wps_crypto_funcs.sha256_vector(1, addr, &hash_len, pubkey_hash);
+	} else {
+		wpa_printf(MSG_ERROR, "Fail to register sha256 vector function!\r\n");
+		return -1;
+	}
+    
     wpabuf_put_be16(msg, ATTR_OOB_DEVICE_PASSWORD);
     wpabuf_put_be16(msg, WPS_OOB_PUBKEY_HASH_LEN + 2 + dev_pw_len);
     wpabuf_put_data(msg, pubkey_hash, WPS_OOB_PUBKEY_HASH_LEN);
