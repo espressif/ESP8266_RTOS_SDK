@@ -23,7 +23,7 @@
 
 #include "pthread_internal.h"
 
-#define PTHREAD_TLS_INDEX 0
+#define PTHREAD_TLS_INDEX 1
 
 typedef void (*pthread_destructor_t)(void*);
 
