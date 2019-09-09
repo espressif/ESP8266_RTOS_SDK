@@ -44,7 +44,9 @@ else()
         "driver/i2s.c"
         "driver/pwm.c"
         "driver/spi.c"
-        "driver/uart.c")
+        "driver/uart.c"
+        "driver/ir_tx.c"
+        "driver/ir_rx.c")
 
     set(include_dirs "include" "include/driver")
 
