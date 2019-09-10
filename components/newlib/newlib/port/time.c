@@ -16,6 +16,7 @@
 #include <reent.h>
 #include <sys/times.h>
 #include <sys/time.h>
+#include <sys/errno.h>
 
 #include "esp_system.h"
 #include "esp_timer.h"
@@ -105,4 +106,39 @@ unsigned int sleep(unsigned int seconds)
     vTaskDelay(seconds * (1000 / portTICK_PERIOD_MS));
 
     return 0;
+}
+
+int clock_gettime (clockid_t clock_id, struct timespec *tp)
+{
+#if defined( WITH_FRC ) || defined( WITH_RTC )
+    if (tp == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+    struct timeval tv;
+    uint64_t monotonic_time_us = 0;
+    switch (clock_id) {
+        case CLOCK_REALTIME:
+            _gettimeofday_r(NULL, &tv, NULL);
+            tp->tv_sec = tv.tv_sec;
+            tp->tv_nsec = tv.tv_usec * 1000L;
+            break;
+        case CLOCK_MONOTONIC:
+#if defined( WITH_FRC )
+            monotonic_time_us = (uint64_t) esp_timer_get_time();
+#elif defined( WITH_RTC )
+            monotonic_time_us = get_rtc_time_us();
+#endif // WITH_FRC
+            tp->tv_sec = monotonic_time_us / 1000000LL;
+            tp->tv_nsec = (monotonic_time_us % 1000000LL) * 1000L;
+            break;
+        default:
+            errno = EINVAL;
+            return -1;
+    }
+    return 0;
+#else
+    errno = ENOSYS;
+    return -1;
+#endif
 }

@@ -20,18 +20,14 @@
 #include <errno.h>
 #include <pthread.h>
 #include <string.h>
-#include <stdlib.h>
 #include "esp_err.h"
 #include "esp_attr.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
-#include "freertos/private/list.h"
 
 #include <sys/queue.h>
 #include <sys/time.h>
-
-#ifdef CONFIG_ENABLE_PTHREAD
 
 #define LOG_LOCAL_LEVEL CONFIG_LOG_DEFAULT_LEVEL
 #include "esp_log.h"
@@ -202,4 +198,7 @@ int pthread_cond_destroy(pthread_cond_t *cv)
     return ret;
 }
 
-#endif
+/* Hook function to force linking this file */
+void pthread_include_pthread_cond_var_impl(void)
+{
+}
