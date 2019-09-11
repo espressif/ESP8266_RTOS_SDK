@@ -20,6 +20,7 @@
 #include "crypto/sha256.h"
 #include "crypto/crypto.h"
 
+#if CONFIG_SSL_USING_MBEDTLS
 
 /**
  * fast_hmac_sha256_vector - HMAC-SHA256 over data vector (RFC 2104)
@@ -163,3 +164,4 @@ fast_sha256_prf(const uint8_t *key, size_t key_len, const char *label,
         counter++;
     }
 }
+#endif

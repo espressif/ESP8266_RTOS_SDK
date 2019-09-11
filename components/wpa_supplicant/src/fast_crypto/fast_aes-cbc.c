@@ -7,6 +7,8 @@
 #include "crypto/common.h"
 #include "crypto/aes.h"
 #include "crypto/aes_wrap.h"
+
+#if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/aes.h"
 
 /**
@@ -76,3 +78,4 @@ fast_aes_128_cbc_decrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data, s
     return ret;
 
 }
+#endif

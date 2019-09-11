@@ -13,6 +13,8 @@
 #include "crypto/crypto.h"
 #include "crypto/sha1_i.h"
 #include "crypto/md5_i.h"
+
+#if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/sha256.h"
 
 
@@ -33,7 +35,7 @@ struct fast_crypto_hash {
 	size_t key_len;
 };
 
-struct crypto_hash *  fast_crypto_hash_init(enum crypto_hash_alg alg, const u8 *key,
+struct crypto_hash*  fast_crypto_hash_init(enum crypto_hash_alg alg, const u8 *key,
 				      size_t key_len)
 {	
 	struct fast_crypto_hash *ctx;
@@ -131,7 +133,7 @@ struct crypto_hash *  fast_crypto_hash_init(enum crypto_hash_alg alg, const u8 *
 }
 
 
-void  fast_crypto_hash_update(struct crypto_hash *ctx, const u8 *data, size_t len)
+void fast_crypto_hash_update(struct crypto_hash *ctx, const u8 *data, size_t len)
 {
         
         struct fast_crypto_hash *fast_ctx;
@@ -160,8 +162,7 @@ void  fast_crypto_hash_update(struct crypto_hash *ctx, const u8 *data, size_t le
 	}
 }
 
-
-int  fast_crypto_hash_finish(struct crypto_hash *ctx, u8 *mac, size_t *len)
+int fast_crypto_hash_finish(struct crypto_hash *ctx, u8 *mac, size_t *len)
 {
         u8 k_pad[64];
 	size_t i;
@@ -280,3 +281,4 @@ int  fast_crypto_hash_finish(struct crypto_hash *ctx, u8 *mac, size_t *len)
 
 	return 0;
 }
+#endif

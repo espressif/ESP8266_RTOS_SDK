@@ -17,6 +17,8 @@
 #include "crypto/common.h"
 #include "crypto/aes.h"
 #include "crypto/aes_wrap.h"
+
+#if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/aes.h"
 
 /**
@@ -81,3 +83,4 @@ int fast_aes_wrap(const uint8_t *kek, int n, const uint8_t *plain, uint8_t *ciph
 
     return ret;
 }
+#endif

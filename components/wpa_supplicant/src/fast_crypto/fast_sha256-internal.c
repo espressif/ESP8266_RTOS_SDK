@@ -14,6 +14,8 @@
 
 #include "crypto/includes.h"
 #include "crypto/common.h"
+
+#if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/sha256.h"
 
 /**
@@ -55,4 +57,4 @@ out:
 
     return ret;
 }
-
+#endif

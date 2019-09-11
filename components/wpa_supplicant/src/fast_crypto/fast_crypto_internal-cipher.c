@@ -21,6 +21,8 @@
 #if defined(CONFIG_DES) || defined(CONFIG_DES3)
 #include "crypto/des_i.h"
 #endif
+
+#if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/aes.h"
 
 struct fast_crypto_cipher {
@@ -285,3 +287,4 @@ void  fast_crypto_cipher_deinit(struct crypto_cipher *ctx)
     }
     os_free(ctx);
 }
+#endif

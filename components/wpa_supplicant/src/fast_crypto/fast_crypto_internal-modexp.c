@@ -16,10 +16,9 @@
 
 #include "crypto/common.h"
 #include "crypto/crypto.h"
-#include "mbedtls/bignum.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#if CONFIG_SSL_USING_MBEDTLS
+#include "mbedtls/bignum.h"
 
 int 
 fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
@@ -38,10 +37,8 @@ fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
     mbedtls_mpi_read_binary(&bn_base, base, base_len);
     mbedtls_mpi_read_binary(&bn_exp, power, power_len);
     mbedtls_mpi_read_binary(&bn_modulus, modulus, modulus_len);
-		    //printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, xTaskGetTickCount());
-
+    
     ret = mbedtls_mpi_exp_mod(&bn_result, &bn_base, &bn_exp, &bn_modulus, &bn_rinv);
-        		//printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, xTaskGetTickCount());
 
     if (ret < 0) {
         mbedtls_mpi_free(&bn_base);
@@ -63,3 +60,4 @@ fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
 
     return ret;
 }
+#endif

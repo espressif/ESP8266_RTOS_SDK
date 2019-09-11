@@ -14,6 +14,8 @@
 
 #include "crypto/includes.h"
 #include "crypto/common.h"
+
+#if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/aes.h"
 
 /**
@@ -82,3 +84,4 @@ fast_aes_unwrap(const uint8_t *kek, int n, const uint8_t *cipher, uint8_t *plain
 
     return ret;
 }
+#endif
