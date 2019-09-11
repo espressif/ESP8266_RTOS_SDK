@@ -2716,15 +2716,12 @@ static int wps_process_wps_state(struct wps_data* wps, const u8* state)
 
 static int wps_process_assoc_state(struct wps_data* wps, const u8* assoc)
 {
-    u16 a = 0;
-
     if (assoc == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Association State received");
         return -1;
     }
 
-    a = WPA_GET_BE16(assoc);
-    wpa_printf(MSG_DEBUG, "WPS: Enrollee Association State %d", a);
+    wpa_printf(MSG_DEBUG, "WPS: Enrollee Association State %d", WPA_GET_BE16(assoc));
 
     return 0;
 }
@@ -2732,15 +2729,12 @@ static int wps_process_assoc_state(struct wps_data* wps, const u8* assoc)
 
 static int wps_process_config_error(struct wps_data* wps, const u8* err)
 {
-    u16 e = 0;
-
     if (err == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Configuration Error received");
         return -1;
     }
 
-    e = WPA_GET_BE16(err);
-    wpa_printf(MSG_DEBUG, "WPS: Enrollee Configuration Error %d", e);
+    wpa_printf(MSG_DEBUG, "WPS: Enrollee Configuration Error %d", WPA_GET_BE16(err));
 
     return 0;
 }
