@@ -10,7 +10,7 @@
 #include "wps/wps_i.h"
 #include "crypto/sha256.h"
 
-int ICACHE_FLASH_ATTR wps_process_authenticator(struct wps_data* wps, const u8* authenticator,
+int wps_process_authenticator(struct wps_data* wps, const u8* authenticator,
         const struct wpabuf* msg)
 {
     u8 hash[SHA256_MAC_LEN];
@@ -36,8 +36,7 @@ int ICACHE_FLASH_ATTR wps_process_authenticator(struct wps_data* wps, const u8* 
     len[0] = wpabuf_len(wps->last_msg);
     addr[1] = wpabuf_head(msg);
     len[1] = wpabuf_len(msg) - 4 - WPS_AUTHENTICATOR_LEN;
-/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 2, addr, len, hash);
- */
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 	        wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 2, addr, (int *)len, hash);
 	} else {
@@ -54,7 +53,7 @@ int ICACHE_FLASH_ATTR wps_process_authenticator(struct wps_data* wps, const u8* 
 }
 
 
-int ICACHE_FLASH_ATTR wps_process_key_wrap_auth(struct wps_data* wps, struct wpabuf* msg,
+int wps_process_key_wrap_auth(struct wps_data* wps, struct wpabuf* msg,
         const u8* key_wrap_auth)
 {
     u8 hash[SHA256_MAC_LEN];
@@ -75,8 +74,6 @@ int ICACHE_FLASH_ATTR wps_process_key_wrap_auth(struct wps_data* wps, struct wpa
         return -1;
     }
 
-/*     hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN, head, len, hash);
- */
 	if (wps_crypto_funcs.hmac_sha256) {
 	        wps_crypto_funcs.hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN, head, len, hash);
 	} else {
@@ -93,7 +90,7 @@ int ICACHE_FLASH_ATTR wps_process_key_wrap_auth(struct wps_data* wps, struct wpa
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_network_idx(struct wps_credential* cred,
+static int wps_process_cred_network_idx(struct wps_credential* cred,
         const u8* idx)
 {
     if (idx == NULL) {
@@ -108,7 +105,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_network_idx(struct wps_credential*
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_ssid(struct wps_credential* cred, const u8* ssid,
+static int wps_process_cred_ssid(struct wps_credential* cred, const u8* ssid,
         size_t ssid_len)
 {
     if (ssid == NULL) {
@@ -133,7 +130,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_ssid(struct wps_credential* cred, 
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_auth_type(struct wps_credential* cred,
+static int wps_process_cred_auth_type(struct wps_credential* cred,
         const u8* auth_type)
 {
     if (auth_type == NULL) {
@@ -150,7 +147,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_auth_type(struct wps_credential* c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_encr_type(struct wps_credential* cred,
+static int wps_process_cred_encr_type(struct wps_credential* cred,
         const u8* encr_type)
 {
     if (encr_type == NULL) {
@@ -167,7 +164,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_encr_type(struct wps_credential* c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_network_key_idx(struct wps_credential* cred,
+static int wps_process_cred_network_key_idx(struct wps_credential* cred,
         const u8* key_idx)
 {
     if (key_idx == NULL) {
@@ -181,7 +178,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_network_key_idx(struct wps_credent
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_network_key(struct wps_credential* cred,
+static int wps_process_cred_network_key(struct wps_credential* cred,
         const u8* key, size_t key_len)
 {
     if (key == NULL) {
@@ -210,7 +207,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_network_key(struct wps_credential*
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_mac_addr(struct wps_credential* cred,
+static int wps_process_cred_mac_addr(struct wps_credential* cred,
         const u8* mac_addr)
 {
     if (mac_addr == NULL) {
@@ -226,7 +223,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_mac_addr(struct wps_credential* cr
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_eap_type(struct wps_credential* cred,
+static int wps_process_cred_eap_type(struct wps_credential* cred,
         const u8* eap_type, size_t eap_type_len)
 {
     if (eap_type == NULL) {
@@ -239,7 +236,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_eap_type(struct wps_credential* cr
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_eap_identity(struct wps_credential* cred,
+static int wps_process_cred_eap_identity(struct wps_credential* cred,
         const u8* identity,
         size_t identity_len)
 {
@@ -254,7 +251,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_eap_identity(struct wps_credential
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_key_prov_auto(struct wps_credential* cred,
+static int wps_process_cred_key_prov_auto(struct wps_credential* cred,
         const u8* key_prov_auto)
 {
     if (key_prov_auto == NULL) {
@@ -268,7 +265,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_key_prov_auto(struct wps_credentia
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_802_1x_enabled(struct wps_credential* cred,
+static int wps_process_cred_802_1x_enabled(struct wps_credential* cred,
         const u8* dot1x_enabled)
 {
     if (dot1x_enabled == NULL) {
@@ -281,7 +278,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_802_1x_enabled(struct wps_credenti
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_ap_channel(struct wps_credential* cred,
+static int wps_process_cred_ap_channel(struct wps_credential* cred,
         const u8* ap_channel)
 {
     if (ap_channel == NULL) {
@@ -295,7 +292,7 @@ static int ICACHE_FLASH_ATTR wps_process_cred_ap_channel(struct wps_credential* 
 }
 
 
-static int ICACHE_FLASH_ATTR wps_workaround_cred_key(struct wps_credential* cred)
+static int wps_workaround_cred_key(struct wps_credential* cred)
 {
     if (cred->auth_type & (WPS_AUTH_WPAPSK | WPS_AUTH_WPA2PSK) &&
             cred->key_len > 8 && cred->key_len < 64 &&
@@ -322,7 +319,7 @@ static int ICACHE_FLASH_ATTR wps_workaround_cred_key(struct wps_credential* cred
 }
 
 
-int ICACHE_FLASH_ATTR wps_process_cred(struct wps_parse_attr* attr,
+int wps_process_cred(struct wps_parse_attr* attr,
                                        struct wps_credential* cred)
 {
     wpa_printf(MSG_DEBUG, "WPS: Process Credential");
@@ -350,7 +347,7 @@ int ICACHE_FLASH_ATTR wps_process_cred(struct wps_parse_attr* attr,
 }
 
 
-int ICACHE_FLASH_ATTR wps_process_ap_settings(struct wps_parse_attr* attr,
+int wps_process_ap_settings(struct wps_parse_attr* attr,
         struct wps_credential* cred)
 {
     wpa_printf(MSG_DEBUG, "WPS: Processing AP Settings");

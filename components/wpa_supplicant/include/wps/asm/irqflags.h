@@ -23,6 +23,7 @@
 extern "C" {
 #endif
 
+#ifdef CONFIG_IDF_TARGET_ESP8266
 /**
  * @brief save IRQ state and disable IRQ
  *
@@ -50,6 +51,7 @@ static inline void arch_local_irq_restore(uint32_t tmp)
 #define local_irq_declare(_t)       uint32_t (_t)
 #define local_irq_save(_t)          (_t) = arch_local_irq_save()
 #define local_irq_restore(_t)       arch_local_irq_restore(_t)
+#endif
 
 #ifdef __cplusplus
 }

@@ -14,7 +14,7 @@
 static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
 #endif
 
-int ICACHE_FLASH_ATTR wps_build_manufacturer(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_manufacturer(struct wps_device_data* dev, struct wpabuf* msg)
 {
     size_t len;
     wpa_printf(MSG_DEBUG, "WPS:  * Manufacturer");
@@ -40,7 +40,7 @@ int ICACHE_FLASH_ATTR wps_build_manufacturer(struct wps_device_data* dev, struct
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_model_name(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_model_name(struct wps_device_data* dev, struct wpabuf* msg)
 {
     size_t len;
     wpa_printf(MSG_DEBUG, "WPS:  * Model Name");
@@ -66,7 +66,7 @@ int ICACHE_FLASH_ATTR wps_build_model_name(struct wps_device_data* dev, struct w
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_model_number(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_model_number(struct wps_device_data* dev, struct wpabuf* msg)
 {
     size_t len;
     wpa_printf(MSG_DEBUG, "WPS:  * Model Number");
@@ -92,7 +92,7 @@ int ICACHE_FLASH_ATTR wps_build_model_number(struct wps_device_data* dev, struct
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_serial_number(struct wps_device_data* dev,
+static int wps_build_serial_number(struct wps_device_data* dev,
         struct wpabuf* msg)
 {
     size_t len;
@@ -119,7 +119,7 @@ static int ICACHE_FLASH_ATTR wps_build_serial_number(struct wps_device_data* dev
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_primary_dev_type(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_primary_dev_type(struct wps_device_data* dev, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Primary Device Type");
     wpabuf_put_be16(msg, ATTR_PRIMARY_DEV_TYPE);
@@ -129,7 +129,7 @@ int ICACHE_FLASH_ATTR wps_build_primary_dev_type(struct wps_device_data* dev, st
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_secondary_dev_type(struct wps_device_data* dev,
+int wps_build_secondary_dev_type(struct wps_device_data* dev,
         struct wpabuf* msg)
 {
     if (!dev->num_sec_dev_types) {
@@ -146,7 +146,7 @@ int ICACHE_FLASH_ATTR wps_build_secondary_dev_type(struct wps_device_data* dev,
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_req_dev_type(struct wps_device_data* dev, struct wpabuf* msg,
+int wps_build_req_dev_type(struct wps_device_data* dev, struct wpabuf* msg,
         unsigned int num_req_dev_types,
         const u8* req_dev_types)
 {
@@ -166,7 +166,7 @@ int ICACHE_FLASH_ATTR wps_build_req_dev_type(struct wps_device_data* dev, struct
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_dev_name(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_dev_name(struct wps_device_data* dev, struct wpabuf* msg)
 {
     size_t len;
     wpa_printf(MSG_DEBUG, "WPS:  * Device Name");
@@ -192,7 +192,7 @@ int ICACHE_FLASH_ATTR wps_build_dev_name(struct wps_device_data* dev, struct wpa
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_device_attrs(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_device_attrs(struct wps_device_data* dev, struct wpabuf* msg)
 {
     if (wps_build_manufacturer(dev, msg) ||
             wps_build_model_name(dev, msg) ||
@@ -207,7 +207,7 @@ int ICACHE_FLASH_ATTR wps_build_device_attrs(struct wps_device_data* dev, struct
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_os_version(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_os_version(struct wps_device_data* dev, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * OS Version");
     wpabuf_put_be16(msg, ATTR_OS_VERSION);
@@ -217,7 +217,7 @@ int ICACHE_FLASH_ATTR wps_build_os_version(struct wps_device_data* dev, struct w
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_vendor_ext_m1(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_vendor_ext_m1(struct wps_device_data* dev, struct wpabuf* msg)
 {
     if (dev->vendor_ext_m1 != NULL) {
         wpa_hexdump(MSG_DEBUG, "WPS:  * Vendor Extension M1",
@@ -232,7 +232,7 @@ int ICACHE_FLASH_ATTR wps_build_vendor_ext_m1(struct wps_device_data* dev, struc
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_rf_bands(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_rf_bands(struct wps_device_data* dev, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * RF Bands (%x)", dev->rf_bands);
     wpabuf_put_be16(msg, ATTR_RF_BANDS);
@@ -242,7 +242,7 @@ int ICACHE_FLASH_ATTR wps_build_rf_bands(struct wps_device_data* dev, struct wpa
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_vendor_ext(struct wps_device_data* dev, struct wpabuf* msg)
+int wps_build_vendor_ext(struct wps_device_data* dev, struct wpabuf* msg)
 {
     int i;
 
@@ -263,7 +263,7 @@ int ICACHE_FLASH_ATTR wps_build_vendor_ext(struct wps_device_data* dev, struct w
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_manufacturer(struct wps_device_data* dev, const u8* str,
+static int wps_process_manufacturer(struct wps_device_data* dev, const u8* str,
         size_t str_len)
 {
     if (str == NULL) {
@@ -287,7 +287,7 @@ static int ICACHE_FLASH_ATTR wps_process_manufacturer(struct wps_device_data* de
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_model_name(struct wps_device_data* dev, const u8* str,
+static int wps_process_model_name(struct wps_device_data* dev, const u8* str,
         size_t str_len)
 {
     if (str == NULL) {
@@ -311,7 +311,7 @@ static int ICACHE_FLASH_ATTR wps_process_model_name(struct wps_device_data* dev,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_model_number(struct wps_device_data* dev, const u8* str,
+static int wps_process_model_number(struct wps_device_data* dev, const u8* str,
         size_t str_len)
 {
     if (str == NULL) {
@@ -335,7 +335,7 @@ static int ICACHE_FLASH_ATTR wps_process_model_number(struct wps_device_data* de
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_serial_number(struct wps_device_data* dev,
+static int wps_process_serial_number(struct wps_device_data* dev,
         const u8* str, size_t str_len)
 {
     if (str == NULL) {
@@ -359,7 +359,7 @@ static int ICACHE_FLASH_ATTR wps_process_serial_number(struct wps_device_data* d
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_dev_name(struct wps_device_data* dev, const u8* str,
+static int wps_process_dev_name(struct wps_device_data* dev, const u8* str,
         size_t str_len)
 {
     if (str == NULL) {
@@ -383,7 +383,7 @@ static int ICACHE_FLASH_ATTR wps_process_dev_name(struct wps_device_data* dev, c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_primary_dev_type(struct wps_device_data* dev,
+static int wps_process_primary_dev_type(struct wps_device_data* dev,
         const u8* dev_type)
 {
 #if 0
@@ -406,7 +406,7 @@ static int ICACHE_FLASH_ATTR wps_process_primary_dev_type(struct wps_device_data
 }
 
 
-int ICACHE_FLASH_ATTR wps_process_device_attrs(struct wps_device_data* dev,
+int wps_process_device_attrs(struct wps_device_data* dev,
         struct wps_parse_attr* attr)
 {
     if (wps_process_manufacturer(dev, attr->manufacturer,
@@ -426,7 +426,7 @@ int ICACHE_FLASH_ATTR wps_process_device_attrs(struct wps_device_data* dev,
 }
 
 
-int ICACHE_FLASH_ATTR wps_process_os_version(struct wps_device_data* dev, const u8* ver)
+int wps_process_os_version(struct wps_device_data* dev, const u8* ver)
 {
     if (ver == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No OS Version received");
@@ -440,7 +440,7 @@ int ICACHE_FLASH_ATTR wps_process_os_version(struct wps_device_data* dev, const 
 }
 
 
-int ICACHE_FLASH_ATTR wps_process_rf_bands(struct wps_device_data* dev, const u8* bands)
+int wps_process_rf_bands(struct wps_device_data* dev, const u8* bands)
 {
     if (bands == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No RF Bands received");
@@ -454,7 +454,7 @@ int ICACHE_FLASH_ATTR wps_process_rf_bands(struct wps_device_data* dev, const u8
 }
 
 
-void ICACHE_FLASH_ATTR wps_device_data_dup(struct wps_device_data* dst,
+void wps_device_data_dup(struct wps_device_data* dst,
         const struct wps_device_data* src)
 {
     if (src->device_name) {
@@ -483,7 +483,7 @@ void ICACHE_FLASH_ATTR wps_device_data_dup(struct wps_device_data* dst,
 }
 
 
-void ICACHE_FLASH_ATTR wps_device_data_free(struct wps_device_data* dev)
+void wps_device_data_free(struct wps_device_data* dev)
 {
     os_free(dev->device_name);
     dev->device_name = NULL;

@@ -9,8 +9,8 @@
 #ifndef WPS_I_H
 #define WPS_I_H
 
-#include "wps/wps.h"
-#include "wps/wps_attr_parse.h"
+#include "wps.h"
+#include "wps_attr_parse.h"
 #include "esp_wifi_crypto_types.h"
 
 #ifdef CONFIG_WPS_NFC

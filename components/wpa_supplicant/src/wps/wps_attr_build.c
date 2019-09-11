@@ -30,7 +30,7 @@ extern bool system_overclock(void);
 extern bool system_restoreclock(void);
 #endif
 
-int ICACHE_FLASH_ATTR wps_build_public_key(struct wps_data* wps, struct wpabuf* msg, wps_key_mode_t mode)
+int wps_build_public_key(struct wps_data* wps, struct wpabuf* msg, wps_key_mode_t mode)
 {
     struct wpabuf* pubkey;
 
@@ -116,7 +116,7 @@ int ICACHE_FLASH_ATTR wps_build_public_key(struct wps_data* wps, struct wpabuf* 
     return 0;
 }
 
-int ICACHE_FLASH_ATTR wps_build_req_type(struct wpabuf* msg, enum wps_request_type type)
+int wps_build_req_type(struct wpabuf* msg, enum wps_request_type type)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Request Type");
     wpabuf_put_be16(msg, ATTR_REQUEST_TYPE);
@@ -125,7 +125,7 @@ int ICACHE_FLASH_ATTR wps_build_req_type(struct wpabuf* msg, enum wps_request_ty
     return 0;
 }
 
-int ICACHE_FLASH_ATTR wps_build_resp_type(struct wpabuf* msg, enum wps_response_type type)
+int wps_build_resp_type(struct wpabuf* msg, enum wps_response_type type)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Response Type (%d)", type);
     wpabuf_put_be16(msg, ATTR_RESPONSE_TYPE);
@@ -134,7 +134,7 @@ int ICACHE_FLASH_ATTR wps_build_resp_type(struct wpabuf* msg, enum wps_response_
     return 0;
 }
 
-int ICACHE_FLASH_ATTR wps_build_config_methods(struct wpabuf* msg, u16 methods)
+int wps_build_config_methods(struct wpabuf* msg, u16 methods)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Config Methods (%x)", methods);
     wpabuf_put_be16(msg, ATTR_CONFIG_METHODS);
@@ -143,7 +143,7 @@ int ICACHE_FLASH_ATTR wps_build_config_methods(struct wpabuf* msg, u16 methods)
     return 0;
 }
 
-int ICACHE_FLASH_ATTR wps_build_uuid_e(struct wpabuf* msg, const u8* uuid)
+int wps_build_uuid_e(struct wpabuf* msg, const u8* uuid)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * UUID-E");
     wpabuf_put_be16(msg, ATTR_UUID_E);
@@ -152,7 +152,7 @@ int ICACHE_FLASH_ATTR wps_build_uuid_e(struct wpabuf* msg, const u8* uuid)
     return 0;
 }
 
-int ICACHE_FLASH_ATTR wps_build_dev_password_id(struct wpabuf* msg, u16 id)
+int wps_build_dev_password_id(struct wpabuf* msg, u16 id)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Device Password ID (%d)", id);
     wpabuf_put_be16(msg, ATTR_DEV_PASSWORD_ID);
@@ -162,7 +162,7 @@ int ICACHE_FLASH_ATTR wps_build_dev_password_id(struct wpabuf* msg, u16 id)
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_config_error(struct wpabuf* msg, u16 err)
+int wps_build_config_error(struct wpabuf* msg, u16 err)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Configuration Error (%d)", err);
     wpabuf_put_be16(msg, ATTR_CONFIG_ERROR);
@@ -172,7 +172,7 @@ int ICACHE_FLASH_ATTR wps_build_config_error(struct wpabuf* msg, u16 err)
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_authenticator(struct wps_data* wps, struct wpabuf* msg)
+int wps_build_authenticator(struct wps_data* wps, struct wpabuf* msg)
 {
     u8 hash[SHA256_MAC_LEN];
     const u8* addr[2];
@@ -191,14 +191,14 @@ int ICACHE_FLASH_ATTR wps_build_authenticator(struct wps_data* wps, struct wpabu
     len[0] = wpabuf_len(wps->last_msg);
     addr[1] = wpabuf_head(msg);
     len[1] = wpabuf_len(msg);
-    //hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 2, addr, len, hash);
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 	        wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 2, addr, (int *)len, hash);
-            ets_printf("test wps\n");
 	} else {
 		wpa_printf(MSG_ERROR, "Fail to register hmac sha256 vector!\r\n");
 		return -1;
 	}
+
     wpa_printf(MSG_DEBUG, "WPS:  * Authenticator");
     wpabuf_put_be16(msg, ATTR_AUTHENTICATOR);
     wpabuf_put_be16(msg, WPS_AUTHENTICATOR_LEN);
@@ -208,7 +208,7 @@ int ICACHE_FLASH_ATTR wps_build_authenticator(struct wps_data* wps, struct wpabu
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_version(struct wpabuf* msg)
+int wps_build_version(struct wpabuf* msg)
 {
     /*
      * Note: This attribute is deprecated and set to hardcoded 0x10 for
@@ -223,7 +223,7 @@ int ICACHE_FLASH_ATTR wps_build_version(struct wpabuf* msg)
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_wfa_ext(struct wpabuf* msg, int req_to_enroll,
+int wps_build_wfa_ext(struct wpabuf* msg, int req_to_enroll,
                                         const u8* auth_macs, size_t auth_macs_count)
 {
 #ifdef CONFIG_WPS2
@@ -276,7 +276,7 @@ int ICACHE_FLASH_ATTR wps_build_wfa_ext(struct wpabuf* msg, int req_to_enroll,
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_msg_type(struct wpabuf* msg, enum wps_msg_type msg_type)
+int wps_build_msg_type(struct wpabuf* msg, enum wps_msg_type msg_type)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Message Type (%d)", msg_type);
     wpabuf_put_be16(msg, ATTR_MSG_TYPE);
@@ -286,7 +286,7 @@ int ICACHE_FLASH_ATTR wps_build_msg_type(struct wpabuf* msg, enum wps_msg_type m
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_enrollee_nonce(struct wps_data* wps, struct wpabuf* msg)
+int wps_build_enrollee_nonce(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Enrollee Nonce");
     wpabuf_put_be16(msg, ATTR_ENROLLEE_NONCE);
@@ -296,7 +296,7 @@ int ICACHE_FLASH_ATTR wps_build_enrollee_nonce(struct wps_data* wps, struct wpab
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_registrar_nonce(struct wps_data* wps, struct wpabuf* msg)
+int wps_build_registrar_nonce(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Registrar Nonce");
     wpabuf_put_be16(msg, ATTR_REGISTRAR_NONCE);
@@ -306,7 +306,7 @@ int ICACHE_FLASH_ATTR wps_build_registrar_nonce(struct wps_data* wps, struct wpa
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_auth_type_flags(struct wps_data* wps, struct wpabuf* msg)
+int wps_build_auth_type_flags(struct wps_data* wps, struct wpabuf* msg)
 {
     u16 auth_types = WPS_AUTH_TYPES;
 #ifdef CONFIG_WPS2
@@ -320,7 +320,7 @@ int ICACHE_FLASH_ATTR wps_build_auth_type_flags(struct wps_data* wps, struct wpa
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_encr_type_flags(struct wps_data* wps, struct wpabuf* msg)
+int wps_build_encr_type_flags(struct wps_data* wps, struct wpabuf* msg)
 {
     u16 encr_types = WPS_ENCR_TYPES;
 #ifdef CONFIG_WPS2
@@ -334,7 +334,7 @@ int ICACHE_FLASH_ATTR wps_build_encr_type_flags(struct wps_data* wps, struct wpa
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_conn_type_flags(struct wps_data* wps, struct wpabuf* msg)
+int wps_build_conn_type_flags(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Connection Type Flags");
     wpabuf_put_be16(msg, ATTR_CONN_TYPE_FLAGS);
@@ -344,7 +344,7 @@ int ICACHE_FLASH_ATTR wps_build_conn_type_flags(struct wps_data* wps, struct wpa
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_assoc_state(struct wps_data* wps, struct wpabuf* msg)
+int wps_build_assoc_state(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Association State");
     wpabuf_put_be16(msg, ATTR_ASSOC_STATE);
@@ -354,14 +354,12 @@ int ICACHE_FLASH_ATTR wps_build_assoc_state(struct wps_data* wps, struct wpabuf*
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_key_wrap_auth(struct wps_data* wps, struct wpabuf* msg)
+int wps_build_key_wrap_auth(struct wps_data* wps, struct wpabuf* msg)
 {
     u8 hash[SHA256_MAC_LEN];
 
     wpa_printf(MSG_DEBUG, "WPS:  * Key Wrap Authenticator");
-/*     hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN, wpabuf_head(msg),
-                wpabuf_len(msg), hash);
- */
+
 	if (wps_crypto_funcs.hmac_sha256) {
 	        wps_crypto_funcs.hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN, wpabuf_head(msg),
 		                             wpabuf_len(msg), hash);
@@ -369,6 +367,7 @@ int ICACHE_FLASH_ATTR wps_build_key_wrap_auth(struct wps_data* wps, struct wpabu
 		wpa_printf(MSG_ERROR, "Fail to register hmac sha256 function!\r\n");
 		return -1;
 	}
+
     wpabuf_put_be16(msg, ATTR_KEY_WRAP_AUTH);
     wpabuf_put_be16(msg, WPS_KWA_LEN);
     wpabuf_put_data(msg, hash, WPS_KWA_LEN);
@@ -376,7 +375,7 @@ int ICACHE_FLASH_ATTR wps_build_key_wrap_auth(struct wps_data* wps, struct wpabu
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_encr_settings(struct wps_data* wps, struct wpabuf* msg,
+int wps_build_encr_settings(struct wps_data* wps, struct wpabuf* msg,
         struct wpabuf* plain)
 {
     size_t pad_len;
@@ -400,11 +399,8 @@ int ICACHE_FLASH_ATTR wps_build_encr_settings(struct wps_data* wps, struct wpabu
 
     data = wpabuf_put(msg, 0);
     wpabuf_put_buf(msg, plain);
-
-/*     if (aes_128_cbc_encrypt(wps->keywrapkey, iv, data, wpabuf_len(plain))) {
-        return -1;
-    } */
 	wpa_printf(MSG_DEBUG,  "WPS:  * AES 128 Encrypted Settings");
+
 	if (wps_crypto_funcs.aes_128_encrypt) {
 	        if (wps_crypto_funcs.aes_128_encrypt(wps->keywrapkey, iv, data, wpabuf_len(plain)))
 		        return -1;
@@ -418,7 +414,7 @@ int ICACHE_FLASH_ATTR wps_build_encr_settings(struct wps_data* wps, struct wpabu
 
 
 #ifdef CONFIG_WPS_OOB
-int ICACHE_FLASH_ATTR wps_build_oob_dev_pw(struct wpabuf* msg, u16 dev_pw_id,
+int wps_build_oob_dev_pw(struct wpabuf* msg, u16 dev_pw_id,
         const struct wpabuf* pubkey, const u8* dev_pw,
         size_t dev_pw_len)
 {
@@ -428,7 +424,7 @@ int ICACHE_FLASH_ATTR wps_build_oob_dev_pw(struct wpabuf* msg, u16 dev_pw_id,
 
     addr[0] = wpabuf_head(pubkey);
     hash_len = wpabuf_len(pubkey);
-/*     sha256_vector(1, addr, &hash_len, pubkey_hash); */
+
 	if (wps_crypto_funcs.sha256_vector) {
 	        wps_crypto_funcs.sha256_vector(1, addr, &hash_len, pubkey_hash);
 	} else {
@@ -448,7 +444,7 @@ int ICACHE_FLASH_ATTR wps_build_oob_dev_pw(struct wpabuf* msg, u16 dev_pw_id,
 
 
 /* Encapsulate WPS IE data with one (or more, if needed) IE headers */
-struct wpabuf* ICACHE_FLASH_ATTR wps_ie_encapsulate(struct wpabuf* data)
+struct wpabuf* wps_ie_encapsulate(struct wpabuf* data)
 {
     struct wpabuf* ie;
     const u8* pos, *end;

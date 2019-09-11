@@ -13,4 +13,5 @@ target_compile_definitions(${COMPONENT_LIB} PRIVATE
     CONFIG_WPS2
     CONFIG_WPS_PIN
     USE_WPS_TASK
+    ESP8266_WORKAROUND
     )

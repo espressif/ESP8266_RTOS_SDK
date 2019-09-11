@@ -9,7 +9,7 @@
 #include "wpa/common.h"
 #include "wps/utils/uuid.h"
 
-int ICACHE_FLASH_ATTR uuid_str2bin(const char* str, u8* bin)
+int uuid_str2bin(const char* str, u8* bin)
 {
     const char* pos;
     u8* opos;
@@ -53,7 +53,7 @@ int ICACHE_FLASH_ATTR uuid_str2bin(const char* str, u8* bin)
 }
 
 
-int ICACHE_FLASH_ATTR uuid_bin2str(const u8* bin, char* str, size_t max_len)
+int uuid_bin2str(const u8* bin, char* str, size_t max_len)
 {
     int len;
     len = snprintf(str, max_len, "%02x%02x%02x%02x-%02x%02x-%02x%02x-"
@@ -71,7 +71,7 @@ int ICACHE_FLASH_ATTR uuid_bin2str(const u8* bin, char* str, size_t max_len)
 }
 
 
-int ICACHE_FLASH_ATTR is_nil_uuid(const u8* uuid)
+int is_nil_uuid(const u8* uuid)
 {
     int i;
 

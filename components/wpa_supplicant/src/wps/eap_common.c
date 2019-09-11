@@ -21,7 +21,7 @@
  * length field is verified to be large enough to include the header and not
  * too large to go beyond the end of the buffer.
  */
-int ICACHE_FLASH_ATTR eap_hdr_len_valid(const struct wpabuf* msg, size_t min_payload)
+int eap_hdr_len_valid(const struct wpabuf* msg, size_t min_payload)
 {
     const struct eap_hdr* hdr;
     size_t len;
@@ -64,7 +64,7 @@ int ICACHE_FLASH_ATTR eap_hdr_len_valid(const struct wpabuf* msg, size_t min_pay
  * the payload regardless of whether the packet used the expanded EAP header or
  * not.
  */
-const u8* ICACHE_FLASH_ATTR eap_hdr_validate(int vendor, EapType eap_type,
+const u8* eap_hdr_validate(int vendor, EapType eap_type,
         const struct wpabuf* msg, size_t* plen)
 {
     const struct eap_hdr* hdr;
@@ -131,7 +131,7 @@ const u8* ICACHE_FLASH_ATTR eap_hdr_validate(int vendor, EapType eap_type,
  * function to allocate the message buffers. The returned buffer has room for
  * payload_len bytes and has the EAP header and Type field already filled in.
  */
-struct wpabuf* ICACHE_FLASH_ATTR eap_msg_alloc(int vendor, EapType type, size_t payload_len,
+struct wpabuf* eap_msg_alloc(int vendor, EapType type, size_t payload_len,
         u8 code, u8 identifier)
 {
     struct wpabuf* buf;
@@ -172,7 +172,7 @@ struct wpabuf* ICACHE_FLASH_ATTR eap_msg_alloc(int vendor, EapType type, size_t 
  * allocate a larger buffer than the exact message length (e.g., if exact
  * message length is not yet known).
  */
-void ICACHE_FLASH_ATTR eap_update_len(struct wpabuf* msg)
+void eap_update_len(struct wpabuf* msg)
 {
     struct eap_hdr* hdr;
     hdr = wpabuf_mhead(msg);
@@ -190,7 +190,7 @@ void ICACHE_FLASH_ATTR eap_update_len(struct wpabuf* msg)
  * @msg: Buffer starting with an EAP header
  * Returns: The Identifier field from the EAP header
  */
-u8 ICACHE_FLASH_ATTR eap_get_id(const struct wpabuf* msg)
+u8 eap_get_id(const struct wpabuf* msg)
 {
     const struct eap_hdr* eap;
 
@@ -208,7 +208,7 @@ u8 ICACHE_FLASH_ATTR eap_get_id(const struct wpabuf* msg)
  * @msg: Buffer starting with an EAP header
  * Returns: The EAP Type after the EAP header
  */
-EapType ICACHE_FLASH_ATTR eap_get_type(const struct wpabuf* msg)
+EapType eap_get_type(const struct wpabuf* msg)
 {
     if (wpabuf_len(msg) < sizeof(struct eap_hdr) + 1) {
         return EAP_TYPE_NONE;

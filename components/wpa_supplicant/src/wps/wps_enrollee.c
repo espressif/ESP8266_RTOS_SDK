@@ -34,7 +34,7 @@ extern bool system_restoreclock(void);
 #endif
 
 
-static int ICACHE_FLASH_ATTR wps_build_mac_addr(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_mac_addr(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * MAC Address");
     wpabuf_put_be16(msg, ATTR_MAC_ADDR);
@@ -44,7 +44,7 @@ static int ICACHE_FLASH_ATTR wps_build_mac_addr(struct wps_data* wps, struct wpa
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_wps_state(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_wps_state(struct wps_data* wps, struct wpabuf* msg)
 {
     u8 state;
 
@@ -63,7 +63,7 @@ static int ICACHE_FLASH_ATTR wps_build_wps_state(struct wps_data* wps, struct wp
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_e_hash(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_e_hash(struct wps_data* wps, struct wpabuf* msg)
 {
     u8* hash;
     const u8* addr[4];
@@ -96,8 +96,7 @@ static int ICACHE_FLASH_ATTR wps_build_e_hash(struct wps_data* wps, struct wpabu
     len[2] = wpabuf_len(wps->dh_pubkey_e);
     addr[3] = wpabuf_head(wps->dh_pubkey_r);
     len[3] = wpabuf_len(wps->dh_pubkey_r);
-/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
- */
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
 	} else {
@@ -114,8 +113,7 @@ static int ICACHE_FLASH_ATTR wps_build_e_hash(struct wps_data* wps, struct wpabu
     /* E-Hash2 = HMAC_AuthKey(E-S2 || PSK2 || PK_E || PK_R) */
     addr[0] = wps->snonce + WPS_SECRET_NONCE_LEN;
     addr[1] = wps->psk2;
-/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
- */ 
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
 	} else {
@@ -129,7 +127,7 @@ static int ICACHE_FLASH_ATTR wps_build_e_hash(struct wps_data* wps, struct wpabu
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_e_snonce1(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_e_snonce1(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * E-SNonce1");
     wpabuf_put_be16(msg, ATTR_E_SNONCE1);
@@ -139,7 +137,7 @@ static int ICACHE_FLASH_ATTR wps_build_e_snonce1(struct wps_data* wps, struct wp
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_e_snonce2(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_e_snonce2(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * E-SNonce2");
     wpabuf_put_be16(msg, ATTR_E_SNONCE2);
@@ -150,7 +148,7 @@ static int ICACHE_FLASH_ATTR wps_build_e_snonce2(struct wps_data* wps, struct wp
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m1(struct wps_data* wps)
+static struct wpabuf* wps_build_m1(struct wps_data* wps)
 {
     struct wpabuf* msg;
     u16 config_methods;
@@ -218,7 +216,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m1(struct wps_data* wps)
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m3(struct wps_data* wps)
+static struct wpabuf* wps_build_m3(struct wps_data* wps)
 {
     struct wpabuf* msg;
 
@@ -252,7 +250,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m3(struct wps_data* wps)
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m5(struct wps_data* wps)
+static struct wpabuf* wps_build_m5(struct wps_data* wps)
 {
     struct wpabuf* msg, *plain;
 
@@ -291,7 +289,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m5(struct wps_data* wps)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_ssid(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_cred_ssid(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * SSID");
     wpabuf_put_be16(msg, ATTR_SSID);
@@ -301,7 +299,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_ssid(struct wps_data* wps, struct wp
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_auth_type(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_cred_auth_type(struct wps_data* wps, struct wpabuf* msg)
 {
     u16 auth_type = wps->wps->auth_types;
 
@@ -324,7 +322,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_auth_type(struct wps_data* wps, stru
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_encr_type(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_cred_encr_type(struct wps_data* wps, struct wpabuf* msg)
 {
     u16 encr_type = wps->wps->encr_types;
 
@@ -351,7 +349,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_encr_type(struct wps_data* wps, stru
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_network_key(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_cred_network_key(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Network Key");
     wpabuf_put_be16(msg, ATTR_NETWORK_KEY);
@@ -361,7 +359,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_network_key(struct wps_data* wps, st
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_mac_addr(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_cred_mac_addr(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * MAC Address (AP BSSID)");
     wpabuf_put_be16(msg, ATTR_MAC_ADDR);
@@ -371,7 +369,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_mac_addr(struct wps_data* wps, struc
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_ap_settings(struct wps_data* wps, struct wpabuf* plain)
+static int wps_build_ap_settings(struct wps_data* wps, struct wpabuf* plain)
 {
     if (wps->wps->ap_settings) {
         wpa_printf(MSG_DEBUG, "WPS:  * AP Settings (pre-configured)");
@@ -388,7 +386,7 @@ static int ICACHE_FLASH_ATTR wps_build_ap_settings(struct wps_data* wps, struct 
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m7(struct wps_data* wps)
+static struct wpabuf* wps_build_m7(struct wps_data* wps)
 {
     struct wpabuf* msg, *plain;
 
@@ -438,7 +436,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m7(struct wps_data* wps)
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_wsc_done(struct wps_data* wps)
+static struct wpabuf* wps_build_wsc_done(struct wps_data* wps)
 {
     struct wpabuf* msg;
 
@@ -470,7 +468,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_wsc_done(struct wps_data* wps)
 }
 
 
-struct wpabuf* ICACHE_FLASH_ATTR wps_enrollee_get_msg(struct wps_data* wps,
+struct wpabuf* wps_enrollee_get_msg(struct wps_data* wps,
         enum wsc_op_code* op_code)
 {
     struct wpabuf* msg;
@@ -541,7 +539,7 @@ struct wpabuf* ICACHE_FLASH_ATTR wps_enrollee_get_msg(struct wps_data* wps,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_registrar_nonce(struct wps_data* wps, const u8* r_nonce)
+static int wps_process_registrar_nonce(struct wps_data* wps, const u8* r_nonce)
 {
     if (r_nonce == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Registrar Nonce received");
@@ -556,7 +554,7 @@ static int ICACHE_FLASH_ATTR wps_process_registrar_nonce(struct wps_data* wps, c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_enrollee_nonce(struct wps_data* wps, const u8* e_nonce)
+static int wps_process_enrollee_nonce(struct wps_data* wps, const u8* e_nonce)
 {
     if (e_nonce == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Enrollee Nonce received");
@@ -572,7 +570,7 @@ static int ICACHE_FLASH_ATTR wps_process_enrollee_nonce(struct wps_data* wps, co
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_uuid_r(struct wps_data* wps, const u8* uuid_r)
+static int wps_process_uuid_r(struct wps_data* wps, const u8* uuid_r)
 {
     if (uuid_r == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No UUID-R received");
@@ -586,7 +584,7 @@ static int ICACHE_FLASH_ATTR wps_process_uuid_r(struct wps_data* wps, const u8* 
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_pubkey(struct wps_data* wps, const u8* pk,
+static int wps_process_pubkey(struct wps_data* wps, const u8* pk,
         size_t pk_len)
 {
     if (pk == NULL || pk_len == 0) {
@@ -609,7 +607,7 @@ static int ICACHE_FLASH_ATTR wps_process_pubkey(struct wps_data* wps, const u8* 
 
     //REG_SET_BIT(0x3ff00014, BIT(0));        //change CPU to 160Mhz
     //ets_update_cpu_frequency(160);
-    printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, REG_READ(0x3ff20c00));
+    //ets_printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, REG_READ(0x3ff20c00));
     system_overclock();
     if (wps_derive_keys(wps) < 0) {
         //REG_CLR_BIT(0x3ff00014, BIT(0));        //change CPU to 80Mhz
@@ -621,10 +619,9 @@ static int ICACHE_FLASH_ATTR wps_process_pubkey(struct wps_data* wps, const u8* 
     }
 
     system_restoreclock();
-    printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, REG_READ(0x3ff20c00));
+    //ets_printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, REG_READ(0x3ff20c00));
     //REG_CLR_BIT(0x3ff00014, BIT(0));        //change CPU to 80Mhz
     //ets_update_cpu_frequency(80);
-
     //pp_soft_wdt_restart();
     API_MUTEX_GIVE(c_tmp);
 #else
@@ -639,7 +636,7 @@ static int ICACHE_FLASH_ATTR wps_process_pubkey(struct wps_data* wps, const u8* 
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_r_hash1(struct wps_data* wps, const u8* r_hash1)
+static int wps_process_r_hash1(struct wps_data* wps, const u8* r_hash1)
 {
     if (r_hash1 == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No R-Hash1 received");
@@ -653,7 +650,7 @@ static int ICACHE_FLASH_ATTR wps_process_r_hash1(struct wps_data* wps, const u8*
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_r_hash2(struct wps_data* wps, const u8* r_hash2)
+static int wps_process_r_hash2(struct wps_data* wps, const u8* r_hash2)
 {
     if (r_hash2 == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No R-Hash2 received");
@@ -667,7 +664,7 @@ static int ICACHE_FLASH_ATTR wps_process_r_hash2(struct wps_data* wps, const u8*
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_r_snonce1(struct wps_data* wps, const u8* r_snonce1)
+static int wps_process_r_snonce1(struct wps_data* wps, const u8* r_snonce1)
 {
     u8 hash[SHA256_MAC_LEN];
     const u8* addr[4];
@@ -690,7 +687,7 @@ static int ICACHE_FLASH_ATTR wps_process_r_snonce1(struct wps_data* wps, const u
     len[2] = wpabuf_len(wps->dh_pubkey_e);
     addr[3] = wpabuf_head(wps->dh_pubkey_r);
     len[3] = wpabuf_len(wps->dh_pubkey_r);
-/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash); */
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
 	} else {
@@ -713,7 +710,7 @@ static int ICACHE_FLASH_ATTR wps_process_r_snonce1(struct wps_data* wps, const u
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_r_snonce2(struct wps_data* wps, const u8* r_snonce2)
+static int wps_process_r_snonce2(struct wps_data* wps, const u8* r_snonce2)
 {
     u8 hash[SHA256_MAC_LEN];
     const u8* addr[4];
@@ -736,8 +733,7 @@ static int ICACHE_FLASH_ATTR wps_process_r_snonce2(struct wps_data* wps, const u
     len[2] = wpabuf_len(wps->dh_pubkey_e);
     addr[3] = wpabuf_head(wps->dh_pubkey_r);
     len[3] = wpabuf_len(wps->dh_pubkey_r);
-/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
- */
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
 	} else {
@@ -760,7 +756,7 @@ static int ICACHE_FLASH_ATTR wps_process_r_snonce2(struct wps_data* wps, const u
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_cred_e(struct wps_data* wps, const u8* cred,
+static int wps_process_cred_e(struct wps_data* wps, const u8* cred,
         size_t cred_len, int wps2)
 {
     struct wps_parse_attr* attr;
@@ -850,7 +846,7 @@ _out:
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_creds(struct wps_data* wps, const u8* cred[],
+static int wps_process_creds(struct wps_data* wps, const u8* cred[],
         size_t cred_len[], size_t num_cred, int wps2)
 {
     size_t i;
@@ -889,7 +885,7 @@ static int ICACHE_FLASH_ATTR wps_process_creds(struct wps_data* wps, const u8* c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_ap_settings_e(struct wps_data* wps,
+static int wps_process_ap_settings_e(struct wps_data* wps,
         struct wps_parse_attr* attr,
         struct wpabuf* attrs, int wps2)
 {
@@ -1011,7 +1007,7 @@ _out:
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m2(struct wps_data* wps,
+static enum wps_process_res wps_process_m2(struct wps_data* wps,
         const struct wpabuf* msg,
         struct wps_parse_attr* attr)
 {
@@ -1059,7 +1055,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m2(struct wps_data* wp
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m2d(struct wps_data* wps,
+static enum wps_process_res wps_process_m2d(struct wps_data* wps,
         struct wps_parse_attr* attr)
 {
     wpa_printf(MSG_DEBUG, "WPS: Received M2D");
@@ -1119,7 +1115,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m2d(struct wps_data* w
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m4(struct wps_data* wps,
+static enum wps_process_res wps_process_m4(struct wps_data* wps,
         const struct wpabuf* msg,
         struct wps_parse_attr* attr)
 {
@@ -1198,7 +1194,7 @@ _out:
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m6(struct wps_data* wps,
+static enum wps_process_res wps_process_m6(struct wps_data* wps,
         const struct wpabuf* msg,
         struct wps_parse_attr* attr)
 {
@@ -1279,7 +1275,7 @@ _out:
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m8(struct wps_data* wps,
+static enum wps_process_res wps_process_m8(struct wps_data* wps,
         const struct wpabuf* msg,
         struct wps_parse_attr* attr)
 {
@@ -1376,7 +1372,7 @@ _out:
 
 extern struct wps_sm *gWpsSm;
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_start(struct wps_data* wps,
+static enum wps_process_res wps_process_wsc_start(struct wps_data* wps,
         const struct wpabuf* msg)
 {
     struct wps_sm* sm = gWpsSm;
@@ -1394,7 +1390,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_start(struct wps_d
         }\
     } while (0)
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_msg(struct wps_data* wps,
+static enum wps_process_res wps_process_wsc_msg(struct wps_data* wps,
         const struct wpabuf* msg)
 {
     struct wps_parse_attr* attr;
@@ -1528,7 +1524,7 @@ _out:
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_ack(struct wps_data* wps,
+static enum wps_process_res wps_process_wsc_ack(struct wps_data* wps,
         const struct wpabuf* msg)
 {
     struct wps_parse_attr* attr;
@@ -1595,7 +1591,7 @@ _out:
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_nack(struct wps_data* wps,
+static enum wps_process_res wps_process_wsc_nack(struct wps_data* wps,
         const struct wpabuf* msg)
 {
     struct wps_parse_attr* attr;
@@ -1697,7 +1693,7 @@ _out:
 }
 
 
-enum wps_process_res ICACHE_FLASH_ATTR wps_enrollee_process_msg(struct wps_data* wps,
+enum wps_process_res wps_enrollee_process_msg(struct wps_data* wps,
         enum wsc_op_code op_code,
         const struct wpabuf* msg)
 {

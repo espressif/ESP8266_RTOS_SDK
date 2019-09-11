@@ -39,14 +39,14 @@ struct wps_nfc_pw_token {
 };
 
 
-static void ICACHE_FLASH_ATTR wps_remove_nfc_pw_token(struct wps_nfc_pw_token* token)
+static void wps_remove_nfc_pw_token(struct wps_nfc_pw_token* token)
 {
     dl_list_del(&token->list);
     os_free(token);
 }
 
 
-static void ICACHE_FLASH_ATTR wps_free_nfc_pw_tokens(struct dl_list* tokens, u16 pw_id)
+static void wps_free_nfc_pw_tokens(struct dl_list* tokens, u16 pw_id)
 {
     struct wps_nfc_pw_token* token, *prev;
     dl_list_for_each_safe(token, prev, tokens, struct wps_nfc_pw_token,
@@ -92,21 +92,21 @@ struct wps_uuid_pin {
 };
 
 
-static void ICACHE_FLASH_ATTR wps_free_pin(struct wps_uuid_pin* pin)
+static void wps_free_pin(struct wps_uuid_pin* pin)
 {
     os_free(pin->pin);
     os_free(pin);
 }
 
 
-static void ICACHE_FLASH_ATTR wps_remove_pin(struct wps_uuid_pin* pin)
+static void wps_remove_pin(struct wps_uuid_pin* pin)
 {
     dl_list_del(&pin->list);
     wps_free_pin(pin);
 }
 
 
-static void ICACHE_FLASH_ATTR wps_free_pins(struct dl_list* pins)
+static void wps_free_pins(struct dl_list* pins)
 {
     struct wps_uuid_pin* pin, *prev;
     dl_list_for_each_safe(pin, prev, pins, struct wps_uuid_pin, list)
@@ -123,7 +123,7 @@ struct wps_pbc_session {
 };
 
 
-static void ICACHE_FLASH_ATTR wps_free_pbc_sessions(struct wps_pbc_session* pbc)
+static void wps_free_pbc_sessions(struct wps_pbc_session* pbc)
 {
     struct wps_pbc_session* prev;
 
@@ -205,7 +205,7 @@ static void wps_registrar_remove_pin(struct wps_registrar* reg,
                                      struct wps_uuid_pin* pin);
 #endif
 
-static void ICACHE_FLASH_ATTR wps_registrar_add_authorized_mac(struct wps_registrar* reg,
+static void wps_registrar_add_authorized_mac(struct wps_registrar* reg,
         const u8* addr)
 {
     int i;
@@ -229,7 +229,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_add_authorized_mac(struct wps_regist
 }
 
 
-static void ICACHE_FLASH_ATTR wps_registrar_remove_authorized_mac(struct wps_registrar* reg,
+static void wps_registrar_remove_authorized_mac(struct wps_registrar* reg,
         const u8* addr)
 {
     int i;
@@ -259,7 +259,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_remove_authorized_mac(struct wps_reg
 }
 
 
-static void ICACHE_FLASH_ATTR wps_free_devices(struct wps_registrar_device* dev)
+static void wps_free_devices(struct wps_registrar_device* dev)
 {
     struct wps_registrar_device* prev;
 
@@ -272,7 +272,7 @@ static void ICACHE_FLASH_ATTR wps_free_devices(struct wps_registrar_device* dev)
 }
 
 
-static struct wps_registrar_device* ICACHE_FLASH_ATTR wps_device_get(struct wps_registrar* reg,
+static struct wps_registrar_device* wps_device_get(struct wps_registrar* reg,
         const u8* addr)
 {
     struct wps_registrar_device* dev;
@@ -287,7 +287,7 @@ static struct wps_registrar_device* ICACHE_FLASH_ATTR wps_device_get(struct wps_
 }
 
 
-static void ICACHE_FLASH_ATTR wps_device_clone_data(struct wps_device_data* dst,
+static void wps_device_clone_data(struct wps_device_data* dst,
         struct wps_device_data* src)
 {
     os_memcpy(dst->mac_addr, src->mac_addr, ETH_ALEN);
@@ -306,7 +306,7 @@ static void ICACHE_FLASH_ATTR wps_device_clone_data(struct wps_device_data* dst,
 }
 
 
-int ICACHE_FLASH_ATTR wps_device_store(struct wps_registrar* reg,
+int wps_device_store(struct wps_registrar* reg,
                                        struct wps_device_data* dev, const u8* uuid)
 {
     struct wps_registrar_device* d;
@@ -331,7 +331,7 @@ int ICACHE_FLASH_ATTR wps_device_store(struct wps_registrar* reg,
 }
 
 
-static void ICACHE_FLASH_ATTR wps_registrar_add_pbc_session(struct wps_registrar* reg,
+static void wps_registrar_add_pbc_session(struct wps_registrar* reg,
         const u8* addr, const u8* uuid_e)
 {
     struct wps_pbc_session* pbc, *prev = NULL;
@@ -392,7 +392,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_add_pbc_session(struct wps_registrar
 }
 
 
-static void ICACHE_FLASH_ATTR wps_registrar_remove_pbc_session(struct wps_registrar* reg,
+static void wps_registrar_remove_pbc_session(struct wps_registrar* reg,
         const u8* uuid_e,
         const u8* p2p_dev_addr)
 {
@@ -427,7 +427,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_remove_pbc_session(struct wps_regist
 }
 
 
-int ICACHE_FLASH_ATTR wps_registrar_pbc_overlap(struct wps_registrar* reg,
+int wps_registrar_pbc_overlap(struct wps_registrar* reg,
         const u8* addr, const u8* uuid_e)
 {
     int count = 0;
@@ -481,7 +481,7 @@ int ICACHE_FLASH_ATTR wps_registrar_pbc_overlap(struct wps_registrar* reg,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_wps_state(struct wps_context* wps, struct wpabuf* msg)
+static int wps_build_wps_state(struct wps_context* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Wi-Fi Protected Setup State (%d)",
                wps->wps_state);
@@ -493,7 +493,7 @@ static int ICACHE_FLASH_ATTR wps_build_wps_state(struct wps_context* wps, struct
 
 
 #ifdef CONFIG_WPS_UPNP
-static void ICACHE_FLASH_ATTR wps_registrar_free_pending_m2(struct wps_context* wps)
+static void wps_registrar_free_pending_m2(struct wps_context* wps)
 {
     struct upnp_pending_message* p, *p2, *prev = NULL;
     p = wps->upnp_msgs;
@@ -521,7 +521,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_free_pending_m2(struct wps_context* 
 #endif /* CONFIG_WPS_UPNP */
 
 
-static int ICACHE_FLASH_ATTR wps_build_ap_setup_locked(struct wps_context* wps,
+static int wps_build_ap_setup_locked(struct wps_context* wps,
         struct wpabuf* msg)
 {
     if (wps->ap_setup_locked && wps->ap_setup_locked != 2) {
@@ -535,7 +535,7 @@ static int ICACHE_FLASH_ATTR wps_build_ap_setup_locked(struct wps_context* wps,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_selected_registrar(struct wps_registrar* reg,
+static int wps_build_selected_registrar(struct wps_registrar* reg,
         struct wpabuf* msg)
 {
     if (!reg->sel_reg_union) {
@@ -550,7 +550,7 @@ static int ICACHE_FLASH_ATTR wps_build_selected_registrar(struct wps_registrar* 
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_sel_reg_dev_password_id(struct wps_registrar* reg,
+static int wps_build_sel_reg_dev_password_id(struct wps_registrar* reg,
         struct wpabuf* msg)
 {
     u16 id = reg->pbc ? DEV_PW_PUSHBUTTON : DEV_PW_DEFAULT;
@@ -571,7 +571,7 @@ static int ICACHE_FLASH_ATTR wps_build_sel_reg_dev_password_id(struct wps_regist
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_sel_pbc_reg_uuid_e(struct wps_registrar* reg,
+static int wps_build_sel_pbc_reg_uuid_e(struct wps_registrar* reg,
         struct wpabuf* msg)
 {
     u16 id = reg->pbc ? DEV_PW_PUSHBUTTON : DEV_PW_DEFAULT;
@@ -592,7 +592,7 @@ static int ICACHE_FLASH_ATTR wps_build_sel_pbc_reg_uuid_e(struct wps_registrar* 
 }
 
 
-static void ICACHE_FLASH_ATTR wps_set_pushbutton(u16* methods, u16 conf_methods)
+static void wps_set_pushbutton(u16* methods, u16 conf_methods)
 {
     *methods |= WPS_CONFIG_PUSHBUTTON;
 #ifdef CONFIG_WPS2
@@ -623,7 +623,7 @@ static void ICACHE_FLASH_ATTR wps_set_pushbutton(u16* methods, u16 conf_methods)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_sel_reg_config_methods(struct wps_registrar* reg,
+static int wps_build_sel_reg_config_methods(struct wps_registrar* reg,
         struct wpabuf* msg)
 {
     u16 methods;
@@ -656,7 +656,7 @@ static int ICACHE_FLASH_ATTR wps_build_sel_reg_config_methods(struct wps_registr
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_probe_config_methods(struct wps_registrar* reg,
+static int wps_build_probe_config_methods(struct wps_registrar* reg,
         struct wpabuf* msg)
 {
     u16 methods;
@@ -677,14 +677,14 @@ static int ICACHE_FLASH_ATTR wps_build_probe_config_methods(struct wps_registrar
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_config_methods_r(struct wps_registrar* reg,
+static int wps_build_config_methods_r(struct wps_registrar* reg,
         struct wpabuf* msg)
 {
     return wps_build_config_methods(msg, reg->wps->config_methods);
 }
 
 
-const u8* ICACHE_FLASH_ATTR wps_authorized_macs(struct wps_registrar* reg, size_t* count)
+const u8* wps_authorized_macs(struct wps_registrar* reg, size_t* count)
 {
     *count = 0;
 
@@ -716,7 +716,7 @@ const u8* ICACHE_FLASH_ATTR wps_authorized_macs(struct wps_registrar* reg, size_
  * responsible for freeing the returned data with wps_registrar_deinit() when
  * Registrar functionality is not needed anymore.
  */
-struct wps_registrar* ICACHE_FLASH_ATTR
+struct wps_registrar*
 wps_registrar_init(struct wps_context* wps,
                    const struct wps_registrar_config* cfg)
 {
@@ -773,7 +773,7 @@ wps_registrar_init(struct wps_context* wps,
  * wps_registrar_deinit - Deinitialize WPS Registrar data
  * @reg: Registrar data from wps_registrar_init()
  */
-void ICACHE_FLASH_ATTR wps_registrar_deinit(struct wps_registrar* reg)
+void wps_registrar_deinit(struct wps_registrar* reg)
 {
     if (reg == NULL) {
         return;
@@ -800,7 +800,7 @@ void ICACHE_FLASH_ATTR wps_registrar_deinit(struct wps_registrar* reg)
 
 #ifdef CONFIG_WPS_PIN
 
-static void ICACHE_FLASH_ATTR wps_registrar_invalidate_unused(struct wps_registrar* reg)
+static void wps_registrar_invalidate_unused(struct wps_registrar* reg)
 {
     struct wps_uuid_pin* pin;
 
@@ -825,7 +825,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_invalidate_unused(struct wps_registr
  * @timeout: Time (in seconds) when the PIN will be invalidated; 0 = no timeout
  * Returns: 0 on success, -1 on failure
  */
-int ICACHE_FLASH_ATTR wps_registrar_add_pin(struct wps_registrar* reg, const u8* addr,
+int wps_registrar_add_pin(struct wps_registrar* reg, const u8* addr,
         const u8* uuid, const u8* pin, size_t pin_len,
         int timeout)
 {
@@ -892,7 +892,7 @@ int ICACHE_FLASH_ATTR wps_registrar_add_pin(struct wps_registrar* reg, const u8*
 }
 
 
-static void ICACHE_FLASH_ATTR wps_registrar_remove_pin(struct wps_registrar* reg,
+static void wps_registrar_remove_pin(struct wps_registrar* reg,
         struct wps_uuid_pin* pin)
 {
     u8* addr;
@@ -910,7 +910,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_remove_pin(struct wps_registrar* reg
 }
 
 
-static void ICACHE_FLASH_ATTR wps_registrar_expire_pins(struct wps_registrar* reg)
+static void wps_registrar_expire_pins(struct wps_registrar* reg)
 {
     struct wps_uuid_pin* pin, *prev;
     struct os_time now;
@@ -934,7 +934,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_expire_pins(struct wps_registrar* re
  * @dev_pw_len: Length of dev_pw in octets
  * Returns: 0 on success, -1 if not wildcard PIN is enabled
  */
-static int ICACHE_FLASH_ATTR wps_registrar_invalidate_wildcard_pin(struct wps_registrar* reg,
+static int wps_registrar_invalidate_wildcard_pin(struct wps_registrar* reg,
         const u8* dev_pw,
         size_t dev_pw_len)
 {
@@ -965,7 +965,7 @@ static int ICACHE_FLASH_ATTR wps_registrar_invalidate_wildcard_pin(struct wps_re
  * @uuid: UUID-E
  * Returns: 0 on success, -1 on failure (e.g., PIN not found)
  */
-int ICACHE_FLASH_ATTR wps_registrar_invalidate_pin(struct wps_registrar* reg, const u8* uuid)
+int wps_registrar_invalidate_pin(struct wps_registrar* reg, const u8* uuid)
 {
     struct wps_uuid_pin* pin, *prev;
 
@@ -982,7 +982,7 @@ int ICACHE_FLASH_ATTR wps_registrar_invalidate_pin(struct wps_registrar* reg, co
 }
 
 
-static const u8* ICACHE_FLASH_ATTR wps_registrar_get_pin(struct wps_registrar* reg,
+static const u8* wps_registrar_get_pin(struct wps_registrar* reg,
         const u8* uuid, size_t* pin_len)
 {
     struct wps_uuid_pin* pin, *found = NULL;
@@ -1043,7 +1043,7 @@ static const u8* ICACHE_FLASH_ATTR wps_registrar_get_pin(struct wps_registrar* r
  * PIN to allow it to be used again. If the specified PIN was configured using
  * a wildcard UUID, it will be removed instead of allowing multiple uses.
  */
-int ICACHE_FLASH_ATTR wps_registrar_unlock_pin(struct wps_registrar* reg, const u8* uuid)
+int wps_registrar_unlock_pin(struct wps_registrar* reg, const u8* uuid)
 {
     struct wps_uuid_pin* pin;
 
@@ -1064,7 +1064,7 @@ int ICACHE_FLASH_ATTR wps_registrar_unlock_pin(struct wps_registrar* reg, const 
 }
 #endif
 
-static void ICACHE_FLASH_ATTR wps_registrar_stop_pbc(struct wps_registrar* reg)
+static void wps_registrar_stop_pbc(struct wps_registrar* reg)
 {
     reg->selected_registrar = 0;
     reg->pbc = 0;
@@ -1075,8 +1075,8 @@ static void ICACHE_FLASH_ATTR wps_registrar_stop_pbc(struct wps_registrar* reg)
 }
 
 
-//static void ICACHE_FLASH_ATTR wps_registrar_pbc_timeout(void *eloop_ctx, void *timeout_ctx)
-static void ICACHE_FLASH_ATTR wps_registrar_pbc_timeout(void* eloop_ctx)
+//static void wps_registrar_pbc_timeout(void *eloop_ctx, void *timeout_ctx)
+static void wps_registrar_pbc_timeout(void* eloop_ctx)
 {
     struct wps_registrar* reg = eloop_ctx;
 
@@ -1100,7 +1100,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_pbc_timeout(void* eloop_ctx)
  * PBC mode is not activated and -2 is returned to indicate session overlap.
  * This is skipped if a specific Enrollee is selected.
  */
-int ICACHE_FLASH_ATTR wps_registrar_button_pushed(struct wps_registrar* reg,
+int wps_registrar_button_pushed(struct wps_registrar* reg,
         const u8* p2p_dev_addr)
 {
     if (p2p_dev_addr == NULL &&
@@ -1141,7 +1141,7 @@ int ICACHE_FLASH_ATTR wps_registrar_button_pushed(struct wps_registrar* reg,
 }
 
 
-static void ICACHE_FLASH_ATTR wps_registrar_pbc_completed(struct wps_registrar* reg)
+static void wps_registrar_pbc_completed(struct wps_registrar* reg)
 {
     wpa_printf(MSG_DEBUG, "WPS: PBC completed - stopping PBC mode");
     //eloop_cancel_timeout(wps_registrar_pbc_timeout, reg, NULL);
@@ -1152,7 +1152,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_pbc_completed(struct wps_registrar* 
 
 #ifdef CONFIG_WPS_PIN
 
-static void ICACHE_FLASH_ATTR wps_registrar_pin_completed(struct wps_registrar* reg)
+static void wps_registrar_pin_completed(struct wps_registrar* reg)
 {
     wpa_printf(MSG_DEBUG, "WPS: PIN completed using internal Registrar");
     //eloop_cancel_timeout(wps_registrar_set_selected_timeout, reg, NULL);
@@ -1161,7 +1161,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_pin_completed(struct wps_registrar* 
 }
 #endif
 
-void ICACHE_FLASH_ATTR wps_registrar_complete(struct wps_registrar* registrar, const u8* uuid_e,
+void wps_registrar_complete(struct wps_registrar* registrar, const u8* uuid_e,
         const u8* dev_pw, size_t dev_pw_len)
 {
     if (registrar->pbc) {
@@ -1189,7 +1189,7 @@ void ICACHE_FLASH_ATTR wps_registrar_complete(struct wps_registrar* registrar, c
 }
 
 
-int ICACHE_FLASH_ATTR wps_registrar_wps_cancel(struct wps_registrar* reg)
+int wps_registrar_wps_cancel(struct wps_registrar* reg)
 {
     if (reg->pbc) {
         wpa_printf(MSG_DEBUG, "WPS: PBC is set - cancelling it");
@@ -1226,7 +1226,7 @@ int ICACHE_FLASH_ATTR wps_registrar_wps_cancel(struct wps_registrar* reg)
  * received. This is used to track PBC mode use and to detect possible overlap
  * situation with other WPS APs.
  */
-void ICACHE_FLASH_ATTR wps_registrar_probe_req_rx(struct wps_registrar* reg, const u8* addr,
+void wps_registrar_probe_req_rx(struct wps_registrar* reg, const u8* addr,
         const struct wpabuf* wps_data,
         int p2p_wildcard)
 {
@@ -1322,7 +1322,7 @@ void ICACHE_FLASH_ATTR wps_registrar_probe_req_rx(struct wps_registrar* reg, con
 }
 
 
-static int ICACHE_FLASH_ATTR wps_cb_new_psk(struct wps_registrar* reg, const u8* mac_addr,
+static int wps_cb_new_psk(struct wps_registrar* reg, const u8* mac_addr,
         const u8* psk, size_t psk_len)
 {
     if (reg->new_psk_cb == NULL) {
@@ -1334,7 +1334,7 @@ static int ICACHE_FLASH_ATTR wps_cb_new_psk(struct wps_registrar* reg, const u8*
 
 #ifdef CONFIG_WPS_PIN
 
-static void ICACHE_FLASH_ATTR wps_cb_pin_needed(struct wps_registrar* reg, const u8* uuid_e,
+static void wps_cb_pin_needed(struct wps_registrar* reg, const u8* uuid_e,
         const struct wps_device_data* dev)
 {
     if (reg->pin_needed_cb == NULL) {
@@ -1345,7 +1345,7 @@ static void ICACHE_FLASH_ATTR wps_cb_pin_needed(struct wps_registrar* reg, const
 }
 #endif
 
-static void ICACHE_FLASH_ATTR wps_cb_reg_success(struct wps_registrar* reg, const u8* mac_addr,
+static void wps_cb_reg_success(struct wps_registrar* reg, const u8* mac_addr,
         const u8* uuid_e, const u8* dev_pw,
         size_t dev_pw_len)
 {
@@ -1357,14 +1357,14 @@ static void ICACHE_FLASH_ATTR wps_cb_reg_success(struct wps_registrar* reg, cons
 }
 
 
-static int ICACHE_FLASH_ATTR wps_cb_set_ie(struct wps_registrar* reg, struct wpabuf* beacon_ie,
+static int wps_cb_set_ie(struct wps_registrar* reg, struct wpabuf* beacon_ie,
         struct wpabuf* probe_resp_ie)
 {
     return reg->set_ie_cb(reg->cb_ctx, beacon_ie, probe_resp_ie);
 }
 
 
-static void ICACHE_FLASH_ATTR wps_cb_set_sel_reg(struct wps_registrar* reg)
+static void wps_cb_set_sel_reg(struct wps_registrar* reg)
 {
     u16 methods = 0;
 
@@ -1395,7 +1395,7 @@ static void ICACHE_FLASH_ATTR wps_cb_set_sel_reg(struct wps_registrar* reg)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_set_ie(struct wps_registrar* reg)
+static int wps_set_ie(struct wps_registrar* reg)
 {
     struct wpabuf* beacon;
     struct wpabuf* probe;
@@ -1514,7 +1514,7 @@ static int ICACHE_FLASH_ATTR wps_set_ie(struct wps_registrar* reg)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_get_dev_password(struct wps_data* wps)
+static int wps_get_dev_password(struct wps_data* wps)
 {
     const u8* pin;
     size_t pin_len = 0;
@@ -1562,7 +1562,7 @@ static int ICACHE_FLASH_ATTR wps_get_dev_password(struct wps_data* wps)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_uuid_r(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_uuid_r(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * UUID-R");
     wpabuf_put_be16(msg, ATTR_UUID_R);
@@ -1572,7 +1572,7 @@ static int ICACHE_FLASH_ATTR wps_build_uuid_r(struct wps_data* wps, struct wpabu
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_r_hash(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_r_hash(struct wps_data* wps, struct wpabuf* msg)
 {
     u8* hash;
     const u8* addr[4];
@@ -1605,7 +1605,7 @@ static int ICACHE_FLASH_ATTR wps_build_r_hash(struct wps_data* wps, struct wpabu
     len[2] = wpabuf_len(wps->dh_pubkey_e);
     addr[3] = wpabuf_head(wps->dh_pubkey_r);
     len[3] = wpabuf_len(wps->dh_pubkey_r);
-/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash); */
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
 	} else {
@@ -1622,8 +1622,7 @@ static int ICACHE_FLASH_ATTR wps_build_r_hash(struct wps_data* wps, struct wpabu
     /* R-Hash2 = HMAC_AuthKey(R-S2 || PSK2 || PK_E || PK_R) */
     addr[0] = wps->snonce + WPS_SECRET_NONCE_LEN;
     addr[1] = wps->psk2;
-/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
- */
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
 	} else {
@@ -1637,7 +1636,7 @@ static int ICACHE_FLASH_ATTR wps_build_r_hash(struct wps_data* wps, struct wpabu
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_r_snonce1(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_r_snonce1(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * R-SNonce1");
     wpabuf_put_be16(msg, ATTR_R_SNONCE1);
@@ -1647,7 +1646,7 @@ static int ICACHE_FLASH_ATTR wps_build_r_snonce1(struct wps_data* wps, struct wp
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_r_snonce2(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_r_snonce2(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * R-SNonce2");
     wpabuf_put_be16(msg, ATTR_R_SNONCE2);
@@ -1658,7 +1657,7 @@ static int ICACHE_FLASH_ATTR wps_build_r_snonce2(struct wps_data* wps, struct wp
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_network_idx(struct wpabuf* msg,
+static int wps_build_cred_network_idx(struct wpabuf* msg,
         const struct wps_credential* cred)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Network Index (1)");
@@ -1669,7 +1668,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_network_idx(struct wpabuf* msg,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_ssid(struct wpabuf* msg,
+static int wps_build_cred_ssid(struct wpabuf* msg,
         const struct wps_credential* cred)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * SSID");
@@ -1682,7 +1681,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_ssid(struct wpabuf* msg,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_auth_type(struct wpabuf* msg,
+static int wps_build_cred_auth_type(struct wpabuf* msg,
         const struct wps_credential* cred)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Authentication Type (0x%x)",
@@ -1694,7 +1693,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_auth_type(struct wpabuf* msg,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_encr_type(struct wpabuf* msg,
+static int wps_build_cred_encr_type(struct wpabuf* msg,
         const struct wps_credential* cred)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Encryption Type (0x%x)",
@@ -1706,7 +1705,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_encr_type(struct wpabuf* msg,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_network_key(struct wpabuf* msg,
+static int wps_build_cred_network_key(struct wpabuf* msg,
         const struct wps_credential* cred)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * Network Key (len=%d)",
@@ -1720,7 +1719,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_network_key(struct wpabuf* msg,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_cred_mac_addr(struct wpabuf* msg,
+static int wps_build_cred_mac_addr(struct wpabuf* msg,
         const struct wps_credential* cred)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * MAC Address (" MACSTR ")",
@@ -1732,7 +1731,7 @@ static int ICACHE_FLASH_ATTR wps_build_cred_mac_addr(struct wpabuf* msg,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_credential(struct wpabuf* msg,
+static int wps_build_credential(struct wpabuf* msg,
         const struct wps_credential* cred)
 {
     if (wps_build_cred_network_idx(msg, cred) ||
@@ -1748,7 +1747,7 @@ static int ICACHE_FLASH_ATTR wps_build_credential(struct wpabuf* msg,
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_credential_wrap(struct wpabuf* msg,
+int wps_build_credential_wrap(struct wpabuf* msg,
         const struct wps_credential* cred)
 {
     struct wpabuf* wbuf;
@@ -1771,7 +1770,7 @@ int ICACHE_FLASH_ATTR wps_build_credential_wrap(struct wpabuf* msg,
 }
 
 
-int ICACHE_FLASH_ATTR wps_build_cred(struct wps_data* wps, struct wpabuf* msg)
+int wps_build_cred(struct wps_data* wps, struct wpabuf* msg)
 {
     struct wpabuf* cred;
 
@@ -1958,7 +1957,7 @@ skip_cred_build:
 }
 
 
-static int ICACHE_FLASH_ATTR wps_build_ap_settings(struct wps_data* wps, struct wpabuf* msg)
+static int wps_build_ap_settings(struct wps_data* wps, struct wpabuf* msg)
 {
     wpa_printf(MSG_DEBUG, "WPS:  * AP Settings");
 
@@ -1970,7 +1969,7 @@ static int ICACHE_FLASH_ATTR wps_build_ap_settings(struct wps_data* wps, struct 
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_ap_cred(struct wps_data* wps)
+static struct wpabuf* wps_build_ap_cred(struct wps_data* wps)
 {
     struct wpabuf* msg, *plain;
 
@@ -2002,7 +2001,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_ap_cred(struct wps_data* wps)
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m2(struct wps_data* wps)
+static struct wpabuf* wps_build_m2(struct wps_data* wps)
 {
     struct wpabuf* msg;
 
@@ -2050,7 +2049,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m2(struct wps_data* wps)
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m2d(struct wps_data* wps)
+static struct wpabuf* wps_build_m2d(struct wps_data* wps)
 {
     struct wpabuf* msg;
     u16 err = wps->config_error;
@@ -2091,7 +2090,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m2d(struct wps_data* wps)
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m4(struct wps_data* wps)
+static struct wpabuf* wps_build_m4(struct wps_data* wps)
 {
     struct wpabuf* msg, *plain;
 
@@ -2133,7 +2132,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m4(struct wps_data* wps)
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m6(struct wps_data* wps)
+static struct wpabuf* wps_build_m6(struct wps_data* wps)
 {
     struct wpabuf* msg, *plain;
 
@@ -2173,7 +2172,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m6(struct wps_data* wps)
 }
 
 
-static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m8(struct wps_data* wps)
+static struct wpabuf* wps_build_m8(struct wps_data* wps)
 {
     struct wpabuf* msg, *plain;
 
@@ -2213,7 +2212,7 @@ static struct wpabuf* ICACHE_FLASH_ATTR wps_build_m8(struct wps_data* wps)
 }
 
 
-struct wpabuf* ICACHE_FLASH_ATTR wps_registrar_get_msg(struct wps_data* wps,
+struct wpabuf* wps_registrar_get_msg(struct wps_data* wps,
         enum wsc_op_code* op_code)
 {
     struct wpabuf* msg;
@@ -2338,7 +2337,7 @@ struct wpabuf* ICACHE_FLASH_ATTR wps_registrar_get_msg(struct wps_data* wps,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_enrollee_nonce(struct wps_data* wps, const u8* e_nonce)
+static int wps_process_enrollee_nonce(struct wps_data* wps, const u8* e_nonce)
 {
     if (e_nonce == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Enrollee Nonce received");
@@ -2353,7 +2352,7 @@ static int ICACHE_FLASH_ATTR wps_process_enrollee_nonce(struct wps_data* wps, co
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_registrar_nonce(struct wps_data* wps, const u8* r_nonce)
+static int wps_process_registrar_nonce(struct wps_data* wps, const u8* r_nonce)
 {
     if (r_nonce == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Registrar Nonce received");
@@ -2369,7 +2368,7 @@ static int ICACHE_FLASH_ATTR wps_process_registrar_nonce(struct wps_data* wps, c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_uuid_e(struct wps_data* wps, const u8* uuid_e)
+static int wps_process_uuid_e(struct wps_data* wps, const u8* uuid_e)
 {
     if (uuid_e == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No UUID-E received");
@@ -2383,7 +2382,7 @@ static int ICACHE_FLASH_ATTR wps_process_uuid_e(struct wps_data* wps, const u8* 
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_dev_password_id(struct wps_data* wps, const u8* pw_id)
+static int wps_process_dev_password_id(struct wps_data* wps, const u8* pw_id)
 {
     if (pw_id == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Device Password ID received");
@@ -2397,7 +2396,7 @@ static int ICACHE_FLASH_ATTR wps_process_dev_password_id(struct wps_data* wps, c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_e_hash1(struct wps_data* wps, const u8* e_hash1)
+static int wps_process_e_hash1(struct wps_data* wps, const u8* e_hash1)
 {
     if (e_hash1 == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No E-Hash1 received");
@@ -2411,7 +2410,7 @@ static int ICACHE_FLASH_ATTR wps_process_e_hash1(struct wps_data* wps, const u8*
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_e_hash2(struct wps_data* wps, const u8* e_hash2)
+static int wps_process_e_hash2(struct wps_data* wps, const u8* e_hash2)
 {
     if (e_hash2 == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No E-Hash2 received");
@@ -2425,7 +2424,7 @@ static int ICACHE_FLASH_ATTR wps_process_e_hash2(struct wps_data* wps, const u8*
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_e_snonce1(struct wps_data* wps, const u8* e_snonce1)
+static int wps_process_e_snonce1(struct wps_data* wps, const u8* e_snonce1)
 {
     u8 hash[SHA256_MAC_LEN];
     const u8* addr[4];
@@ -2448,8 +2447,7 @@ static int ICACHE_FLASH_ATTR wps_process_e_snonce1(struct wps_data* wps, const u
     len[2] = wpabuf_len(wps->dh_pubkey_e);
     addr[3] = wpabuf_head(wps->dh_pubkey_r);
     len[3] = wpabuf_len(wps->dh_pubkey_r);
-/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
- */
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
 	} else {
@@ -2472,7 +2470,7 @@ static int ICACHE_FLASH_ATTR wps_process_e_snonce1(struct wps_data* wps, const u
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_e_snonce2(struct wps_data* wps, const u8* e_snonce2)
+static int wps_process_e_snonce2(struct wps_data* wps, const u8* e_snonce2)
 {
     u8 hash[SHA256_MAC_LEN];
     const u8* addr[4];
@@ -2495,8 +2493,7 @@ static int ICACHE_FLASH_ATTR wps_process_e_snonce2(struct wps_data* wps, const u
     len[2] = wpabuf_len(wps->dh_pubkey_e);
     addr[3] = wpabuf_head(wps->dh_pubkey_r);
     len[3] = wpabuf_len(wps->dh_pubkey_r);
-/*     hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, len, hash);
- */
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 		wps_crypto_funcs.hmac_sha256_vector(wps->authkey, WPS_AUTHKEY_LEN, 4, addr, (int *)len, hash);
 	} else {
@@ -2532,7 +2529,7 @@ static int ICACHE_FLASH_ATTR wps_process_e_snonce2(struct wps_data* wps, const u
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_mac_addr(struct wps_data* wps, const u8* mac_addr)
+static int wps_process_mac_addr(struct wps_data* wps, const u8* mac_addr)
 {
     if (mac_addr == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No MAC Address received");
@@ -2548,7 +2545,7 @@ static int ICACHE_FLASH_ATTR wps_process_mac_addr(struct wps_data* wps, const u8
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_pubkey(struct wps_data* wps, const u8* pk,
+static int wps_process_pubkey(struct wps_data* wps, const u8* pk,
         size_t pk_len)
 {
     if (pk == NULL || pk_len == 0) {
@@ -2567,7 +2564,7 @@ static int ICACHE_FLASH_ATTR wps_process_pubkey(struct wps_data* wps, const u8* 
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_auth_type_flags(struct wps_data* wps, const u8* auth)
+static int wps_process_auth_type_flags(struct wps_data* wps, const u8* auth)
 {
     u16 auth_types;
 
@@ -2608,7 +2605,7 @@ static int ICACHE_FLASH_ATTR wps_process_auth_type_flags(struct wps_data* wps, c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_encr_type_flags(struct wps_data* wps, const u8* encr)
+static int wps_process_encr_type_flags(struct wps_data* wps, const u8* encr)
 {
     u16 encr_types;
 
@@ -2649,7 +2646,7 @@ static int ICACHE_FLASH_ATTR wps_process_encr_type_flags(struct wps_data* wps, c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_conn_type_flags(struct wps_data* wps, const u8* conn)
+static int wps_process_conn_type_flags(struct wps_data* wps, const u8* conn)
 {
     if (conn == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Connection Type flags "
@@ -2664,7 +2661,7 @@ static int ICACHE_FLASH_ATTR wps_process_conn_type_flags(struct wps_data* wps, c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_config_methods(struct wps_data* wps, const u8* methods)
+static int wps_process_config_methods(struct wps_data* wps, const u8* methods)
 {
     u16 m;
 
@@ -2702,7 +2699,7 @@ static int ICACHE_FLASH_ATTR wps_process_config_methods(struct wps_data* wps, co
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_wps_state(struct wps_data* wps, const u8* state)
+static int wps_process_wps_state(struct wps_data* wps, const u8* state)
 {
     if (state == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Wi-Fi Protected Setup State "
@@ -2717,9 +2714,9 @@ static int ICACHE_FLASH_ATTR wps_process_wps_state(struct wps_data* wps, const u
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_assoc_state(struct wps_data* wps, const u8* assoc)
+static int wps_process_assoc_state(struct wps_data* wps, const u8* assoc)
 {
-    u16 a;
+    u16 a = 0;
 
     if (assoc == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Association State received");
@@ -2733,9 +2730,9 @@ static int ICACHE_FLASH_ATTR wps_process_assoc_state(struct wps_data* wps, const
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_config_error(struct wps_data* wps, const u8* err)
+static int wps_process_config_error(struct wps_data* wps, const u8* err)
 {
-    u16 e;
+    u16 e = 0;
 
     if (err == NULL) {
         wpa_printf(MSG_DEBUG, "WPS: No Configuration Error received");
@@ -2749,7 +2746,7 @@ static int ICACHE_FLASH_ATTR wps_process_config_error(struct wps_data* wps, cons
 }
 
 
-static int ICACHE_FLASH_ATTR wps_registrar_p2p_dev_addr_match(struct wps_data* wps)
+static int wps_registrar_p2p_dev_addr_match(struct wps_data* wps)
 {
 #ifdef CONFIG_P2P
     struct wps_registrar* reg = wps->wps->registrar;
@@ -2772,7 +2769,7 @@ static int ICACHE_FLASH_ATTR wps_registrar_p2p_dev_addr_match(struct wps_data* w
 }
 
 
-static int ICACHE_FLASH_ATTR wps_registrar_skip_overlap(struct wps_data* wps)
+static int wps_registrar_skip_overlap(struct wps_data* wps)
 {
 #ifdef CONFIG_P2P
     struct wps_registrar* reg = wps->wps->registrar;
@@ -2792,7 +2789,7 @@ static int ICACHE_FLASH_ATTR wps_registrar_skip_overlap(struct wps_data* wps)
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m1(struct wps_data* wps,
+static enum wps_process_res wps_process_m1(struct wps_data* wps,
         struct wps_parse_attr* attr)
 {
     wpa_printf(MSG_DEBUG, "WPS: Received M1");
@@ -2911,7 +2908,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m1(struct wps_data* wp
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m3(struct wps_data* wps,
+static enum wps_process_res wps_process_m3(struct wps_data* wps,
         const struct wpabuf* msg,
         struct wps_parse_attr* attr)
 {
@@ -2946,7 +2943,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m3(struct wps_data* wp
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m5(struct wps_data* wps,
+static enum wps_process_res wps_process_m5(struct wps_data* wps,
         const struct wpabuf* msg,
         struct wps_parse_attr* attr)
 {
@@ -3011,7 +3008,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m5(struct wps_data* wp
 }
 
 
-static void ICACHE_FLASH_ATTR wps_sta_cred_cb(struct wps_data* wps)
+static void wps_sta_cred_cb(struct wps_data* wps)
 {
     /*
      * Update credential to only include a single authentication and
@@ -3039,7 +3036,7 @@ static void ICACHE_FLASH_ATTR wps_sta_cred_cb(struct wps_data* wps)
 }
 
 
-static void ICACHE_FLASH_ATTR wps_cred_update(struct wps_credential* dst,
+static void wps_cred_update(struct wps_credential* dst,
         struct wps_credential* src)
 {
     os_memcpy(dst->ssid, src->ssid, sizeof(dst->ssid));
@@ -3052,7 +3049,7 @@ static void ICACHE_FLASH_ATTR wps_cred_update(struct wps_credential* dst,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_process_ap_settings_r(struct wps_data* wps,
+static int wps_process_ap_settings_r(struct wps_data* wps,
         struct wps_parse_attr* attr)
 {
     struct wpabuf* msg;
@@ -3113,7 +3110,7 @@ static int ICACHE_FLASH_ATTR wps_process_ap_settings_r(struct wps_data* wps,
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m7(struct wps_data* wps,
+static enum wps_process_res wps_process_m7(struct wps_data* wps,
         const struct wpabuf* msg,
         struct wps_parse_attr* attr)
 {
@@ -3180,7 +3177,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_m7(struct wps_data* wp
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_msg(struct wps_data* wps,
+static enum wps_process_res wps_process_wsc_msg(struct wps_data* wps,
         const struct wpabuf* msg)
 {
     struct wps_parse_attr attr;
@@ -3284,7 +3281,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_msg(struct wps_dat
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_ack(struct wps_data* wps,
+static enum wps_process_res wps_process_wsc_ack(struct wps_data* wps,
         const struct wpabuf* msg)
 {
     struct wps_parse_attr attr;
@@ -3361,7 +3358,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_ack(struct wps_dat
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_nack(struct wps_data* wps,
+static enum wps_process_res wps_process_wsc_nack(struct wps_data* wps,
         const struct wpabuf* msg)
 {
     struct wps_parse_attr attr;
@@ -3449,7 +3446,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_nack(struct wps_da
 }
 
 
-static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_done(struct wps_data* wps,
+static enum wps_process_res wps_process_wsc_done(struct wps_data* wps,
         const struct wpabuf* msg)
 {
     struct wps_parse_attr attr;
@@ -3576,7 +3573,7 @@ static enum wps_process_res ICACHE_FLASH_ATTR wps_process_wsc_done(struct wps_da
 }
 
 
-enum wps_process_res ICACHE_FLASH_ATTR wps_registrar_process_msg(struct wps_data* wps,
+enum wps_process_res wps_registrar_process_msg(struct wps_data* wps,
         enum wsc_op_code op_code,
         const struct wpabuf* msg)
 {
@@ -3672,16 +3669,16 @@ enum wps_process_res ICACHE_FLASH_ATTR wps_registrar_process_msg(struct wps_data
 }
 
 
-int ICACHE_FLASH_ATTR wps_registrar_update_ie(struct wps_registrar* reg)
+int wps_registrar_update_ie(struct wps_registrar* reg)
 {
     return wps_set_ie(reg);
 }
 
 
-//static void ICACHE_FLASH_ATTR wps_registrar_set_selected_timeout(void *eloop_ctx,
+//static void wps_registrar_set_selected_timeout(void *eloop_ctx,
 //					       void *timeout_ctx)
 #if 0
-static void ICACHE_FLASH_ATTR wps_registrar_set_selected_timeout(void* eloop_ctx)
+static void wps_registrar_set_selected_timeout(void* eloop_ctx)
 {
     struct wps_registrar* reg = eloop_ctx;
 
@@ -3694,7 +3691,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_set_selected_timeout(void* eloop_ctx
 #endif
 
 #ifdef CONFIG_WPS_UPNP
-static void ICACHE_FLASH_ATTR wps_registrar_sel_reg_add(struct wps_registrar* reg,
+static void wps_registrar_sel_reg_add(struct wps_registrar* reg,
         struct subscription* s)
 {
     int i, j;
@@ -3738,7 +3735,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_sel_reg_add(struct wps_registrar* re
 #endif /* CONFIG_WPS_UPNP */
 
 
-static void ICACHE_FLASH_ATTR wps_registrar_sel_reg_union(struct wps_registrar* reg)
+static void wps_registrar_sel_reg_union(struct wps_registrar* reg)
 {
 #ifdef CONFIG_WPS_UPNP
     struct subscription* s;
@@ -3775,7 +3772,7 @@ static void ICACHE_FLASH_ATTR wps_registrar_sel_reg_union(struct wps_registrar* 
  * This function is called when selected registrar state changes, e.g., when an
  * AP receives a SetSelectedRegistrar UPnP message.
  */
-void ICACHE_FLASH_ATTR wps_registrar_selected_registrar_changed(struct wps_registrar* reg)
+void wps_registrar_selected_registrar_changed(struct wps_registrar* reg)
 {
     wpa_printf(MSG_DEBUG, "WPS: Selected registrar information changed");
 
@@ -3817,7 +3814,7 @@ void ICACHE_FLASH_ATTR wps_registrar_selected_registrar_changed(struct wps_regis
 }
 
 
-int ICACHE_FLASH_ATTR wps_registrar_get_info(struct wps_registrar* reg, const u8* addr,
+int wps_registrar_get_info(struct wps_registrar* reg, const u8* addr,
         char* buf, size_t buflen)
 {
     struct wps_registrar_device* d;
@@ -3862,7 +3859,7 @@ int ICACHE_FLASH_ATTR wps_registrar_get_info(struct wps_registrar* reg, const u8
 }
 
 
-int ICACHE_FLASH_ATTR wps_registrar_config_ap(struct wps_registrar* reg,
+int wps_registrar_config_ap(struct wps_registrar* reg,
         struct wps_credential* cred)
 {
 #ifdef CONFIG_WPS2
@@ -3906,7 +3903,7 @@ int ICACHE_FLASH_ATTR wps_registrar_config_ap(struct wps_registrar* reg,
 
 #ifdef CONFIG_WPS_NFC
 
-int ICACHE_FLASH_ATTR wps_registrar_add_nfc_pw_token(struct wps_registrar* reg,
+int wps_registrar_add_nfc_pw_token(struct wps_registrar* reg,
         const u8* pubkey_hash, u16 pw_id,
         const u8* dev_pw, size_t dev_pw_len)
 {
@@ -3945,7 +3942,7 @@ int ICACHE_FLASH_ATTR wps_registrar_add_nfc_pw_token(struct wps_registrar* reg,
 }
 
 
-int ICACHE_FLASH_ATTR wps_registrar_add_nfc_password_token(struct wps_registrar* reg,
+int wps_registrar_add_nfc_password_token(struct wps_registrar* reg,
         const u8* oob_dev_pw,
         size_t oob_dev_pw_len)
 {
@@ -3978,7 +3975,7 @@ int ICACHE_FLASH_ATTR wps_registrar_add_nfc_password_token(struct wps_registrar*
 }
 
 
-void ICACHE_FLASH_ATTR wps_registrar_remove_nfc_pw_token(struct wps_registrar* reg,
+void wps_registrar_remove_nfc_pw_token(struct wps_registrar* reg,
         struct wps_nfc_pw_token* token)
 {
     wps_registrar_remove_authorized_mac(reg,

@@ -15,7 +15,7 @@
 #endif /* CONFIG_WPS_STRICT */
 
 
-static int ICACHE_FLASH_ATTR wps_set_vendor_ext_wfa_subelem(struct wps_parse_attr* attr,
+static int wps_set_vendor_ext_wfa_subelem(struct wps_parse_attr* attr,
         u8 id, u8 len, const u8* pos)
 {
     wpa_printf(MSG_EXCESSIVE, "WPS: WFA subelement id=%u len=%u",
@@ -77,7 +77,7 @@ static int ICACHE_FLASH_ATTR wps_set_vendor_ext_wfa_subelem(struct wps_parse_att
 }
 
 
-static int ICACHE_FLASH_ATTR wps_parse_vendor_ext_wfa(struct wps_parse_attr* attr, const u8* pos,
+static int wps_parse_vendor_ext_wfa(struct wps_parse_attr* attr, const u8* pos,
         u16 len)
 {
     const u8* end = pos + len;
@@ -102,7 +102,7 @@ static int ICACHE_FLASH_ATTR wps_parse_vendor_ext_wfa(struct wps_parse_attr* att
 }
 
 
-static int ICACHE_FLASH_ATTR wps_parse_vendor_ext(struct wps_parse_attr* attr, const u8* pos,
+static int wps_parse_vendor_ext(struct wps_parse_attr* attr, const u8* pos,
         u16 len)
 {
     u32 vendor_id;
@@ -145,7 +145,7 @@ static int ICACHE_FLASH_ATTR wps_parse_vendor_ext(struct wps_parse_attr* attr, c
 }
 
 
-static int ICACHE_FLASH_ATTR wps_set_attr(struct wps_parse_attr* attr, u16 type,
+static int wps_set_attr(struct wps_parse_attr* attr, u16 type,
         const u8* pos, u16 len)
 {
     switch (type) {
@@ -678,7 +678,7 @@ static int ICACHE_FLASH_ATTR wps_set_attr(struct wps_parse_attr* attr, u16 type,
 }
 
 
-int ICACHE_FLASH_ATTR wps_parse_msg(const struct wpabuf* msg, struct wps_parse_attr* attr)
+int wps_parse_msg(const struct wpabuf* msg, struct wps_parse_attr* attr)
 {
     const u8* pos, *end;
     u16 type, len;

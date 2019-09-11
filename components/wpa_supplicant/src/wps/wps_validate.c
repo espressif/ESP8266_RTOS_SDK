@@ -19,7 +19,7 @@
 static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
 #endif
 
-static int ICACHE_FLASH_ATTR wps_validate_version(const u8* version, int mandatory)
+static int wps_validate_version(const u8* version, int mandatory)
 {
     if (version == NULL) {
         if (mandatory) {
@@ -41,7 +41,7 @@ static int ICACHE_FLASH_ATTR wps_validate_version(const u8* version, int mandato
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_version2(const u8* version2, int mandatory)
+static int wps_validate_version2(const u8* version2, int mandatory)
 {
     if (version2 == NULL) {
         if (mandatory) {
@@ -63,7 +63,7 @@ static int ICACHE_FLASH_ATTR wps_validate_version2(const u8* version2, int manda
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_request_type(const u8* request_type, int mandatory)
+static int wps_validate_request_type(const u8* request_type, int mandatory)
 {
     if (request_type == NULL) {
         if (mandatory) {
@@ -85,7 +85,7 @@ static int ICACHE_FLASH_ATTR wps_validate_request_type(const u8* request_type, i
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_response_type(const u8* response_type, int mandatory)
+static int wps_validate_response_type(const u8* response_type, int mandatory)
 {
     if (response_type == NULL) {
         if (mandatory) {
@@ -107,7 +107,7 @@ static int ICACHE_FLASH_ATTR wps_validate_response_type(const u8* response_type,
 }
 
 
-static int ICACHE_FLASH_ATTR valid_config_methods(u16 val, int wps2)
+static int valid_config_methods(u16 val, int wps2)
 {
     if (wps2) {
         if ((val & 0x6000) && !(val & WPS_CONFIG_DISPLAY)) {
@@ -141,7 +141,7 @@ static int ICACHE_FLASH_ATTR valid_config_methods(u16 val, int wps2)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_config_methods(const u8* config_methods, int wps2,
+static int wps_validate_config_methods(const u8* config_methods, int wps2,
         int mandatory)
 {
     u16 val;
@@ -168,7 +168,7 @@ static int ICACHE_FLASH_ATTR wps_validate_config_methods(const u8* config_method
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_ap_config_methods(const u8* config_methods, int wps2,
+static int wps_validate_ap_config_methods(const u8* config_methods, int wps2,
         int mandatory)
 {
     u16 val;
@@ -195,7 +195,7 @@ static int ICACHE_FLASH_ATTR wps_validate_ap_config_methods(const u8* config_met
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_uuid_e(const u8* uuid_e, int mandatory)
+static int wps_validate_uuid_e(const u8* uuid_e, int mandatory)
 {
     if (uuid_e == NULL) {
         if (mandatory) {
@@ -211,7 +211,7 @@ static int ICACHE_FLASH_ATTR wps_validate_uuid_e(const u8* uuid_e, int mandatory
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_uuid_r(const u8* uuid_r, int mandatory)
+static int wps_validate_uuid_r(const u8* uuid_r, int mandatory)
 {
     if (uuid_r == NULL) {
         if (mandatory) {
@@ -227,7 +227,7 @@ static int ICACHE_FLASH_ATTR wps_validate_uuid_r(const u8* uuid_r, int mandatory
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_primary_dev_type(const u8* primary_dev_type,
+static int wps_validate_primary_dev_type(const u8* primary_dev_type,
         int mandatory)
 {
     if (primary_dev_type == NULL) {
@@ -244,7 +244,7 @@ static int ICACHE_FLASH_ATTR wps_validate_primary_dev_type(const u8* primary_dev
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_rf_bands(const u8* rf_bands, int mandatory)
+static int wps_validate_rf_bands(const u8* rf_bands, int mandatory)
 {
     if (rf_bands == NULL) {
         if (mandatory) {
@@ -267,7 +267,7 @@ static int ICACHE_FLASH_ATTR wps_validate_rf_bands(const u8* rf_bands, int manda
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_assoc_state(const u8* assoc_state, int mandatory)
+static int wps_validate_assoc_state(const u8* assoc_state, int mandatory)
 {
     u16 val;
 
@@ -293,7 +293,7 @@ static int ICACHE_FLASH_ATTR wps_validate_assoc_state(const u8* assoc_state, int
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_config_error(const u8* config_error, int mandatory)
+static int wps_validate_config_error(const u8* config_error, int mandatory)
 {
     u16 val;
 
@@ -319,7 +319,7 @@ static int ICACHE_FLASH_ATTR wps_validate_config_error(const u8* config_error, i
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_dev_password_id(const u8* dev_password_id,
+static int wps_validate_dev_password_id(const u8* dev_password_id,
         int mandatory)
 {
     u16 val;
@@ -346,7 +346,7 @@ static int ICACHE_FLASH_ATTR wps_validate_dev_password_id(const u8* dev_password
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_manufacturer(const u8* manufacturer, size_t len,
+static int wps_validate_manufacturer(const u8* manufacturer, size_t len,
         int mandatory)
 {
     if (manufacturer == NULL) {
@@ -369,7 +369,7 @@ static int ICACHE_FLASH_ATTR wps_validate_manufacturer(const u8* manufacturer, s
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_model_name(const u8* model_name, size_t len,
+static int wps_validate_model_name(const u8* model_name, size_t len,
         int mandatory)
 {
     if (model_name == NULL) {
@@ -392,7 +392,7 @@ static int ICACHE_FLASH_ATTR wps_validate_model_name(const u8* model_name, size_
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_model_number(const u8* model_number, size_t len,
+static int wps_validate_model_number(const u8* model_number, size_t len,
         int mandatory)
 {
     if (model_number == NULL) {
@@ -415,7 +415,7 @@ static int ICACHE_FLASH_ATTR wps_validate_model_number(const u8* model_number, s
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_serial_number(const u8* serial_number, size_t len,
+static int wps_validate_serial_number(const u8* serial_number, size_t len,
         int mandatory)
 {
     if (serial_number == NULL) {
@@ -439,7 +439,7 @@ static int ICACHE_FLASH_ATTR wps_validate_serial_number(const u8* serial_number,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_dev_name(const u8* dev_name, size_t len,
+static int wps_validate_dev_name(const u8* dev_name, size_t len,
         int mandatory)
 {
     if (dev_name == NULL) {
@@ -462,7 +462,7 @@ static int ICACHE_FLASH_ATTR wps_validate_dev_name(const u8* dev_name, size_t le
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_request_to_enroll(const u8* request_to_enroll,
+static int wps_validate_request_to_enroll(const u8* request_to_enroll,
         int mandatory)
 {
     if (request_to_enroll == NULL) {
@@ -485,7 +485,7 @@ static int ICACHE_FLASH_ATTR wps_validate_request_to_enroll(const u8* request_to
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_req_dev_type(const u8* req_dev_type[], size_t num,
+static int wps_validate_req_dev_type(const u8* req_dev_type[], size_t num,
         int mandatory)
 {
     if (num == 0) {
@@ -502,7 +502,7 @@ static int ICACHE_FLASH_ATTR wps_validate_req_dev_type(const u8* req_dev_type[],
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_wps_state(const u8* wps_state, int mandatory)
+static int wps_validate_wps_state(const u8* wps_state, int mandatory)
 {
     if (wps_state == NULL) {
         if (mandatory) {
@@ -525,7 +525,7 @@ static int ICACHE_FLASH_ATTR wps_validate_wps_state(const u8* wps_state, int man
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_ap_setup_locked(const u8* ap_setup_locked,
+static int wps_validate_ap_setup_locked(const u8* ap_setup_locked,
         int mandatory)
 {
     if (ap_setup_locked == NULL) {
@@ -548,7 +548,7 @@ static int ICACHE_FLASH_ATTR wps_validate_ap_setup_locked(const u8* ap_setup_loc
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_selected_registrar(const u8* selected_registrar,
+static int wps_validate_selected_registrar(const u8* selected_registrar,
         int mandatory)
 {
     if (selected_registrar == NULL) {
@@ -571,7 +571,7 @@ static int ICACHE_FLASH_ATTR wps_validate_selected_registrar(const u8* selected_
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_sel_reg_config_methods(const u8* config_methods,
+static int wps_validate_sel_reg_config_methods(const u8* config_methods,
         int wps2, int mandatory)
 {
     u16 val;
@@ -599,7 +599,7 @@ static int ICACHE_FLASH_ATTR wps_validate_sel_reg_config_methods(const u8* confi
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_authorized_macs(const u8* authorized_macs, size_t len,
+static int wps_validate_authorized_macs(const u8* authorized_macs, size_t len,
         int mandatory)
 {
     if (authorized_macs == NULL) {
@@ -622,7 +622,7 @@ static int ICACHE_FLASH_ATTR wps_validate_authorized_macs(const u8* authorized_m
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_msg_type(const u8* msg_type, int mandatory)
+static int wps_validate_msg_type(const u8* msg_type, int mandatory)
 {
     if (msg_type == NULL) {
         if (mandatory) {
@@ -644,7 +644,7 @@ static int ICACHE_FLASH_ATTR wps_validate_msg_type(const u8* msg_type, int manda
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_mac_addr(const u8* mac_addr, int mandatory)
+static int wps_validate_mac_addr(const u8* mac_addr, int mandatory)
 {
     if (mac_addr == NULL) {
         if (mandatory) {
@@ -666,7 +666,7 @@ static int ICACHE_FLASH_ATTR wps_validate_mac_addr(const u8* mac_addr, int manda
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_enrollee_nonce(const u8* enrollee_nonce, int mandatory)
+static int wps_validate_enrollee_nonce(const u8* enrollee_nonce, int mandatory)
 {
     if (enrollee_nonce == NULL) {
         if (mandatory) {
@@ -682,7 +682,7 @@ static int ICACHE_FLASH_ATTR wps_validate_enrollee_nonce(const u8* enrollee_nonc
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_registrar_nonce(const u8* registrar_nonce,
+static int wps_validate_registrar_nonce(const u8* registrar_nonce,
         int mandatory)
 {
     if (registrar_nonce == NULL) {
@@ -699,7 +699,7 @@ static int ICACHE_FLASH_ATTR wps_validate_registrar_nonce(const u8* registrar_no
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_public_key(const u8* public_key, size_t len,
+static int wps_validate_public_key(const u8* public_key, size_t len,
         int mandatory)
 {
     if (public_key == NULL) {
@@ -722,7 +722,7 @@ static int ICACHE_FLASH_ATTR wps_validate_public_key(const u8* public_key, size_
 }
 
 
-static int ICACHE_FLASH_ATTR num_bits_set(u16 val)
+static int num_bits_set(u16 val)
 {
     int c;
 
@@ -734,7 +734,7 @@ static int ICACHE_FLASH_ATTR num_bits_set(u16 val)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_auth_type_flags(const u8* flags, int mandatory)
+static int wps_validate_auth_type_flags(const u8* flags, int mandatory)
 {
     u16 val;
 
@@ -760,7 +760,7 @@ static int ICACHE_FLASH_ATTR wps_validate_auth_type_flags(const u8* flags, int m
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_auth_type(const u8* type, int mandatory)
+static int wps_validate_auth_type(const u8* type, int mandatory)
 {
     u16 val;
 
@@ -788,7 +788,7 @@ static int ICACHE_FLASH_ATTR wps_validate_auth_type(const u8* type, int mandator
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_encr_type_flags(const u8* flags, int mandatory)
+static int wps_validate_encr_type_flags(const u8* flags, int mandatory)
 {
     u16 val;
 
@@ -814,7 +814,7 @@ static int ICACHE_FLASH_ATTR wps_validate_encr_type_flags(const u8* flags, int m
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_encr_type(const u8* type, int mandatory)
+static int wps_validate_encr_type(const u8* type, int mandatory)
 {
     u16 val;
 
@@ -841,7 +841,7 @@ static int ICACHE_FLASH_ATTR wps_validate_encr_type(const u8* type, int mandator
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_conn_type_flags(const u8* flags, int mandatory)
+static int wps_validate_conn_type_flags(const u8* flags, int mandatory)
 {
     if (flags == NULL) {
         if (mandatory) {
@@ -864,7 +864,7 @@ static int ICACHE_FLASH_ATTR wps_validate_conn_type_flags(const u8* flags, int m
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_os_version(const u8* os_version, int mandatory)
+static int wps_validate_os_version(const u8* os_version, int mandatory)
 {
     if (os_version == NULL) {
         if (mandatory) {
@@ -880,7 +880,7 @@ static int ICACHE_FLASH_ATTR wps_validate_os_version(const u8* os_version, int m
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_authenticator(const u8* authenticator, int mandatory)
+static int wps_validate_authenticator(const u8* authenticator, int mandatory)
 {
     if (authenticator == NULL) {
         if (mandatory) {
@@ -896,7 +896,7 @@ static int ICACHE_FLASH_ATTR wps_validate_authenticator(const u8* authenticator,
 }
 
 
-static int ICACHE_FLASH_ATTR ICACHE_FLASH_ATTR wps_validate_e_hash1(const u8* hash, int mandatory)
+static int wps_validate_e_hash1(const u8* hash, int mandatory)
 {
     if (hash == NULL) {
         if (mandatory) {
@@ -912,7 +912,7 @@ static int ICACHE_FLASH_ATTR ICACHE_FLASH_ATTR wps_validate_e_hash1(const u8* ha
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_e_hash2(const u8* hash, int mandatory)
+static int wps_validate_e_hash2(const u8* hash, int mandatory)
 {
     if (hash == NULL) {
         if (mandatory) {
@@ -928,7 +928,7 @@ static int ICACHE_FLASH_ATTR wps_validate_e_hash2(const u8* hash, int mandatory)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_r_hash1(const u8* hash, int mandatory)
+static int wps_validate_r_hash1(const u8* hash, int mandatory)
 {
     if (hash == NULL) {
         if (mandatory) {
@@ -944,7 +944,7 @@ static int ICACHE_FLASH_ATTR wps_validate_r_hash1(const u8* hash, int mandatory)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_r_hash2(const u8* hash, int mandatory)
+static int wps_validate_r_hash2(const u8* hash, int mandatory)
 {
     if (hash == NULL) {
         if (mandatory) {
@@ -960,7 +960,7 @@ static int ICACHE_FLASH_ATTR wps_validate_r_hash2(const u8* hash, int mandatory)
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_encr_settings(const u8* encr_settings, size_t len,
+static int wps_validate_encr_settings(const u8* encr_settings, size_t len,
         int mandatory)
 {
     if (encr_settings == NULL) {
@@ -983,7 +983,7 @@ static int ICACHE_FLASH_ATTR wps_validate_encr_settings(const u8* encr_settings,
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_settings_delay_time(const u8* delay, int mandatory)
+static int wps_validate_settings_delay_time(const u8* delay, int mandatory)
 {
     if (delay == NULL) {
         if (mandatory) {
@@ -999,7 +999,7 @@ static int ICACHE_FLASH_ATTR wps_validate_settings_delay_time(const u8* delay, i
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_r_snonce1(const u8* nonce, int mandatory)
+static int wps_validate_r_snonce1(const u8* nonce, int mandatory)
 {
     if (nonce == NULL) {
         if (mandatory) {
@@ -1015,7 +1015,7 @@ static int ICACHE_FLASH_ATTR wps_validate_r_snonce1(const u8* nonce, int mandato
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_r_snonce2(const u8* nonce, int mandatory)
+static int wps_validate_r_snonce2(const u8* nonce, int mandatory)
 {
     if (nonce == NULL) {
         if (mandatory) {
@@ -1031,7 +1031,7 @@ static int ICACHE_FLASH_ATTR wps_validate_r_snonce2(const u8* nonce, int mandato
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_e_snonce1(const u8* nonce, int mandatory)
+static int wps_validate_e_snonce1(const u8* nonce, int mandatory)
 {
     if (nonce == NULL) {
         if (mandatory) {
@@ -1047,7 +1047,7 @@ static int ICACHE_FLASH_ATTR wps_validate_e_snonce1(const u8* nonce, int mandato
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_e_snonce2(const u8* nonce, int mandatory)
+static int wps_validate_e_snonce2(const u8* nonce, int mandatory)
 {
     if (nonce == NULL) {
         if (mandatory) {
@@ -1063,7 +1063,7 @@ static int ICACHE_FLASH_ATTR wps_validate_e_snonce2(const u8* nonce, int mandato
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_key_wrap_auth(const u8* auth, int mandatory)
+static int wps_validate_key_wrap_auth(const u8* auth, int mandatory)
 {
     if (auth == NULL) {
         if (mandatory) {
@@ -1079,7 +1079,7 @@ static int ICACHE_FLASH_ATTR wps_validate_key_wrap_auth(const u8* auth, int mand
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_ssid(const u8* ssid, size_t ssid_len, int mandatory)
+static int wps_validate_ssid(const u8* ssid, size_t ssid_len, int mandatory)
 {
     if (ssid == NULL) {
         if (mandatory) {
@@ -1101,7 +1101,7 @@ static int ICACHE_FLASH_ATTR wps_validate_ssid(const u8* ssid, size_t ssid_len, 
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_network_key_index(const u8* idx, int mandatory)
+static int wps_validate_network_key_index(const u8* idx, int mandatory)
 {
     if (idx == NULL) {
         if (mandatory) {
@@ -1117,7 +1117,7 @@ static int ICACHE_FLASH_ATTR wps_validate_network_key_index(const u8* idx, int m
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_network_idx(const u8* idx, int mandatory)
+static int wps_validate_network_idx(const u8* idx, int mandatory)
 {
     if (idx == NULL) {
         if (mandatory) {
@@ -1133,7 +1133,7 @@ static int ICACHE_FLASH_ATTR wps_validate_network_idx(const u8* idx, int mandato
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_network_key(const u8* key, size_t key_len,
+static int wps_validate_network_key(const u8* key, size_t key_len,
         const u8* encr_type, int mandatory)
 {
     if (key == NULL) {
@@ -1158,7 +1158,7 @@ static int ICACHE_FLASH_ATTR wps_validate_network_key(const u8* key, size_t key_
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_network_key_shareable(const u8* val, int mandatory)
+static int wps_validate_network_key_shareable(const u8* val, int mandatory)
 {
     if (val == NULL) {
         if (mandatory) {
@@ -1180,7 +1180,7 @@ static int ICACHE_FLASH_ATTR wps_validate_network_key_shareable(const u8* val, i
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_cred(const u8* cred, size_t len)
+static int wps_validate_cred(const u8* cred, size_t len)
 {
     struct wps_parse_attr* attr;
     struct wpabuf buf;
@@ -1231,7 +1231,7 @@ _out:
 }
 
 
-static int ICACHE_FLASH_ATTR wps_validate_credential(const u8* cred[], size_t len[], size_t num,
+static int wps_validate_credential(const u8* cred[], size_t len[], size_t num,
         int mandatory)
 {
     size_t i;
@@ -1256,7 +1256,7 @@ static int ICACHE_FLASH_ATTR wps_validate_credential(const u8* cred[], size_t le
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_beacon(const struct wpabuf* wps_ie)
+int wps_validate_beacon(const struct wpabuf* wps_ie)
 {
     struct wps_parse_attr* attr;
     int wps2, sel_reg;
@@ -1314,7 +1314,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_beacon_probe_resp(const struct wpabuf* wps_ie, int probe,
+int wps_validate_beacon_probe_resp(const struct wpabuf* wps_ie, int probe,
         const u8* addr)
 {
     struct wps_parse_attr* attr;
@@ -1397,7 +1397,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_probe_req(const struct wpabuf* wps_ie, const u8* addr)
+int wps_validate_probe_req(const struct wpabuf* wps_ie, const u8* addr)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -1464,7 +1464,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_assoc_req(const struct wpabuf* wps_ie)
+int wps_validate_assoc_req(const struct wpabuf* wps_ie)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -1513,7 +1513,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_assoc_resp(const struct wpabuf* wps_ie)
+int wps_validate_assoc_resp(const struct wpabuf* wps_ie)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -1563,7 +1563,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m1(const struct wpabuf* tlvs)
+int wps_validate_m1(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -1644,7 +1644,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m2(const struct wpabuf* tlvs)
+int wps_validate_m2(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -1724,7 +1724,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m2d(const struct wpabuf* tlvs)
+int wps_validate_m2d(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -1800,7 +1800,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m3(const struct wpabuf* tlvs)
+int wps_validate_m3(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -1860,7 +1860,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m4(const struct wpabuf* tlvs)
+int wps_validate_m4(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -1922,7 +1922,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m4_encr(const struct wpabuf* tlvs, int wps2)
+int wps_validate_m4_encr(const struct wpabuf* tlvs, int wps2)
 {
     struct wps_parse_attr* attr;
     int ret;
@@ -1977,7 +1977,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m5(const struct wpabuf* tlvs)
+int wps_validate_m5(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -2037,7 +2037,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m5_encr(const struct wpabuf* tlvs, int wps2)
+int wps_validate_m5_encr(const struct wpabuf* tlvs, int wps2)
 {
     struct wps_parse_attr* attr;
     int ret;
@@ -2091,7 +2091,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m6(const struct wpabuf* tlvs)
+int wps_validate_m6(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -2151,7 +2151,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m6_encr(const struct wpabuf* tlvs, int wps2)
+int wps_validate_m6_encr(const struct wpabuf* tlvs, int wps2)
 {
     struct wps_parse_attr* attr;
     int ret;
@@ -2205,7 +2205,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m7(const struct wpabuf* tlvs)
+int wps_validate_m7(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -2266,7 +2266,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m7_encr(const struct wpabuf* tlvs, int ap, int wps2)
+int wps_validate_m7_encr(const struct wpabuf* tlvs, int ap, int wps2)
 {
     struct wps_parse_attr* attr;
     int ret;
@@ -2327,7 +2327,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m8(const struct wpabuf* tlvs)
+int wps_validate_m8(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -2387,7 +2387,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_m8_encr(const struct wpabuf* tlvs, int ap, int wps2)
+int wps_validate_m8_encr(const struct wpabuf* tlvs, int ap, int wps2)
 {
     struct wps_parse_attr* attr;
     int ret;
@@ -2447,7 +2447,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_wsc_ack(const struct wpabuf* tlvs)
+int wps_validate_wsc_ack(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -2505,7 +2505,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_wsc_nack(const struct wpabuf* tlvs)
+int wps_validate_wsc_nack(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -2563,7 +2563,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_wsc_done(const struct wpabuf* tlvs)
+int wps_validate_wsc_done(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;
@@ -2621,7 +2621,7 @@ _out:
 }
 
 
-int ICACHE_FLASH_ATTR wps_validate_upnp_set_selected_registrar(const struct wpabuf* tlvs)
+int wps_validate_upnp_set_selected_registrar(const struct wpabuf* tlvs)
 {
     struct wps_parse_attr* attr;
     int wps2;

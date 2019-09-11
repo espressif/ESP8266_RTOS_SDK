@@ -26,7 +26,7 @@
 static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
 #endif
 
-void ICACHE_FLASH_ATTR wps_kdf(const u8* key, const u8* label_prefix, size_t label_prefix_len,
+void wps_kdf(const u8* key, const u8* label_prefix, size_t label_prefix_len,
                                const char* label, u8* res, size_t res_len)
 {
     u8 i_buf[4], key_bits[4];
@@ -53,7 +53,7 @@ void ICACHE_FLASH_ATTR wps_kdf(const u8* key, const u8* label_prefix, size_t lab
 
     for (i = 1; i <= iter; i++) {
         WPA_PUT_BE32(i_buf, i);
-/*         hmac_sha256_vector(key, SHA256_MAC_LEN, 4, addr, len, hash); */
+
 		if (wps_crypto_funcs.hmac_sha256_vector) {
 		        wps_crypto_funcs.hmac_sha256_vector(key, SHA256_MAC_LEN, 4, addr, (int *)len, hash);
 		} else {
@@ -71,7 +71,7 @@ void ICACHE_FLASH_ATTR wps_kdf(const u8* key, const u8* label_prefix, size_t lab
     }
 }
 
-int ICACHE_FLASH_ATTR wps_derive_keys(struct wps_data* wps)
+int wps_derive_keys(struct wps_data* wps)
 {
     struct wpabuf* pubkey, *dh_shared;
     u8 dhkey[SHA256_MAC_LEN], kdk[SHA256_MAC_LEN];
@@ -121,8 +121,7 @@ int ICACHE_FLASH_ATTR wps_derive_keys(struct wps_data* wps)
     /* DHKey = SHA-256(g^AB mod p) */
     addr[0] = wpabuf_head(dh_shared);
     len[0] = wpabuf_len(dh_shared);
-/*     sha256_vector(1, addr, len, dhkey);
- */ 
+
 	if (wps_crypto_funcs.sha256_vector) {
 	        wps_crypto_funcs.sha256_vector(1, addr, (int *)len, dhkey);
 	} else {
@@ -140,8 +139,7 @@ int ICACHE_FLASH_ATTR wps_derive_keys(struct wps_data* wps)
     len[1] = ETH_ALEN;
     addr[2] = wps->nonce_r;
     len[2] = WPS_NONCE_LEN;
-/*     hmac_sha256_vector(dhkey, sizeof(dhkey), 3, addr, len, kdk);
- */
+
 	if (wps_crypto_funcs.hmac_sha256_vector) {
 	        wps_crypto_funcs.hmac_sha256_vector(dhkey, sizeof(dhkey), 3, addr, (int *)len, kdk);
 	} else {
@@ -168,7 +166,7 @@ int ICACHE_FLASH_ATTR wps_derive_keys(struct wps_data* wps)
 }
 
 
-void ICACHE_FLASH_ATTR wps_derive_psk(struct wps_data* wps, const u8* dev_passwd,
+void wps_derive_psk(struct wps_data* wps, const u8* dev_passwd,
                                       size_t dev_passwd_len)
 {
     u8 hash[SHA256_MAC_LEN];
@@ -176,9 +174,7 @@ void ICACHE_FLASH_ATTR wps_derive_psk(struct wps_data* wps, const u8* dev_passwd
     hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN, dev_passwd,
                 (dev_passwd_len + 1) / 2, hash);
     os_memcpy(wps->psk1, hash, WPS_PSK_LEN);
-/*     hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN,
-                dev_passwd + (dev_passwd_len + 1) / 2,
-                dev_passwd_len / 2, hash); */
+
 	if (wps_crypto_funcs.hmac_sha256) {
 	        wps_crypto_funcs.hmac_sha256(wps->authkey, WPS_AUTHKEY_LEN,
 		                             dev_passwd + (dev_passwd_len + 1) / 2,
@@ -196,7 +192,7 @@ void ICACHE_FLASH_ATTR wps_derive_psk(struct wps_data* wps, const u8* dev_passwd
     wpa_hexdump_key(MSG_DEBUG, "WPS: PSK2", wps->psk2, WPS_PSK_LEN);
 }
 
-struct wpabuf* ICACHE_FLASH_ATTR wps_decrypt_encr_settings(struct wps_data* wps, const u8* encr,
+struct wpabuf* wps_decrypt_encr_settings(struct wps_data* wps, const u8* encr,
         size_t encr_len)
 {
     struct wpabuf* decrypted;
@@ -220,11 +216,6 @@ struct wpabuf* ICACHE_FLASH_ATTR wps_decrypt_encr_settings(struct wps_data* wps,
     wpa_hexdump(MSG_MSGDUMP, "WPS: Encrypted Settings", encr, encr_len);
     wpabuf_put_data(decrypted, encr + block_size, encr_len - block_size);
 
-/*     if (aes_128_cbc_decrypt(wps->keywrapkey, encr, wpabuf_mhead(decrypted),
-                            wpabuf_len(decrypted))) {
-        wpabuf_free(decrypted);
-        return NULL;
-    } */
 	if (wps_crypto_funcs.aes_128_decrypt) {
 	        if (wps_crypto_funcs.aes_128_decrypt(wps->keywrapkey, encr, wpabuf_mhead(decrypted),
 				                     wpabuf_len(decrypted))) {
@@ -268,7 +259,7 @@ struct wpabuf* ICACHE_FLASH_ATTR wps_decrypt_encr_settings(struct wps_data* wps,
  * @pin: Seven digit PIN (i.e., eight digit PIN without the checksum digit)
  * Returns: Checksum digit
  */
-unsigned int ICACHE_FLASH_ATTR wps_pin_checksum(unsigned int pin)
+unsigned int wps_pin_checksum(unsigned int pin)
 {
     unsigned int accum = 0;
 
@@ -288,7 +279,7 @@ unsigned int ICACHE_FLASH_ATTR wps_pin_checksum(unsigned int pin)
  * @pin: Eight digit PIN (i.e., including the checksum digit)
  * Returns: 1 if checksum digit is valid, or 0 if not
  */
-unsigned int ICACHE_FLASH_ATTR wps_pin_valid(unsigned int pin)
+unsigned int wps_pin_valid(unsigned int pin)
 {
     return wps_pin_checksum(pin / 10) == (pin % 10);
 }
@@ -298,31 +289,22 @@ unsigned int ICACHE_FLASH_ATTR wps_pin_valid(unsigned int pin)
  * wps_generate_pin - Generate a random PIN
  * Returns: Eight digit PIN (i.e., including the checksum digit)
  */
-unsigned int ICACHE_FLASH_ATTR wps_generate_pin(void)
+unsigned int wps_generate_pin(void)
 {
-    unsigned int val;
+	unsigned int val;
 
-    /* Generate seven random digits for the PIN */
-    //if (random_get_bytes((unsigned char *) &val, sizeof(val)) < 0) {
-#ifdef CONFIG_IDF_TARGET_ESP8266
-    struct os_time now;
-    os_get_time(&now);
-    val = esp_random() ^ now.sec ^ now.usec;
-    //}
-#else
 	/* Generate seven random digits for the PIN */
 	if (random_get_bytes((unsigned char *) &val, sizeof(val)) < 0) {
 		return -1;
 	}
-#endif
-    val %= 10000000;
+	val %= 10000000;
 
-    /* Append checksum digit */
-    return val * 10 + wps_pin_checksum(val);
+	/* Append checksum digit */
+	return val * 10 + wps_pin_checksum(val);
 }
 
 
-int ICACHE_FLASH_ATTR wps_pin_str_valid(const char* pin)
+int wps_pin_str_valid(const char* pin)
 {
     const char* p;
     size_t len;
@@ -342,7 +324,7 @@ int ICACHE_FLASH_ATTR wps_pin_str_valid(const char* pin)
 }
 #endif
 
-void ICACHE_FLASH_ATTR wps_fail_event(struct wps_context* wps, enum wps_msg_type msg,
+void wps_fail_event(struct wps_context* wps, enum wps_msg_type msg,
                                       u16 config_error, u16 error_indication)
 {
     union wps_event_data* data;
@@ -366,7 +348,7 @@ void ICACHE_FLASH_ATTR wps_fail_event(struct wps_context* wps, enum wps_msg_type
     os_free(data);
 }
 
-void ICACHE_FLASH_ATTR wps_success_event(struct wps_context* wps)
+void wps_success_event(struct wps_context* wps)
 {
     if (wps->event_cb == NULL) {
         return;
@@ -375,7 +357,7 @@ void ICACHE_FLASH_ATTR wps_success_event(struct wps_context* wps)
     wps->event_cb(wps->cb_ctx, WPS_EV_SUCCESS, NULL);
 }
 
-void ICACHE_FLASH_ATTR wps_pwd_auth_fail_event(struct wps_context* wps, int enrollee, int part)
+void wps_pwd_auth_fail_event(struct wps_context* wps, int enrollee, int part)
 {
     union wps_event_data* data;
 
@@ -397,7 +379,7 @@ void ICACHE_FLASH_ATTR wps_pwd_auth_fail_event(struct wps_context* wps, int enro
     os_free(data);
 }
 
-void ICACHE_FLASH_ATTR wps_pbc_overlap_event(struct wps_context* wps)
+void wps_pbc_overlap_event(struct wps_context* wps)
 {
     if (wps->event_cb == NULL) {
         return;
@@ -406,7 +388,7 @@ void ICACHE_FLASH_ATTR wps_pbc_overlap_event(struct wps_context* wps)
     wps->event_cb(wps->cb_ctx, WPS_EV_PBC_OVERLAP, NULL);
 }
 
-void ICACHE_FLASH_ATTR wps_pbc_timeout_event(struct wps_context* wps)
+void wps_pbc_timeout_event(struct wps_context* wps)
 {
     if (wps->event_cb == NULL) {
         return;
@@ -416,7 +398,7 @@ void ICACHE_FLASH_ATTR wps_pbc_timeout_event(struct wps_context* wps)
 }
 
 #ifdef CONFIG_WPS_OOB
-struct wpabuf* ICACHE_FLASH_ATTR wps_get_oob_cred(struct wps_context* wps)
+struct wpabuf* wps_get_oob_cred(struct wps_context* wps)
 {
     struct wps_data* data;
     struct wpabuf* plain;
@@ -455,7 +437,7 @@ struct wpabuf* ICACHE_FLASH_ATTR wps_get_oob_cred(struct wps_context* wps)
 
 #ifdef CONFIG_WPS_NFC
 
-struct wpabuf* ICACHE_FLASH_ATTR wps_build_nfc_pw_token(u16 dev_pw_id,
+struct wpabuf* wps_build_nfc_pw_token(u16 dev_pw_id,
         const struct wpabuf* pubkey,
         const struct wpabuf* dev_pw)
 {
@@ -482,7 +464,7 @@ struct wpabuf* ICACHE_FLASH_ATTR wps_build_nfc_pw_token(u16 dev_pw_id,
 
 #endif
 
-int ICACHE_FLASH_ATTR wps_oob_use_cred(struct wps_context* wps, struct wps_parse_attr* attr)
+int wps_oob_use_cred(struct wps_context* wps, struct wps_parse_attr* attr)
 {
     struct wpabuf msg;
     size_t i;
@@ -508,7 +490,7 @@ int ICACHE_FLASH_ATTR wps_oob_use_cred(struct wps_context* wps, struct wps_parse
 }
 #endif /* CONFIG_WPS_OOB */
 
-int ICACHE_FLASH_ATTR wps_dev_type_str2bin(const char* str, u8 dev_type[WPS_DEV_TYPE_LEN])
+int wps_dev_type_str2bin(const char* str, u8 dev_type[WPS_DEV_TYPE_LEN])
 {
     const char* pos;
 
@@ -539,7 +521,7 @@ int ICACHE_FLASH_ATTR wps_dev_type_str2bin(const char* str, u8 dev_type[WPS_DEV_
     return 0;
 }
 
-char* ICACHE_FLASH_ATTR wps_dev_type_bin2str(const u8 dev_type[WPS_DEV_TYPE_LEN], char* buf,
+char* wps_dev_type_bin2str(const u8 dev_type[WPS_DEV_TYPE_LEN], char* buf,
         size_t buf_len)
 {
     int ret;
@@ -555,7 +537,7 @@ char* ICACHE_FLASH_ATTR wps_dev_type_bin2str(const u8 dev_type[WPS_DEV_TYPE_LEN]
     return buf;
 }
 
-void ICACHE_FLASH_ATTR uuid_gen_mac_addr(const u8* mac_addr, u8* uuid)
+void uuid_gen_mac_addr(const u8* mac_addr, u8* uuid)
 {
     const u8* addr[2];
     size_t len[2];
@@ -583,7 +565,7 @@ void ICACHE_FLASH_ATTR uuid_gen_mac_addr(const u8* mac_addr, u8* uuid)
 }
 
 
-u16 ICACHE_FLASH_ATTR wps_config_methods_str2bin(const char* str)
+u16 wps_config_methods_str2bin(const char* str)
 {
     u16 methods = 0;
 
@@ -653,7 +635,7 @@ u16 ICACHE_FLASH_ATTR wps_config_methods_str2bin(const char* str)
     return methods;
 }
 
-struct wpabuf* ICACHE_FLASH_ATTR wps_build_wsc_ack(struct wps_data* wps)
+struct wpabuf* wps_build_wsc_ack(struct wps_data* wps)
 {
     struct wpabuf* msg;
 
@@ -677,7 +659,7 @@ struct wpabuf* ICACHE_FLASH_ATTR wps_build_wsc_ack(struct wps_data* wps)
     return msg;
 }
 
-struct wpabuf* ICACHE_FLASH_ATTR wps_build_wsc_nack(struct wps_data* wps)
+struct wpabuf* wps_build_wsc_nack(struct wps_data* wps)
 {
     struct wpabuf* msg;
 
@@ -703,7 +685,7 @@ struct wpabuf* ICACHE_FLASH_ATTR wps_build_wsc_nack(struct wps_data* wps)
 }
 
 #ifdef CONFIG_WPS_NFC
-struct wpabuf* ICACHE_FLASH_ATTR wps_nfc_token_gen(int ndef, int* id, struct wpabuf** pubkey,
+struct wpabuf* wps_nfc_token_gen(int ndef, int* id, struct wpabuf** pubkey,
         struct wpabuf** privkey,
         struct wpabuf** dev_pw)
 {
