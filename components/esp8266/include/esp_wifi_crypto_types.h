@@ -750,48 +750,6 @@ typedef struct{
     esp_eap_msg_alloc_t eap_msg_alloc;
 }wps_crypto_funcs_t;
 
-/**
-  * @brief The crypto callback function structure used when do WPA enterprise connect.
-  *        The structure can be set as software crypto or the crypto optimized by ESP32
-  *        hardware.
-  */
-typedef struct {
-    uint32_t size;
-    uint32_t version;
-    esp_crypto_hash_init_t crypto_hash_init;                  /**< function used to initialize a crypto_hash structure when use TLSV1 */
-    esp_crypto_hash_update_t crypto_hash_update;              /**< function used to calculate hash data when use TLSV1 */
-    esp_crypto_hash_finish_t crypto_hash_finish;              /**< function used to finish the hash calculate when use TLSV1 */
-    esp_crypto_cipher_init_t crypto_cipher_init;              /**< function used to initialize a crypt_cipher structure when use TLSV1 */
-    esp_crypto_cipher_encrypt_t crypto_cipher_encrypt;        /**< function used to encrypt cipher when use TLSV1 */
-    esp_crypto_cipher_decrypt_t crypto_cipher_decrypt;        /**< function used to decrypt cipher when use TLSV1 */
-    esp_crypto_cipher_deinit_t crypto_cipher_deinit;          /**< function used to free context when use TLSV1 */
-    esp_crypto_mod_exp_t crypto_mod_exp;                      /**< function used to do key exchange when use TLSV1 */
-    esp_sha256_vector_t sha256_vector;                        /**< function used to do X.509v3 certificate parsing and processing */
-    esp_tls_init_t tls_init;
-    esp_tls_deinit_t tls_deinit;  
-    esp_eap_peer_blob_init_t eap_peer_blob_init;
-    esp_eap_peer_blob_deinit_t eap_peer_blob_deinit;
-    esp_eap_peer_config_init_t eap_peer_config_init;
-    esp_eap_peer_config_deinit_t eap_peer_config_deinit;
-    esp_eap_peer_register_methods_t eap_peer_register_methods;
-    esp_eap_peer_unregister_methods_t eap_peer_unregister_methods;
-    esp_eap_deinit_prev_method_t eap_deinit_prev_method;
-    esp_eap_peer_get_eap_method_t eap_peer_get_eap_method;
-    esp_eap_sm_abort_t eap_sm_abort;
-    esp_eap_sm_build_nak_t eap_sm_build_nak;
-    esp_eap_sm_build_identity_resp_t eap_sm_build_identity_resp;
-    esp_eap_msg_alloc_t eap_msg_alloc;
-} wpa2_crypto_funcs_t;
-
-/**
-  * @brief The crypto callback function structure used in mesh vendor IE encryption. The
-  *        structure can be set as software crypto or the crypto optimized by ESP32
-  *        hardware.
-  */
-typedef struct{
-    esp_aes_128_encrypt_t aes_128_encrypt;          /**< function used in mesh vendor IE encryption */
-    esp_aes_128_decrypt_t aes_128_decrypt;          /**< function used in mesh vendor IE decryption */
-} mesh_crypto_funcs_t;
 
 #ifdef __cplusplus
 }

@@ -13,6 +13,7 @@
  *
  * See README and COPYING for more details.
  */
+#include "sdkconfig.h"
 
 #include "crypto/includes.h"
 
@@ -163,5 +164,55 @@ fast_sha256_prf(const uint8_t *key, size_t key_len, const char *label,
         }
         counter++;
     }
+}
+#else
+/**
+ * fast_hmac_sha256_vector - HMAC-SHA256 over data vector (RFC 2104)
+ * @key: Key for HMAC operations
+ * @key_len: Length of the key in bytes
+ * @num_elem: Number of elements in the data vector
+ * @addr: Pointers to the data areas
+ * @len: Lengths of the data blocks
+ * @mac: Buffer for the hash (32 bytes)
+ */
+void 
+fast_hmac_sha256_vector(const uint8_t *key, size_t key_len, size_t num_elem,
+			const uint8_t *addr[], const size_t *len, uint8_t *mac)
+{
+}
+
+
+/**
+ * fast_hmac_sha256 - HMAC-SHA256 over data buffer (RFC 2104)
+ * @key: Key for HMAC operations
+ * @key_len: Length of the key in bytes
+ * @data: Pointers to the data area
+ * @data_len: Length of the data area
+ * @mac: Buffer for the hash (20 bytes)
+ */
+void 
+fast_hmac_sha256(const uint8_t *key, size_t key_len, const uint8_t *data,
+		 size_t data_len, uint8_t *mac)
+{
+}
+
+
+/**
+ * fast_sha256_prf - SHA256-based Pseudo-Random Function (IEEE 802.11r, 8.5.1.5.2)
+ * @key: Key for PRF
+ * @key_len: Length of the key in bytes
+ * @label: A unique label for each purpose of the PRF
+ * @data: Extra data to bind into the key
+ * @data_len: Length of the data
+ * @buf: Buffer for the generated pseudo-random key
+ * @buf_len: Number of bytes of key to generate
+ *
+ * This function is used to derive new, cryptographically separate keys from a
+ * given key.
+ */
+void 
+fast_sha256_prf(const uint8_t *key, size_t key_len, const char *label,
+		const uint8_t *data, size_t data_len, uint8_t *buf, size_t buf_len)
+{
 }
 #endif

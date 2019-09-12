@@ -13,6 +13,7 @@
 // limitations under the License.
 
 //#include "wpa/includes.h"
+#include "sdkconfig.h"
 
 //#include "wpa/common.h"
 #include "crypto/common.h"

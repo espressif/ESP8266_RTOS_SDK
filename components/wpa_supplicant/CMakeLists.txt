@@ -1,7 +1,8 @@
-set(COMPONENT_SRCDIRS "src/crypto" "src/wps" "port")
-set(COMPONENT_ADD_INCLUDEDIRS "include" "port/include")
 
-set(COMPONENT_PRIV_REQUIRES "freertos" "heap" "newlib" "util")
+set(COMPONENT_SRCDIRS "src/crypto" "src/fast_crypto" "src/wps" "port" "src")
+set(COMPONENT_ADD_INCLUDEDIRS "include" "port/include")
+set(COMPONENT_PRIV_REQUIRES "ssl" "freertos" "heap" "newlib" "util")
+
 
 register_component()
 

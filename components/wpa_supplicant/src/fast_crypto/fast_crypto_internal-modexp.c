@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
+
 #include "crypto/includes.h"
 
 #include "crypto/common.h"
@@ -20,8 +22,7 @@
 #if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/bignum.h"
 
-int 
-fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
+int fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
 		    const uint8_t *power, size_t power_len,
 		    const uint8_t *modulus, size_t modulus_len,
 		    uint8_t *result, size_t *result_len)
@@ -59,5 +60,13 @@ fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
     mbedtls_mpi_free(&bn_rinv);
 
     return ret;
+}
+#else
+int fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
+		    const uint8_t *power, size_t power_len,
+		    const uint8_t *modulus, size_t modulus_len,
+		    uint8_t *result, size_t *result_len)
+{
+    return 0;
 }
 #endif

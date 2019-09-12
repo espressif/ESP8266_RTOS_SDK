@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
+
 #include "crypto/includes.h"
 
 #include "crypto/common.h"
@@ -82,5 +84,19 @@ int fast_aes_wrap(const uint8_t *kek, int n, const uint8_t *plain, uint8_t *ciph
      */
 
     return ret;
+}
+#else
+/**
+ * fast_aes_wrap - Wrap keys with AES Key Wrap Algorithm (128-bit KEK) (RFC3394)
+ * @kek: 16-octet Key encryption key (KEK)
+ * @n: Length of the plaintext key in 64-bit units; e.g., 2 = 128-bit = 16
+ * bytes
+ * @plain: Plaintext key to be wrapped, n * 64 bits
+ * @cipher: Wrapped key, (n + 1) * 64 bits
+ * Returns: 0 on success, -1 on failure
+ */
+int fast_aes_wrap(const uint8_t *kek, int n, const uint8_t *plain, uint8_t *cipher)
+{
+    return 0;
 }
 #endif

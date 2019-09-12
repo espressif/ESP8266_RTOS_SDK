@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include "sdkconfig.h"
 
 #include "crypto/includes.h"
 #include "crypto/common.h"
 
 #if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/aes.h"
-
 /**
  * fast_aes_unwrap - Unwrap key with AES Key Wrap Algorithm (128-bit KEK) (RFC3394)
  * @kek: Key encryption key (KEK)
@@ -83,5 +83,20 @@ fast_aes_unwrap(const uint8_t *kek, int n, const uint8_t *cipher, uint8_t *plain
     }
 
     return ret;
+}
+#else
+/**
+ * fast_aes_unwrap - Unwrap key with AES Key Wrap Algorithm (128-bit KEK) (RFC3394)
+ * @kek: Key encryption key (KEK)
+ * @n: Length of the plaintext key in 64-bit units; e.g., 2 = 128-bit = 16
+ * bytes
+ * @cipher: Wrapped key to be unwrapped, (n + 1) * 64 bits
+ * @plain: Plaintext key, n * 64 bits
+ * Returns: 0 on success, -1 on failure (e.g., integrity verification failed)
+ */
+int 
+fast_aes_unwrap(const uint8_t *kek, int n, const uint8_t *cipher, uint8_t *plain)
+{
+    return 0;
 }
 #endif
