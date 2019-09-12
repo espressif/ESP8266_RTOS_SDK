@@ -330,7 +330,9 @@ typedef struct {
  */
 typedef struct {
     wifi_pkt_rx_ctrl_t rx_ctrl; /**< metadata header */
-    uint8_t payload[0];       /**< Data or management payload. Length of payload is described by rx_ctrl.legacy_length or rx_ctrl.HT_length. Type of content determined by packet type argument of callback. */
+    uint8_t payload[0];       /**< Data or management frame payload. Length of payload is
+                                min(112, (pkt->rx_ctrl.sig_mode ? pkt->rx_ctrl.HT_length : pkt->rx_ctrl.legacy_length))
+                                Type of content determined by packet type argument of callback. */
 } wifi_promiscuous_pkt_t;
 
 /**
