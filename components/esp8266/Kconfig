@@ -560,39 +560,17 @@ endmenu
 
 menu PHY
 
-choice ESP8266_PHY_CALIBRATION
-    prompt "RF calibration"
-    default ESP8266_PHY_FULL_CALIBRATION
-    help
-        If calibration data is not found, full calibration will be performed. To ensure better RF performance,
-        it is recommend to set RF_calibration to ESP8266_PHY_FULL_CALIBRATION, otherwise the RF performance may become poor.
-
-        Full calibration needs 170 - 180ms.
-        Partial calibration needs 35 - 40ms.
-        No calibration needs 3.260 - 3.264ms.
-
-config ESP8266_PHY_FULL_CALIBRATION
-    bool "RF full calibration"
-config ESP8266_PHY_NO_CALIBRATION
-    bool "RF no calibration"
-config ESP8266_PHY_PARTIAL_CALIBRATION
-    bool "RF partial calibration"
-endchoice
-
-config ESP8266_PHY_CALIBRATION
-    int
-    default 3 if ESP8266_PHY_FULL_CALIBRATION
-    default 2 if ESP8266_PHY_PARTIAL_CALIBRATION
-    default 1 if ESP8266_PHY_NO_CALIBRATION
-
 config ESP_PHY_CALIBRATION_AND_DATA_STORAGE
     bool "Store phy calibration data in NVS"
     default y
     help
         If this option is enabled, NVS will be initialized and calibration data will be loaded from there.
-        PHY calibration will be skipped on deep sleep wakeup. If calibration data is not found, full calibration
-        will be performed and stored in NVS. Normally, only partial calibration will be performed. 
-        If this option is disabled, full calibration will be performed.
+        If calibration data is not found, full calibration will be performed and stored in NVS. Normally,
+        only partial calibration will be performed. If this option is disabled, full calibration will be performed.
+
+        Full calibration needs 170 - 180ms.
+        Partial calibration needs 35 - 40ms.
+        No calibration needs 3.260 - 3.264ms.
 
         If it's easy that your board calibrate bad data, choose 'n'.
         Two cases for example, you should choose 'n':
