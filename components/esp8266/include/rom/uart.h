@@ -47,22 +47,7 @@ extern "C" {
   * The function defined in ROM code has a bug, so we define the correct version
   * here for compatibility.
   */
-static inline void IRAM_ATTR uart_tx_wait_idle(uint8_t uart_no) {
-    uint32_t tx_bytes;
-    uint32_t baudrate, byte_delay_us;
-    uart_dev_t *const UART[2] = {&uart0, &uart1};
-    uart_dev_t *const uart = UART[uart_no];
-    
-    baudrate = (UART_CLK_FREQ / (uart->clk_div.val & 0xFFFFF));
-    byte_delay_us = (uint32_t)(10000000 / baudrate);
-
-    do {
-        tx_bytes = uart->status.txfifo_cnt;
-        /* either tx count or state is non-zero */
-    } while (tx_bytes);
-
-    ets_delay_us(byte_delay_us);
-}
+void uart_tx_wait_idle(uint8_t uart_no);
 
 /**
   * @brief Output a char to printf channel, wait until fifo not full.
