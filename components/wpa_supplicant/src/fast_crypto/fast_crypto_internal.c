@@ -282,6 +282,4 @@ int fast_crypto_hash_finish(struct crypto_hash *ctx, u8 *mac, size_t *len)
 
 	return 0;
 }
-#else
-
 #endif

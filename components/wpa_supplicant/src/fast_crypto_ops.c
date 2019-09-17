@@ -85,7 +85,8 @@ const wps_crypto_funcs_t g_wifi_default_wps_crypto_funcs = {
     .eap_msg_alloc = (esp_eap_msg_alloc_t)eap_msg_alloc
 };
 
-#else 
+#else
+
 /* 
  * The parameters is used to set the cyrpto callback function for station connect when in security mode,
  * every callback function can register as fast_xxx or normal one, i.e, fast_aes_wrap or aes_wrap, the 

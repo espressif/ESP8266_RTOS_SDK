@@ -691,8 +691,6 @@ typedef int (*esp_wps_is_selected_pin_registrar_t)(const void *msg, unsigned cha
  */
 typedef int (*esp_wps_is_selected_pbc_registrar_t)(const void *msg, unsigned char *bssid);
 
-
-
 /**
   * @brief The crypto callback function structure used when do station security connect.
   *        The structure can be set as software crypto or the crypto optimized by ESP32
@@ -749,7 +747,6 @@ typedef struct{
     esp_wps_is_selected_pbc_registrar_t wps_is_selected_pbc_registrar;
     esp_eap_msg_alloc_t eap_msg_alloc;
 }wps_crypto_funcs_t;
-
 
 #ifdef __cplusplus
 }

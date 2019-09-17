@@ -61,12 +61,4 @@ int fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
 
     return ret;
 }
-#else
-int fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
-		    const uint8_t *power, size_t power_len,
-		    const uint8_t *modulus, size_t modulus_len,
-		    uint8_t *result, size_t *result_len)
-{
-    return 0;
-}
 #endif

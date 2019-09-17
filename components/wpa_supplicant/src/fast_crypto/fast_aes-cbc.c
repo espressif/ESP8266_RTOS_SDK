@@ -79,33 +79,4 @@ fast_aes_128_cbc_decrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data, s
     return ret;
 
 }
-#else
-/**
- * fast_aes_128_cbc_encrypt - AES-128 CBC encryption
- * @key: Encryption key
- * @iv: Encryption IV for CBC mode (16 bytes)
- * @data: Data to encrypt in-place
- * @data_len: Length of data in bytes (must be divisible by 16)
- * Returns: 0 on success, -1 on failure
- */
-int 
-fast_aes_128_cbc_encrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data, size_t data_len)
-{
-    return 0;
-}
-
-/**
- * fast_aes_128_cbc_decrypt - AES-128 CBC decryption
- * @key: Decryption key
- * @iv: Decryption IV for CBC mode (16 bytes)
- * @data: Data to decrypt in-place
- * @data_len: Length of data in bytes (must be divisible by 16)
- * Returns: 0 on success, -1 on failure
- */
-int 
-fast_aes_128_cbc_decrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data, size_t data_len)
-{
-    return 0;
-
-}
 #endif
