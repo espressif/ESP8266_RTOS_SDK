@@ -37,6 +37,7 @@ else()
         "source/startup.c"
         "source/system_api.c"
         "source/task_wdt.c"
+        "source/rom.c"
         "driver/adc.c"
         "driver/gpio.c"
         "driver/hw_timer.c"

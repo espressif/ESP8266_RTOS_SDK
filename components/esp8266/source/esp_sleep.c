@@ -22,9 +22,9 @@
 #include "freertos/task.h"
 #include "driver/soc.h"
 #include "esp8266/timer_struct.h"
-#include "esp8266/uart_struct.h"
 #include "esp8266/rom_functions.h"
 #include "driver/rtc.h"
+#include "rom/uart.h"
 
 #define FRC2_LOAD               (0x60000620)
 #define FRC2_COUNT              (0x60000624)
@@ -109,21 +109,6 @@ static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
     }
 }
 
-static void esp_sleep_wait_uart_empty(int no)
-{
-    int filled = 0;
-    const uart_dev_t *uart = (no == 0 ? &uart0 : &uart1);
-
-    while (uart->status.txfifo_cnt)
-        filled = 1;
-
-    if (filled) {
-        const uint32_t us = 10000000 / (UART_CLK_FREQ / uart->clk_div.val);
-
-        ets_delay_us(us);
-    }
-}
-
 esp_err_t esp_sleep_enable_timer_wakeup(uint32_t time_in_us)
 {
     if (time_in_us <= MIN_SLEEP_US)
@@ -174,8 +159,8 @@ void esp_sleep_start(void)
         return ;
     }
 
-    esp_sleep_wait_uart_empty(0);
-    esp_sleep_wait_uart_empty(1);
+    uart_tx_wait_idle(0);
+    uart_tx_wait_idle(1);
 
     int slept = 0;
     pm_soc_clk_t clk;
