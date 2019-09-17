@@ -22,6 +22,14 @@
 
 #define ESP_TIMER_HZ CONFIG_FREERTOS_HZ
 
+typedef enum {
+    ESP_TIMER_INIT = 0,
+    ESP_TIMER_ONCE,
+    ESP_TIMER_CYCLE,
+    ESP_TIMER_STOP,
+    ESP_TIMER_DELETE,
+} esp_timer_state_t;
+
 struct esp_timer {
     TimerHandle_t       os_timer;
 
@@ -29,26 +37,64 @@ struct esp_timer {
 
     void                *arg;
 
-    TickType_t          period_ticks;
+    esp_timer_state_t   state;
 };
 
 static const char *TAG = "esp_timer";
+
+static esp_err_t delete_timer(esp_timer_handle_t timer)
+{
+    BaseType_t ret = xTimerDelete(timer->os_timer, portMAX_DELAY);
+    if (ret == pdPASS)
+        heap_caps_free(timer);
+
+    return ret == pdPASS ? ESP_OK : ESP_ERR_NO_MEM;
+}
 
 /**
  * @brief FreeRTOS callback function
  */
 static void esp_timer_callback(TimerHandle_t xTimer)
 {
-    BaseType_t os_ret;
     struct esp_timer *timer = (struct esp_timer *)pvTimerGetTimerID(xTimer);
 
     timer->cb(timer->arg);
 
-    if (!timer->period_ticks) {
-        os_ret = xTimerStop(timer->os_timer, 0);
-        if (os_ret != pdPASS) {
-            ESP_LOGE(TAG, "Set timer from periodic to once error");
+    switch (timer->state) {
+        case ESP_TIMER_INIT:
+        case ESP_TIMER_STOP:
+            break;
+        case ESP_TIMER_CYCLE: {
+            BaseType_t ret = xTimerReset(timer->os_timer, portMAX_DELAY);
+            if (ret != pdPASS) {
+                ESP_LOGE(TAG, "start timer at callback error");
+            } else {
+                ESP_LOGD(TAG, "start timer at callback OK");
+            }
+            break;
         }
+        case ESP_TIMER_ONCE: {
+            BaseType_t ret = xTimerStop(timer->os_timer, portMAX_DELAY);
+            if (ret != pdPASS) {
+                ESP_LOGE(TAG, "stop timer at callback error");
+            } else {
+                timer->state = ESP_TIMER_STOP;
+                ESP_LOGD(TAG, "stop timer at callback OK");
+            }
+            break;
+        }
+        case ESP_TIMER_DELETE: {
+            esp_err_t ret = delete_timer(timer);
+            if (ret != ESP_OK) {
+                ESP_LOGE(TAG, "delete timer at callback error");
+            } else {
+                ESP_LOGD(TAG, "delete timer at callback OK");
+            }
+            break;
+        }
+        default:
+            ESP_LOGE(TAG, "timer state error is %d", timer->state);
+            break;
     }
 }
 
@@ -84,17 +130,16 @@ esp_err_t esp_timer_create(const esp_timer_create_args_t* create_args,
     if (!esp_timer)
         return ESP_ERR_NO_MEM;
 
-    esp_timer->cb = create_args->callback;
-    esp_timer->arg = create_args->arg;
-    esp_timer->period_ticks = 0;
-
     os_timer = xTimerCreate(create_args->name,
                             portMAX_DELAY,
-                            pdTRUE,
+                            pdFALSE,
                             esp_timer,
                             esp_timer_callback);
     if (os_timer) {
         esp_timer->os_timer = os_timer;
+        esp_timer->cb = create_args->callback;
+        esp_timer->arg = create_args->arg;
+        esp_timer->state = ESP_TIMER_INIT;
         *out_handle = (esp_timer_handle_t)esp_timer;
     } else {
         heap_caps_free(esp_timer);
@@ -121,14 +166,7 @@ esp_err_t esp_timer_start_once(esp_timer_handle_t timer, uint64_t timeout_us)
 
     os_ret = xTimerChangePeriod(os_timer, ticks, portMAX_DELAY);
     if (os_ret == pdPASS) {
-        TickType_t period_ticks = timer->period_ticks;
-
-        timer->period_ticks = 0;
-        os_ret = xTimerStart(os_timer, portMAX_DELAY);
-        if (os_ret != pdPASS) {
-            timer->period_ticks = period_ticks;
-            return ESP_ERR_INVALID_STATE;
-        }
+        timer->state = ESP_TIMER_ONCE;
     } else {
         return ESP_ERR_INVALID_STATE;
     }
@@ -153,14 +191,7 @@ esp_err_t esp_timer_start_periodic(esp_timer_handle_t timer, uint64_t period)
 
     os_ret = xTimerChangePeriod(os_timer, ticks, portMAX_DELAY);
     if (os_ret == pdPASS) {
-        TickType_t period_ticks = timer->period_ticks;
-
-        timer->period_ticks = ticks;
-        os_ret = xTimerStart(os_timer, portMAX_DELAY);
-        if (os_ret != pdPASS) {
-            timer->period_ticks = period_ticks;
-            return ESP_ERR_INVALID_STATE;
-        }
+        timer->state = ESP_TIMER_CYCLE;
     } else {
         return ESP_ERR_INVALID_STATE;
     }
@@ -179,6 +210,8 @@ esp_err_t esp_timer_stop(esp_timer_handle_t timer)
     BaseType_t os_ret;
 
     os_ret = xTimerStop(os_timer, portMAX_DELAY);
+    if (os_ret == pdPASS)
+        timer->state = ESP_TIMER_STOP;
 
     return os_ret == pdPASS ? ESP_OK : ESP_ERR_INVALID_STATE;   
 }
@@ -188,16 +221,27 @@ esp_err_t esp_timer_stop(esp_timer_handle_t timer)
  */
 esp_err_t esp_timer_delete(esp_timer_handle_t timer)
 {
+    esp_err_t ret;
+
     assert(timer);
 
-    TimerHandle_t os_timer = timer->os_timer;
-    BaseType_t os_ret;
+    if (xTimerGetTimerDaemonTaskHandle() == xTaskGetCurrentTaskHandle()) {
+        timer->state = ESP_TIMER_DELETE;
+        ret = ESP_OK;
+    } else {
+        UBaseType_t prio = uxTaskPriorityGet(NULL);
+        if (prio >= configTIMER_TASK_PRIORITY)
+            vTaskPrioritySet(NULL, configTIMER_TASK_PRIORITY - 1);
+        else
+            prio = 0;
 
-    os_ret = xTimerDelete(os_timer, portMAX_DELAY);
-    if (os_ret == pdPASS)
-        heap_caps_free(timer);
+        ret = delete_timer(timer);
 
-    return os_ret == pdPASS ? ESP_OK : ESP_ERR_INVALID_STATE; 
+        if (prio)
+            vTaskPrioritySet(NULL, prio);
+    }
+
+    return ret;
 }
 
 int64_t esp_timer_get_time()
