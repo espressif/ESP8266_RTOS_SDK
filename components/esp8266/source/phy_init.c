@@ -85,10 +85,12 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t* init_data, esp_phy_calibrat
                              phy_check_data_table(phy_rx_gain_dc_table, 125, 1);
 
     phy_afterwake_set_rfoption(1);
-    phy_set_powerup_option(CONFIG_ESP8266_PHY_CALIBRATION);
 
     if (!cal_data_check) {
+        phy_set_powerup_option(1);
         write_data_to_rtc(calibration_data->rf_cal_data);
+    } else {
+        phy_set_powerup_option(3);
     }
 
     esp_efuse_mac_get_default(sta_mac);
