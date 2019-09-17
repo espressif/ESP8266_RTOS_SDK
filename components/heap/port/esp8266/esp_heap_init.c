@@ -13,12 +13,23 @@
 // limitations under the License.
 
 #include "esp_heap_caps.h"
+#include "esp_attr.h"
 
 #define HEAP_REGION_IRAM_MIN 512
 #define HEAP_REGION_IRAM_MAX 0x00010000
 
 heap_region_t g_heap_region[HEAP_REGIONS_MAX];
 
+size_t IRAM_ATTR heap_caps_get_dram_free_size(void)
+{
+#ifndef CONFIG_HEAP_DISABLE_IRAM
+    extern size_t g_heap_region_num;
+
+    return g_heap_region[g_heap_region_num - 1].free_bytes;
+#else
+    return g_heap_region[0].free_bytes;
+#endif
+}
 
 /**
  * @brief Initialize the capability-aware heap allocator.
