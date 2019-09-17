@@ -14,6 +14,12 @@
 
 #pragma once
 
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define _heap_caps_lock(_num)               \
 {                                           \
     extern void vPortETSIntrLock(void);     \
@@ -32,3 +38,13 @@
     esp_task_wdt_reset();                   \
 }
 
+/**
+ * @brief Get the total free size of DRAM region
+ *
+ * @return Amount of free bytes in DRAM region
+ */
+size_t heap_caps_get_dram_free_size(void);
+
+#ifdef __cplusplus
+}
+#endif
