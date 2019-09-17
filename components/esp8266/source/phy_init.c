@@ -364,3 +364,11 @@ void esp_wifi_set_max_tx_power_via_vdd33(uint16_t vdd33)
     extern void phy_vdd33_set_tpw(uint16_t vdd33);
     phy_vdd33_set_tpw(vdd33);
 }
+
+/**
+ * @brief Just for compiling
+ */
+int phy_printf(const char *fmt, ...)
+{
+    return 0;
+}
