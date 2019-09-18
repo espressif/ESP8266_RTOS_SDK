@@ -82,10 +82,6 @@ app-flash: $(APP_BIN) $(ESPTOOLPY_SRC) $(call prereq_if_explicit,erase_flash)
 	@echo "Flashing app to serial port $(ESPPORT), offset $(APP_OFFSET)..."
 	$(ESPTOOLPY_WRITE_FLASH) $(APP_OFFSET) $(APP_BIN)
 
-# Submodules normally added in component.mk, but can be added
-# at the project level as long as qualified path
-COMPONENT_SUBMODULES += $(COMPONENT_PATH)/esptool
-
 erase_flash:
 	@echo "Erasing entire flash..."
 	$(ESPTOOLPY_SERIAL) erase_flash

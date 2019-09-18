@@ -8,8 +8,6 @@ COMPONENT_OBJS = libcoap/src/address.o libcoap/src/async.o libcoap/src/block.o l
 
 COMPONENT_SRCDIRS := libcoap/src libcoap port
 
-COMPONENT_SUBMODULES += libcoap
-
 libcoap/src/debug.o: CFLAGS += -Wno-write-strings
 libcoap/src/pdu.o: CFLAGS += -Wno-write-strings
 # Temporary suppress "fallthrough" warnings until they are fixed in libcoap repo
