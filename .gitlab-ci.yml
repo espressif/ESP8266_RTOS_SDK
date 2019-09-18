@@ -23,7 +23,8 @@ before_script:
   before_script: &do_nothing_before
     # apply bot filter in before script
     - *apply_bot_filter
-    - echo "Not setting up GitLab key, not fetching submodules"
+    - echo "Not setting up GitLab key, fetching submodules ..."
+    - git submodule update --init --recursive
     - source tools/ci/configure_ci_environment.sh
 
 .build_template: &build_template
@@ -121,6 +122,7 @@ build_docs:
       - $BOT_LABEL_BUILD
       - $BOT_LABEL_EXAMPLE_TEST
       - $BOT_LABEL_REGULAR_TEST
+  before_script: *do_nothing_before
   script:
     # it's not possible to build 100% out-of-tree and have the "artifacts"
     # mechanism work, but this is the next best thing
@@ -147,6 +149,7 @@ build_docs:
       - $BOT_LABEL_BUILD
       - $BOT_LABEL_EXAMPLE_TEST
       - $BOT_LABEL_REGULAR_TEST
+  before_script: *do_nothing_before
   script:
     # it's not possible to build 100% out-of-tree and have the "artifacts"
     # mechanism work, but this is the next best thing
