@@ -1,4 +1,3 @@
-COMPONENT_SUBMODULES += libsodium
 
 # Common root directory for all source directories
 LSRC := libsodium/src/libsodium
