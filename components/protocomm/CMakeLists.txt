@@ -13,6 +13,6 @@ set(COMPONENT_SRCS  "src/common/protocomm.c"
                     "src/transports/protocomm_httpd.c")
 endif()
 
-set(COMPONENT_PRIV_REQUIRES protobuf-c ssl esp_http_server http_parser)
+set(COMPONENT_PRIV_REQUIRES protobuf-c mbedtls esp_http_server http_parser)
 
 register_component()

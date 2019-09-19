@@ -196,16 +196,6 @@ static void openssl_client_task(void* p)
 
     printf("OK\n");
 
-    printf("load ca crt ......");
-    ret = SSL_CTX_load_verify_buffer(ctx, ca_pem_start, ca_pem_end - ca_pem_start);
-
-    if (ret) {
-        printf("OK\n");
-    } else {
-        printf("failed\n");
-        goto failed2;
-    }
-
     printf("load client crt ......");
     ret = SSL_CTX_use_certificate_ASN1(ctx, client_pem_end - client_pem_start, client_pem_start);
 

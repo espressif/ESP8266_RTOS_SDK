@@ -382,14 +382,6 @@ int NetworkConnectSSL(Network *n, char *addr, int port, ssl_ca_crt_key_t *ssl_cc
         goto exit;
     }
 
-    if (ssl_cck->cacrt) {
-        retVal = SSL_CTX_load_verify_buffer(n->ctx, ssl_cck->cacrt, ssl_cck->cacrt_len);
-
-        if (retVal != 1) {
-            goto exit1;
-        }
-    }
-
     if (ssl_cck->cert && ssl_cck->key) {
         retVal = SSL_CTX_use_certificate_ASN1(n->ctx, ssl_cck->cert_len, ssl_cck->cert);
 

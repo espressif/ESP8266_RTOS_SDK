@@ -183,6 +183,16 @@ uint32_t esp_get_minimum_free_heap_size( void );
  */
 uint32_t esp_random(void);
 
+/**
+ * @brief Fill a buffer with random bytes from hardware RNG
+ *
+ * @note This function has the same restrictions regarding available entropy as esp_random()
+ *
+ * @param buf Pointer to buffer to fill with random numbers.
+ * @param len Length of buffer in bytes
+ */
+void esp_fill_random(void *buf, size_t len);
+
 typedef enum {
     FLASH_SIZE_4M_MAP_256_256 = 0,  /**<  Flash size : 4Mbits. Map : 256KBytes + 256KBytes */
     FLASH_SIZE_2M,                  /**<  Flash size : 2Mbits. Map : 256KBytes */

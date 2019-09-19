@@ -1,5 +1,5 @@
 /*
- *  SHA-1 implementation with hardware ESP32 support added.
+ *  SHA-1 implementation with extra ESP8266 support added.
  *  Uses mbedTLS software implementation for failover when concurrent
  *  SHA operations are in use.
  *
@@ -29,29 +29,14 @@ extern "C" {
 
 #if defined(MBEDTLS_SHA1_ALT)
 
-typedef enum {
-    ESP_MBEDTLS_SHA1_UNUSED, /* first block hasn't been processed yet */
-    ESP_MBEDTLS_SHA1_HARDWARE, /* using hardware SHA engine */
-    ESP_MBEDTLS_SHA1_SOFTWARE, /* using software SHA */
-} esp_mbedtls_sha1_mode;
+#include "esp_sha.h"
 
-/**
- * \brief          SHA-1 context structure
- */
-typedef struct
-{
-    uint32_t total[2];          /*!< number of bytes processed  */
-    uint32_t state[5];          /*!< intermediate digest state  */
-    unsigned char buffer[64];   /*!< data block being processed */
-    esp_mbedtls_sha1_mode mode;
-}
-mbedtls_sha1_context;
+typedef esp_sha1_t mbedtls_sha1_context;
 
-#endif
+#endif /* MBEDTLS_SHA1_ALT */
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-

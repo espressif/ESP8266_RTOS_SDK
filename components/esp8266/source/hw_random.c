@@ -1,4 +1,4 @@
-// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2019-2020 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <esp_attr.h>
-#include <esp_heap_caps.h>
-#include <sdkconfig.h>
-#include "esp_mem.h"
 
-#ifndef CONFIG_MBEDTLS_CUSTOM_MEM_ALLOC
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+#include <sys/param.h>
+#include "esp_system.h"
 
-void *esp_mbedtls_mem_calloc(size_t n, size_t size)
+void esp_fill_random(void *buf, size_t len)
 {
-    return calloc(n, size);
+    assert(buf != NULL);
+    uint8_t *buf_bytes = (uint8_t *)buf;
+    while (len > 0) {
+        uint32_t word = esp_random();
+        uint32_t to_copy = MIN(sizeof(word), len);
+        memcpy(buf_bytes, &word, to_copy);
+        buf_bytes += to_copy;
+        len -= to_copy;
+    }
 }
-
-void esp_mbedtls_mem_free(void *ptr)
-{
-    return heap_caps_free(ptr);
-}
-
-#endif /* !CONFIG_MBEDTLS_CUSTOM_MEM_ALLOC */

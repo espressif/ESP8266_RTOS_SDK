@@ -1,5 +1,5 @@
 /*
- *  SHA-256 implementation with hardware ESP32 support added.
+ *  SHA-512 implementation with extra ESP8266 support added.
  *  Uses mbedTLS software implementation for failover when concurrent
  *  SHA operations are in use.
  *
@@ -20,35 +20,20 @@
  *  limitations under the License.
  *
  */
-#ifndef _SHA256_ALT_H_
-#define _SHA256_ALT_H_
+#ifndef _SHA512_ALT_H_
+#define _SHA512_ALT_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(MBEDTLS_SHA256_ALT)
+#if defined(MBEDTLS_SHA512_ALT)
 
-typedef enum {
-    ESP_MBEDTLS_SHA256_UNUSED, /* first block hasn't been processed yet */
-    ESP_MBEDTLS_SHA256_HARDWARE, /* using hardware SHA engine */
-    ESP_MBEDTLS_SHA256_SOFTWARE, /* using software SHA */
-} esp_mbedtls_sha256_mode;
+#include "esp_sha.h"
 
-/**
- * \brief          SHA-256 context structure
- */
-typedef struct
-{
-    uint32_t total[2];          /*!< number of bytes processed  */
-    uint32_t state[8];          /*!< intermediate digest state  */
-    unsigned char buffer[64];   /*!< data block being processed */
-    int is224;                  /*!< 0 => SHA-256, else SHA-224 */
-    esp_mbedtls_sha256_mode mode;
-}
-mbedtls_sha256_context;
+typedef esp_sha512_t mbedtls_sha512_context;
 
-#endif
+#endif /* MBEDTLS_SHA512_ALT */
 
 #ifdef __cplusplus
 }

@@ -6,6 +6,6 @@ set(COMPONENT_ADD_INCLUDEDIRS "include")
 set(COMPONENT_PRIV_INCLUDEDIRS "lib/include")
 
 set(COMPONENT_REQUIRES "http_parser")
-set(COMPONENT_PRIV_REQUIRES "ssl" "lwip" "esp-tls" "tcp_transport" "tcpip_adapter")
+set(COMPONENT_PRIV_REQUIRES "mbedtls" "lwip" "esp-tls" "tcp_transport" "tcpip_adapter")
 
 register_component()
