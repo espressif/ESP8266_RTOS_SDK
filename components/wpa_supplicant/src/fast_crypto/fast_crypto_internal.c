@@ -27,7 +27,11 @@ struct fast_crypto_hash {
 	enum crypto_hash_alg alg;
 	union {
 		struct MD5Context md5;
+#ifndef CONFIG_ESP_SHA
 		struct SHA1Context sha1;
+#else
+        SHA1_CTX sha1;
+#endif
 #ifdef CONFIG_SHA256
                 mbedtls_sha256_context sha256;
 #endif /* CONFIG_SHA256 */
