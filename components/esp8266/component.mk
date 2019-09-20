@@ -34,6 +34,7 @@ COMPONENT_ADD_LDFLAGS += -L$(COMPONENT_PATH)/lib \
                          -T $(COMPONENT_BUILD_DIR)/esp8266.project.ld \
                          -Wl,--no-check-sections \
                          -u call_user_start      \
+                         -u g_esp_sys_info \
                          $(addprefix -T ,$(LINKER_SCRIPTS))
 
 ALL_LIB_FILES := $(patsubst %,$(COMPONENT_PATH)/lib/lib%.a,$(LIBS))

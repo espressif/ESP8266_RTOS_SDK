@@ -52,6 +52,16 @@ struct _rtc_sys_info {
                                              if your bootloader is older than v3.2, please don't use this */
 };
 
+/**
+ * @brief System information
+ */
+typedef struct esp_sys_info {
+    uint32_t  version;                                  //!< system version
+    uint32_t  reserved[3];                              //!< reserved data
+} esp_sys_info_t;
+
+_Static_assert(sizeof(esp_sys_info_t) == 16, "esp_sys_info_t should be 16 bytes");
+
 extern struct _rtc_sys_info rtc_sys_info;
 
 /**

@@ -48,7 +48,7 @@ SECTIONS
     _iram_start = ABSOLUTE(.);
     /* Vectors go to IRAM */
     _init_start = ABSOLUTE(.);
-    LONG(_iram_start)
+    KEEP(*(.SystemInfoVector.text));
     . = 0x10;
     KEEP(*(.DebugExceptionVector.text));
     . = 0x20;
