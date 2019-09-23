@@ -96,6 +96,8 @@ static inline uint32_t min_sleep_us(pm_soc_clk_t *clk)
 
 static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
 {
+    extern uint32_t WdevTimOffSet;
+
     const uint32_t os_ccount = us * g_esp_ticks_per_us + clk->ccount;
 
     if (os_ccount >= _xt_tick_divisor) 
@@ -107,6 +109,8 @@ static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
 
         REG_WRITE(FRC2_LOAD,  frc2_cnt);
     }
+
+    WdevTimOffSet += us;
 }
 
 esp_err_t esp_sleep_enable_timer_wakeup(uint32_t time_in_us)
