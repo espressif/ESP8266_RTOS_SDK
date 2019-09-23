@@ -11,6 +11,7 @@
 
 #include "wps/wps_defs.h"
 #include "esp_wifi_types.h"
+#include "esp_system.h"
 
 /**
  * enum wsc_op_code - EAP-WSC OP-Code values

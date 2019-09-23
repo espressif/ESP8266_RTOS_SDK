@@ -26,8 +26,6 @@
 #define API_MUTEX_TAKE(t)       local_irq_save(t)
 #define API_MUTEX_GIVE(t)       local_irq_restore(t)
 
-extern bool system_overclock(void);
-extern bool system_restoreclock(void);
 #endif
 
 int wps_build_public_key(struct wps_data* wps, struct wpabuf* msg, wps_key_mode_t mode)
@@ -63,13 +61,13 @@ int wps_build_public_key(struct wps_data* wps, struct wpabuf* msg, wps_key_mode_
             API_MUTEX_DECLARE(c_tmp);
             API_MUTEX_TAKE(c_tmp);
             //pp_soft_wdt_stop();
-            system_overclock();
+            esp_set_cpu_freq(ESP_CPU_FREQ_160M);
             //REG_SET_BIT(0x3ff00014, BIT(0));        //change CPU to 160Mhz
             //ets_update_cpu_frequency(160);
 #endif
             wps->dh_ctx = dh5_init(&wps->dh_privkey, &pubkey);
 #ifdef CONFIG_IDF_TARGET_ESP8266
-            system_restoreclock();
+            esp_set_cpu_freq(ESP_CPU_FREQ_80M);
             //REG_CLR_BIT(0x3ff00014, BIT(0));        //change CPU to 80Mhz
             //ets_update_cpu_frequency(80);
 

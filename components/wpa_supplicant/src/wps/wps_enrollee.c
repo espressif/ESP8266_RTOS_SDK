@@ -29,8 +29,6 @@ static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
 #define API_MUTEX_TAKE(t)       local_irq_save(t)
 #define API_MUTEX_GIVE(t)       local_irq_restore(t)
 
-extern bool system_overclock(void);
-extern bool system_restoreclock(void);
 #endif
 
 
@@ -608,17 +606,17 @@ static int wps_process_pubkey(struct wps_data* wps, const u8* pk,
     //REG_SET_BIT(0x3ff00014, BIT(0));        //change CPU to 160Mhz
     //ets_update_cpu_frequency(160);
     //ets_printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, REG_READ(0x3ff20c00));
-    system_overclock();
+    esp_set_cpu_freq(ESP_CPU_FREQ_160M);
     if (wps_derive_keys(wps) < 0) {
         //REG_CLR_BIT(0x3ff00014, BIT(0));        //change CPU to 80Mhz
         //ets_update_cpu_frequency(80);
-        system_restoreclock();
+        esp_set_cpu_freq(ESP_CPU_FREQ_80M);
         //pp_soft_wdt_restart();
         API_MUTEX_GIVE(c_tmp);
         return -1;
     }
 
-    system_restoreclock();
+    esp_set_cpu_freq(ESP_CPU_FREQ_80M);
     //ets_printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, REG_READ(0x3ff20c00));
     //REG_CLR_BIT(0x3ff00014, BIT(0));        //change CPU to 80Mhz
     //ets_update_cpu_frequency(80);
