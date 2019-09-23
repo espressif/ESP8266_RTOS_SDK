@@ -60,18 +60,11 @@ int wps_build_public_key(struct wps_data* wps, struct wpabuf* msg, wps_key_mode_
 #ifdef CONFIG_IDF_TARGET_ESP8266
             API_MUTEX_DECLARE(c_tmp);
             API_MUTEX_TAKE(c_tmp);
-            //pp_soft_wdt_stop();
             esp_set_cpu_freq(ESP_CPU_FREQ_160M);
-            //REG_SET_BIT(0x3ff00014, BIT(0));        //change CPU to 160Mhz
-            //ets_update_cpu_frequency(160);
 #endif
             wps->dh_ctx = dh5_init(&wps->dh_privkey, &pubkey);
 #ifdef CONFIG_IDF_TARGET_ESP8266
             esp_set_cpu_freq(ESP_CPU_FREQ_80M);
-            //REG_CLR_BIT(0x3ff00014, BIT(0));        //change CPU to 80Mhz
-            //ets_update_cpu_frequency(80);
-
-            //pp_soft_wdt_restart();
             API_MUTEX_GIVE(c_tmp);
 #endif
             wpa_printf(MSG_DEBUG, "build public key finish");

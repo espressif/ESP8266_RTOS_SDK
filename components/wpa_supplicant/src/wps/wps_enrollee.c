@@ -601,26 +601,16 @@ static int wps_process_pubkey(struct wps_data* wps, const u8* pk,
 #ifdef CONFIG_IDF_TARGET_ESP8266
     API_MUTEX_DECLARE(c_tmp);
     API_MUTEX_TAKE(c_tmp);
-    //pp_soft_wdt_stop();
-
-    //REG_SET_BIT(0x3ff00014, BIT(0));        //change CPU to 160Mhz
-    //ets_update_cpu_frequency(160);
-    //ets_printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, REG_READ(0x3ff20c00));
     esp_set_cpu_freq(ESP_CPU_FREQ_160M);
+    
     if (wps_derive_keys(wps) < 0) {
-        //REG_CLR_BIT(0x3ff00014, BIT(0));        //change CPU to 80Mhz
-        //ets_update_cpu_frequency(80);
         esp_set_cpu_freq(ESP_CPU_FREQ_80M);
-        //pp_soft_wdt_restart();
         API_MUTEX_GIVE(c_tmp);
         return -1;
     }
 
     esp_set_cpu_freq(ESP_CPU_FREQ_80M);
-    //ets_printf("[%s]line:[%d]%d\r\n", __func__, __LINE__, REG_READ(0x3ff20c00));
-    //REG_CLR_BIT(0x3ff00014, BIT(0));        //change CPU to 80Mhz
-    //ets_update_cpu_frequency(80);
-    //pp_soft_wdt_restart();
+
     API_MUTEX_GIVE(c_tmp);
 #else
 	if (wps_derive_keys(wps) < 0) {

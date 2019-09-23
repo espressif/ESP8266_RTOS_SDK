@@ -4,7 +4,7 @@ gwen:
     pp:         6a32b9b
     wpa:        743c778
     espnow:     743c778
-    wps:        44eada6
+    wps:        6a32b9b
 
     smartconfig:  2.8.2
     phy:          1149
