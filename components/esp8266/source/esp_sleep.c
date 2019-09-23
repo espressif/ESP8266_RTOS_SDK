@@ -162,10 +162,15 @@ void esp_sleep_start(void)
     uart_tx_wait_idle(0);
     uart_tx_wait_idle(1);
 
-    int slept = 0;
+    int cpu_wait = 1;
     pm_soc_clk_t clk;
     const esp_irqflag_t irqflag = soc_save_local_irq();
     const uint32_t wdevflag = save_local_wdev();
+
+    if (s_lock_cnt) {
+        cpu_wait = 0;
+        goto exit;
+    }
 
     save_soc_clk(&clk);
 
@@ -184,13 +189,14 @@ void esp_sleep_start(void)
 
             update_soc_clk(&clk, sleep_us);
 
-            slept = 1;
+            cpu_wait = 0;
         }
     }
 
+exit:
     restore_local_wdev(wdevflag);
     soc_restore_local_irq(irqflag);
 
-    if (!slept)
+    if (cpu_wait)
         soc_wait_int();
 }
