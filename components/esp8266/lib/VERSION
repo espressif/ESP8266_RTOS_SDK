@@ -1,7 +1,7 @@
 gwen:
     core:       743c778
     net80211:   da5ae93
-    pp:         743c778
+    pp:         6a32b9b
     wpa:        743c778
     espnow:     743c778
     wps:        743c778
