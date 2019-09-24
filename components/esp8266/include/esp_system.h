@@ -21,6 +21,8 @@
 
 #include "sdkconfig.h"
 
+#include "esp_idf_version.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -180,13 +182,6 @@ uint32_t esp_get_minimum_free_heap_size( void );
  * @return Random value between 0 and UINT32_MAX
  */
 uint32_t esp_random(void);
-
-/**
- * Get IDF version
- *
- * @return constant string from IDF_VER
- */
-const char* esp_get_idf_version(void);
 
 typedef enum {
     FLASH_SIZE_4M_MAP_256_256 = 0,  /**<  Flash size : 4Mbits. Map : 256KBytes + 256KBytes */

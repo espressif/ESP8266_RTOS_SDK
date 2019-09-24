@@ -33,6 +33,11 @@ static const char* TAG = "system_api";
 
 static uint8_t base_mac_addr[6] = { 0 };
 
+// Bootloader can get this information
+const __attribute__((section(".SystemInfoVector.text"))) esp_sys_info_t g_esp_sys_info = {
+    .version = ESP_IDF_VERSION
+};
+
 esp_err_t esp_base_mac_addr_set(uint8_t *mac)
 {
     if (mac == NULL) {
