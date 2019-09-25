@@ -16,7 +16,6 @@
 #define SHA1_I_H
 
 #include "sdkconfig.h"
-
 #ifdef CONFIG_ESP_SHA
 #include "esp_sha.h"
 
