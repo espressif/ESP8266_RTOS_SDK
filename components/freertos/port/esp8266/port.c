@@ -390,13 +390,9 @@ BaseType_t xQueueGenericReceive(QueueHandle_t xQueue, void * const pvBuffer,
 
 void esp_internal_idle_hook(void)
 {
-    extern void pmIdleHook(void);
-    extern void esp_task_wdt_reset(void);
-
     esp_task_wdt_reset();
-    pmIdleHook();
 
-    soc_wait_int();
+    esp_sleep_start();
 }
 
 #ifndef DISABLE_FREERTOS
