@@ -7,11 +7,10 @@
  */
 #include "wpa/includes.h"
 #include "wpa/common.h"
+#include "wpa/list.h"
+#include "wpa/ieee802_11_defs.h"
 
 #include "wps/utils/uuid.h"
-#include "wpa/list.h"
-
-#include "wpa/ieee802_11_defs.h"
 #include "wps/wps_i.h"
 #include "wps/wps_dev_attr.h"
 

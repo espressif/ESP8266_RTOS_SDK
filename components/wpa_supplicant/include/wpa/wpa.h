@@ -104,15 +104,15 @@ struct wpa_sm {
     uint8_t flags;
 
     void (* sendto) (u8 *wpadata, u16 wpadatalen);
-    void (*config_assoc_ie) (uint8 proto, u8 *assoc_buf, u32 assoc_wpa_ie_len);
-    void (*install_ppkey) (enum wpa_alg alg, uint8 *addr, int key_idx, int set_tx,
-               uint8 *seq, size_t seq_len, uint8 *key, size_t key_len, int key_entry_valid);
-    int (*get_ppkey) (uint8 *ifx, int *alg, uint8 *addr, int *key_idx,
-    		   uint8 *key, size_t key_len, int key_entry_valid);
-    void (*wpa_deauthenticate)(uint8 reason_code);
+    void (*config_assoc_ie) (uint8_t proto, u8 *assoc_buf, u32 assoc_wpa_ie_len);
+    void (*install_ppkey) (enum wpa_alg alg, uint8_t *addr, int key_idx, int set_tx,
+               uint8_t *seq, size_t seq_len, uint8_t *key, size_t key_len, int key_entry_valid);
+    int (*get_ppkey) (uint8_t *ifx, int *alg, uint8_t *addr, int *key_idx,
+    		   uint8_t *key, size_t key_len, int key_entry_valid);
+    void (*wpa_deauthenticate)(uint8_t reason_code);
     void (*wpa_neg_complete)();
     struct wpa_gtk_data gd; //used for calllback save param
-    uint16 key_info; 	//used for txcallback param    
+    uint16_t key_info; 	//used for txcallback param    
 };
 
 struct l2_ethhdr {
@@ -188,12 +188,12 @@ struct l2_ethhdr {
 
 #define KEYENTRY_TABLE_MAP(key_entry_valid)  ((key_entry_valid)%5) 
 
-void pp_michael_mic_failure(uint16 isunicast);
+void pp_michael_mic_failure(uint16_t isunicast);
 
 void wpa_sm_set_state(enum wpa_states state);
 
-int ppGetKey(uint8 *ifx, int *alg, uint8 *addr, int *key_idx,
-		uint8 *key, size_t key_len, int key_entry_valid);
+int ppGetKey(uint8_t *ifx, int *alg, uint8_t *addr, int *key_idx,
+		uint8_t *key, size_t key_len, int key_entry_valid);
 
 #endif /* WPA_H */
 

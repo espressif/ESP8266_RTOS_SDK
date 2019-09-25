@@ -568,6 +568,13 @@ config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_FRAG
     help
         When this option is enabled, log for frag module will be enabled.
 
+config ESP8266_WIFI_DEBUG_LOG_SUBMODULE_WPA2
+    depends on ESP8266_WIFI_DEBUG_LOG_SUBMODULE
+    bool "wpa2_enterprise"
+    default n
+    help
+        When this option is enabled, log for wpa2_enterprise module will be enabled.
+
 endmenu
 
 menu PHY

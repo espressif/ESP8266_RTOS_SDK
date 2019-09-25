@@ -9,6 +9,7 @@
 #include "wpa/includes.h"
 #include "wpa/common.h"
 #include "wpa/wpa_debug.h"
+#include "wpa/ieee802_11_defs.h"
 
 #include "crypto/aes_wrap.h"
 #include "crypto/crypto.h"
@@ -16,9 +17,7 @@
 #include "crypto/sha256.h"
 #include "crypto/random.h"
 
-#include "wpa/ieee802_11_defs.h"
 #include "wps/wps_i.h"
-
 #ifdef CONFIG_IDF_TARGET_ESP8266
 #include "wps/asm/irqflags.h"
 
