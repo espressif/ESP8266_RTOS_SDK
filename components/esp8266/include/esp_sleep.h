@@ -26,6 +26,11 @@ typedef enum {
     WIFI_MODEM_SLEEP_T
 } wifi_sleep_type_t;
 
+typedef enum esp_sleep_mode {
+    ESP_CPU_WAIT = 0,
+    ESP_CPU_LIGHTSLEEP,
+} esp_sleep_mode_t;
+
 typedef void (*fpm_wakeup_cb)(void);
 
 /**
