@@ -81,10 +81,22 @@ SECTIONS
     mapping[iram0_text]
 
     _iram_text_end = ABSOLUTE(.);
+  } > iram0_0_seg
+
+  .iram0.bss :
+  {
+    . = ALIGN (4);
+    /* Code marked as runnning out of IRAM */
+    _iram_bss_start = ABSOLUTE(.);
+
+    mapping[iram0_bss]
+
+    . = ALIGN (4);
+    _iram_bss_end = ABSOLUTE(.);
     _iram_end = ABSOLUTE(.);
   } > iram0_0_seg
 
-  ASSERT(((_iram_text_end - ORIGIN(iram0_0_seg)) <= LENGTH(iram0_0_seg)),
+  ASSERT(((_iram_end - ORIGIN(iram0_0_seg)) <= LENGTH(iram0_0_seg)),
           "IRAM0 segment data does not fit.")
 
   .dram0.data :
