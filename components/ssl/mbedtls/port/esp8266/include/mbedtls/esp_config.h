@@ -1933,7 +1933,9 @@
  *
  * This module is used for testing (ssl_client/server).
  */
-//#define MBEDTLS_CERTS_C
+#ifdef CONFIG_MBEDTLS_TEST_CERTIFICATES
+#define MBEDTLS_CERTS_C
+#endif
 
 /**
  * \def MBEDTLS_CIPHER_C
@@ -2138,7 +2140,9 @@
  *
  * This module enables mbedtls_strerror().
  */
-//#define MBEDTLS_ERROR_C
+#ifdef CONFIG_MBEDTLS_STRERROR
+#define MBEDTLS_ERROR_C
+#endif
 
 /**
  * \def MBEDTLS_GCM_C
@@ -2576,7 +2580,9 @@
  *
  * Requires: MBEDTLS_SSL_CACHE_C
  */
-//#define MBEDTLS_SSL_CACHE_C
+#ifdef CONFIG_MBEDTLS_SSL_CACHE
+#define MBEDTLS_SSL_CACHE_C
+#endif
 
 /**
  * \def MBEDTLS_SSL_COOKIE_C
@@ -2586,7 +2592,9 @@
  * Module:  library/ssl_cookie.c
  * Caller:
  */
-//#define MBEDTLS_SSL_COOKIE_C
+#ifdef CONFIG_MBEDTLS_SSL_COOKIE
+#define MBEDTLS_SSL_COOKIE_C
+#endif
 
 /**
  * \def MBEDTLS_SSL_TICKET_C

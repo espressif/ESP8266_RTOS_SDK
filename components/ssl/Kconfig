@@ -101,6 +101,10 @@ config MBEDTLS_DEBUG_LEVEL
    help
        Mbedtls debugging level.
 
+config MBEDTLS_STRERROR
+    bool "Enable mbedtls_strerror function"
+    default n
+
 config MBEDTLS_HAVE_TIME
    bool "Enable mbedtls time"
    default y
@@ -119,6 +123,17 @@ config MBEDTLS_HAVE_TIME_DATE
        X.509 certificates.
 
        It is suggested that you should get the real time by "SNTP".
+
+config MBEDTLS_SSL_COOKIE
+    bool "Enable mbedtls ssl cookie"
+    default n
+    help
+        Enables SSL (D)TLS cookies, useful for mitigating IP spoofing and
+        DDoS attacks.
+
+config MBEDTLS_SSL_CACHE
+    bool "Enable mbedtls ssl cache"
+    default n
 
 choice MBEDTLS_TLS_MODE
     bool "TLS Protocol Role"
@@ -419,6 +434,13 @@ config MBEDTLS_X509_CSR_PARSE_C
     default y
     help
         Support for parsing X.509 Certifificate Signing Requests
+
+config MBEDTLS_TEST_CERTIFICATES
+    bool "Test certificates"
+    default n
+    help
+        Insecure debug-only certificates for non-production environments
+        Includes the 'PolarSSLTest' certificate suite
 
 endmenu # Certificates
 
