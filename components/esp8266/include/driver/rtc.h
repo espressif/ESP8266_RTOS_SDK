@@ -48,7 +48,7 @@ void phy_close_rf(void);
 /**
  * @brief Initialize RTC hardware
  */
-void rtc_init_2(uint8_t *init_param);
+void rtc_init_clk(uint8_t *init_param);
 
 /**
  * @brief Initialize light sleep hardware
