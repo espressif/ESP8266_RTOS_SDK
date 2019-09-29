@@ -32,6 +32,8 @@ endif()
 set(COMPONENT_REQUIRES vfs)
 set(COMPONENT_PRIV_REQUIRES tcpip_adapter)
 
+set(COMPONENT_ADD_LDFRAGMENTS "linker.lf")
+
 register_component()
 
 component_compile_options(-Wno-address)

@@ -24,6 +24,8 @@ ifdef CONFIG_USING_ESP_VFS
 COMPONENT_SRCDIRS += port
 endif
 
+COMPONENT_ADD_LDFRAGMENTS += linker.lf
+
 CFLAGS += -Wno-address #lots of LWIP source files evaluate macros that check address of stack variables
 
 lwip/src/apps/sntp/sntp.o: CFLAGS += -Wno-implicit-function-declaration
