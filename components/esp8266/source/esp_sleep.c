@@ -51,7 +51,8 @@ typedef struct pm_soc_clk {
     uint32_t    frc2_cnt;
 } pm_soc_clk_t;
 
-static uint32_t s_lock_cnt = 1;
+static uint16_t s_lock_cnt = 1;
+static esp_sleep_mode_t s_sleep_mode = ESP_CPU_WAIT;
 static uint32_t s_sleep_wakup_triggers;
 static uint32_t s_sleep_duration;
 
@@ -114,6 +115,11 @@ static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
     }
 
     WdevTimOffSet += us;
+}
+
+static int cpu_is_wait_mode(void)
+{
+    return (s_sleep_mode == ESP_CPU_WAIT) || s_lock_cnt;
 }
 
 void esp_wifi_hw_open(void)
@@ -192,9 +198,14 @@ void esp_sleep_unlock(void)
     soc_restore_local_irq(irqflag);
 }
 
+void esp_sleep_set_mode(esp_sleep_mode_t mode)
+{
+    s_sleep_mode = mode;
+}
+
 void esp_sleep_start(void)
 {
-    if (s_lock_cnt) {
+    if (cpu_is_wait_mode()) {
         soc_wait_int();
         return ;
     }
@@ -207,7 +218,7 @@ void esp_sleep_start(void)
     const esp_irqflag_t irqflag = soc_save_local_irq();
     const uint32_t wdevflag = save_local_wdev();
 
-    if (s_lock_cnt) {
+    if (cpu_is_wait_mode()) {
         cpu_wait = 0;
         goto exit;
     }
