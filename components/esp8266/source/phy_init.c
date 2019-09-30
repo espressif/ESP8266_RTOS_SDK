@@ -107,7 +107,7 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t* init_data, esp_phy_calibrat
     uart_tx_wait_idle(1);
     uart_div_modify(1, UART_CLK_FREQ / uart_baudrate);
 
-    rtc_init_2(local_init_data);
+    rtc_init_clk(local_init_data);
 
     int ret = register_chipv6_phy(local_init_data);
     if (ret) {
