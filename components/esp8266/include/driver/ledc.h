@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+#include "esp_err.h"
+#define PERIPH_LEDC_MODULE  (0) 
 #define LEDC_APB_CLK_HZ (APB_CLK_FREQ)
 #define LEDC_REF_CLK_HZ (1*1000000)
 #define LEDC_ERR_DUTY   (0xFFFFFFFF)
@@ -91,6 +93,7 @@ typedef struct {
     ledc_mode_t speed_mode;                /*!< LEDC speed speed_mode, high-speed mode or low-speed mode */
     union {
         ledc_timer_bit_t duty_resolution;  /*!< LEDC channel duty resolution */
+        ledc_timer_bit_t bit_num __attribute__((deprecated)); /*!< Deprecated in ESP-IDF 3.0. This is an alias to 'duty_resolution' for backward compatibility with ESP-IDF 2.1 */
     };
     ledc_timer_t  timer_num;               /*!< The timer source of channel (0 - 3) */
     uint32_t freq_hz;                      /*!< LEDC timer frequency (100Hz ~ 1KHz) */
@@ -202,6 +205,25 @@ esp_err_t ledc_fade_func_install(int intr_alloc_flags);
  *
  */
 esp_err_t ledc_fade_func_uninstall(void);
+
+/**
+ * @brief LEDC stop.
+ *        Disable LEDC output, and set idle level
+ *
+ * @param  speed_mode Select the LEDC speed_mode, high-speed mode and low-speed mode
+ * @param  channel LEDC channel (0-7), select from ledc_channel_t
+ * @param  idle_level Set output idle level after LEDC stops.
+ *
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG Parameter error
+ */
+esp_err_t ledc_stop(ledc_mode_t speed_mode, ledc_channel_t channel, uint32_t idle_level);
+
+/**
+ * it is an empty function
+ */
+int periph_module_enable(int none);
 
 #ifdef __cplusplus
 }

@@ -33,6 +33,7 @@
 #define LEDC_FLAG_ON (1)
 #define LEDC_FLAG_OFF (0)
 #define LEDC_TASK_STACK_DEPTH (1024)
+#define LEDC_MAX_DUTY (8196)
 
 static const char* LEDC_TAG = "ledc";
 
@@ -96,13 +97,14 @@ esp_err_t ledc_timer_config(const ledc_timer_config_t* timer_conf)
 esp_err_t ledc_set_duty(ledc_mode_t speed_mode, ledc_channel_t ledc_channel, uint32_t ledc_duty)
 {
     LEDC_CHECK(ledc_channel < LEDC_CHANNEL_MAX, "ledc_channel error", ESP_ERR_INVALID_ARG);
-    LEDC_CHECK(ledc_duty <= ledc_period, "ledc_duty error", ESP_ERR_INVALID_ARG);
-
+    LEDC_CHECK(ledc_period * ledc_duty / LEDC_MAX_DUTY <= ledc_period, "ledc_duty error", ESP_ERR_INVALID_ARG);
+    
     p_ledc_obj[ledc_channel]->channel_num = ledc_channel;
-    p_ledc_obj[ledc_channel]->duty = ledc_duty;
+    p_ledc_obj[ledc_channel]->duty = ledc_period * ledc_duty / LEDC_MAX_DUTY;
     pwm_get_duty(ledc_channel, &p_ledc_obj[ledc_channel]->duty_p);
 
     p_ledc_obj[ledc_channel]->step_duty = (p_ledc_obj[ledc_channel]->duty_p > p_ledc_obj[ledc_channel]->duty ? p_ledc_obj[ledc_channel]->duty_p - p_ledc_obj[ledc_channel]->duty : p_ledc_obj[ledc_channel]->duty - p_ledc_obj[ledc_channel]->duty_p);
+    //The duty print value for this channel is duty/period(Program internal value), corresponding to duty/ledc_max_duty
     ESP_LOGI(LEDC_TAG, "channel_num = %d | duty = %d; duty_p = %d | step_duty = %d;",
         p_ledc_obj[ledc_channel]->channel_num, p_ledc_obj[ledc_channel]->duty,
         p_ledc_obj[ledc_channel]->duty_p, p_ledc_obj[ledc_channel]->step_duty);
@@ -128,10 +130,10 @@ esp_err_t ledc_set_fade_with_time(ledc_mode_t speed_mode, ledc_channel_t ledc_ch
 {
     //  For porting, speed_mode is not used
     LEDC_CHECK(ledc_channel < LEDC_CHANNEL_MAX, "ledc_channel error", ESP_ERR_INVALID_ARG);
-    LEDC_CHECK(ledc_duty <= ledc_period, "ledc_duty error", ESP_ERR_INVALID_ARG);
+    LEDC_CHECK(ledc_period * ledc_duty / LEDC_MAX_DUTY <= ledc_period, "ledc_duty error", ESP_ERR_INVALID_ARG);
 
     p_ledc_obj[ledc_channel]->channel_num = ledc_channel;
-    p_ledc_obj[ledc_channel]->duty = ledc_duty;
+    p_ledc_obj[ledc_channel]->duty = ledc_period * ledc_duty / LEDC_MAX_DUTY;
     p_ledc_obj[ledc_channel]->fade_time = ledc_fade_time;
     pwm_get_duty(ledc_channel, &p_ledc_obj[ledc_channel]->duty_p);
     uint32_t duty_value = (p_ledc_obj[ledc_channel]->duty_p > p_ledc_obj[ledc_channel]->duty ? (p_ledc_obj[ledc_channel]->duty_p - p_ledc_obj[ledc_channel]->duty) : (p_ledc_obj[ledc_channel]->duty - p_ledc_obj[ledc_channel]->duty_p));
@@ -140,6 +142,7 @@ esp_err_t ledc_set_fade_with_time(ledc_mode_t speed_mode, ledc_channel_t ledc_ch
     p_ledc_obj[ledc_channel]->step_01duty = duty_value * 10 / (ledc_fade_time / LEDC_STEP_TIME) % 10;
     p_ledc_obj[ledc_channel]->step_001duty = duty_value * 100 / (ledc_fade_time / LEDC_STEP_TIME) % 10;
 
+    //The duty print value for this channel is duty/period(Program internal value), corresponding to duty/ledc_max_duty
     ESP_LOGI(LEDC_TAG, "channel_num = %d | duty = %d; duty_p = %d | step_duty = %d | step_01duty = %d | step_001duty = %d",
         p_ledc_obj[ledc_channel]->channel_num, p_ledc_obj[ledc_channel]->duty,
         p_ledc_obj[ledc_channel]->duty_p, p_ledc_obj[ledc_channel]->step_duty, p_ledc_obj[ledc_channel]->step_01duty, p_ledc_obj[ledc_channel]->step_001duty);
@@ -176,7 +179,7 @@ esp_err_t ledc_channel_config(const ledc_channel_config_t* ledc_conf)
             }
         }
     p_ledc_obj[ledc_usr_channel_max]->gpio_num = ledc_conf->gpio_num;
-    p_ledc_obj[ledc_usr_channel_max]->duty = ledc_conf->duty;
+    p_ledc_obj[ledc_usr_channel_max]->duty = ledc_period * ledc_conf->duty / LEDC_MAX_DUTY;
     ledc_usr_channel_max++;
 
     return ESP_OK;
@@ -208,7 +211,6 @@ esp_err_t ledc_fade_up(ledc_channel_t channel, uint8_t* flag)
     }
     if (p_ledc_obj[channel]->duty_p == p_ledc_obj[channel]->duty) {
         *flag = LEDC_FLAG_OFF;
-        ESP_LOGI(LEDC_TAG, "channel%d is end", channel);
     }
 
     return ESP_OK;
@@ -241,7 +243,6 @@ esp_err_t ledc_fade_down(ledc_channel_t channel, uint8_t* flag)
     }
     if (p_ledc_obj[channel]->duty_p == p_ledc_obj[channel]->duty) {
         *flag = LEDC_FLAG_OFF;
-        ESP_LOGI(LEDC_TAG, "channel%d is end", channel);
     }
 
     return ESP_OK;
@@ -258,7 +259,6 @@ static void ledc_task(void* pvParameters)
 
         while (pdTRUE == xQueueReceive(channel_queue, &channel, 0)) {
             flag[channel] = LEDC_FLAG_ON;
-            ESP_LOGI(LEDC_TAG, "channel%d is start", channel);
         }
         vTaskSuspendAll();
         for (i = 0; i < ledc_usr_channel_max; i++) {
@@ -294,7 +294,6 @@ esp_err_t ledc_fade_func_install(int intr_alloc_flags)
         ESP_LOGI(LEDC_TAG, "gpio:%d", ledc_gpio_num[i]);
     }
     
-
     pwm_set_phases(ledc_phase);
     channel_queue = xQueueCreate(ledc_usr_channel_max, sizeof(uint8_t));
     if (channel_queue == 0) {
@@ -314,4 +313,26 @@ esp_err_t ledc_fade_func_uninstall(void)
         p_ledc_obj[i] = NULL;
     }
     return pwm_stop(0x00);
+}
+
+esp_err_t ledc_stop(ledc_mode_t speed_mode, ledc_channel_t channel, uint32_t idle_level)
+{
+    LEDC_CHECK(idle_level == 0 || idle_level == 1, "idle_level error", ESP_ERR_INVALID_ARG);
+
+    static uint32_t stop_level_mask = 0x0;
+    if (idle_level == 0){
+        stop_level_mask = stop_level_mask | 0x1 << channel;
+    }
+    else if (idle_level == 1){
+        stop_level_mask = stop_level_mask & ~(0x1 << channel);
+    }
+
+    pwm_stop(stop_level_mask);
+
+    return ESP_OK;
+}
+
+int periph_module_enable(int none)
+{
+    return ESP_OK;
 }
