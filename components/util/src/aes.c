@@ -1006,3 +1006,40 @@ int esp_aes_crypt_xts(esp_aes_xts_t *ctx,
 
     return 0;
 }
+
+int esp_aes_crypt_ofb(esp_aes_t *ctx,
+                      size_t length,
+                      size_t *iv_off,
+                      void *p_iv,
+                      const void *p_src,
+                      void *p_dst)
+{
+    size_t n;
+    uint8_t *iv = (uint8_t *)p_iv;
+    const uint8_t *input = (const uint8_t *)p_src;
+    uint8_t *output = (uint8_t *)p_dst;
+
+    util_assert(ctx != NULL);
+    util_assert(iv_off != NULL);
+    util_assert(iv != NULL);
+    util_assert(input != NULL);
+    util_assert(output != NULL);
+
+    n = *iv_off;
+
+    if (n > 15)
+        return -EINVAL;
+
+    while (length--) {
+        if (n == 0) {
+            esp_aes_encrypt(ctx, iv, 16, iv, 16);
+        }
+        *output++ = *input++ ^ iv[n];
+
+        n = (n + 1) & 0x0F;
+    }
+
+    *iv_off = n;
+
+    return 0;
+}

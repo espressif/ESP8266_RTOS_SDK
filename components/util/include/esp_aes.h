@@ -265,6 +265,20 @@ int esp_aes_xts_set_decrypt_key(esp_aes_xts_t *aes, const void *p_key, size_t ke
  */
 int esp_aes_crypt_xts(esp_aes_xts_t *aes, int encrypt, size_t length, const void *p_data_unit, const void *p_src, void *p_dst);
 
+/**
+ * @brief AES OFB encrypt/decrypt calculation
+ *
+ * @param aes AES contex pointer
+ * @param length data length by bytes
+ * @param iv_off IV offset
+ * @param p_iv IV data buffer
+ * @param p_src input data buffer
+ * @param p_dst output data buffer
+ *
+ * @return 0 if success or fail
+ */
+int esp_aes_crypt_ofb(esp_aes_t *ctx, size_t length, size_t *iv_off, void *p_iv, const void *p_src, void *p_dst);
+
 #ifdef __cplusplus
 }
 #endif
