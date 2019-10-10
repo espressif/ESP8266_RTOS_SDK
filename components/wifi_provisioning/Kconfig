@@ -3,7 +3,6 @@ menu "Unified Provisioning"
 config ENABLE_UNIFIED_PROVISIONING
     bool "Enable Unified Provisioning"
     default n
-    select SSL_USING_MBEDTLS
     select MBEDTLS_CIPHER_MODE_CTR
     select MBEDTLS_ECP_C
     help

@@ -23,10 +23,6 @@
 
 #include <sys/socket.h>
 
-#if CONFIG_SSL_USING_WOLFSSL
-#include "lwip/apps/sntp.h"
-#endif
-
 #include "openssl/ssl.h"
 
 /* The examples use simple WiFi configuration that you can set via
@@ -124,40 +120,6 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_start() );
 }
 
-#if CONFIG_SSL_USING_WOLFSSL
-static void get_time()
-{
-    struct timeval now;
-    int sntp_retry_cnt = 0;
-    int sntp_retry_time = 0;
-
-    sntp_setoperatingmode(0);
-    sntp_setservername(0, "pool.ntp.org");
-    sntp_init();
-
-    while (1) {
-        for (int32_t i = 0; (i < (SNTP_RECV_TIMEOUT / 100)) && now.tv_sec < 1525952900; i++) {
-            vTaskDelay(100 / portTICK_RATE_MS);
-            gettimeofday(&now, NULL);
-        }
-
-        if (now.tv_sec < 1525952900) {
-            sntp_retry_time = SNTP_RECV_TIMEOUT << sntp_retry_cnt;
-
-            if (SNTP_RECV_TIMEOUT << (sntp_retry_cnt + 1) < SNTP_RETRY_TIMEOUT_MAX) {
-                sntp_retry_cnt ++;
-            }
-
-            printf("SNTP get time failed, retry after %d ms\n", sntp_retry_time);
-            vTaskDelay(sntp_retry_time / portTICK_RATE_MS);
-        } else {
-            printf("SNTP get time success\n");
-            break;
-        }
-    }
-}
-#endif
-
 static void openssl_server_task(void* p)
 {
     int ret;
@@ -178,11 +140,6 @@ static void openssl_server_task(void* p)
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
     ESP_LOGI(TAG, "Connected to AP");
-
-#if CONFIG_SSL_USING_WOLFSSL
-    /* CA date verification need system time */
-    get_time();
-#endif
 
     printf("create SSL context ......");
     ctx = SSL_CTX_new(TLSv1_2_server_method());

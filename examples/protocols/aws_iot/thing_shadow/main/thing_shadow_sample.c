@@ -49,9 +49,6 @@
 #include "aws_iot_mqtt_client_interface.h"
 #include "aws_iot_shadow_interface.h"
 
-#if CONFIG_SSL_USING_WOLFSSL
-#include "lwip/apps/sntp.h"
-#endif
 /*!
  * The goal of this sample application is to demonstrate the capabilities of shadow.
  * This device(say Connected Window) will open the window of a room based on temperature
@@ -129,43 +126,6 @@ static const char * ROOT_CA_PATH = CONFIG_EXAMPLE_ROOT_CA_PATH;
 
 #else
 #error "Invalid method for loading certs"
-#endif
-
-#if CONFIG_SSL_USING_WOLFSSL
-static void get_time()
-{
-    struct timeval now;
-    int sntp_retry_cnt = 0;
-    int sntp_retry_time = 0;
-
-    sntp_setoperatingmode(0);
-    sntp_setservername(0, "pool.ntp.org");
-
-    sntp_setservername(1, "ntp1.aliyun.com");
-    sntp_setservername(2, "time.aisa.apple.com");
-    sntp_init();
-
-    while (1) {
-        for (int32_t i = 0; (i < (SNTP_RECV_TIMEOUT / 100)) && now.tv_sec < 1525952900; i++) {
-            vTaskDelay(100 / portTICK_RATE_MS);
-            gettimeofday(&now, NULL);
-        }
-
-        if (now.tv_sec < 1525952900) {
-            sntp_retry_time = SNTP_RECV_TIMEOUT << sntp_retry_cnt;
-
-            if (SNTP_RECV_TIMEOUT << (sntp_retry_cnt + 1) < SNTP_RETRY_TIMEOUT_MAX) {
-                sntp_retry_cnt ++;
-            }
-
-            ESP_LOGI(TAG,"SNTP get time failed, retry after %d ms\n", sntp_retry_time);
-            vTaskDelay(sntp_retry_time / portTICK_RATE_MS);
-        } else {
-            ESP_LOGI(TAG,"SNTP get time success\n");
-            break;
-        }
-    }
-}
 #endif
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
@@ -297,10 +257,6 @@ void aws_iot_task(void *param) {
     xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                         false, true, portMAX_DELAY);
 
-#if CONFIG_SSL_USING_WOLFSSL
-    /* CA date verification need system time */
-    get_time();
-#endif
     ESP_LOGI(TAG, "Shadow Init");
     rc = aws_iot_shadow_init(&mqttClient, &sp);
     if(SUCCESS != rc) {
