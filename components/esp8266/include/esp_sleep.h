@@ -34,6 +34,16 @@ typedef enum esp_sleep_mode {
 typedef void (*fpm_wakeup_cb)(void);
 
 /**
+ * @brief Sleep wakeup cause
+ */
+typedef enum {
+    ESP_SLEEP_WAKEUP_UNDEFINED,    //!< In case of deep sleep, reset was not caused by exit from deep sleep
+    ESP_SLEEP_WAKEUP_ALL,          //!< Not a wakeup cause, used to disable all wakeup sources with esp_sleep_disable_wakeup_source
+    ESP_SLEEP_WAKEUP_TIMER,        //!< Wakeup caused by timer
+    ESP_SLEEP_WAKEUP_GPIO,         //!< Wakeup caused by GPIO (light sleep only)
+} esp_sleep_source_t;
+
+/**
   * @brief     Set the chip to deep-sleep mode.
   *
   *            The device will automatically wake up after the deep-sleep time set
@@ -207,6 +217,32 @@ esp_err_t esp_light_sleep_start(void);
  * @note This function is called by system, user should not call this
  */
 void esp_sleep_start(void);
+
+/**
+ * @brief Enable wakeup from light sleep using GPIOs
+ *
+ * @return
+ *      - ESP_OK on success
+ *      - ESP_ERR_INVALID_STATE if wakeup triggers conflict
+ */
+esp_err_t esp_sleep_enable_gpio_wakeup(void);
+
+/**
+ * @brief Disable wakeup source
+ *
+ * This function is used to deactivate wake up trigger for source
+ * defined as parameter of the function.
+ *
+ * @note This function does not modify wake up configuration in RTC.
+ *       It will be performed in esp_sleep_start function.
+ *
+ * @param source - number of source to disable of type esp_sleep_source_t
+ *
+ * @return
+ *      - ESP_OK on success
+ *      - ESP_ERR_INVALID_STATE if trigger was not active
+ */
+esp_err_t esp_sleep_disable_wakeup_source(esp_sleep_source_t source);
 
 #ifdef __cplusplus
 }
