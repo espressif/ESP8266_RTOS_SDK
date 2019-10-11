@@ -164,6 +164,33 @@ esp_err_t esp_sleep_enable_timer_wakeup(uint32_t time_in_us)
     return ESP_OK;
 }
 
+esp_err_t esp_sleep_enable_gpio_wakeup(void)
+{
+    s_sleep_wakup_triggers |= RTC_GPIO_TRIG_EN;
+
+    return ESP_OK;
+}
+
+esp_err_t esp_sleep_disable_wakeup_source(esp_sleep_source_t source)
+{
+    // For most of sources it is enough to set trigger mask in local
+    // configuration structure. The actual RTC wake up options
+    // will be updated by esp_sleep_start().
+    if (source == ESP_SLEEP_WAKEUP_ALL) {
+        s_sleep_wakup_triggers = 0;
+    } else if (ESP_SLEEP_WAKEUP_TIMER == source) {
+        s_sleep_wakup_triggers &= ~RTC_TIMER_TRIG_EN;
+        s_sleep_duration = 0;
+    } else if (ESP_SLEEP_WAKEUP_GPIO == source) {
+        s_sleep_wakup_triggers &= ~RTC_GPIO_TRIG_EN;
+    } else {
+        ESP_LOGE(TAG, "Incorrect wakeup source (%d) to disable.", (int) source);
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    return ESP_OK;
+}
+
 esp_err_t esp_light_sleep_start(void)
 {
     uint32_t period = pm_rtc_clock_cali_proc();
