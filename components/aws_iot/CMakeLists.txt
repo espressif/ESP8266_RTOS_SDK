@@ -5,7 +5,7 @@ else()
     message(STATUS "Building empty aws_iot component due to configuration")
 endif()
 
-set(COMPONENT_REQUIRES ssl)
+set(COMPONENT_REQUIRES mbedtls)
 set(COMPONENT_PRIV_REQUIRES jsmn esp-tls)
 
 register_component()

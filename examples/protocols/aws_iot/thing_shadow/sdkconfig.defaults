@@ -1,7 +1,6 @@
 # Enable AWS IoT SDK support
 CONFIG_AWS_IOT_SDK=y
 CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL=y
-CONFIG_SSL_USING_WOLFSSL=y
 
 # Enable FATFS read only with long filename support
 # for loading Cert/CA/etc from filesystem

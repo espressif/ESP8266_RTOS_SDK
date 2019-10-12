@@ -21,7 +21,7 @@ set(COMPONENT_SRCS "esp-mqtt/mqtt_client.c"
 
 endif()
 
-set(COMPONENT_REQUIRES lwip http_parser ssl tcp_transport freertos lwip ssl)
+set(COMPONENT_REQUIRES lwip http_parser tcp_transport freertos lwip mbedtls openssl)
 
 register_component()
 
