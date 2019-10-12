@@ -26,7 +26,7 @@ target_compile_definitions(${COMPONENT_LIB} PUBLIC
 
 target_link_libraries(${COMPONENT_LIB} PUBLIC "-L ${CMAKE_CURRENT_SOURCE_DIR}/newlib/lib")
 
-set(blobs "${LIBC}" "${LIBM}" "gcc")
+set(blobs "${LIBC}" "${LIBM}")
 foreach(blob ${blobs})
     add_library(${blob} STATIC IMPORTED)
     set_property(TARGET ${blob} PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/newlib/lib/lib${blob}.a)
