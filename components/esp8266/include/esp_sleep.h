@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
+
 #include <stdint.h>
 #include "esp_err.h"
 #include "driver/gpio.h"
