@@ -96,7 +96,7 @@ TAG_SERIAL_FLUSH = 2
 # regex matches an potential PC value (0x4xxxxxxx)
 MATCH_PCADDR = re.compile(r'0x4[0-9a-f]{7}', re.IGNORECASE)
 
-DEFAULT_TOOLCHAIN_PREFIX = "xtensa-esp32-elf-"
+DEFAULT_TOOLCHAIN_PREFIX = "xtensa-lx106-elf-"
 
 DEFAULT_PRINT_FILTER = ""
 
