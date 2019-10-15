@@ -81,6 +81,10 @@ char *http_auth_digest(const char *username, const char *password, esp_http_auth
         return NULL;
     }
 
+    if (auth_data->algorithm == NULL) {
+        auth_data->algorithm = "md5";
+    }
+
     ha1 = calloc(1, MD5_MAX_LEN);
     HTTP_MEM_CHECK(TAG, ha1, goto _digest_exit);
 
