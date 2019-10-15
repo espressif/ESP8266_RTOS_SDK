@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <reent.h>
+#include <time.h>
 #include <sys/times.h>
 #include <sys/time.h>
 #include <sys/errno.h>
@@ -25,6 +26,12 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "driver/soc.h"
+
+#include "sdkconfig.h"
+
+#ifdef CONFIG_ESP8266_TIME_SYSCALL_USE_FRC1
+#define WITH_FRC 1
+#endif
 
 static uint64_t s_boot_time;
 
