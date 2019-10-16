@@ -560,7 +560,7 @@ esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint8_t channel_num, const
 
     for (i = 0; i < channel_num; i++) {
         pwm_obj->pwm_info[i].io_num =  pin_num[i];
-        pwm_obj->gpio_bit_mask |= (0x1 << pin_num[i]);
+        pwm_obj->gpio_bit_mask |= ( (uint32_t) 1 << pin_num[i]);
     }
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_DISABLE;
