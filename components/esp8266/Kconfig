@@ -321,6 +321,24 @@ config ESP_ERR_TO_NAME_LOOKUP
         order to save memory but this comes at the price of sacrificing
         distinguishable (meaningful) output string representations.
 
+    choice ESP8266_TIME_SYSCALL
+        prompt "Timers used for gettimeofday function"
+        default ESP8266_TIME_SYSCALL_USE_FRC1
+        help
+            This setting defines which hardware timers are used to
+            implement 'gettimeofday' and 'time' functions in C library.
+
+            - If high-resolution timer is used, gettimeofday will
+              provide time at microsecond resolution.
+              Time will not be preserved when going into deep sleep mode.
+            - If no timers are used, gettimeofday and time functions
+              return -1 and set errno to ENOSYS.
+
+        config ESP8266_TIME_SYSCALL_USE_FRC1
+            bool "High-resolution timer"
+        config ESP8266_TIME_SYSCALL_USE_NONE
+            bool "None"
+    endchoice
 endmenu
 
 menu Wi-Fi
