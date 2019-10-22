@@ -8,7 +8,7 @@ gwen:
     smartconfig:b971620
     wpa:        a8b0acd
     wps:        ff84a8b
-    phy:        1055_13
+    phy:        1056_9
 
 gitlab:
     driver:     7bee5263
