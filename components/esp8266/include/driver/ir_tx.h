@@ -32,7 +32,13 @@ extern "C" {
 #define IR_TX_NEC_REP_LOW_US      2250
 #define IR_TX_NEC_REP_STOP_US     562
 #define IR_TX_NEC_REP_CYCLE       108000
-#define IR_TX_ERROR_US            40 // Timing in advance to reduce errors
+#define IR_TX_WDEV_TIMER_ERROR_US 5 // Timing in advance to reduce errors
+#define IR_TX_HW_TIMER_ERROR_US   40 // Timing in advance to reduce errors
+
+typedef enum {
+    IR_TX_WDEV_TIMER,
+    IR_TX_HW_TIMER,
+} ir_tx_timer_t;
 
 /**
  * @brief ir tx initialization parameter structure type definition
@@ -40,6 +46,7 @@ extern "C" {
 typedef struct {
     uint32_t io_num; // 2 or 14, 2: I2SO_WS 14: I2SI_WS
     uint32_t freq;
+    ir_tx_timer_t timer; // WDEV timer will be more accurate, but PWM will not work
 } ir_tx_config_t;
 
 /**
@@ -82,6 +89,8 @@ esp_err_t ir_tx_deinit();
 
 /**
   * @brief Initialize the ir tx
+  * 
+  * @note WDEV timer will be more accurate, but PWM will not work.
   *
   * @param config Pointer to deliver initialize configuration parameter
   *

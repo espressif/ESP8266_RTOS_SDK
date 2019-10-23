@@ -29,6 +29,17 @@
 
 static const char *TAG = "ir tx";
 
+#define WDEVTSF0_TIME_LO     0x3ff21004
+#define WDEVTSF0_TIME_HI     0x3ff21008
+#define WDEVTSFSW0_LO        0x3ff21018
+#define WDEVTSFSW0_HI        0x3ff2101C
+#define WDEVTSF0_TIMER_LO    0x3ff2109c
+#define WDEVTSF0_TIMER_HI    0x3ff210a0
+#define WDEVTSF0TIMER_ENA    0x3ff21098
+#define WDEV_TSF0TIMER_ENA   BIT(31)
+
+int wDev_MacTimSetFunc(void (*handle)(void));
+
 #define IR_TX_CHECK(a, str, ret_val) \
     if (!(a)) { \
         ESP_LOGE(TAG,"%s(%d): %s", __FUNCTION__, __LINE__, str); \
@@ -61,6 +72,7 @@ typedef struct {
     SemaphoreHandle_t done_sem;
     SemaphoreHandle_t send_mux;
     ir_tx_trans_t trans;
+    ir_tx_timer_t timer;
 } ir_tx_obj_t;
 
 ir_tx_obj_t *ir_tx_obj = NULL;
@@ -103,7 +115,17 @@ static void inline ir_tx_gen_carrier()
 
 static void inline ir_tx_timer_alarm(uint32_t val)
 {
-    hw_timer_alarm_us(val - IR_TX_ERROR_US, false);
+    if (ir_tx_obj->timer == IR_TX_WDEV_TIMER) {
+        REG_WRITE(WDEVTSFSW0_LO, 0);
+        REG_WRITE(WDEVTSFSW0_HI, 0);
+        REG_WRITE(WDEVTSFSW0_LO, 0);
+        REG_WRITE(WDEVTSF0_TIMER_LO, 0);
+        REG_WRITE(WDEVTSF0_TIMER_HI, 0);
+        REG_WRITE(WDEVTSF0_TIMER_LO, val - IR_TX_WDEV_TIMER_ERROR_US);
+        REG_WRITE(WDEVTSF0TIMER_ENA, WDEV_TSF0TIMER_ENA);
+    } else {
+        hw_timer_alarm_us(val - IR_TX_HW_TIMER_ERROR_US, false);
+    }
 }
 
 void IRAM_ATTR ir_tx_handler()
@@ -115,7 +137,9 @@ void IRAM_ATTR ir_tx_handler()
     static uint8_t ir_bit_state = TX_BIT_CARRIER;
 
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
+    if (ir_tx_obj->timer == IR_TX_WDEV_TIMER) {
+        REG_WRITE(WDEVTSF0TIMER_ENA, REG_READ(WDEVTSF0TIMER_ENA) & (~WDEV_TSF0TIMER_ENA));
+    }
     switch (ir_tx_state) {
         case IR_TX_IDLE: {
             ir_tx_gen_carrier();
@@ -351,7 +375,12 @@ esp_err_t ir_tx_deinit()
         ir_tx_obj->send_mux = NULL;
     }
 
-    hw_timer_deinit();
+    if (ir_tx_obj->timer == IR_TX_WDEV_TIMER) {
+        REG_WRITE(WDEVTSF0TIMER_ENA, REG_READ(WDEVTSF0TIMER_ENA) & (~WDEV_TSF0TIMER_ENA));
+        wDev_MacTimSetFunc(NULL);
+    } else {
+        hw_timer_deinit();
+    }
 
     i2s_driver_uninstall(I2S_NUM_0);
 
@@ -370,6 +399,7 @@ esp_err_t ir_tx_init(ir_tx_config_t *config)
     IR_TX_CHECK(ir_tx_obj, "ir tx object malloc error", ESP_ERR_NO_MEM);
     ir_tx_obj->io_num = config->io_num;
     ir_tx_obj->freq = config->freq;
+    ir_tx_obj->timer = config->timer;
     ir_tx_obj->done_sem = xSemaphoreCreateBinary();
     ir_tx_obj->send_mux = xSemaphoreCreateMutex();
 
@@ -413,8 +443,12 @@ esp_err_t ir_tx_init(ir_tx_config_t *config)
 
     i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
     i2s_set_pin(I2S_NUM_0, &pin_config);
-    hw_timer_init(ir_tx_handler, NULL);
-    hw_timer_disarm();
+    if (ir_tx_obj->timer == IR_TX_WDEV_TIMER) {
+        wDev_MacTimSetFunc(ir_tx_handler);
+    } else {
+        hw_timer_init(ir_tx_handler, NULL);
+        hw_timer_disarm();
+    }
     ir_tx_clear_carrier();
 
     return ESP_OK;
