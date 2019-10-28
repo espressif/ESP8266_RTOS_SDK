@@ -8,6 +8,5 @@ set(esp_gdbstub_srcs "src/gdbstub.c"
 idf_component_register(SRCS "${esp_gdbstub_srcs}"
                        INCLUDE_DIRS "include"
                        PRIV_INCLUDE_DIRS "private_include" "${target}" "xtensa"
-                       LDFRAGMENTS "linker.lf"
-                       REQUIRES "freertos"
-                       PRIV_REQUIRES "soc" "xtensa" "esp_rom")
+                       REQUIRES "freertos" 
+                       PRIV_REQUIRES "esp8266")

@@ -27,6 +27,7 @@
 #include "esp_err.h"
 
 #include "FreeRTOS.h"
+#include "freertos/xtensa_context.h"
 
 #define PANIC(_fmt, ...)    ets_printf(_fmt, ##__VA_ARGS__)
 
@@ -42,39 +43,14 @@
 #define ESP_PANIC_PRINT
 #endif
 
+#if defined(CONFIG_ESP_PANIC_GDBSTUB)
+#define ESP_PANIC_GDBSTUB
+#else
+#undef ESP_PANIC_GDBSTUB
+#endif
+
 #ifdef ESP_PANIC_PRINT
-
-typedef struct panic_frame {
-    uint32_t    exit;
-
-    uint32_t    pc;
-    uint32_t    ps;
-
-    uint32_t    a0;
-    uint32_t    a1;
-    uint32_t    a2;
-    uint32_t    a3;
-
-    uint32_t    a4;
-    uint32_t    a5;
-    uint32_t    a6;
-    uint32_t    a7;
-
-    uint32_t    a8;
-    uint32_t    a9;
-    uint32_t    a10;
-    uint32_t    a11;
-
-    uint32_t    a12;
-    uint32_t    a13;
-    uint32_t    a14;
-    uint32_t    a15;
-
-    uint32_t    sar;
-    uint32_t    exccause;
-} panic_frame_t;
-
-static void panic_frame(panic_frame_t *frame)
+static inline void panic_frame(XtExcFrame *frame)
 {
     static const char *sdesc[] = {
         "PC",   "PS",   "A0",   "A1",
@@ -161,6 +137,11 @@ void panicHandler(void *frame, int wdt)
 
 #ifdef ESP_PANIC_REBOOT
     esp_panic_reset();
+#elif defined(ESP_PANIC_GDBSTUB)
+    extern void esp_gdbstub_panic_handler(void *frame);
+
+    PANIC("Entering gdb stub now.\r\n");
+    esp_gdbstub_panic_handler(frame);
 #else
     while (1) {
         esp_task_wdt_reset();

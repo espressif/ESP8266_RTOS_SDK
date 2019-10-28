@@ -178,6 +178,15 @@ config ESP_PANIC_SILENT_REBOOT
     bool "Silent reboot"
     help
         Just resets the processor without outputting anything
+
+config ESP_PANIC_GDBSTUB
+    bool "Invoke GDBStub"
+    select ESP_GDBSTUB_ENABLED
+    help
+        Invoke gdbstub on the serial port, allowing for gdb to attach to it to do a postmortem
+        of the crash.
+
+        The UART's baudrate should be 115200 or others which can be recognized by xtensa GDB.
 endchoice
 
 config MAIN_TASK_STACK_SIZE

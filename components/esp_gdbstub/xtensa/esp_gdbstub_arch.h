@@ -25,8 +25,8 @@ typedef XtExcFrame esp_gdbstub_frame_t;
 
 /* GDB regfile structure, configuration dependent */
 typedef struct {
-    uint32_t pc;
     uint32_t a[XCHAL_NUM_AREGS];
+    uint32_t pc;
 
 #if XCHAL_HAVE_LOOPS
     uint32_t lbeg;
@@ -35,6 +35,8 @@ typedef struct {
 #endif
 
     uint32_t sar;
+
+    uint32_t litbase;
 
 #if XCHAL_HAVE_WINDOWED
     uint32_t windowbase;

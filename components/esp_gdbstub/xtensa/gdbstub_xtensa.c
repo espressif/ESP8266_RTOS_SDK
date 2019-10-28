@@ -15,13 +15,14 @@
 #include <string.h>
 #include "esp_gdbstub.h"
 #include "esp_gdbstub_common.h"
-#include "soc/cpu.h"
-#include "soc/soc_memory_layout.h"
+#include "esp8266/eagle_soc.h"
 #include "sdkconfig.h"
 
-#if !XCHAL_HAVE_WINDOWED
-#warning "gdbstub_xtensa: revisit the implementation for Call0 ABI"
-#endif
+inline static bool esp_stack_ptr_is_sane(uint32_t sp)
+{
+    //Check if stack ptr is in between SOC_DRAM_LOW and SOC_DRAM_HIGH, and 16 byte aligned.
+    return !(!IS_DRAM(sp) || ((sp & 0xF) != 0));
+}
 
 static void init_regfile(esp_gdbstub_gdb_regfile_t *dst)
 {
@@ -36,10 +37,12 @@ static void update_regfile_common(esp_gdbstub_gdb_regfile_t *dst)
     if (!esp_stack_ptr_is_sane(dst->a[1])) {
         dst->a[1] = 0xDEADBEEF;
     }
+#if XCHAL_HAVE_WINDOWED
     dst->windowbase = 0;
     dst->windowstart = 0x1;
     RSR(CONFIGID0, dst->configid0);
     RSR(CONFIGID1, dst->configid1);
+#endif
 }
 
 void esp_gdbstub_frame_to_regfile(const esp_gdbstub_frame_t *frame, esp_gdbstub_gdb_regfile_t *dst)
@@ -51,9 +54,11 @@ void esp_gdbstub_frame_to_regfile(const esp_gdbstub_frame_t *frame, esp_gdbstub_
     for (int i = 0; i < 16; i++) {
         dst->a[i] = a_regs[i];
     }
+#if XCHAL_HAVE_WINDOWED
     for (int i = 16; i < 64; i++) {
         dst->a[i] = 0xDEADBEEF;
     }
+#endif
 
 #if XCHAL_HAVE_LOOPS
     dst->lbeg = frame->lbeg;
@@ -78,9 +83,11 @@ static void solicited_frame_to_regfile(const XtSolFrame *frame, esp_gdbstub_gdb_
     for (int i = 0; i < 4; i++) {
         dst->a[i] = a_regs[i];
     }
+#if XCHAL_HAVE_WINDOWED
     for (int i = 4; i < 64; i++) {
         dst->a[i] = 0xDEADBEEF;
     }
+#endif
 
     dst->ps = (frame->ps & PS_UM) ? (frame->ps & ~PS_EXCM) : frame->ps;
     update_regfile_common(dst);

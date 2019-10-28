@@ -30,6 +30,7 @@ NOTE: The Xtensa architecture requires stack pointer alignment to 16 bytes.
 #include    <xtensa/config/tie.h>
 #include    <xtensa/corebits.h>
 #include    <xtensa/config/system.h>
+#include    <xtensa/xtruntime-frames.h>
 
 
 /*
@@ -79,6 +80,52 @@ space to help manage the spilling of the register windows.
 #define XT_STK_SAR              0x4C
 #define XT_STK_EXCCAUSE         0x50
 
+#define XT_STK_EXCVADDR         0x54
+
+STRUCT_BEGIN
+STRUCT_FIELD (long, 4, XT_STK_EXIT,     exit) /* exit point for dispatch */
+STRUCT_FIELD (long, 4, XT_STK_PC,       pc)   /* return PC */
+STRUCT_FIELD (long, 4, XT_STK_PS,       ps)   /* return PS */
+STRUCT_FIELD (long, 4, XT_STK_A0,       a0)
+STRUCT_FIELD (long, 4, XT_STK_A1,       a1)   /* stack pointer before interrupt */
+STRUCT_FIELD (long, 4, XT_STK_A2,       a2)
+STRUCT_FIELD (long, 4, XT_STK_A3,       a3)
+STRUCT_FIELD (long, 4, XT_STK_A4,       a4)
+STRUCT_FIELD (long, 4, XT_STK_A5,       a5)
+STRUCT_FIELD (long, 4, XT_STK_A6,       a6)
+STRUCT_FIELD (long, 4, XT_STK_A7,       a7)
+STRUCT_FIELD (long, 4, XT_STK_A8,       a8)
+STRUCT_FIELD (long, 4, XT_STK_A9,       a9)
+STRUCT_FIELD (long, 4, XT_STK_A10,      a10)
+STRUCT_FIELD (long, 4, XT_STK_A11,      a11)
+STRUCT_FIELD (long, 4, XT_STK_A12,      a12)
+STRUCT_FIELD (long, 4, XT_STK_A13,      a13)
+STRUCT_FIELD (long, 4, XT_STK_A14,      a14)
+STRUCT_FIELD (long, 4, XT_STK_A15,      a15)
+STRUCT_FIELD (long, 4, XT_STK_SAR,      sar)
+STRUCT_FIELD (long, 4, XT_STK_EXCCAUSE, exccause)
+STRUCT_FIELD (long, 4, XT_STK_EXCVADDR, excvaddr)
+#if XCHAL_HAVE_LOOPS
+STRUCT_FIELD (long, 4, XT_STK_LBEG,   lbeg)
+STRUCT_FIELD (long, 4, XT_STK_LEND,   lend)
+STRUCT_FIELD (long, 4, XT_STK_LCOUNT, lcount)
+#endif
+#ifndef __XTENSA_CALL0_ABI__
+/* Temporary space for saving stuff during window spill */
+STRUCT_FIELD (long, 4, XT_STK_TMP0,   tmp0)
+STRUCT_FIELD (long, 4, XT_STK_TMP1,   tmp1)
+STRUCT_FIELD (long, 4, XT_STK_TMP2,   tmp2)
+#endif
+#ifdef XT_USE_SWPRI
+/* Storage for virtual priority mask */
+STRUCT_FIELD (long, 4, XT_STK_VPRI,   vpri)
+#endif
+#ifdef XT_USE_OVLY
+/* Storage for overlay state */
+STRUCT_FIELD (long, 4, XT_STK_OVLY,   ovly)
+#endif
+STRUCT_END(XtExcFrame)
+
 #if XCHAL_HAVE_LOOPS
 #define XT_STK_LBEG             0x50
 #define XT_STK_LEND             0x54
@@ -114,6 +161,49 @@ Windowed -
 #define XT_STK_FRMSZ            (ALIGNUP(0x10, XT_STK_NEXT3) + 0x20)
 #endif
 
+
+/*
+-------------------------------------------------------------------------------
+  SOLICITED STACK FRAME FOR A THREAD
+
+  A stack frame of this structure is allocated whenever a thread enters the 
+  RTOS kernel intentionally (and synchronously) to submit to thread scheduling.
+  It goes on the current thread's stack.
+
+  The solicited frame only includes registers that are required to be preserved
+  by the callee according to the compiler's ABI conventions, some space to save 
+  the return address for returning to the caller, and the caller's PS register.
+
+  For Windowed ABI, this stack frame includes the caller's base save area.
+
+  Note on XT_SOL_EXIT field:
+      It is necessary to distinguish a solicited from an interrupt stack frame.
+      This field corresponds to XT_STK_EXIT in the interrupt stack frame and is
+      always at the same offset (0). It can be written with a code (usually 0) 
+      to distinguish a solicted frame from an interrupt frame. An RTOS port may
+      opt to ignore this field if it has another way of distinguishing frames.
+-------------------------------------------------------------------------------
+*/
+
+STRUCT_BEGIN
+#ifdef __XTENSA_CALL0_ABI__
+STRUCT_FIELD (long, 4, XT_SOL_EXIT, exit)
+STRUCT_FIELD (long, 4, XT_SOL_PC,   pc)
+STRUCT_FIELD (long, 4, XT_SOL_PS,   ps)
+STRUCT_FIELD (long, 4, XT_SOL_NEXT, a0)
+STRUCT_FIELD (long, 4, XT_SOL_A12,  a1)    /* should be on 16-byte alignment */
+STRUCT_FIELD (long, 4, XT_SOL_A13,  a2)
+#else
+STRUCT_FIELD (long, 4, XT_SOL_EXIT, exit)
+STRUCT_FIELD (long, 4, XT_SOL_PC,   pc)
+STRUCT_FIELD (long, 4, XT_SOL_PS,   ps)
+STRUCT_FIELD (long, 4, XT_SOL_NEXT, next)
+STRUCT_FIELD (long, 4, XT_SOL_A0,   a0)    /* should be on 16-byte alignment */
+STRUCT_FIELD (long, 4, XT_SOL_A1,   a1)
+STRUCT_FIELD (long, 4, XT_SOL_A2,   a2)
+STRUCT_FIELD (long, 4, XT_SOL_A3,   a3)
+#endif
+STRUCT_END(XtSolFrame)
 
 /*******************************************************************************
 

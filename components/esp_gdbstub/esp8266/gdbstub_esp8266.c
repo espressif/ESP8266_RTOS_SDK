@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "soc/uart_periph.h"
-#include "soc/gpio_periph.h"
-#include "esp_gdbstub_common.h"
+#include "esp8266/uart_register.h"
+#include "esp8266/eagle_soc.h"
 #include "sdkconfig.h"
+#include "esp_task_wdt.h"
 
 #define UART_NUM CONFIG_CONSOLE_UART_NUM
 
@@ -25,23 +25,24 @@ void esp_gdbstub_target_init(void)
 
 int esp_gdbstub_getchar(void)
 {
-    while (REG_GET_FIELD(UART_STATUS_REG(UART_NUM), UART_RXFIFO_CNT) == 0) {
-        ;
+    while (((READ_PERI_REG(UART_STATUS(UART_NUM)) >> UART_RXFIFO_CNT_S) & UART_RXFIFO_CNT) == 0) {
+        esp_task_wdt_reset();
     }
-    return REG_READ(UART_FIFO_REG(UART_NUM));
+    return READ_PERI_REG(UART_FIFO(UART_NUM));
 }
 
 void esp_gdbstub_putchar(int c)
 {
-    while (REG_GET_FIELD(UART_STATUS_REG(UART_NUM), UART_TXFIFO_CNT) >= 126) {
+    while (((READ_PERI_REG(UART_STATUS(UART_NUM)) >> UART_TXFIFO_CNT_S) & UART_TXFIFO_CNT) >= 126) {
         ;
     }
-    REG_WRITE(UART_FIFO_REG(UART_NUM), c);
+
+    WRITE_PERI_REG(UART_FIFO(UART_NUM) , c);
 }
 
 int esp_gdbstub_readmem(intptr_t addr)
 {
-    if (addr < 0x20000000 || addr >= 0x80000000) {
+    if (addr < 0x3ff00000 || addr >= 0x60010000) {
         /* see cpu_configure_region_protection */
         return -1;
     }

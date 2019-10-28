@@ -78,7 +78,7 @@ uint8_t *__cpu_init_stk(uint8_t *stack_top, void (*_entry)(void *), void *param,
     uint32_t *sp, *tp, *stk = (uint32_t *)stack_top;
 
     /* Create interrupt stack frame aligned to 16 byte boundary */
-    sp = (uint32_t *)(((INT32U)(stk + 1) - XT_CP_SIZE - XT_STK_FRMSZ) & ~0xf);
+    sp = (uint32_t *)(((uint32_t)(stk + 1) - XT_CP_SIZE - XT_STK_FRMSZ) & ~0xf);
 
     /* Clear the entire frame (do not use memset() because we don't depend on C library) */
     for (tp = sp; tp <= stk; ++tp) {
@@ -88,7 +88,7 @@ uint8_t *__cpu_init_stk(uint8_t *stack_top, void (*_entry)(void *), void *param,
     /* Explicitly initialize certain saved registers */
     SET_STKREG(XT_STK_PC,   _entry);                        /* task entrypoint                  */
     SET_STKREG(XT_STK_A0,   _exit);                         /* to terminate GDB backtrace       */
-    SET_STKREG(XT_STK_A1,   (INT32U)sp + XT_STK_FRMSZ);     /* physical top of stack frame      */
+    SET_STKREG(XT_STK_A1,   (uint32_t)sp + XT_STK_FRMSZ);   /* physical top of stack frame      */
     SET_STKREG(XT_STK_A2,   param);                         /* parameters      */
     SET_STKREG(XT_STK_EXIT, _xt_user_exit);                 /* user exception exit dispatcher   */
 
