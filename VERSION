@@ -1,7 +1,7 @@
 gwen:
     crypto:     9ec59b5
     espnow:     79c549f
-    main:       5d55574
+    main:       e61c04c
     net80211:   529a4d8
     pp:         ab47d75
     pwm:        8b5441e
