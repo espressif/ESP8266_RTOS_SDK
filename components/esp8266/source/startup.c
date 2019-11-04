@@ -74,15 +74,9 @@ static void user_init_entry(void *param)
 
     extern void app_main(void);
 
-    extern void phy_close_rf(void);
-
-    extern void esp_sleep_unlock();
-
     /* initialize C++ construture function */
     for (func = &__init_array_start; func < &__init_array_end; func++)
         func[0]();
-
-    phy_get_bb_evm();
 
     /*enable tsf0 interrupt for pwm*/
     REG_WRITE(PERIPHS_DPORT_BASEADDR, (REG_READ(PERIPHS_DPORT_BASEADDR) & ~0x1F) | 0x1);
@@ -92,9 +86,6 @@ static void user_init_entry(void *param)
     assert(rtc_init() == 0);
     assert(mac_init() == 0);
     assert(base_gpio_init() == 0);
-    esp_phy_load_cal_and_init(0);
-    phy_close_rf();
-    esp_sleep_unlock();
 
     esp_wifi_set_rx_pbuf_mem_type(WIFI_RX_PBUF_DRAM);
 

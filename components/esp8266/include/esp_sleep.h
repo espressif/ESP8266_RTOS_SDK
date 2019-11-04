@@ -15,6 +15,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "esp_err.h"
 #include "driver/gpio.h"
 
@@ -260,6 +261,22 @@ esp_err_t esp_sleep_enable_gpio_wakeup(void);
  *      - ESP_ERR_INVALID_STATE if trigger was not active
  */
 esp_err_t esp_sleep_disable_wakeup_source(esp_sleep_source_t source);
+
+/**
+ * @brief Print power consumption information
+ *
+ * @note This function is used to print power consumption data. The current
+ *       when the RF and CPU are both turned on is 70 mA. The current when
+ *       only the CPU is turned on is 18 mA. 900uA when both CPU and RF are off.
+ *       There may be some errors compared to the actual power consumption.
+ *       The power consumption is based on the actual measurement, and the printing
+ *       in the function is for reference only.
+ * 
+ * @param     clear_old_data  - Recalculate power consumption info or not.
+ * 
+ * @return    null
+ */
+void esp_power_consumption_info(bool clear_old_data);
 
 #ifdef __cplusplus
 }
