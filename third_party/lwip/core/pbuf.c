@@ -303,6 +303,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
       (PBUF_POOL_BUFSIZE_ALIGNED - LWIP_MEM_ALIGN_SIZE(offset)) > 0 );
     /* set reference count (needed here in case we fail) */
     p->ref = 1;
+    p->eb = NULL;
 
     /* now allocate the tail of the pbuf chain */
 
@@ -337,6 +338,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
                   ((u8_t*)p->payload + p->len <=
                    (u8_t*)p + SIZEOF_STRUCT_PBUF + PBUF_POOL_BUFSIZE_ALIGNED));
       q->ref = 1;
+      q->eb = NULL;
       /* calculate remaining length to be allocated */
       rem_len -= q->len;
       /* remember this pbuf for linkage in next iteration */
@@ -382,6 +384,7 @@ pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
     p->len = p->tot_len = length;
     p->next = NULL;
     p->type = type;
+    p->eb = NULL;
     break;
   default:
     LWIP_ASSERT("pbuf_alloc: erroneous type", 0);
