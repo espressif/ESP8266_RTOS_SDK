@@ -22,7 +22,8 @@ void ir_tx_task(void *arg)
 {
     ir_tx_config_t ir_tx_config = {
         .io_num = IR_TX_IO_NUM,
-        .freq = 38000
+        .freq = 38000,
+        .timer = IR_TX_WDEV_TIMER // WDEV timer will be more accurate, but PWM will not work
     };
 
     ir_tx_init(&ir_tx_config);
