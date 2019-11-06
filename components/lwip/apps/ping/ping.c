@@ -57,6 +57,10 @@
 #include "lwip/inet.h"
 #endif /* PING_USE_SOCKETS */
 
+#ifdef CONFIG_USING_ESP_VFS
+#include <unistd.h>
+#endif
+
 #ifdef ESP_PING
 #include "esp_ping.h"
 #include "lwip/ip_addr.h"
