@@ -51,6 +51,7 @@ typedef struct mem_blk {
 /**
  * Second type memory block.
  */
+#ifdef CONFIG_HEAP_TRACING
 typedef struct mem_blk2 {
     struct mem_blk2 *prev;  ///< Point to previous memory block
     struct mem_blk2 *next;  ///< Point to next memory block
@@ -58,6 +59,9 @@ typedef struct mem_blk2 {
     const char      *file;  ///< Which "file" allocate the memory block
     size_t          line;   ///< Which "line" allocate the memory block                      
 } mem2_blk_t;
+#else
+typedef mem_blk_t mem2_blk_t;
+#endif
 
 /**
  * User region information.

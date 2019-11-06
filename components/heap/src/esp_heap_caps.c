@@ -32,7 +32,9 @@ extern heap_region_t g_heap_region[];
 
 static const char *TAG = "heap_init";
 size_t g_heap_region_num;
+#ifdef CONFIG_HEAP_TRACING
 int __g_heap_trace_mode = HEAP_TRACE_NONE;
+#endif
 
 /**
  * @brief Initialize regions of memory to the collection of heaps at runtime.
@@ -116,7 +118,9 @@ void IRAM_ATTR *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, 
 
         _heap_caps_lock(num);
 
+#ifdef CONFIG_HEAP_TRACING
         trace = __g_heap_trace_mode == HEAP_TRACE_LEAKS;
+#endif
 
         mem_blk_size = ptr2memblk_size(size, trace);
 
