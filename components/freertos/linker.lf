@@ -10,3 +10,6 @@ entries:
         timers (iram_bss)
         freertos_hooks (iram_bss)
         impure(iram_bss)
+
+    if FREERTOS_CODE_LINK_TO_IRAM = y:
+        * (noflash_text)

@@ -70,6 +70,12 @@ config FREERTOS_GLOBAL_DATA_LINK_IRAM
     help
         Link FreeRTOS global data(.bss .data COMMON) from DRAM to IRAM.
 
+config FREERTOS_CODE_LINK_TO_IRAM
+    bool "Link FreeRTOS code to IRAM"
+    default n
+    help
+        Link FreeRTOS code from Flash to IRAM.
+
 config FREERTOS_TIMER_STACKSIZE
     int "Timer stack size"
     default 2048
