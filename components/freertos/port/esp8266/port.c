@@ -130,15 +130,9 @@ void TASK_SW_ATTR SoftIsrHdl(void* arg)
     }
 }
 
-void esp_increase_tick_cnt(const TickType_t ticks)
+void IRAM_ATTR esp_increase_tick_cnt(const TickType_t ticks)
 {
-    esp_irqflag_t flag;
-
-    flag = soc_save_local_irq();
-
     g_esp_os_ticks += ticks;
-
-    soc_restore_local_irq(flag);
 }
 
 void IRAM_ATTR xPortSysTickHandle(void *p)
@@ -163,14 +157,12 @@ void IRAM_ATTR xPortSysTickHandle(void *p)
     soc_set_ccompare(_xt_tick_divisor);
 
     ticks = us / 1000 / portTICK_PERIOD_MS;
-    if (!ticks) {
-        ticks = 1;
-    }
 
-    g_esp_os_ticks += ticks;
     if (ticks > 1) {
         vTaskStepTick(ticks - 1);
     }
+
+    g_esp_os_ticks++;
 
     if (xTaskIncrementTick() != pdFALSE) {
         vTaskSwitchContext();
