@@ -27,13 +27,7 @@
 extern "C" {
 #endif
 
-#if CONFIG_CRYSTAL_USED_26MHZ
 #define CRYSTAL_USED 26
-#endif
-
-#if CONFIG_CRYSTAL_USED_40MHZ
-#define CRYSTAL_USED 40
-#endif
 
 typedef enum {
     ESP_MAC_WIFI_STA,
