@@ -653,6 +653,7 @@ static IRAM_ATTR void spi_intr(void *arg)
 {
     spi_host_t host;
     uint32_t trans_done;
+    uint32_t cnt = 0;
     if (READ_PERI_REG(DPORT_SPI_INT_STATUS_REG) & DPORT_SPI_INT_STATUS_SPI0) { // DPORT_SPI_INT_STATUS_SPI0
         trans_done = SPI0.slave.val & 0x1F;
         SPI0.slave.val &= ~0x3FF;
@@ -660,6 +661,16 @@ static IRAM_ATTR void spi_intr(void *arg)
     } else if (READ_PERI_REG(DPORT_SPI_INT_STATUS_REG) & DPORT_SPI_INT_STATUS_SPI1) { // DPORT_SPI_INT_STATUS_SPI1
         trans_done = SPI1.slave.val & 0x1F;
         SPI1.slave.val &= ~0x1F;
+        // Hardware issues: We need to wait for the hardware to clear the registers successfully.
+        while ((SPI1.slave.val & 0x1F) != 0) {
+            if (cnt >= 50) {
+                ets_printf("WARNING: waiting too much time, maybe error\r\n");
+                cnt = 0;
+            }
+            SPI1.slave.val &= ~0x1F;
+            cnt++;
+        }
+
         host = HSPI_HOST;
     } else {
         return;
