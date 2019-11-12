@@ -1564,7 +1564,6 @@ class ESP8266V3FirmwareImage(BaseFirmwareImage):
                                           "Can't generate binary. Suggest changing linker script or ELF to merge sections.") %
                                          (segment.addr, last_addr))
                     last_addr = segment.addr
-                    print('%x' % last_addr)
 
             def get_alignment_data_needed(segment):
                 # Actual alignment (in data bytes) required for a segment header: positioned so that
