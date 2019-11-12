@@ -125,8 +125,8 @@ typedef struct {
 #define WIFI_AMPDU_RX_BA_WIN          0 /* unused if ampdu_rx_enable == false */
 #define WIFI_RX_MAX_SINGLE_PKT_LEN    (1600 - 524)
 #endif
-#define WIFI_AMPDU_RX_AMPDU_BUF_LEN   72
-#define WIFI_AMPDU_RX_AMPDU_BUF_NUM   3
+#define WIFI_AMPDU_RX_AMPDU_BUF_LEN   256
+#define WIFI_AMPDU_RX_AMPDU_BUF_NUM   5
 #define WIFI_HW_RX_BUFFER_LEN         524
 
 #if CONFIG_ESP8266_WIFI_QOS_ENABLED
