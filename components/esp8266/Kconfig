@@ -627,3 +627,12 @@ config ESP8266_PHY_MAX_WIFI_TX_POWER
 
 endmenu  # PHY
 
+menu HSPI
+config ESP8266_HSPI_HIGH_THROUGHPUT
+    bool "Do some optimization to improve throughput"
+    default n
+    help
+        If enable this configuration, some spi api will be placed into iram.
+        And it will reduce iram memory.
+endmenu  # Driver
+
