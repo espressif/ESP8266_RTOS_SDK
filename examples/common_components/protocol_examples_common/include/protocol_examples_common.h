@@ -16,13 +16,7 @@ extern "C" {
 #include "esp_err.h"
 #include "tcpip_adapter.h"
 
-#ifdef CONFIG_EXAMPLE_CONNECT_ETHERNET
-#define EXAMPLE_INTERFACE TCPIP_ADAPTER_IF_ETH
-#endif
-
-#ifdef CONFIG_EXAMPLE_CONNECT_WIFI
 #define EXAMPLE_INTERFACE TCPIP_ADAPTER_IF_STA
-#endif
 
 /**
  * @brief Configure Wi-Fi or Ethernet, connect, wait for IP
