@@ -1,4 +1,4 @@
-// Copyright 2015-2018 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2019 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _ESP_TRANSPORT_TCP_H_
-#define _ESP_TRANSPORT_TCP_H_
-
-#include "esp_transport.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef _ESP_TRANSPORT_INTERNAL_H_
+#define _ESP_TRANSPORT_INTERNAL_H_
 
 /**
- * @brief      Create TCP transport, the transport handle must be release esp_transport_destroy callback
+ * @brief      Sets error to common transport handle
  *
- * @return  the allocated esp_transport_handle_t, or NULL if the handle can not be allocated
+ *             Note: This function copies the supplied error handle object to tcp_transport's internal
+ *             error handle object
+ *
+ * @param[in]  A transport handle
+ *
  */
-esp_transport_handle_t esp_transport_tcp_init(void);
+void esp_transport_set_errors(esp_transport_handle_t t, const esp_tls_error_handle_t error_handle);
 
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _ESP_TRANSPORT_TCP_H_ */
+#endif /* _ESP_TRANSPORT_INTERNAL_H_ */
