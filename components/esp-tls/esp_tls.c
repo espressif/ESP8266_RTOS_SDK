@@ -169,12 +169,16 @@ static esp_err_t esp_tcp_connect(const char *host, int hostlen, int port, int *s
         struct sockaddr_in *p = (struct sockaddr_in *)addrinfo->ai_addr;
         p->sin_port = htons(port);
         addr_ptr = p;
-    } else if (addrinfo->ai_family == AF_INET6) {
+    }
+#if LWIP_IPV6
+    else if (addrinfo->ai_family == AF_INET6) {
         struct sockaddr_in6 *p = (struct sockaddr_in6 *)addrinfo->ai_addr;
         p->sin6_port = htons(port);
         p->sin6_family = AF_INET6;
         addr_ptr = p;
-    } else {
+    }
+#endif
+    else {
         ESP_LOGE(TAG, "Unsupported protocol family %d", addrinfo->ai_family);
         ret = ESP_ERR_ESP_TLS_UNSUPPORTED_PROTOCOL_FAMILY;
         goto err_freesocket;
@@ -236,8 +240,8 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
             return -1;
         }
         if (!cfg) {
-            tls->read = tcp_read;
-            tls->write = tcp_write;
+            tls->_read = tcp_read;
+            tls->_write = tcp_write;
             ESP_LOGD(TAG, "non-tls connection established");
             return 1;
         }
@@ -282,8 +286,8 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
             tls->conn_state = ESP_TLS_FAIL;
             return -1;
         }
-        tls->read = _esp_tls_read;
-        tls->write = _esp_tls_write;
+        tls->_read = _esp_tls_read;
+        tls->_write = _esp_tls_write;
         tls->conn_state = ESP_TLS_HANDSHAKE;
     /* falls through */
     case ESP_TLS_HANDSHAKE:

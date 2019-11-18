@@ -69,6 +69,7 @@ IoT_Error_t iot_tls_is_connected(Network *pNetwork) {
 }
 
 IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
+    struct esp_tls *tls;
     int ret = SUCCESS;
     TLSDataParams *tlsDataParams = NULL;
 
@@ -101,10 +102,15 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
 
     esp_set_cpu_freq(ESP_CPU_FREQ_160M);
 
-    struct esp_tls *tls = esp_tls_conn_new(pNetwork->tlsConnectParams.pDestinationURL, strlen(pNetwork->tlsConnectParams.pDestinationURL), pNetwork->tlsConnectParams.DestinationPort, &cfg);
-
+    tls = esp_tls_init();
     if (!tls) {
         ret = SSL_CONNECTION_ERROR;
+    } else {
+        int tls_ret = esp_tls_conn_new_sync(pNetwork->tlsConnectParams.pDestinationURL, strlen(pNetwork->tlsConnectParams.pDestinationURL), pNetwork->tlsConnectParams.DestinationPort, &cfg, tls);
+        if (tls_ret) {
+            ret = SSL_CONNECTION_ERROR;
+            esp_tls_conn_delete(tls);
+        }
     }
 
     tlsDataParams->timeout = pNetwork->tlsConnectParams.timeout_ms;
@@ -129,7 +135,7 @@ IoT_Error_t iot_tls_write(Network *pNetwork, unsigned char *pMsg, size_t len, Ti
         written_so_far < len && !has_timer_expired(timer); written_so_far += ret, frags++) {
         while(!has_timer_expired(timer) &&
               (ret = esp_tls_conn_write(tls, pMsg + written_so_far, len - written_so_far)) <= 0) {
-            if(ret != ESP_TLS_ERROR_WANT_READ && ret != ESP_TLS_ERROR_WANT_WRITE) {
+            if(ret != ESP_TLS_ERR_SSL_WANT_READ && ret != ESP_TLS_ERR_SSL_WANT_WRITE) {
                 ESP_LOGE(TAG, "failed! esp_tls_conn_write returned -0x%x", -ret);
                 /* All other negative return values indicate connection needs to be reset.
                 * Will be caught in ping request so ignored here */
@@ -195,7 +201,7 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
             rxLen += ret;
             pMsg += ret;
             len -= ret;
-        } else if (ret == 0 || (ret != ESP_TLS_ERROR_WANT_READ && ret != ESP_TLS_ERROR_WANT_WRITE)) {
+        } else if (ret == 0 || (ret != ESP_TLS_ERR_SSL_WANT_READ && ret != ESP_TLS_ERR_SSL_WANT_WRITE)) {
             return NETWORK_SSL_READ_ERROR;
         }
 

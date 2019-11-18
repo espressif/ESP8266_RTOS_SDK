@@ -1444,6 +1444,7 @@ size_t memp_malloc_get_size(size_t type);
  */
 #ifdef CONFIG_USING_ESP_VFS
 #define LWIP_POSIX_SOCKETS_IO_NAMES     0
+#include <unistd.h>  /* close/read/write */
 #else
 #define LWIP_POSIX_SOCKETS_IO_NAMES     1
 #endif

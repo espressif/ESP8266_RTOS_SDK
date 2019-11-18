@@ -284,10 +284,10 @@ typedef struct esp_tls {
 #endif
     int sockfd;                                                                 /*!< Underlying socket file descriptor. */
  
-    ssize_t (*read)(struct esp_tls  *tls, char *data, size_t datalen);          /*!< Callback function for reading data from TLS/SSL
+    ssize_t (*_read)(struct esp_tls  *tls, char *data, size_t datalen);          /*!< Callback function for reading data from TLS/SSL
                                                                                      connection. */
  
-    ssize_t (*write)(struct esp_tls *tls, const char *data, size_t datalen);    /*!< Callback function for writing data to TLS/SSL
+    ssize_t (*_write)(struct esp_tls *tls, const char *data, size_t datalen);    /*!< Callback function for writing data to TLS/SSL
                                                                                      connection. */
 
     esp_tls_conn_state_t  conn_state;                                           /*!< ESP-TLS Connection state */
@@ -429,7 +429,7 @@ int esp_tls_conn_http_new_async(const char *url, const esp_tls_cfg_t *cfg, esp_t
  */
 static inline ssize_t esp_tls_conn_write(esp_tls_t *tls, const void *data, size_t datalen)
 {
-    return tls->write(tls, (char *)data, datalen);
+    return tls->_write(tls, (char *)data, datalen);
 }
 
 /**
@@ -449,7 +449,7 @@ static inline ssize_t esp_tls_conn_write(esp_tls_t *tls, const void *data, size_
  */
 static inline ssize_t esp_tls_conn_read(esp_tls_t *tls, void  *data, size_t datalen)
 {
-    return tls->read(tls, (char *)data, datalen);
+    return tls->_read(tls, (char *)data, datalen);
 }
 
 /**
