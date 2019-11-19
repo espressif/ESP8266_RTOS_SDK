@@ -146,7 +146,7 @@ static void https_get_task(void *pvParameters)
             .cacert_pem_bytes = server_root_cert_pem_end - server_root_cert_pem_start,
         };
         
-        struct esp_tls *tls = esp_tls_conn_new(WEB_SERVER, strlen(WEB_SERVER), WEB_PORT, &cfg);
+        struct esp_tls *tls = esp_tls_conn_http_new(WEB_URL, &cfg);
         
         if(tls != NULL) {
             ESP_LOGI(TAG, "Connection established...");
@@ -163,12 +163,7 @@ static void https_get_task(void *pvParameters)
             if (ret >= 0) {
                 ESP_LOGI(TAG, "%d bytes written", ret);
                 written_bytes += ret;
-            } else if
-#if CONFIG_SSL_USING_MBEDTLS
-            (ret != MBEDTLS_ERR_SSL_WANT_READ  && ret != MBEDTLS_ERR_SSL_WANT_WRITE)
-#else
-            (ret != WOLFSSL_ERROR_WANT_READ  && ret != WOLFSSL_ERROR_WANT_WRITE)
-#endif
+            } else if (ret != ESP_TLS_ERR_SSL_WANT_READ  && ret != ESP_TLS_ERR_SSL_WANT_WRITE)
             {
                 ESP_LOGE(TAG, "esp_tls_conn_write  returned 0x%x", ret);
                 goto exit;
