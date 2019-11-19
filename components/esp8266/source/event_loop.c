@@ -109,3 +109,8 @@ esp_err_t esp_event_loop_init(system_event_cb_t cb, void *ctx)
     s_event_init_flag = true;
     return ESP_OK;
 }
+
+esp_err_t esp_event_loop_create_default(void)
+{
+    return ESP_OK;
+}
