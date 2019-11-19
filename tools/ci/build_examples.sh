@@ -166,7 +166,7 @@ build_example () {
 
 EXAMPLE_NUM=0
 
-EXAMPLE_PATHS=$( find ${IDF_PATH}/examples/ -type f -name Makefile | grep -v "/build_system/cmake/" | sort )
+EXAMPLE_PATHS=$( find ${IDF_PATH}/examples/ -type f -name Makefile | grep -v "/components/" | grep -v "/common_components/" | grep -v "/main/" | grep -v "/build_system/cmake/" | sort )
 for FN in ${EXAMPLE_PATHS}
 do
     if [[ $EXAMPLE_NUM -lt $START_NUM || $EXAMPLE_NUM -ge $END_NUM ]]
