@@ -103,7 +103,7 @@
 #define CPU_FREQ_160MHZ             (160 * 1000 * 1000)
 #define CPU_FREQ_80MHz              (80 * 1000 * 1000)
 
-#define CPU_160M_TICKS_PRT_MS       (CPU_FREQ_160MHZ / FREQ_1MHZ)
+#define CPU_160M_TICKS_PRT_MS       (CPU_FREQ_160MHZ / FREQ_1KHZ)
 #define CPU_80M_TICKS_PRT_MS        (CPU_FREQ_80MHz / FREQ_1KHZ)
 
 #define CPU_160M_TICKS_PRT_US       (CPU_FREQ_160MHZ / FREQ_1MHZ)
