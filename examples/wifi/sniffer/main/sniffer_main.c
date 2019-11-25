@@ -131,6 +131,12 @@ static void sniffer_task(void* pvParameters)
     sniffer_filter.filter_mask |= WIFI_PROMIS_FILTER_MASK_DATA;
 #endif
 
+#if CONFIG_FILTER_MASK_DATA_FRAME_PAYLOAD
+    /*Enable to receive the correct data frame payload*/
+    extern esp_err_t esp_wifi_set_recv_data_frame_payload(bool enable_recv);
+    ESP_ERROR_CHECK(esp_wifi_set_recv_data_frame_payload(true));
+#endif
+
 #if CONFIG_FILTER_MASK_MISC
     sniffer_filter.filter_mask |= WIFI_PROMIS_FILTER_MASK_MISC;
 #endif
