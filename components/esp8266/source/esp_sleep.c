@@ -49,6 +49,8 @@ typedef struct pm_soc_clk {
 
     uint32_t    frc2_enable;
     uint32_t    frc2_cnt;
+
+    uint32_t    wdev_cnt;
 } pm_soc_clk_t;
 
 static uint16_t s_lock_cnt = 1;
@@ -79,6 +81,8 @@ static inline void save_soc_clk(pm_soc_clk_t *clk)
     clk->frc2_enable = REG_READ(FRC2_CTL) & FRC2_CNTL_ENABLE;
     if (clk->frc2_enable)
         clk->frc2_cnt = REG_READ(FRC2_COUNT);
+
+    clk->wdev_cnt = REG_READ(WDEV_COUNT_REG);
 }
 
 static inline uint32_t min_sleep_us(pm_soc_clk_t *clk)
@@ -114,7 +118,15 @@ static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
         REG_WRITE(FRC2_LOAD,  frc2_cnt);
     }
 
-    WdevTimOffSet += us;
+    uint32_t wdev_us;
+    uint32_t wdev_cnt = REG_READ(WDEV_COUNT_REG);
+
+    if (clk->wdev_cnt < wdev_cnt)
+        wdev_us = us - (wdev_cnt - clk->wdev_cnt);
+    else
+        wdev_us = us - (UINT32_MAX - clk->wdev_cnt + wdev_cnt);
+
+    WdevTimOffSet += wdev_us;
 }
 
 static int cpu_is_wait_mode(void)
