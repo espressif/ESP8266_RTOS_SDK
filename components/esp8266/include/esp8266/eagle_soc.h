@@ -143,6 +143,8 @@
 #define INT_ENA_WDEV                0x3ff20c18
 #define WDEV_TSF0_REACH_INT         (BIT(27))
 
+#define WDEV_COUNT_REG              (0x3ff20c00)
+
 //Watch dog reg {{
 #define PERIPHS_WDT_BASEADDR        0x60000900
 
