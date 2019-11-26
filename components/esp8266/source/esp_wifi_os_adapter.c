@@ -145,3 +145,27 @@ void *__wifi_task_top_sp(void)
 
     return pxCurrentTCB[0];
 }
+
+void* __wifi_semphr_create(uint32_t max, uint32_t init)
+{
+    return (void*)xSemaphoreCreateCounting(max, init);
+}
+
+void __wifi_semphr_delete(void* semphr)
+{
+    vSemaphoreDelete(semphr);
+}
+
+int32_t __wifi_semphr_take(void* semphr, uint32_t block_time_tick)
+{
+    if (block_time_tick == OSI_FUNCS_TIME_BLOCKING) {
+        return (int32_t)xSemaphoreTake(semphr, portMAX_DELAY);
+    } else {
+        return (int32_t)xSemaphoreTake(semphr, block_time_tick);
+    }
+}
+
+int32_t __wifi_semphr_give(void* semphr)
+{
+    return (int32_t)xSemaphoreGive(semphr);
+}

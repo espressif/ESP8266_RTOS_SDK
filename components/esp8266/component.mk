@@ -13,10 +13,10 @@ LIBS ?=
 ifndef CONFIG_NO_BLOBS
 ifndef CONFIG_ESP8266_WIFI_DEBUG_LOG_ENABLE
 LIBS += gcc hal core net80211 \
-        phy rtc clk pp smartconfig ssc wpa espnow wps
+        phy rtc clk pp smartconfig ssc wpa espnow wps wpa2
 else
 LIBS += gcc hal core_dbg net80211_dbg \
-        phy rtc clk pp_dbg smartconfig ssc wpa_dbg espnow_dbg wps_dbg
+        phy rtc clk pp_dbg smartconfig ssc wpa_dbg espnow_dbg wps_dbg wpa2_dbg
 endif
 endif
 

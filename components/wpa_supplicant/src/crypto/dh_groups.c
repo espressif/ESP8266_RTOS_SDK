@@ -13,13 +13,14 @@
  */
 
 #include "crypto/includes.h"
-
 #include "crypto/common.h"
 #include "crypto/crypto.h"
 #include "crypto/random.h"
 #include "crypto/dh_groups.h"
+
 #include "wpa/wpabuf.h"
 #include "wpa/wpa_debug.h"
+
 #include "esp_wifi_crypto_types.h"
 
 extern wps_crypto_funcs_t wps_crypto_funcs;
