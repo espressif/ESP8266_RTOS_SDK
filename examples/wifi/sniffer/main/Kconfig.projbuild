@@ -17,6 +17,13 @@ config FILTER_MASK_DATA
     bool "Receive data packets"
     default n
 
+config FILTER_MASK_DATA_FRAME_PAYLOAD
+    depends on FILTER_MASK_DATA
+    bool "Receive data frame payload"
+    default n
+    help
+        Select this option to enable recv data frame payload
+
 config FILTER_MASK_MISC
     bool "Receive misc packets"
     default n
