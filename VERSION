@@ -3,9 +3,8 @@ gwen:
     espnow:     79c549f
     main:       f4cdb80
     net80211:   529a4d8
-    pp:         ab47d75
+    pp:         6eff19d
     pwm:        8b5441e
-    smartconfig:b971620
     wpa:        a8b0acd
     wps:        ff84a8b
     phy:        1058.13
@@ -20,3 +19,5 @@ gitlab:
     nopoll:     31f0ea07
     openssl:    1669353f
     ssl:        eefb383a
+
+    smartconfig:   2.5.5
