@@ -205,11 +205,15 @@ esp_err_t esp_sleep_disable_wakeup_source(esp_sleep_source_t source)
 
 esp_err_t esp_light_sleep_start(void)
 {
+    esp_err_t ret;
+    esp_irqflag_t irqflag = soc_save_local_irq();
+    uint32_t wdevflag = save_local_wdev();
     uint32_t period = pm_rtc_clock_cali_proc();
     const uint32_t sleep_rtc_ticks = pm_usec2rtc(s_sleep_duration, period);
-    const rtc_cpu_freq_t cpu_freq = rtc_clk_cpu_freq_get();
 
     if (sleep_rtc_ticks > WAKEUP_EARLY_TICKS + 1) {
+        const rtc_cpu_freq_t cpu_freq = rtc_clk_cpu_freq_get();
+
         rtc_lightsleep_init();
         pm_set_sleep_cycles(sleep_rtc_ticks - WAKEUP_EARLY_TICKS);
         rtc_light_sleep_start(s_sleep_wakup_triggers, 0);
@@ -217,10 +221,15 @@ esp_err_t esp_light_sleep_start(void)
 
         rtc_clk_cpu_freq_set(cpu_freq);
 
-        return ESP_OK;
+        ret = ESP_OK;
+    } else {
+        ret = ESP_ERR_INVALID_STATE;
     }
 
-    return ESP_ERR_INVALID_STATE;
+    restore_local_wdev(wdevflag);
+    soc_restore_local_irq(irqflag);
+
+    return ret;
 }
 
 void esp_sleep_lock(void)
