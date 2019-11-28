@@ -376,7 +376,7 @@ int NetworkConnectSSL(Network *n, char *addr, int port, ssl_ca_crt_key_t *ssl_cc
         goto exit;
     }
 
-    n->ctx = SSL_CTX_new(method);
+    n->ctx = SSL_CTX_new((SSL_METHOD *)method);
 
     if (!n->ctx) {
         goto exit;
