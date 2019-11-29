@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "sdkconfig.h"
 
@@ -62,6 +63,7 @@ int __attribute__ ((weak)) ets_putc(int c)
 #define ALTERNATE   0x08
 #define OUPUT_INT   0x10
 #define START       0x20
+#define END         0x40
 
 #define VINT_STR_MAX 10
 
@@ -73,7 +75,7 @@ typedef union _val_cache {
 } val_cache_t;
 
 typedef struct _val_attr {
-    int8_t          type;
+    uint8_t         type;
     uint8_t         state;
     uint8_t         fillbytes;
     uint8_t         precision;
@@ -182,23 +184,10 @@ int ets_vprintf(const char *fmt, va_list va)
 
         fmt = ps;
 
-        attr.state = 0;
-        attr.type = -1;
-        attr.fillbytes = 0;
-        attr.precision = 0;
+        memset(&attr, 0, sizeof(val_attr_t));
 
         for (; ;) {
             switch (*++ps) {
-                case 'd':
-                case 'i':
-                case 'u':
-                case 'x':
-                case 'c':
-                case 's':
-                case 'p':
-                case '\0':
-                    attr.type = *ps++;
-                    break;
                 case '#':
                     attr.state |= ALTERNATE;
                     ps++;
@@ -220,14 +209,15 @@ int ets_vprintf(const char *fmt, va_list va)
                     attr.state |= FILL_LEFT;
                     break;
                 default:
-                    attr.type = -2;
+                    attr.type = *ps++;
+                    attr.state |= END;
                     break;
             }
 
-            attr.state |= START;
-
-            if (attr.type != -1)
+            if (attr.state & END)
                 break;
+            
+            attr.state |= START;
         }
 
         switch (attr.type) {
@@ -260,7 +250,13 @@ int ets_vprintf(const char *fmt, va_list va)
                 ets_printf_buf("0x", 2);
                 attr.value.valcp = va_arg(va, const char *);
                 ets_printf_int(&attr, 16);
+                break;
+            case '%':
+                ets_putc('%');
+                break;
             default:
+                ets_putc('%');
+                ps = fmt + 1;
                 break;
         }
 
