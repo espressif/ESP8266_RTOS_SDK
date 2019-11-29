@@ -89,7 +89,7 @@ void IRAM_ATTR esp_task_wdt_reset(void)
   */
 void pp_soft_wdt_stop(void)
 {
-
+    WDT_FEED();
 }
 
 /**
@@ -97,5 +97,5 @@ void pp_soft_wdt_stop(void)
   */
 void pp_soft_wdt_restart(void)
 {
-
+    WDT_FEED();
 }
