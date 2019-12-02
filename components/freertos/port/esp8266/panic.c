@@ -17,17 +17,32 @@
 #include "esp_attr.h"
 #include "esp_libc.h"
 #include "esp_system.h"
+#include "esp_task_wdt.h"
+#include "internal/esp_system_internal.h"
 
 #include "esp8266/rom_functions.h"
 #include "esp8266/backtrace.h"
 #include "rom/ets_sys.h"
+#include "rom/uart.h"
 #include "esp_err.h"
 
 #include "FreeRTOS.h"
 
 #define PANIC(_fmt, ...)    ets_printf(_fmt, ##__VA_ARGS__)
 
-#ifndef CONFIG_ESP_PANIC_SILENT_REBOOT
+#if defined(CONFIG_ESP_PANIC_SILENT_REBOOT) || defined(CONFIG_ESP_PANIC_PRINT_REBOOT)
+#define ESP_PANIC_REBOOT
+#else
+#undef ESP_PANIC_REBOOT
+#endif
+
+#if defined(CONFIG_ESP_PANIC_SILENT_REBOOT)
+#undef ESP_PANIC_PRINT
+#else
+#define ESP_PANIC_PRINT
+#endif
+
+#ifdef ESP_PANIC_PRINT
 
 typedef struct panic_frame {
     uint32_t    exit;
@@ -59,7 +74,7 @@ typedef struct panic_frame {
     uint32_t    exccause;
 } panic_frame_t;
 
-static inline void panic_frame(panic_frame_t *frame)
+static void panic_frame(panic_frame_t *frame)
 {
     static const char *sdesc[] = {
         "PC",   "PS",   "A0",   "A1",
@@ -107,11 +122,25 @@ static inline void panic_frame(panic_frame_t *frame)
     }
     PANIC("\r\n");
 }
-#endif /* !CONFIG_ESP_PANIC_SILENT_REBOOT */
+#endif /* ESP_PANIC_PRINT */
+
+#ifdef ESP_PANIC_REBOOT
+static void esp_panic_reset(void)
+{
+    uart_tx_wait_idle(0);
+    uart_tx_wait_idle(1);    
+
+    rom_i2c_writeReg(0x67, 4, 1, 0x08);
+    rom_i2c_writeReg(0x67, 4, 2, 0x81);
+
+    esp_reset_reason_set_hint(ESP_RST_PANIC);
+
+    rom_software_reboot();
+}
+#endif
 
 void panicHandler(void *frame, int wdt)
 {
-#ifndef CONFIG_ESP_PANIC_SILENT_REBOOT
     extern int _chip_nmi_cnt;
 
     _chip_nmi_cnt = 0;
@@ -122,21 +151,21 @@ void panicHandler(void *frame, int wdt)
         REG_WRITE(INT_ENA_WDEV, 0);
     } while (REG_READ(INT_ENA_WDEV) != 0);
 
+#ifdef ESP_PANIC_PRINT
     if (wdt) {
         PANIC("Task watchdog got triggered.\r\n\r\n");
     }
 
     panic_frame(frame);
-
-#ifdef CONFIG_ESP_PANIC_PRINT_HALT
-    while (1);
-#else
-    esp_restart();
 #endif
 
-#else  /* CONFIG_ESP_PANIC_SILENT_REBOOT */
-    esp_restart();
-#endif /* !CONFIG_ESP_PANIC_SILENT_REBOOT */
+#ifdef ESP_PANIC_REBOOT
+    esp_panic_reset();
+#else
+    while (1) {
+        esp_task_wdt_reset();
+    }
+#endif
 }
 
 static void esp_error_check_failed_print(const char *msg, esp_err_t rc, const char *file, int line, const char *function, const char *expression)
