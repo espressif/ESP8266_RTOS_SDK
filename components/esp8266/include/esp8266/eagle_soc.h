@@ -208,9 +208,13 @@
 #define RTC_USER_BASE                   (0x60001200)
 #define RTC_USER_SIZE                   (0x200)
 
+#define ROM_BASE                        (0x40000000)
+#define ROM_SIZE                        (0x10000)
+
 #define IS_DRAM(a)                      ((size_t)(a) >= DRAM_BASE && (size_t)(a) < (DRAM_BASE + DRAM_SIZE))
 #define IS_IRAM(a)                      ((size_t)(a) >= IRAM_BASE && (size_t)(a) < (IRAM_BASE + IRAM_SIZE))
 #define IS_FLASH(a)                     ((size_t)(a) >= FLASH_BASE && (size_t)(a) < (FLASH_BASE + FLASH_SIZE))
 #define IS_USR_RTC(a)                   ((size_t)(a) >= RTC_USER_BASE && (size_t)(a) < (RTC_USER_BASE + RTC_USER_SIZE))
+#define IS_ROM(a)                       ((size_t)(a) >= ROM_BASE && (size_t)(a) < (ROM_BASE + ROM_SIZE))
 
 #endif //_EAGLE_SOC_H_
