@@ -17,10 +17,13 @@
 #include "esp_attr.h"
 #include "esp_libc.h"
 #include "esp_system.h"
+#include "esp_task_wdt.h"
+#include "internal/esp_system_internal.h"
 
 #include "esp8266/eagle_soc.h"
 #include "esp8266/rom_functions.h"
 #include "rom/ets_sys.h"
+#include "rom/uart.h"
 #include "esp_err.h"
 
 #include "FreeRTOS.h"
@@ -30,7 +33,19 @@
 
 #define STACK_VOL_NUM 16
 
-#ifndef CONFIG_ESP_PANIC_SILENT_REBOOT
+#if defined(CONFIG_ESP_PANIC_SILENT_REBOOT) || defined(CONFIG_ESP_PANIC_PRINT_REBOOT)
+#define ESP_PANIC_REBOOT
+#else
+#undef ESP_PANIC_REBOOT
+#endif
+
+#if defined(CONFIG_ESP_PANIC_SILENT_REBOOT)
+#undef ESP_PANIC_PRINT
+#else
+#define ESP_PANIC_PRINT
+#endif
+
+#ifdef ESP_PANIC_PRINT
 #ifndef DISABLE_FREERTOS
 /*
  * @Note: If freeRTOS is updated, the structure must be checked.
@@ -123,7 +138,7 @@ static void panic_stack(const uint32_t *reg, const uint32_t *start_stk, const ui
  * 
  * @return none
  */
-static __attribute__((noreturn)) void panic_info(void *frame, int wdt)
+static void panic_info(void *frame, int wdt)
 {
     extern int _chip_nmi_cnt;
     extern int __g_is_task_overflow;
@@ -182,28 +197,48 @@ static __attribute__((noreturn)) void panic_info(void *frame, int wdt)
         }
         ets_printf("\r\n");
     }
-
-#ifdef CONFIG_ESP_PANIC_PRINT_HALT
-    while (1);
-#else
-    esp_restart();
-#endif
 }
-#endif /* !CONFIG_ESP_PANIC_SILENT_REBOOT */
+#endif /* ESP_PANIC_PRINT */
+
+#ifdef ESP_PANIC_REBOOT
+static void __attribute__((noreturn)) esp_panic_reset(void)
+{
+    uart_tx_wait_idle(0);
+    uart_tx_wait_idle(1);    
+
+    rom_i2c_writeReg(0x67, 4, 1, 0x08);
+    rom_i2c_writeReg(0x67, 4, 2, 0x81);
+
+    esp_reset_reason_set_hint(ESP_RST_PANIC);
+
+    rom_software_reboot();
+
+    while (1) { }
+}
+#endif
 
 void __attribute__((noreturn)) panicHandler(void *frame, int wdt)
 {
-#ifndef CONFIG_ESP_PANIC_SILENT_REBOOT
+    extern int _chip_nmi_cnt;
+
+    _chip_nmi_cnt = 0;
+
     /* NMI can interrupt exception. */
-    vPortEnterCritical();
     do {
         REG_WRITE(INT_ENA_WDEV, 0);
     } while (REG_READ(INT_ENA_WDEV) != 0);
 
+#ifdef ESP_PANIC_PRINT
     panic_info(frame, wdt);
+#endif
+
+#ifdef ESP_PANIC_REBOOT
+    esp_panic_reset();
 #else
-    esp_restart();
-#endif /* !CONFIG_ESP_PANIC_SILENT_REBOOT */
+    while (1) {
+        esp_task_wdt_reset();
+    }
+#endif
 }
 
 static void esp_error_check_failed_print(const char *msg, esp_err_t rc, const char *file, int line, const char *function, const char *expression)
