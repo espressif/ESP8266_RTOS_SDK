@@ -158,7 +158,9 @@ void _free_r(struct _reent *r, void *ptr)
 
 void abort(void)
 {
-    ESP_LOGE("ABORT","Error found and abort!");
+#ifndef CONFIG_ESP_PANIC_SILENT_REBOOT
+    ets_printf("abort() was called at PC %p on core %d\r\n", __builtin_return_address(0) - 3, xPortGetCoreID());
+#endif
 
     /* cause a exception to jump into panic function */
     while (1) {
