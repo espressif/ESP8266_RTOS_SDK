@@ -42,4 +42,8 @@ int SPIEraseSector(uint32_t sector_num);
 void Cache_Read_Disable();
 void Cache_Read_Enable(uint8_t map, uint8_t p, uint8_t v);
 
+void rom_software_reboot(void);
+
+void rom_i2c_writeReg(uint8_t block, uint8_t host_id, uint8_t reg_add, uint8_t data);
+
 #endif
