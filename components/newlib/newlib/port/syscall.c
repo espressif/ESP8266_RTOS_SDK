@@ -110,7 +110,7 @@ void _exit(int status)
 
 void abort(void)
 {
-    ESP_LOGE("ABORT","Error found and abort!");
+    ets_printf("abort() was called at PC %p on core %d\r\n", __builtin_return_address(0) - 3, xPortGetCoreID());
 
     /* cause a exception to jump into panic function */
     while (1) {
