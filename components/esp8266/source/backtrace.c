@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include "esp8266/eagle_soc.h"
 
-static inline uint32_t prev_text_size(const uint32_t pc)
+static uint32_t prev_text_size(const uint32_t pc)
 {
     uint32_t size;
     extern uint32_t _text_start, _text_end;
@@ -24,6 +24,8 @@ static inline uint32_t prev_text_size(const uint32_t pc)
         size = pc - (uint32_t )&_text_start;
     } else if (IS_IRAM(pc)) {
         size = pc - IRAM_BASE;
+    } else if (IS_ROM(pc)) {
+        size = pc - ROM_BASE;
     } else {
         size = 0;
     }
