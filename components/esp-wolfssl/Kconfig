@@ -8,4 +8,10 @@ config ESP_WOLFSSL_INTERNAL
         
         If users want to use external wolfssl, please disable this option.
 
+config WOLFSSL_DEBUG
+   bool "Enable esp-wolfssl(internal) debugging"
+   default n
+   help
+       Enable esp-wolfssl(internal) debugging functions at compile time.
+
 endmenu
