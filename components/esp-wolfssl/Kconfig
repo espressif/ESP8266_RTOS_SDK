@@ -1,0 +1,11 @@
+menu "esp-wolfssl(internal)"
+
+config ESP_WOLFSSL_INTERNAL
+    bool "Enable esp-wolfssl(internal)"
+    default n
+    help
+        Enable esp-wolfssl(internal).
+        
+        If users want to use external wolfssl, please disable this option.
+
+endmenu

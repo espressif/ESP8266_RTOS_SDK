@@ -1,0 +1,10 @@
+# Anyone compiling mbedTLS code needs the name of the
+# alternative config file
+
+#ifdef CONFIG_SSL_USING_MBEDTLS
+CPPFLAGS += -DMBEDTLS_CONFIG_FILE='"mbedtls/esp_config.h"'
+#endif
+
+#ifdef CONFIG_SSL_USING_WOLFSSL
+CPPFLAGS += -DWOLFSSL_USER_SETTINGS
+#endif
