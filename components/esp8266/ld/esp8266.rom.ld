@@ -64,3 +64,5 @@ PROVIDE ( rom_i2c_readReg = 0x40007268 );
 PROVIDE ( rom_i2c_readReg_Mask = 0x4000729c );
 PROVIDE ( rom_i2c_writeReg = 0x400072d8 );
 PROVIDE ( rom_i2c_writeReg_Mask = 0x4000730c );
+
+PROVIDE ( rom_software_reboot = 0x40000080 );
