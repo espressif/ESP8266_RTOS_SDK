@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/errno.h>
 
 #include "esp_libc.h"
 #include "FreeRTOS.h"
@@ -176,4 +177,10 @@ void _exit(int status)
 void *_sbrk_r(struct _reent *r, ptrdiff_t incr)
 {
     abort();
+}
+
+int _getpid_r(struct _reent *r)
+{
+    __errno_r(r) = ENOSYS;
+    return -1;
 }
