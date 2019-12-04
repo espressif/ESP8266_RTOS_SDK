@@ -26,7 +26,7 @@ register_component()
 # Needed for coap headers in public builds, also.
 #
 # TODO: find a way to move this to a port header
-target_compile_definitions(coap PUBLIC WITH_POSIX)
+target_compile_definitions(${COMPONENT_LIB} PUBLIC WITH_POSIX)
 
 set_source_files_properties(
     libcoap/src/debug.c
@@ -40,4 +40,4 @@ set_source_files_properties(
     PROPERTIES COMPILE_FLAGS
     -Wno-implicit-fallthrough)
 
-target_compile_definitions(${COMPONENT_NAME} PUBLIC -D WITH_POSIX)
+target_compile_definitions(${COMPONENT_LIB} PUBLIC -D WITH_POSIX)

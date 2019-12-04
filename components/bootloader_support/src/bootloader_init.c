@@ -164,7 +164,7 @@ static esp_err_t bootloader_main()
     ESP_LOGI(TAG, "Enabling RNG early entropy source...");
     bootloader_random_enable();
 
-#if CONFIG_FLASHMODE_QIO || CONFIG_FLASHMODE_QOUT
+#if CONFIG_ESPTOOLPY_FLASHMODE_QIO || CONFIG_ESPTOOLPY_FLASHMODE_QOUT
     bootloader_enable_qio_mode();
 #endif
 
@@ -625,7 +625,7 @@ static esp_err_t bootloader_main()
 
     ESP_LOGI(TAG, "compile time " __TIME__ );
 
-#if defined(CONFIG_FLASHMODE_QIO) || defined(CONFIG_FLASHMODE_QOUT)
+#if defined(CONFIG_ESPTOOLPY_FLASHMODE_QIO) || defined(CONFIG_ESPTOOLPY_FLASHMODE_QOUT)
     fhdr.spi_mode = CONFIG_SPI_FLASH_MODE;
 #endif
 

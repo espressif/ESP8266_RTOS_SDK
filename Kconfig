@@ -4,22 +4,23 @@
 #
 mainmenu "Espressif IoT Development Framework Configuration"
 
-choice TARGET_PLATFORM
+choice IDF_TARGET
    bool "Espressif target platform choose"
    default IDF_TARGET_ESP8266
    help
        Choose the specific target platform which you will use.
 
-config IDF_TARGET_ESP32
-   bool "esp32"
 config IDF_TARGET_ESP8266
    bool "esp8266"
 endchoice
 
-menu "SDK tool configuration"
-config TOOLPREFIX
+config IDF_TARGET
     string
-    default "xtensa-esp32-elf-" if IDF_TARGET_ESP32
+    default "esp8266" if IDF_TARGET_ESP8266
+
+menu "SDK tool configuration"
+config SDK_TOOLPREFIX
+    string
     default "xtensa-lx106-elf-" if IDF_TARGET_ESP8266
     help
         The prefix/path that is used to call the toolchain. The default setting assumes
