@@ -1,6 +1,0 @@
-set(COMPONENT_SRCDIRS cJSON)
-set(COMPONENT_ADD_INCLUDEDIRS cJSON)
-
-set(COMPONENT_REQUIRES newlib)
-
-register_component()

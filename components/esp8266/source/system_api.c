@@ -33,6 +33,11 @@ static const char* TAG = "system_api";
 
 static uint8_t base_mac_addr[6] = { 0 };
 
+// Bootloader can get this information
+const __attribute__((section(".SystemInfoVector.text"))) esp_sys_info_t g_esp_sys_info = {
+    .version = ESP_IDF_VERSION
+};
+
 esp_err_t esp_base_mac_addr_set(uint8_t *mac)
 {
     if (mac == NULL) {
@@ -50,7 +55,7 @@ esp_err_t esp_base_mac_addr_get(uint8_t *mac)
     uint8_t null_mac[6] = {0};
 
     if (memcmp(base_mac_addr, null_mac, 6) == 0) {
-        ESP_LOGI(TAG, "Base MAC address is not set, read default base MAC address from BLK0 of EFUSE");
+        ESP_LOGI(TAG, "Base MAC address is not set, read default base MAC address from EFUSE");
         return ESP_ERR_INVALID_MAC;
     }
 

@@ -36,9 +36,29 @@ typedef enum {
 } rtc_cpu_freq_t;
 
 /**
+ * @brief Open RF hardware
+ */
+void phy_open_rf(void);
+
+/**
+ * @brief Close RF hardware
+ */
+void phy_close_rf(void);
+
+/**
  * @brief Initialize RTC hardware
  */
-void rtc_clk_init(void);
+void rtc_init_2(uint8_t *init_param);
+
+/**
+ * @brief Initialize light sleep hardware
+ */
+void rtc_lightsleep_init(void);
+
+/**
+ * @brief Initialize hardware when CPU wakes up from light sleep
+ */
+void rtc_wakeup_init(void);
 
 /**
  * @brief Get the currently used CPU frequency configuration
@@ -66,8 +86,6 @@ void rtc_clk_cpu_freq_set(rtc_cpu_freq_t cpu_freq);
  * 
  * @note  CPU wakeup has 2672 ms time cost, so the real sleeping time is to_sleep_time_in_us - 2672
  *
- * @param rtc_ticks   value of RTC counter at which wakeup from sleep will happen
- * 
  * @param wakeup_opt  bit mask wake up reasons to enable (RTC_xxx_TRIG_EN flags
  *                    combined with OR)
  * @param reject_opt  bit mask of sleep reject reasons:
@@ -77,8 +95,7 @@ void rtc_clk_cpu_freq_set(rtc_cpu_freq_t cpu_freq);
  *                    an external host is communicating via SDIO slave
  * @return non-zero if sleep was rejected by hardware
  */
-uint32_t rtc_light_sleep_start(uint32_t rtc_ticks, uint32_t wakeup_opt, uint32_t reject_opt);
-
+uint32_t rtc_light_sleep_start(uint32_t wakeup_opt, uint32_t reject_opt);
 /**
  * @brief Convert time interval from microseconds to RTC_CLK cycles
  *
@@ -87,7 +104,7 @@ uint32_t rtc_light_sleep_start(uint32_t rtc_ticks, uint32_t wakeup_opt, uint32_t
  *
  * @return number of clock cycles
  */
-uint32_t rtc_time_us_to_clk(uint32_t time_in_us, uint32_t period);
+uint32_t pm_usec2rtc(uint32_t time_in_us, uint32_t period);
 
 /**
  * @brief Convert time interval from RTC_CLK to microseconds
@@ -97,16 +114,21 @@ uint32_t rtc_time_us_to_clk(uint32_t time_in_us, uint32_t period);
  *
  * @return time interval in microseconds
  */
-uint32_t rtc_time_clk_to_us(uint32_t rtc_cycles, uint32_t period);
+uint32_t pm_rtc2usec(uint32_t rtc_cycles, uint32_t period);
 
 /**
  * @brief Get the calibration value of RTC clock
- * 
- * @param xtal_freq  XTAL frequency, unit is MHz
  *
  * @return the calibration value
  */
-uint32_t esp_clk_cal_get(uint32_t xtal_freq);
+uint32_t pm_rtc_clock_cali_proc();
+
+/**
+ * @brief Configure   CPU sleep time by RTC clock ticks
+ * 
+ * @param rtc_cycles  Time interval in RTC_CLK cycles
+ */
+void pm_set_sleep_cycles(uint32_t rtc_cycles);
 
 /**
  * @brief Get current value of RTC counter

@@ -1,22 +1,37 @@
 menu "PThreads"
 
-config ENABLE_PTHREAD
-    bool "Enable pthread"
-    default n
-    help
-        Enable this option and then pthread is to be used.
+        config ENABLE_PTHREAD
+            bool  "Enable Pthread"
+            help
+                Enable this option and then pthread is to be used.
 
-config ESP32_PTHREAD_TASK_PRIO_DEFAULT
-    int "Default task priority"
-    range 0 255
-    default 5
-    help
-        Priority used to create new tasks with default pthread parameters.
+        config PTHREAD_TASK_PRIO_DEFAULT
+            int "Default task priority"
+            range 0 255
+            default 5
+            depends on ENABLE_PTHREAD
+            help
+                Priority used to create new tasks with default pthread parameters.
 
-config ESP32_PTHREAD_TASK_STACK_SIZE_DEFAULT
-    int "Default task stack size"
-    default 3072
-    help
-        Stack size used to create new tasks with default pthread parameters.
+        config PTHREAD_TASK_STACK_SIZE_DEFAULT
+            int "Default task stack size"
+            default 3072
+            depends on ENABLE_PTHREAD
+            help
+                Stack size used to create new tasks with default pthread parameters.
+
+        config PTHREAD_STACK_MIN
+            int "Minimum allowed pthread stack size"
+            default 768
+            depends on ENABLE_PTHREAD
+            help
+                Minimum allowed pthread stack size set in attributes passed to pthread_create
+
+        config PTHREAD_TASK_NAME_DEFAULT
+            string "Default name of pthreads"
+            default "pthread"
+            depends on ENABLE_PTHREAD
+            help
+                The default name of pthreads.
 
 endmenu

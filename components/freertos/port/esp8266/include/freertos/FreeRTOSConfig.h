@@ -82,6 +82,7 @@
 #define configTIMER_TASK_PRIORITY ( tskIDLE_PRIORITY + 2 )
 #define configTIMER_QUEUE_LENGTH (10)
 #define configTIMER_TASK_STACK_DEPTH  ( ( unsigned short ) CONFIG_FREERTOS_TIMER_STACKSIZE )
+#define INCLUDE_xTimerPendFunctionCall 1
 #endif
 
 /* Co-routine definitions. */
@@ -102,6 +103,8 @@ to exclude the API function. */
 /*set the #define for debug info*/
 #define INCLUDE_xTaskGetCurrentTaskHandle 1
 #define INCLUDE_uxTaskGetStackHighWaterMark 1
+
+#define INCLUDE_xSemaphoreGetMutexHolder    1
 
 /* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255
 (lowest) to 0 (1?) (highest). */

@@ -27,6 +27,10 @@ typedef struct esp_aes {
     uint32_t    buf[68];                    /*!< The AES calculation cache */
 } esp_aes_t;
 
+typedef struct esp_aes_xts {
+    esp_aes_t   crypt;                      /*!< The AES context to use for AES block encryption or decryption. */
+    esp_aes_t   tweak;                      /*!< The AES context used for tweak computation. */
+} esp_aes_xts_t;
 
 /**
  * @brief Set AES encrypt key
@@ -224,6 +228,42 @@ static inline int esp_aes_decrypt_ctr(esp_aes_t *aes, size_t *nc_off, void *p_no
 {
     return esp_aes_encrypt_ctr(aes, nc_off, p_nonce_counter, p_stream_block, p_src, slen, p_dst, dlen);   
 }
+
+/**
+ * @brief Set AES XTS encrypt key
+ *
+ * @param aes AES XTS contex pointer
+ * @param p_key AES XTS key data buffer
+ * @param keybits number of AES XTS key bits
+ *
+ * @return 0 if success or fail
+ */
+int esp_aes_xts_set_encrypt_key(esp_aes_xts_t *aes, const void *p_key, size_t keybits);
+
+/**
+ * @brief Set AES XTS decrypt key
+ *
+ * @param aes AES XTS contex pointer
+ * @param p_key AES XTS key data buffer
+ * @param keybits number of AES XTS key bits
+ *
+ * @return 0 if success or fail
+ */
+int esp_aes_xts_set_decrypt_key(esp_aes_xts_t *aes, const void *p_key, size_t keybits);
+
+/**
+ * @brief AES XTS encrypt/decrypt calculation
+ *
+ * @param aes AES contex pointer
+ * @param encrypt 1 : encrypt, 0 : decrypt
+ * @param length data unit data length by bytes
+ * @param p_data_unit data unit buffer
+ * @param p_src input data buffer
+ * @param p_dst output data buffer
+ *
+ * @return 0 if success or fail
+ */
+int esp_aes_crypt_xts(esp_aes_xts_t *aes, int encrypt, size_t length, const void *p_data_unit, const void *p_src, void *p_dst);
 
 #ifdef __cplusplus
 }

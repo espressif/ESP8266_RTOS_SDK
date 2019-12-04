@@ -30,7 +30,6 @@
 #include "internal/esp_wifi_internal.h"
 #include "internal/esp_system_internal.h"
 #include "esp8266/eagle_soc.h"
-#include "esp8266/uart_register.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -63,19 +62,6 @@ static inline int should_load(uint32_t load_addr)
     return 1;
 }
 
-static inline void uart_init()
-{
-#ifdef CONFIG_CONSOLE_UART_BAUDRATE
-    const uint32_t uart_baudrate = CONFIG_CONSOLE_UART_BAUDRATE;
-#else
-    const uint32_t uart_baudrate = 74880; // ROM default baudrate
-#endif
-    while (READ_PERI_REG(UART_STATUS(0)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S));
-    while (READ_PERI_REG(UART_STATUS(1)) & (UART_TXFIFO_CNT << UART_TXFIFO_CNT_S));
-    uart_div_modify(0, UART_CLK_FREQ / uart_baudrate);
-    uart_div_modify(1, UART_CLK_FREQ / uart_baudrate);
-}
-
 static void user_init_entry(void *param)
 {
     void (**func)(void);
@@ -98,7 +84,6 @@ static void user_init_entry(void *param)
     assert(nvs_flash_init() == 0);
     assert(rtc_init() == 0);
     assert(mac_init() == 0);
-    uart_init();
     assert(base_gpio_init() == 0);
     esp_phy_load_cal_and_init(0);
 

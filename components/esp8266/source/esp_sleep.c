@@ -22,9 +22,10 @@
 #include "freertos/task.h"
 #include "driver/soc.h"
 #include "esp8266/timer_struct.h"
-#include "esp8266/uart_struct.h"
 #include "esp8266/rom_functions.h"
 #include "driver/rtc.h"
+#include "rom/uart.h"
+#include "internal/phy_init_data.h"
 
 #define FRC2_LOAD               (0x60000620)
 #define FRC2_COUNT              (0x60000624)
@@ -36,8 +37,10 @@
 #define FRC2_TICKS_PER_US       (5)
 #define FRC2_TICKS_MAX          (UINT32_MAX / 4)
 
-#define MIN_SLEEP_US            (3000)
-#define WAKEUP_EARLY_TICKS      (272) // about 2620ms
+#define SLEEP_MIN_TIME          (1000)
+#define SLEEP_PROC_TIME         (4450)
+#define WAKEUP_EARLY_TICKS      (264) // PLL and STAL wait ticks
+#define MIN_SLEEP_US            (SLEEP_MIN_TIME + SLEEP_PROC_TIME) 
 
 #define TAG                     "esp8266_pm"
 
@@ -96,6 +99,8 @@ static inline uint32_t min_sleep_us(pm_soc_clk_t *clk)
 
 static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
 {
+    extern uint32_t WdevTimOffSet;
+
     const uint32_t os_ccount = us * g_esp_ticks_per_us + clk->ccount;
 
     if (os_ccount >= _xt_tick_divisor) 
@@ -107,21 +112,39 @@ static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
 
         REG_WRITE(FRC2_LOAD,  frc2_cnt);
     }
+
+    WdevTimOffSet += us;
 }
 
-static void esp_sleep_wait_uart_empty(int no)
+void esp_wifi_hw_open(void)
 {
-    int filled = 0;
-    const uart_dev_t *uart = (no == 0 ? &uart0 : &uart1);
+    phy_open_rf();
+}
 
-    while (uart->status.txfifo_cnt)
-        filled = 1;
+void esp_wifi_hw_close(void)
+{
+    phy_close_rf();
+}
 
-    if (filled) {
-        const uint32_t us = 10000000 / (UART_CLK_FREQ / uart->clk_div.val);
+rtc_cpu_freq_t rtc_clk_cpu_freq_get(void)
+{
+    rtc_cpu_freq_t freq;
+    uint32_t reg = REG_READ(DPORT_CTL_REG);
 
-        ets_delay_us(us);
-    }
+    if (reg & DPORT_CTL_DOUBLE_CLK)
+        freq = RTC_CPU_FREQ_160M;
+    else
+        freq = RTC_CPU_FREQ_80M;
+
+    return freq;
+}
+
+void rtc_clk_cpu_freq_set(rtc_cpu_freq_t cpu_freq)
+{
+    if (RTC_CPU_FREQ_80M == cpu_freq)
+        REG_CLR_BIT(DPORT_CTL_REG, DPORT_CTL_DOUBLE_CLK);
+    else
+        REG_SET_BIT(DPORT_CTL_REG, DPORT_CTL_DOUBLE_CLK);
 }
 
 esp_err_t esp_sleep_enable_timer_wakeup(uint32_t time_in_us)
@@ -129,7 +152,7 @@ esp_err_t esp_sleep_enable_timer_wakeup(uint32_t time_in_us)
     if (time_in_us <= MIN_SLEEP_US)
         return ESP_ERR_INVALID_ARG;
 
-    s_sleep_duration = time_in_us;
+    s_sleep_duration = time_in_us - SLEEP_PROC_TIME;
     s_sleep_wakup_triggers |= RTC_TIMER_TRIG_EN;
 
     return ESP_OK;
@@ -137,14 +160,16 @@ esp_err_t esp_sleep_enable_timer_wakeup(uint32_t time_in_us)
 
 esp_err_t esp_light_sleep_start(void)
 {
-    const uint32_t rtc_cal = esp_clk_cal_get(CRYSTAL_USED);
-    const uint32_t sleep_rtc_ticks = rtc_time_us_to_clk(s_sleep_duration, rtc_cal);
+    uint32_t period = pm_rtc_clock_cali_proc();
+    const uint32_t sleep_rtc_ticks = pm_usec2rtc(s_sleep_duration, period);
     const rtc_cpu_freq_t cpu_freq = rtc_clk_cpu_freq_get();
 
     if (sleep_rtc_ticks > WAKEUP_EARLY_TICKS + 1) {
-        rtc_light_sleep_start(sleep_rtc_ticks - WAKEUP_EARLY_TICKS, s_sleep_wakup_triggers, 0);
+        rtc_lightsleep_init();
+        pm_set_sleep_cycles(sleep_rtc_ticks - WAKEUP_EARLY_TICKS);
+        rtc_light_sleep_start(s_sleep_wakup_triggers, 0);
+        rtc_wakeup_init();
 
-        rtc_clk_init();
         rtc_clk_cpu_freq_set(cpu_freq);
 
         return ESP_OK;
@@ -174,38 +199,46 @@ void esp_sleep_start(void)
         return ;
     }
 
-    esp_sleep_wait_uart_empty(0);
-    esp_sleep_wait_uart_empty(1);
+    uart_tx_wait_idle(0);
+    uart_tx_wait_idle(1);
 
-    int slept = 0;
+    int cpu_wait = 1;
     pm_soc_clk_t clk;
     const esp_irqflag_t irqflag = soc_save_local_irq();
     const uint32_t wdevflag = save_local_wdev();
+
+    if (s_lock_cnt) {
+        cpu_wait = 0;
+        goto exit;
+    }
 
     save_soc_clk(&clk);
 
     const uint32_t sleep_us = min_sleep_us(&clk);
     if (sleep_us > MIN_SLEEP_US) {
-        const uint32_t rtc_cal = esp_clk_cal_get(CRYSTAL_USED);
-        const uint32_t sleep_rtc_ticks = rtc_time_us_to_clk(sleep_us, rtc_cal);
+        uint32_t period = pm_rtc_clock_cali_proc();
+        const uint32_t sleep_rtc_ticks = pm_usec2rtc(sleep_us - SLEEP_PROC_TIME, period);
 
         if (sleep_rtc_ticks > WAKEUP_EARLY_TICKS + 1) {
             const rtc_cpu_freq_t cpu_freq = rtc_clk_cpu_freq_get();
 
-            rtc_light_sleep_start(sleep_rtc_ticks - WAKEUP_EARLY_TICKS, s_sleep_wakup_triggers | RTC_TIMER_TRIG_EN, 0);
+            rtc_lightsleep_init();
+            pm_set_sleep_cycles(sleep_rtc_ticks - WAKEUP_EARLY_TICKS);
+            rtc_light_sleep_start(s_sleep_wakup_triggers | RTC_TIMER_TRIG_EN, 0);
+            rtc_wakeup_init();
 
-            rtc_clk_init();
             rtc_clk_cpu_freq_set(cpu_freq);   
 
             update_soc_clk(&clk, sleep_us);
 
-            slept = 1;
+            cpu_wait = 0;
         }
     }
 
+exit:
     restore_local_wdev(wdevflag);
     soc_restore_local_irq(irqflag);
 
-    if (!slept)
+    if (cpu_wait)
         soc_wait_int();
 }

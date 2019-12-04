@@ -139,6 +139,9 @@
 #define TM1_EDGE_INT_DISABLE()      CLEAR_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT1)
 //}}
 
+#define DPORT_CTL_REG               (PERIPHS_DPORT_BASEADDR + 0x14)  
+#define DPORT_CTL_DOUBLE_CLK        BIT0
+
 #define INT_ENA_WDEV                0x3ff20c18
 #define WDEV_TSF0_REACH_INT         (BIT(27))
 

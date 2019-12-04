@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "rom/ets_sys.h"
+#include "rom/uart.h"
 
 #include "esp_err.h"
 #include "esp_phy_init.h"
@@ -29,6 +30,8 @@
 
 #include "internal/phy_init_data.h"
 #include "phy.h"
+
+#include "driver/rtc.h"
 
 static const char* TAG = "phy_init";
 
@@ -69,8 +72,14 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t* init_data, esp_phy_calibrat
     esp_err_t status = ESP_OK;
     uint8_t sta_mac[6];
     uint8_t *local_init_data = calloc(1, 256);
+#ifdef CONFIG_CONSOLE_UART_BAUDRATE
+    const uint32_t uart_baudrate = CONFIG_CONSOLE_UART_BAUDRATE;
+#else
+    const uint32_t uart_baudrate = 74880; // ROM default baudrate
+#endif
 
     memcpy(local_init_data, init_data->params, 128);
+    memcpy(local_init_data + 128, calibration_data->rf_cal_data, 128);
 
     extern uint32_t* phy_rx_gain_dc_table;
     phy_rx_gain_dc_table = calibration_data->rx_gain_dc_table;
@@ -80,10 +89,25 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t* init_data, esp_phy_calibrat
     phy_afterwake_set_rfoption(1);
 
     if (!cal_data_check) {
+        phy_set_powerup_option(1);
         write_data_to_rtc(calibration_data->rf_cal_data);
+    } else {
+        phy_set_powerup_option(3);
     }
 
     esp_efuse_mac_get_default(sta_mac);
+
+    /**
+     * The API "register_chipv6_phy" will modify the APB frequency to 80MHz,
+     * so UARTs must be flush here, then reconfigurate the UART frequency dividor
+     */
+    uart_tx_wait_idle(0);
+    uart_div_modify(0, UART_CLK_FREQ / uart_baudrate);
+
+    uart_tx_wait_idle(1);
+    uart_div_modify(1, UART_CLK_FREQ / uart_baudrate);
+
+    rtc_init_2(local_init_data);
 
     int ret = register_chipv6_phy(local_init_data);
     if (ret) {
@@ -361,4 +385,12 @@ void esp_wifi_set_max_tx_power_via_vdd33(uint16_t vdd33)
 {
     extern void phy_vdd33_set_tpw(uint16_t vdd33);
     phy_vdd33_set_tpw(vdd33);
+}
+
+/**
+ * @brief Just for compiling
+ */
+int phy_printf(const char *fmt, ...)
+{
+    return 0;
 }

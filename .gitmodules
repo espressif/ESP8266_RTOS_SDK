@@ -1,0 +1,3 @@
+[submodule "components/json/cJSON"]
+	path = components/json/cJSON
+	url = ../../DaveGamble/cJSON.git
