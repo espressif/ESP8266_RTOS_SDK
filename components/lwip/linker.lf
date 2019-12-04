@@ -1,0 +1,5 @@
+[mapping:lwip]
+archive: liblwip.a
+entries:
+    if LWIP_GLOBAL_DATA_LINK_IRAM = y:
+        * (iram_bss)

@@ -52,7 +52,7 @@ else()
     set(include_dirs "include" "include/driver")
 
     set(priv_requires "wpa_supplicant" "log" "spi_flash" "tcpip_adapter" "esp_ringbuf" "bootloader_support" "nvs_flash" "util")
-    set(fragments linker.lf ld/esp8266_fragments.lf)
+    set(fragments linker.lf ld/esp8266_fragments.lf ld/esp8266_bss_fragments.lf)
 
     idf_component_register(SRCS "${srcs}"
                     INCLUDE_DIRS "${include_dirs}"

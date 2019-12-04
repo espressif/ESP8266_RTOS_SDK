@@ -25,7 +25,7 @@ endif
 #specifies its own scripts.
 LINKER_SCRIPTS += esp8266.rom.ld esp8266.peripherals.ld
 
-COMPONENT_ADD_LDFRAGMENTS += ld/esp8266_fragments.lf linker.lf
+COMPONENT_ADD_LDFRAGMENTS += ld/esp8266_fragments.lf ld/esp8266_bss_fragments.lf linker.lf
 
 COMPONENT_ADD_LDFLAGS += -L$(COMPONENT_PATH)/lib \
                          $(addprefix -l,$(LIBS)) \

@@ -116,6 +116,7 @@ void call_start_cpu(size_t start_addr)
     int *p;
 
     extern int _bss_start, _bss_end;
+    extern int _iram_bss_start, _iram_bss_end;
 
     esp_image_header_t *head = (esp_image_header_t *)(FLASH_BASE + (start_addr & (FLASH_SIZE - 1)));
     esp_image_segment_header_t *segment = (esp_image_segment_header_t *)((uintptr_t)head + sizeof(esp_image_header_t));
@@ -152,6 +153,10 @@ void call_start_cpu(size_t start_addr)
 
     /* clear bss data */
     for (p = &_bss_start; p < &_bss_end; p++)
+        *p = 0;
+
+    /* clear iram_bss data */
+    for (p = &_iram_bss_start; p < &_iram_bss_end; p++)
         *p = 0;
 
     __asm__ __volatile__(

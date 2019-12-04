@@ -1,0 +1,5 @@
+
+[scheme:iram_bss]
+entries:
+    bss -> iram0_bss
+    common -> iram0_bss
