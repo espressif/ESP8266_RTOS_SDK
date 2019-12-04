@@ -21,6 +21,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+# WARNING: we don't check for Python build-time dependencies until
+# check_environment() function below. If possible, avoid importing
+# any external libraries here - put in external script, or import in
+# their specific function instead.
 import sys
 import argparse
 import os
@@ -41,7 +46,7 @@ class FatalError(RuntimeError):
 PYTHON=sys.executable
 
 # note: os.environ changes don't automatically propagate to child processes,
-# you have to pass this in explicitly
+# you have to pass env=os.environ explicitly anywhere that we create a process
 os.environ["PYTHON"]=sys.executable
 
 # Make flavors, across the various kinds of Windows environments & POSIX...
@@ -71,13 +76,12 @@ def _run_tool(tool_name, args, cwd):
         return arg
     display_args = " ".join(quote_arg(arg) for arg in args)
     print("Running %s in directory %s" % (tool_name, quote_arg(cwd)))
-    print('Executing "%s"...' % display_args)
+    print('Executing "%s"...' % str(display_args))
     try:
         # Note: we explicitly pass in os.environ here, as we may have set IDF_PATH there during startup
         subprocess.check_call(args, env=os.environ, cwd=cwd)
     except subprocess.CalledProcessError as e:
         raise FatalError("%s failed with exit code %d" % (tool_name, e.returncode))
-
 
 def check_environment():
     """
@@ -95,7 +99,17 @@ def check_environment():
             print("WARNING: IDF_PATH environment variable is set to %s but idf.py path indicates IDF directory %s. Using the environment variable directory, but results may be unexpected..."
                   % (set_idf_path, detected_idf_path))
     else:
+        print("Setting IDF_PATH environment variable: %s" % detected_idf_path)
         os.environ["IDF_PATH"] = detected_idf_path
+
+    # check Python dependencies
+    print("Checking Python dependencies...")
+    try:
+        subprocess.check_call([ os.environ["PYTHON"],
+                                os.path.join(os.environ["IDF_PATH"], "tools", "check_python_dependencies.py")],
+                              env=os.environ)
+    except subprocess.CalledProcessError:
+        raise SystemExit(1)
 
 def executable_exists(args):
     try:
@@ -136,18 +150,21 @@ def _ensure_build_directory(args, always_run_cmake=False):
     # Verify/create the build directory
     build_dir = args.build_dir
     if not os.path.isdir(build_dir):
-        os.mkdir(build_dir)
+        os.makedirs(build_dir)
     cache_path = os.path.join(build_dir, "CMakeCache.txt")
     if not os.path.exists(cache_path) or always_run_cmake:
         if args.generator is None:
             args.generator = detect_cmake_generator()
         try:
-            cmake_args = ["cmake", "-G", args.generator]
+            cmake_args = ["cmake", "-G", args.generator, "-DPYTHON_DEPS_CHECKED=1"]
             if not args.no_warnings:
                 cmake_args += [ "--warn-uninitialized" ]
             if args.no_ccache:
                 cmake_args += [ "-DCCACHE_DISABLE=1" ]
+            if args.define_cache_entry:
+                cmake_args +=  ["-D" + d for d in args.define_cache_entry]
             cmake_args += [ project_dir]
+
             _run_tool("cmake", cmake_args, cwd=args.build_dir)
         except:
             # don't allow partially valid CMakeCache.txt files,
@@ -204,6 +221,7 @@ def build_target(target_name, args):
     """
     _ensure_build_directory(args)
     generator_cmd = GENERATOR_CMDS[args.generator]
+
     if not args.no_ccache:
         # Setting CCACHE_BASEDIR & CCACHE_NO_HASHDIR ensures that project paths aren't stored in the ccache entries
         # (this means ccache hits can be shared between different projects. It may mean that some debug information
@@ -221,9 +239,10 @@ def build_target(target_name, args):
 
 def _get_esptool_args(args):
     esptool_path = os.path.join(os.environ["IDF_PATH"], "components/esptool_py/esptool/esptool.py")
+    if args.port is None:
+        args.port = get_default_serial_port()
     result = [ PYTHON, esptool_path ]
-    if args.port is not None:
-        result += [ "-p", args.port ]
+    result += [ "-p", args.port ]
     result += [ "-b", str(args.baud) ]
     return result
 
@@ -241,17 +260,17 @@ def flash(action, args):
     esptool_args += [ "write_flash", "@"+flasher_args_path ]
     _run_tool("esptool.py", esptool_args, args.build_dir)
 
-
 def erase_flash(action, args):
     esptool_args = _get_esptool_args(args)
     esptool_args += [ "erase_flash" ]
     _run_tool("esptool.py", esptool_args, args.build_dir)
 
-
 def monitor(action, args):
     """
     Run idf_monitor.py to watch build output
     """
+    if args.port is None:
+        args.port = get_default_serial_port()
     desc_path = os.path.join(args.build_dir, "project_description.json")
     if not os.path.exists(desc_path):
         _ensure_build_directory(args)
@@ -267,9 +286,13 @@ def monitor(action, args):
         monitor_args += [ "-p", args.port ]
     monitor_args += [ "-b", project_desc["monitor_baud"] ]
     monitor_args += [ elf_file ]
-    if "MSYSTEM" is os.environ:
+
+    idf_py = [ PYTHON ] + get_commandline_options()  # commands to re-run idf.py
+    monitor_args += [ "-m", " ".join("'%s'" % a for a in idf_py) ]
+
+    if "MSYSTEM" in os.environ:
         monitor_args = [ "winpty" ] + monitor_args
-    _run_tool("idf_monitor", monitor_args, args.build_dir)
+    _run_tool("idf_monitor", monitor_args, args.project_dir)
 
 
 def clean(action, args):
@@ -305,42 +328,156 @@ def fullclean(action, args):
         else:
             os.remove(f)
 
+def print_closing_message(args):
+    # print a closing message of some kind
+    #
+    if "flash" in str(args.actions):
+        print("Done")
+        return
+
+    # Otherwise, if we built any binaries print a message about
+    # how to flash them
+    def print_flashing_message(title, key):
+        print("\n%s build complete. To flash, run this command:" % title)
+
+        with open(os.path.join(args.build_dir, "flasher_args.json")) as f:
+            flasher_args = json.load(f)
+
+        def flasher_path(f):
+            return os.path.relpath(os.path.join(args.build_dir, f))
+
+        if key != "project":  # flashing a single item
+            cmd = ""
+            if key == "bootloader":  # bootloader needs --flash-mode, etc to be passed in
+                cmd = " ".join(flasher_args["write_flash_args"]) + " "
+
+            cmd += flasher_args[key]["offset"] + " "
+            cmd += flasher_path(flasher_args[key]["file"])
+        else:  # flashing the whole project
+            cmd = " ".join(flasher_args["write_flash_args"]) + " "
+            flash_items = sorted(((o,f) for (o,f) in flasher_args["flash_files"].items() if len(o) > 0),
+                                 key = lambda x: int(x[0], 0))
+            for o,f in flash_items:
+                cmd += o + " " + flasher_path(f) + " "
+
+        print("%s -p %s -b %s write_flash %s" % (
+            os.path.relpath("%s/components/esptool_py/esptool/esptool.py" % os.environ["IDF_PATH"]),
+            args.port or "(PORT)",
+            args.baud,
+            cmd.strip()))
+        print("or run 'idf.py -p %s %s'" % (args.port or "(PORT)", key + "-flash" if key != "project" else "flash",))
+
+    if "all" in args.actions or "build" in args.actions:
+        print_flashing_message("Project", "project")
+    else:
+        if "app" in args.actions:
+            print_flashing_message("App", "app")
+        if "partition_table" in args.actions:
+            print_flashing_message("Partition Table", "partition_table")
+        if "bootloader" in args.actions:
+            print_flashing_message("Bootloader", "bootloader")
+
 ACTIONS = {
     # action name : ( function (or alias), dependencies, order-only dependencies )
-    "all" :                  ( build_target, [], [ "reconfigure", "menuconfig", "clean", "fullclean" ] ),
-    "build":                 ( "all",        [], [] ),  # build is same as 'all' target
-    "clean":                 ( clean,        [], [ "fullclean" ] ),
-    "fullclean":             ( fullclean,    [], [] ),
-    "reconfigure":           ( reconfigure,  [], [] ),
-    "menuconfig":            ( build_target, [], [] ),
-    "size":                  ( build_target, [], [ "app" ] ),
-    "size-components":       ( build_target, [], [ "app" ] ),
-    "size-files":            ( build_target, [], [ "app" ] ),
-    "bootloader":            ( build_target, [], [] ),
-    "bootloader-clean":      ( build_target, [], [] ),
-    "bootloader-flash":      ( flash,        [ "bootloader" ], [] ),
-    "app":                   ( build_target, [], [ "clean", "fullclean", "reconfigure" ] ),
-    "app-flash":             ( flash,        [], [ "app" ]),
-    "partition_table":       ( build_target, [], [ "reconfigure" ] ),
-    "partition_table-flash": ( flash,        [ "partition_table" ], []),
-    "flash":                 ( flash,        [ "all" ], [ ] ),
-    "erase_flash":           ( erase_flash,  [], []),
-    "monitor":               ( monitor,      [], [ "flash", "partition_table-flash", "bootloader-flash", "app-flash" ]),
+    "all" :                  ( build_target,    [], [ "reconfigure", "menuconfig", "clean", "fullclean" ] ),
+    "build":                 ( "all",           [], [] ),  # build is same as 'all' target
+    "clean":                 ( clean,           [], [ "fullclean" ] ),
+    "fullclean":             ( fullclean,       [], [] ),
+    "reconfigure":           ( reconfigure,     [], [ "menuconfig" ] ),
+    "menuconfig":            ( build_target,    [], [] ),
+    "defconfig":             ( build_target,    [], [] ),
+    "confserver":            ( build_target,    [], [] ),
+    "size":                  ( build_target,    [ "app" ], [] ),
+    "size-components":       ( build_target,    [ "app" ], [] ),
+    "size-files":            ( build_target,    [ "app" ], [] ),
+    "bootloader":            ( build_target,    [], [] ),
+    "bootloader-clean":      ( build_target,    [], [] ),
+    "bootloader-flash":      ( flash,           [ "bootloader" ], [ "erase_flash"] ),
+    "app":                   ( build_target,    [], [ "clean", "fullclean", "reconfigure" ] ),
+    "app-flash":             ( flash,           [ "app" ], [ "erase_flash"]),
+    "partition_table":       ( build_target,    [], [ "reconfigure" ] ),
+    "partition_table-flash": ( flash,           [ "partition_table" ], [ "erase_flash" ]),
+    "flash":                 ( flash,           [ "all" ], [ "erase_flash" ] ),
+    "erase_flash":           ( erase_flash,     [], []),
+    "monitor":               ( monitor,         [], [ "flash", "partition_table-flash", "bootloader-flash", "app-flash" ]),
 }
 
+def get_commandline_options():
+    """ Return all the command line options up to but not including the action """
+    result = []
+    for a in sys.argv:
+        if a in ACTIONS.keys():
+            break
+        else:
+            result.append(a)
+    return result
+
+def get_default_serial_port():
+    """ Return a default serial port. esptool can do this (smarter), but it can create
+    inconsistencies where esptool.py uses one port and idf_monitor uses another.
+
+    Same logic as esptool.py search order, reverse sort by name and choose the first port.
+    """
+    # Import is done here in order to move it after the check_environment() ensured that pyserial has been installed
+    import serial.tools.list_ports
+
+    ports = list(reversed(sorted(
+        p.device for p in serial.tools.list_ports.comports() )))
+    try:
+        print ("Choosing default port %s (use '-p PORT' option to set a specific serial port)" % ports[0])
+        return ports[0]
+    except IndexError:
+        raise RuntimeError("No serial ports found. Connect a device, or use '-p PORT' option to set a specific port.")
+
+# Import the actions, arguments extension file
+if os.path.exists(os.path.join(os.getcwd(), "idf_ext.py")):
+    sys.path.append(os.getcwd())
+    try:
+        from idf_ext import add_action_extensions, add_argument_extensions
+    except ImportError as e:
+        print("Error importing extension file idf_ext.py. Skipping.")
+        print("Please make sure that it contains implementations (even if they're empty implementations) of")
+        print("add_action_extensions and add_argument_extensions.")
 
 def main():
+    if sys.version_info[0] != 2 or sys.version_info[1] != 7:
+        print("Note: You are using Python %d.%d.%d. Python 3 support is new, please report any problems "
+              "you encounter. Search for 'Setting the Python Interpreter' in the ESP-IDF docs if you want to use "
+              "Python 2.7." % sys.version_info[:3])
+
+    # Add actions extensions
+    try:
+        add_action_extensions({
+                    "build_target": build_target,
+                    "reconfigure" : reconfigure,
+                    "flash" : flash,
+                    "monitor" : monitor,
+                    "clean" : clean,
+                    "fullclean" : fullclean
+                    }, ACTIONS)
+    except NameError:
+        pass
+
     parser = argparse.ArgumentParser(description='ESP-IDF build management tool')
-    parser.add_argument('-p', '--port', help="Serial port", default=None)
-    parser.add_argument('-b', '--baud', help="Baud rate", default=460800)
+    parser.add_argument('-p', '--port', help="Serial port",
+                        default=os.environ.get('ESPPORT', None))
+    parser.add_argument('-b', '--baud', help="Baud rate",
+                        default=os.environ.get('ESPBAUD', 460800))
     parser.add_argument('-C', '--project-dir', help="Project directory", default=os.getcwd())
     parser.add_argument('-B', '--build-dir', help="Build directory", default=None)
     parser.add_argument('-G', '--generator', help="Cmake generator", choices=GENERATOR_CMDS.keys())
     parser.add_argument('-n', '--no-warnings', help="Disable Cmake warnings", action="store_true")
     parser.add_argument('-v', '--verbose', help="Verbose build output", action="store_true")
+    parser.add_argument('-D', '--define-cache-entry', help="Create a cmake cache entry", nargs='+')
     parser.add_argument('--no-ccache', help="Disable ccache. Otherwise, if ccache is available on the PATH then it will be used for faster builds.", action="store_true")
     parser.add_argument('actions', help="Actions (build targets or other operations)", nargs='+',
                         choices=ACTIONS.keys())
+
+    # Add arguments extensions
+    try:
+        add_argument_extensions(parser)
+    except NameError:
+        pass
 
     args = parser.parse_args()
 
@@ -374,14 +511,29 @@ def main():
 
         completed_actions.add(action)
 
-    while len(args.actions) > 0:
-        execute_action(args.actions[0], args.actions[1:])
-        args.actions.pop(0)
+    actions = list(args.actions)
+    while len(actions) > 0:
+        execute_action(actions[0], actions[1:])
+        actions.pop(0)
 
+    print_closing_message(args)
 
 if __name__ == "__main__":
     try:
-        main()
+        # On MSYS2 we need to run idf.py with "winpty" in order to be able to cancel the subprocesses properly on
+        # keyboard interrupt (CTRL+C).
+        # Using an own global variable for indicating that we are running with "winpty" seems to be the most suitable
+        # option as os.environment['_'] contains "winpty" only when it is run manually from console.
+        WINPTY_VAR = 'WINPTY'
+        WINPTY_EXE = 'winpty'
+        if ('MSYSTEM' in os.environ) and (not os.environ['_'].endswith(WINPTY_EXE) and WINPTY_VAR not in os.environ):
+            os.environ[WINPTY_VAR] = '1'    # the value is of no interest to us
+            # idf.py calls itself with "winpty" and WINPTY global variable set
+            ret = subprocess.call([WINPTY_EXE, sys.executable] + sys.argv, env=os.environ)
+            if ret:
+                raise SystemExit(ret)
+        else:
+            main()
     except FatalError as e:
         print(e)
         sys.exit(2)

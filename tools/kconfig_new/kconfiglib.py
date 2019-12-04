@@ -500,6 +500,8 @@ class Kconfig(object):
     __slots__ = (
         "_choices",
         "_print_undef_assign",
+        "_print_override",
+        "_print_redun_assign",
         "_print_warnings",
         "_set_re_match",
         "_unset_re_match",
@@ -575,6 +577,7 @@ class Kconfig(object):
 
         self._print_warnings = warn
         self._print_undef_assign = False
+        self._print_redun_assign = self._print_override = True
 
         self.syms = {}
         self.const_syms = {}
@@ -754,6 +757,9 @@ class Kconfig(object):
                         continue
 
                     if sym.orig_type in (BOOL, TRISTATE):
+                        if val == "":
+                            val = "n"  # C implementation allows 'blank' for 'no'
+
                         # The C implementation only checks the first character
                         # to the right of '=', for whatever reason
                         if not ((sym.orig_type == BOOL and
@@ -823,10 +829,12 @@ class Kconfig(object):
                         display_val = val
                         display_user_val = sym.user_value
 
-                    self._warn('{} set more than once. Old value: "{}", new '
-                               'value: "{}".'
-                               .format(name, display_user_val, display_val),
-                               filename, linenr)
+                    msg = '{} set more than once. Old value: "{}", new value: "{}".'.format(name, display_user_val, display_val)
+
+                    if display_user_val == display_val:
+                        self._warn_redun_assign(msg, filename, linenr)
+                    else:
+                        self._warn_override(msg, filename, linenr)
 
                 sym.set_value(val)
 
@@ -924,7 +932,7 @@ class Kconfig(object):
 
             def write_node(node):
                 item = node.item
-                if isinstance(item, Symbol):
+                if isinstance(item, Symbol) and item.env_var is None:
                     config_string = item.config_string
                     if config_string:
                         write(config_string)
@@ -1054,6 +1062,36 @@ class Kconfig(object):
         """
         self._print_undef_assign = False
 
+    def enable_redun_warnings(self):
+        """
+        Enables warnings for redundant assignments to symbols. Printed to
+        stderr. Enabled by default.
+        """
+        self._print_redun_assign = True
+
+    def disable_redun_warnings(self):
+        """
+        See enable_redun_warnings().
+        """
+        self._print_redun_assign = False
+
+    def enable_override_warnings(self):
+        """
+        Enables warnings for duplicated assignments in .config files that set
+        different values (e.g. CONFIG_FOO=m followed by CONFIG_FOO=y, where
+        the last value set is used).
+
+        These warnings are enabled by default. Disabling them might be helpful
+        in certain cases when merging configurations.
+        """
+        self._print_override = True
+
+    def disable_override_warnings(self):
+        """
+        See enable_override_warnings().
+        """
+        self._print_override = False
+
     def __repr__(self):
         """
         Returns a string with information about the Kconfig object when it is
@@ -1068,6 +1106,8 @@ class Kconfig(object):
             "warnings " + ("enabled" if self._print_warnings else "disabled"),
             "undef. symbol assignment warnings " +
                 ("enabled" if self._print_undef_assign else "disabled"),
+            "redundant symbol assignment warnings " +
+                ("enabled" if self._print_redun_assign else "disabled")
         )))
 
     #
@@ -2147,6 +2187,19 @@ class Kconfig(object):
             'attempt to assign the value "{}" to the undefined symbol {}' \
             .format(val, name), filename, linenr)
 
+    def _warn_redun_assign(self, msg, filename=None, linenr=None):
+        """
+        See the class documentation.
+        """
+        if self._print_redun_assign:
+            _stderr_msg("warning: " + msg, filename, linenr)
+
+    def _warn_override(self, msg, filename=None, linenr=None):
+        """
+        See the class documentation.
+        """
+        if self._print_override:
+            _stderr_msg("warning: " + msg, filename, linenr)
 
 class Symbol(object):
     """
@@ -2419,24 +2472,11 @@ class Symbol(object):
             base = _TYPE_TO_BASE[self.orig_type]
 
             # Check if a range is in effect
-            for low_expr, high_expr, cond in self.ranges:
-                if expr_value(cond):
-                    has_active_range = True
-
-                    # The zeros are from the C implementation running strtoll()
-                    # on empty strings
-                    low = int(low_expr.str_value, base) if \
-                      _is_base_n(low_expr.str_value, base) else 0
-                    high = int(high_expr.str_value, base) if \
-                      _is_base_n(high_expr.str_value, base) else 0
-
-                    break
-            else:
-                has_active_range = False
+            low, high = self.active_range
 
             if vis and self.user_value is not None and \
                _is_base_n(self.user_value, base) and \
-               (not has_active_range or
+               (low is None or
                 low <= int(self.user_value, base) <= high):
 
                 # If the user value is well-formed and satisfies range
@@ -2463,7 +2503,7 @@ class Symbol(object):
                     val_num = 0  # strtoll() on empty string
 
                 # This clamping procedure runs even if there's no default
-                if has_active_range:
+                if low is not None:
                     clamp = None
                     if val_num < low:
                         clamp = low
@@ -2713,6 +2753,28 @@ class Symbol(object):
             self.user_value = None
             if self._is_user_assignable():
                 self._rec_invalidate()
+
+    @property
+    def active_range(self):
+        """
+        Returns a tuple of (low, high) integer values if a range
+        limit is active for this symbol, or (None, None) if no range
+        limit exists.
+        """
+        base = _TYPE_TO_BASE[self.orig_type]
+
+        for low_expr, high_expr, cond in self.ranges:
+            if expr_value(cond):
+                # The zeros are from the C implementation running strtoll()
+                # on empty strings
+                low = int(low_expr.str_value, base) if \
+                    _is_base_n(low_expr.str_value, base) else 0
+                high = int(high_expr.str_value, base) if \
+                    _is_base_n(high_expr.str_value, base) else 0
+
+                return (low, high)
+        return (None, None)
+
 
     def __repr__(self):
         """

@@ -300,17 +300,17 @@ typedef struct {
 typedef struct {
     signed rssi: 8;           /**< signal intensity of packet */
     unsigned rate: 4;         /**< data rate */
-    unsigned is_group: 1;
+    unsigned is_group: 1;     /**< usually not used */
     unsigned : 1;             /**< reserve */
     unsigned sig_mode: 2;     /**< 0:is not 11n packet; 1:is 11n packet */
-    unsigned legacy_length: 12;
-    unsigned damatch0: 1;
-    unsigned damatch1: 1;
-    unsigned bssidmatch0: 1;
-    unsigned bssidmatch1: 1;
+    unsigned legacy_length: 12; /**< Length of 11bg mode packet */
+    unsigned damatch0: 1;     /**< usually not used */
+    unsigned damatch1: 1;     /**< usually not used */
+    unsigned bssidmatch0: 1;  /**< usually not used */
+    unsigned bssidmatch1: 1;  /**< usually not used */
     unsigned mcs: 7;          /**< if is 11n packet, shows the modulation(range from 0 to 76) */
     unsigned cwb: 1;          /**< if is 11n packet, shows if is HT40 packet or not */
-    unsigned HT_length: 16;            /**< reserve */
+    unsigned HT_length: 16;   /**< Length of 11n mode packet */
     unsigned smoothing: 1;    /**< reserve */
     unsigned not_sounding: 1; /**< reserve */
     unsigned : 1;             /**< reserve */
@@ -318,18 +318,18 @@ typedef struct {
     unsigned stbc: 2;         /**< STBC */
     unsigned fec_coding: 1;   /**< Flag is set for 11n packets which are LDPC */
     unsigned sgi: 1;          /**< SGI */
-    unsigned rxend_state: 8;
+    unsigned rxend_state: 8;  /**< usually not used */
     unsigned ampdu_cnt: 8;    /**< ampdu cnt */
     unsigned channel: 4;      /**< which channel this packet in */
     unsigned : 4;             /**< reserve */
-    signed noise_floor: 8;
+    signed noise_floor: 8;    /**< usually not used */
 } wifi_pkt_rx_ctrl_t;
 
 /** @brief Payload passed to 'buf' parameter of promiscuous mode RX callback.
  */
 typedef struct {
     wifi_pkt_rx_ctrl_t rx_ctrl; /**< metadata header */
-    uint8_t payload[0];       /**< Data or management payload. Length of payload is described by rx_ctrl.sig_len. Type of content determined by packet type argument of callback. */
+    uint8_t payload[0];       /**< Data or management payload. Length of payload is described by rx_ctrl.legacy_length or rx_ctrl.HT_length. Type of content determined by packet type argument of callback. */
 } wifi_promiscuous_pkt_t;
 
 /**
@@ -372,6 +372,9 @@ typedef struct {
 #define WIFI_EVENT_MASK_NONE                (0)           /**< mask none of the WiFi events */
 #define WIFI_EVENT_MASK_AP_PROBEREQRECVED   (BIT(0))      /**< mask SYSTEM_EVENT_AP_PROBEREQRECVED event */
 
+/**
+ * @brief WIFI hardware TX result code
+ */
 typedef enum {
     TX_STATUS_SUCCESS = 1,
     TX_STATUS_SRC_EXCEED,
@@ -379,6 +382,9 @@ typedef enum {
     TX_STATUS_DISCARD,
 } wifi_tx_result_t;
 
+/**
+ * @brief WIFI hardware TX rate
+ */
 typedef enum {
     PHY_RATE_1_LONG,
     PHY_RATE_2_LONG,
@@ -398,12 +404,15 @@ typedef enum {
     PHY_RATE_9,
 } wifi_tx_rate_t;
 
+/**
+ * @brief WIFI hardware TX status
+ */
 typedef struct {
-    unsigned wifi_tx_result: 8;
-    unsigned wifi_tx_src: 6;
-    unsigned wifi_tx_lrc: 6;
-    unsigned wifi_tx_rate: 8;
-    unsigned unused: 4;
+    unsigned wifi_tx_result: 8;             /*!< TX status code, descripted by "wifi_tx_result_t" */
+    unsigned wifi_tx_src: 6;                /*!< TX status SRC */
+    unsigned wifi_tx_lrc: 6;                /*!< TX status LRC */
+    unsigned wifi_tx_rate: 8;               /*!< TX rate, descripted by "wifi_tx_rate_t" */
+    unsigned unused: 4;                     /*!< Resolved */
 } wifi_tx_status_t;
 
 #ifdef __cplusplus

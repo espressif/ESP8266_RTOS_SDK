@@ -27,7 +27,7 @@
 #include "nvs_flash.h"
 #include "sdkconfig.h"
 
-#include "phy_init_data.h"
+#include "internal/phy_init_data.h"
 #include "phy.h"
 
 static const char *TAG = "phy_init";

@@ -1,27 +1,46 @@
 include(ExternalProject)
 
 macro(kconfig_set_variables)
+    set(CONFIG_DIR ${CMAKE_BINARY_DIR}/config)
     set_default(SDKCONFIG ${PROJECT_PATH}/sdkconfig)
-    set(SDKCONFIG_HEADER ${CMAKE_BINARY_DIR}/sdkconfig.h)
-    set(SDKCONFIG_CMAKE ${CMAKE_BINARY_DIR}/sdkconfig.cmake)
-    set(SDKCONFIG_JSON ${CMAKE_BINARY_DIR}/sdkconfig.json)
+    set(SDKCONFIG_HEADER ${CONFIG_DIR}/sdkconfig.h)
+    set(SDKCONFIG_CMAKE ${CONFIG_DIR}/sdkconfig.cmake)
+    set(SDKCONFIG_JSON ${CONFIG_DIR}/sdkconfig.json)
+    set(KCONFIG_JSON_MENUS ${CONFIG_DIR}/kconfig_menus.json)
 
     set(ROOT_KCONFIG ${IDF_PATH}/Kconfig)
 
     set_default(SDKCONFIG_DEFAULTS "${SDKCONFIG}.defaults")
+
+    # ensure all source files can include sdkconfig.h
+    include_directories("${CONFIG_DIR}")
 endmacro()
 
 if(CMAKE_HOST_WIN32)
-    # Prefer a prebuilt mconf on Windows
-    find_program(WINPTY winpty)
-    find_program(MCONF mconf)
+    # Prefer a prebuilt mconf-idf on Windows
+    if(DEFINED ENV{MSYSTEM})
+        find_program(WINPTY winpty)
+    else()
+        unset(WINPTY CACHE)  # in case previous CMake run was in a tty and this one is not
+    endif()
+    find_program(MCONF mconf-idf)
+
+    # Fall back to the old binary which was called 'mconf' not 'mconf-idf'
+    if(NOT MCONF)
+        find_program(MCONF mconf)
+        if(MCONF)
+            message(WARNING "Falling back to mconf binary '${MCONF}' not mconf-idf. "
+                "This is probably because an old version of IDF mconf is installed and this is fine. "
+                "However if there are config problems please check the Getting Started guide for your platform.")
+        endif()
+    endif()
 
     if(NOT MCONF)
         find_program(NATIVE_GCC gcc)
         if(NOT NATIVE_GCC)
             message(FATAL_ERROR
-                "Windows requires a prebuilt ESP-IDF-specific mconf for your platform "
-                "on the PATH, or an MSYS2 version of gcc on the PATH to build mconf. "
+                "Windows requires a prebuilt mconf-idf for your platform "
+                "on the PATH, or an MSYS2 version of gcc on the PATH to build mconf-idf. "
                 "Consult the setup docs for ESP-IDF on Windows.")
         endif()
     elseif(WINPTY)
@@ -32,29 +51,38 @@ endif()
 if(NOT MCONF)
     # Use the existing Makefile to build mconf (out of tree) when needed
     #
-    set(MCONF kconfig_bin/mconf)
+    set(MCONF kconfig_bin/mconf-idf)
 
-    externalproject_add(mconf
+    externalproject_add(mconf-idf
         SOURCE_DIR ${IDF_PATH}/tools/kconfig
         CONFIGURE_COMMAND ""
         BINARY_DIR "kconfig_bin"
-        BUILD_COMMAND make -f ${IDF_PATH}/tools/kconfig/Makefile mconf
+        BUILD_COMMAND make -f ${IDF_PATH}/tools/kconfig/Makefile mconf-idf
         BUILD_BYPRODUCTS ${MCONF}
         INSTALL_COMMAND ""
         EXCLUDE_FROM_ALL 1
         )
-    set(menuconfig_depends DEPENDS mconf)
+
+    file(GLOB mconf_srcfiles ${IDF_PATH}/tools/kconfig/*.c)
+    externalproject_add_stepdependencies(mconf-idf build
+        ${mconf_srcfiles}
+        ${IDF_PATH}/tools/kconfig/Makefile
+        ${CMAKE_CURRENT_LIST_FILE})
+    unset(mconf_srcfiles)
+
+    set(menuconfig_depends DEPENDS mconf-idf)
+
 endif()
 
 # Find all Kconfig files for all components
 function(kconfig_process_config)
-    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/include/config")
+    file(MAKE_DIRECTORY "${CONFIG_DIR}")
     set(kconfigs)
     set(kconfigs_projbuild)
 
     # Find Kconfig and Kconfig.projbuild for each component as applicable
     # if any of these change, cmake should rerun
-    foreach(dir ${BUILD_COMPONENT_PATHS} "${CMAKE_SOURCE_DIR}/main")
+    foreach(dir ${BUILD_COMPONENT_PATHS})
         file(GLOB kconfig "${dir}/Kconfig")
         if(kconfig)
             set(kconfigs "${kconfigs} ${kconfig}")
@@ -81,11 +109,11 @@ function(kconfig_process_config)
         --kconfig ${ROOT_KCONFIG}
         --config ${SDKCONFIG}
         ${defaults_arg}
-        --create-config-if-missing
         --env "COMPONENT_KCONFIGS=${kconfigs}"
-        --env "COMPONENT_KCONFIGS_PROJBUILD=${kconfigs_projbuild}")
+        --env "COMPONENT_KCONFIGS_PROJBUILD=${kconfigs_projbuild}"
+        --env "IDF_CMAKE=y")
 
-    # Generate the menuconfig target (uses C-based mconf tool, either prebuilt or via mconf target above)
+    # Generate the menuconfig target (uses C-based mconf-idf tool, either prebuilt or via mconf-idf target above)
     add_custom_target(menuconfig
         ${menuconfig_depends}
         # create any missing config file, with defaults if necessary
@@ -93,8 +121,19 @@ function(kconfig_process_config)
         COMMAND ${CMAKE_COMMAND} -E env
         "COMPONENT_KCONFIGS=${kconfigs}"
         "COMPONENT_KCONFIGS_PROJBUILD=${kconfigs_projbuild}"
+        "IDF_CMAKE=y"
         "KCONFIG_CONFIG=${SDKCONFIG}"
         ${MCONF} ${ROOT_KCONFIG}
+        VERBATIM
+        USES_TERMINAL)
+
+    # Custom target to run confserver.py from the build tool
+    add_custom_target(confserver
+        COMMAND ${CMAKE_COMMAND} -E env
+        "COMPONENT_KCONFIGS=${kconfigs}"
+        "COMPONENT_KCONFIGS_PROJBUILD=${kconfigs_projbuild}"
+        ${PYTHON} ${IDF_PATH}/tools/kconfig_new/confserver.py
+        --kconfig ${IDF_PATH}/Kconfig --config ${SDKCONFIG}
         VERBATIM
         USES_TERMINAL)
 
@@ -102,11 +141,24 @@ function(kconfig_process_config)
     # makes sdkconfig.h and skdconfig.cmake
     #
     # This happens during the cmake run not during the build
-    execute_process(COMMAND ${confgen_basecommand}
-        --output header ${SDKCONFIG_HEADER}
-        --output cmake ${SDKCONFIG_CMAKE}
-        --output json ${SDKCONFIG_JSON}
-        RESULT_VARIABLE config_result)
+    if(NOT BOOTLOADER_BUILD)
+        execute_process(
+            COMMAND ${confgen_basecommand}
+            --output header ${SDKCONFIG_HEADER}
+            --output cmake ${SDKCONFIG_CMAKE}
+            --output json ${SDKCONFIG_JSON}
+            --output json_menus ${KCONFIG_JSON_MENUS}
+            --output config ${SDKCONFIG} # only generate config at the top-level project
+            RESULT_VARIABLE config_result)
+    else()
+        execute_process(
+            COMMAND ${confgen_basecommand}
+            --output header ${SDKCONFIG_HEADER}
+            --output cmake ${SDKCONFIG_CMAKE}
+            --output json ${SDKCONFIG_JSON}
+            --output json_menus ${KCONFIG_JSON_MENUS}
+            RESULT_VARIABLE config_result)
+    endif()
     if(config_result)
         message(FATAL_ERROR "Failed to run confgen.py (${confgen_basecommand}). Error ${config_result}")
     endif()

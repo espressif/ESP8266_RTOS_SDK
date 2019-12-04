@@ -40,3 +40,4 @@ set_source_files_properties(
     PROPERTIES COMPILE_FLAGS
     -Wno-implicit-fallthrough)
 
+target_compile_definitions(${COMPONENT_NAME} PUBLIC -D WITH_POSIX)

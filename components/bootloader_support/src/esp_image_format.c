@@ -360,7 +360,7 @@ static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, ui
             dest[w_i] = w ^ ((w_i & 1) ? ram_obfs_value[0] : ram_obfs_value[1]);
         }
 #endif
-#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
+#ifdef CONFIG_APP_UPDATE_CHECK_APP_HASH
         // SHA_CHUNK determined experimentally as the optimum size
         // to call bootloader_sha256_data() with. This is a bit
         // counter-intuitive, but it's ~3ms better than using the
@@ -652,7 +652,7 @@ static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t
 #if defined(CONFIG_SECURE_BOOT_ENABLED)
 static esp_err_t __attribute__((unused)) verify_secure_boot_signature(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data);
 #endif
-#if defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+#if defined(CONFIG_APP_UPDATE_CHECK_APP_HASH)
 static esp_err_t  __attribute__((unused)) verify_simple_hash(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data);
 #endif
 
@@ -691,7 +691,7 @@ esp_err_t esp_image_load(esp_image_load_mode_t mode, const esp_partition_pos_t *
 #ifdef CONFIG_SECURE_BOOT_ENABLED
     if (1) {
 #else
-#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
+#ifdef CONFIG_APP_UPDATE_CHECK_APP_HASH
 #ifdef CONFIG_IDF_TARGET_ESP32
     if (data->image.hash_appended)
 #endif
@@ -769,7 +769,7 @@ goto err;
         // secure boot images have a signature appended
         err = verify_secure_boot_signature(sha_handle, data);
 #else
-#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
+#ifdef CONFIG_APP_UPDATE_CHECK_APP_HASH
         // No secure boot, but SHA-256 can be appended for basic corruption detection
         if (sha_handle != NULL
 #ifdef CONFIG_ENABLE_BOOT_CHECK_OCD
@@ -812,7 +812,7 @@ goto err;
     if (err == ESP_OK) {
       err = ESP_ERR_IMAGE_INVALID;
     }
-#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
+#ifdef CONFIG_APP_UPDATE_CHECK_APP_HASH
     if (sha_handle != NULL) {
         // Need to finish the hash process to free the handle
         bootloader_sha256_finish(sha_handle, NULL);
@@ -858,7 +858,7 @@ static esp_err_t process_segment(int index, uint32_t flash_addr, esp_image_segme
         ESP_LOGE(TAG, "bootloader_flash_read failed at 0x%08x", flash_addr);
         return err;
     }
-#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
+#ifdef CONFIG_APP_UPDATE_CHECK_APP_HASH
     if (sha_handle != NULL) {
         bootloader_sha256_data(sha_handle, header, sizeof(esp_image_segment_header_t));
     }
@@ -934,7 +934,7 @@ err:
 static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, uint32_t data_len, bool do_load, bootloader_sha256_handle_t sha_handle, uint32_t *checksum)
 {
     esp_err_t ret = ESP_OK;
-#if defined(CONFIG_ENABLE_BOOT_CHECK_SUM) || defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+#if defined(CONFIG_APP_UPDATE_CHECK_APP_SUM) || defined(CONFIG_APP_UPDATE_CHECK_APP_HASH)
     const char *src = (const char *)data_addr;
 #ifndef BOOTLOADER_BUILD
     uint32_t *pbuf;
@@ -961,12 +961,12 @@ static esp_err_t process_segment_data(intptr_t load_addr, uint32_t data_addr, ui
             goto exit;
         }
 
-#if defined(CONFIG_ENABLE_BOOT_CHECK_SUM)
+#if defined(CONFIG_APP_UPDATE_CHECK_APP_SUM)
         for (int i = 0; i < bytes / sizeof(uint32_t); i++)
             *checksum ^= pbuf[i];
 #endif
 
-#if defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+#if defined(CONFIG_APP_UPDATE_CHECK_APP_HASH)
         if (sha_handle != NULL)
             bootloader_sha256_data(sha_handle, pbuf, bytes);
 #endif
@@ -1043,7 +1043,7 @@ esp_err_t esp_image_verify_bootloader(uint32_t *length)
 static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t checksum_word, esp_image_metadata_t *data)
 {
     esp_err_t err = ESP_OK;
-#if defined(CONFIG_ENABLE_BOOT_CHECK_SUM) || defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+#if defined(CONFIG_APP_UPDATE_CHECK_APP_SUM) || defined(CONFIG_APP_UPDATE_CHECK_APP_HASH)
     uint32_t unpadded_length = data->image_len;
     uint32_t length = unpadded_length + 1; // Add a byte for the checksum
     length = (length + 15) & ~15; // Pad to next full 16 byte block
@@ -1056,7 +1056,7 @@ static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t
         return ESP_ERR_IMAGE_INVALID;
     }
 
-#if defined(CONFIG_ENABLE_BOOT_CHECK_SUM)
+#if defined(CONFIG_APP_UPDATE_CHECK_APP_SUM)
     uint8_t calc = buf[length - unpadded_length - 1];
     uint8_t checksum = (checksum_word >> 24)
         ^ (checksum_word >> 16)
@@ -1069,7 +1069,7 @@ static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t
     }
 #endif
 
-#ifdef CONFIG_ENABLE_BOOT_CHECK_SHA256
+#ifdef CONFIG_APP_UPDATE_CHECK_APP_HASH
     if (sha_handle != NULL) {
         bootloader_sha256_data(sha_handle, buf, length - unpadded_length);
     }
@@ -1089,7 +1089,7 @@ static esp_err_t verify_checksum(bootloader_sha256_handle_t sha_handle, uint32_t
     return err;
 }
 
-#if defined(CONFIG_SECURE_BOOT_ENABLED) || defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+#if defined(CONFIG_SECURE_BOOT_ENABLED) || defined(CONFIG_APP_UPDATE_CHECK_APP_HASH)
 static void debug_log_hash(const uint8_t *image_hash, const char *caption);
 #endif
 
@@ -1141,7 +1141,7 @@ static esp_err_t verify_secure_boot_signature(bootloader_sha256_handle_t sha_han
 }
 #endif
 
-#if defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+#if defined(CONFIG_APP_UPDATE_CHECK_APP_HASH)
 static esp_err_t verify_simple_hash(bootloader_sha256_handle_t sha_handle, esp_image_metadata_t *data)
 {
     uint8_t image_hash[HASH_LEN];
@@ -1169,7 +1169,7 @@ static esp_err_t verify_simple_hash(bootloader_sha256_handle_t sha_handle, esp_i
 }
 #endif
 
-#if defined(CONFIG_SECURE_BOOT_ENABLED) || defined(CONFIG_ENABLE_BOOT_CHECK_SHA256)
+#if defined(CONFIG_SECURE_BOOT_ENABLED) || defined(CONFIG_APP_UPDATE_CHECK_APP_HASH)
 
 // Log a hash as a hex string
 static void debug_log_hash(const uint8_t *image_hash, const char *label)

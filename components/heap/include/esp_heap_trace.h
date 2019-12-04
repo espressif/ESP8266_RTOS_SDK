@@ -26,8 +26,11 @@ typedef enum {
     HEAP_TRACE_LEAKS,
 } heap_trace_mode_t;
 
+/**
+ * @brief heap trace record information(not used)
+ */
 typedef struct {
-    char    buf[1];
+    char    buf[1];     /*!< record buffer */
 } heap_trace_record_t;
 
 /**

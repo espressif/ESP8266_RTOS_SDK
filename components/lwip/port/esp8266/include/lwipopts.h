@@ -47,11 +47,18 @@
 #include "sdkconfig.h"
 #include <stddef.h>
 #include <stdbool.h>
+#include <time.h>
 #include "esp_libc.h"
 #include "esp_system.h"
 #include "driver/soc.h"
 
 #define ESP_LWIP 1
+
+#ifdef CONFIG_ESP_DNS
+#define ESP_DNS  1
+#else
+#define ESP_DNS  0
+#endif
 
 #ifdef CONFIG_LWIP_IPV6_MLD_SOCK
 #define ESP_LWIP_IPV6_MLD 1
@@ -830,6 +837,7 @@ size_t memp_malloc_get_size(size_t type);
  * DNS_SERVER_ADDRESS(ipaddr), where 'ipaddr' is an 'ip_addr_t*'
  */
 #define DNS_MAX_SERVERS                 CONFIG_DNS_MAX_SERVERS
+#define DNS_FALLBACK_SERVER_INDEX       (DNS_MAX_SERVERS - 1)
 
 /** DNS do a name checking between the query and the response. */
 #define DNS_DOES_NAME_CHECK             1
@@ -1305,21 +1313,21 @@ size_t memp_malloc_get_size(size_t type);
  * The stack size value itself is platform-dependent, but is passed to
  * sys_thread_new() when the thread is created.
  */
-#define DEFAULT_THREAD_STACKSIZE        0
+#define DEFAULT_THREAD_STACKSIZE        TCPIP_THREAD_STACKSIZE
 
 /**
  * DEFAULT_THREAD_PRIO: The priority assigned to any other lwIP thread.
  * The priority value itself is platform-dependent, but is passed to
  * sys_thread_new() when the thread is created.
  */
-#define DEFAULT_THREAD_PRIO             1
+#define DEFAULT_THREAD_PRIO             TCPIP_THREAD_PRIO
 
 /**
  * DEFAULT_RAW_RECVMBOX_SIZE: The mailbox size for the incoming packets on a
  * NETCONN_RAW. The queue size value itself is platform-dependent, but is passed
  * to sys_mbox_new() when the recvmbox is created.
  */
-#define DEFAULT_RAW_RECVMBOX_SIZE       0
+#define DEFAULT_RAW_RECVMBOX_SIZE       6
 
 /**
  * DEFAULT_UDP_RECVMBOX_SIZE: The mailbox size for the incoming packets on a

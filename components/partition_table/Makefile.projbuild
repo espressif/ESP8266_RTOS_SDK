@@ -56,6 +56,8 @@ $(PARTITION_TABLE_BIN_UNSIGNED): $(PARTITION_TABLE_CSV_PATH) $(SDKCONFIG_MAKEFIL
 all_binaries: $(PARTITION_TABLE_BIN) partition_table_get_info
 
 partition_table_get_info: $(PARTITION_TABLE_BIN)
+	$(eval OTA_DATA_SIZE := $(shell $(GET_PART_INFO) --type data --subtype ota --size $(PARTITION_TABLE_BIN) || echo 0))
+	$(eval OTA_DATA_OFFSET := $(shell $(GET_PART_INFO) --type data --subtype ota --offset $(PARTITION_TABLE_BIN)))
 	$(eval PHY_DATA_OFFSET:=$(shell $(GET_PART_INFO) --type data --subtype phy --offset $(PARTITION_TABLE_BIN)))
 	$(eval APP_OFFSET:=$(shell $(GET_PART_INFO) --default-boot-partition --offset $(PARTITION_TABLE_BIN)))
 	$(eval APP_SIZE:=$(shell $(GET_PART_INFO) --default-boot-partition --size $(PARTITION_TABLE_BIN)))
@@ -63,7 +65,7 @@ partition_table_get_info: $(PARTITION_TABLE_BIN)
 	$(eval APP2_SIZE:=$(shell $(GET_PART_INFO) --type app --subtype ota_1 --size $(PARTITION_TABLE_BIN)))
 	$(eval CFLAGS += -DAPP_OFFSET=$(APP_OFFSET) -DAPP_SIZE=$(APP_SIZE))
 
-export PHY_DATA_OFFSET APP_OFFSET APP_SIZE APP2_OFFSET APP2_SIZE
+export OTA_DATA_SIZE OTA_DATA_OFFSET PHY_DATA_OFFSET APP_OFFSET APP_SIZE APP2_OFFSET APP2_SIZE
 
 PARTITION_TABLE_FLASH_CMD = $(ESPTOOLPY_SERIAL) write_flash $(PARTITION_TABLE_OFFSET) $(PARTITION_TABLE_BIN)
 ESPTOOL_ALL_FLASH_ARGS += $(PARTITION_TABLE_OFFSET) $(PARTITION_TABLE_BIN)
@@ -83,7 +85,7 @@ partition_table-flash: $(PARTITION_TABLE_BIN)
 partition_table-clean:
 	rm -f $(PARTITION_TABLE_BIN)
 
-global-macro: partition_table_get_info
+make_prepare: partition_table_get_info
 
 clean: partition_table-clean
 

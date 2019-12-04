@@ -1373,7 +1373,7 @@ class ESP8266ROMFirmwareImage(BaseFirmwareImage):
 
         # everything but IROM goes at 0x00000 in an image file
         normal_segments = self.get_non_irom_segments()
-        with open("%s0x00000.bin" % basename, 'wb') as f:
+        with open("%s" % basename, 'wb') as f:
             self.write_common_header(f, normal_segments)
             checksum = ESPLoader.ESP_CHECKSUM_MAGIC
             for segment in normal_segments:

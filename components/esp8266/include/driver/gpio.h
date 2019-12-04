@@ -133,7 +133,7 @@ typedef void *gpio_isr_handle_t;
  *
  * Configure GPIO's Mode,pull-up,PullDown,IntrType
  *
- * @param  gpio_config Pointer to GPIO configure struct
+ * @param  gpio_cfg  Pointer to GPIO configure struct
  *
  * @return
  *     - ESP_OK success

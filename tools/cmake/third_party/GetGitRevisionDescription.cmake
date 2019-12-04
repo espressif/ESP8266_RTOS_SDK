@@ -109,7 +109,9 @@ function(git_describe _var _repo_dir)
 
 	execute_process(COMMAND
 		"${GIT_EXECUTABLE}"
-		describe
+		"-C"
+		${_repo_dir}
+		describe --tag
 		${hash}
 		${ARGN}
 		WORKING_DIRECTORY

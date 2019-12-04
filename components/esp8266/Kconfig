@@ -277,7 +277,7 @@ config INIT_OS_BEFORE_START
         FreeRTOS need not do this.
 
 config ESP8266_OTA_FROM_OLD
-    bool "(**Expected**)ESP8266 update from old SDK by OTA"
+    bool "ESP8266 update from old SDK by OTA"
     default n
     depends on IDF_TARGET_ESP8266
     select ESP8266_BOOT_COPY_APP if ESPTOOLPY_FLASHSIZE_1MB
@@ -289,8 +289,21 @@ config ESP8266_OTA_FROM_OLD
 
         The old RTOS SDK(before V3.0) or NonOS SDK can download the firmware to its partition and run it as it self's application.
 
+config LOAD_OLD_RF_PARAMETER
+    bool "Load old RF Parameters"
+    default n
+    depends on ESP8266_OTA_FROM_OLD
+    select ESP_PHY_INIT_DATA_IN_PARTITION
+    help
+        The function is not released.
+
+        Enable this option, after updating from old SDK to new SDK, bootloader will copy RF
+        parameters from old SDK partition to new SDK partition.
+
+        Then application can read the RF parameters from new partition directly.
+
 config ESP8266_BOOT_COPY_APP
-    bool "(**Expected**)Boot copy app"
+    bool "Boot copy app"
     default n
     help
         The function is not released.
