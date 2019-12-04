@@ -2,4 +2,11 @@
 archive: libfreertos.a
 entries:
     if FREERTOS_GLOBAL_DATA_LINK_IRAM = y:
-        * (iram_bss)
+        event_groups (iram_bss)
+        list (iram_bss)
+        queue (iram_bss)
+        stream_buffer (iram_bss)
+        tasks  (iram_bss)
+        timers (iram_bss)
+        freertos_hooks (iram_bss)
+        impure(iram_bss)
