@@ -175,7 +175,7 @@ SECTIONS
     _flash_cache_start = ABSOLUTE(0);
   } >iram0_2_seg
 
-  .flash.rodata ALIGN(1) :
+  .flash.rodata ALIGN(4) :
   {
     _rodata_start = ABSOLUTE(.);
 

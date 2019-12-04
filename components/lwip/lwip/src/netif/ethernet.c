@@ -86,6 +86,10 @@ ethernet_input(struct pbuf *p, struct netif *netif)
   s16_t ip_hdr_offset = SIZEOF_ETH_HDR;
 #endif /* LWIP_ARP || ETHARP_SUPPORT_VLAN */
 
+#if ESP_TCP_TXRX_PBUF_DEBUG
+  tcp_print_status(LWIP_FETCH_DATA_AT_TCPIP_THREAD, (void*)p, 0, 0, 0);
+#endif
+
   if (p->len <= SIZEOF_ETH_HDR) {
     /* a packet with only an ethernet header (or less) is not valid for us */
     ETHARP_STATS_INC(etharp.proterr);

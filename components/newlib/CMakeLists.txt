@@ -1,11 +1,13 @@
 set(COMPONENT_SRCDIRS newlib/port)
-set(COMPONENT_ADD_INCLUDEDIRS newlib/include newlib/port/include)
+set(COMPONENT_ADD_INCLUDEDIRS newlib/port/include newlib/include)
 
 
-if(CONFIG_NEWLIB_NANO_FORMAT)
+if(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
     set(LIBC c_nano)
-else()
+elseif(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL)
     set(LIBC c)
+elseif(CONFIG_NEWLIB_LIBRARY_LEVEL_FLOAT_NANO)
+    set(LIBC c_fnano)
 endif()
 
 set(LIBM m)
@@ -13,6 +15,10 @@ set(LIBM m)
 set(COMPONENT_PRIV_REQUIRES "vfs" "lwip")  # for sys/ioctl.h
 
 register_component()
+
+if(CONFIG_NEWLIB_LIBRARY_LEVEL_FLOAT_NANO)
+    target_link_libraries(${COMPONENT_LIB} PUBLIC "-u _printf_float" "-u _scanf_float")
+endif()
 
 target_compile_definitions(${COMPONENT_LIB} PUBLIC
     -D_CLOCKS_PER_SEC_=CONFIG_FREERTOS_HZ -D_POSIX_THREADS=1 -D_UNIX98_THREAD_MUTEX_ATTRIBUTES=1

@@ -120,6 +120,7 @@ static void sc_ack_send_task(void *pvParameters)
                 recvfrom(send_sock, &data, 1, 0, (struct sockaddr *)&from, &sockadd_len);
                 if (from.sin_addr.s_addr != INADDR_ANY) {
                     memcpy(remote_ip, &from.sin_addr, 4);
+                    memcpy(sc_callback_data.ip, &from.sin_addr, sizeof(sc_callback_data.ip));
                     server_addr.sin_addr.s_addr = from.sin_addr.s_addr;
                 } else {
                     if (ack->cb) {

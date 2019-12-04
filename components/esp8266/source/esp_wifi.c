@@ -77,6 +77,15 @@ static void esp_wifi_set_debug_log()
 #if CONFIG_ESP8266_WIFI_DEBUG_LOG_SUBMODULE_WPS
     wifi_log_submodule |= WIFI_LOG_SUBMODULE_WPS;
 #endif
+#if CONFIG_ESP8266_WIFI_DEBUG_LOG_SUBMODULE_AMPDU
+    wifi_log_submodule |= WIFI_LOG_SUBMODULE_AMPDU;
+#endif
+#if CONFIG_ESP8266_WIFI_DEBUG_LOG_SUBMODULE_AMSDU
+    wifi_log_submodule |= WIFI_LOG_SUBMODULE_AMSDU;
+#endif
+#if CONFIG_ESP8266_WIFI_DEBUG_LOG_SUBMODULE_FRAG
+    wifi_log_submodule |= WIFI_LOG_SUBMODULE_FRAG;
+#endif
     esp_wifi_internal_set_log_level(wifi_log_level);
     esp_wifi_internal_set_log_mod(wifi_log_submodule);
 #else

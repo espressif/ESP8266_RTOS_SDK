@@ -29,6 +29,10 @@
 #include "esp_log.h"
 #include "esp_system.h"
 
+#ifndef BOOTLOADER_BUILD
+#include "FreeRTOS.h"
+#endif
+
 #ifdef CONFIG_LOG_COLORS
 #define LOG_COLOR_HEAD      "\033[0;%dm"
 #define LOG_BOLD_HEAD       "\033[1;%dm"
@@ -55,7 +59,18 @@ static const char s_log_prefix[ESP_LOG_MAX] = {
 
 uint32_t IRAM_ATTR esp_log_early_timestamp()
 {
-    return xthal_get_ccount() / ((CRYSTAL_USED * 2) * 1000);
+#ifndef BOOTLOADER_BUILD
+    extern uint64_t g_esp_os_us;
+    extern uint64_t g_esp_boot_ccount;
+
+    const uint32_t ticks_per_ms = g_esp_ticks_per_us * 1000;
+    const uint32_t ms = g_esp_os_us / 1000 + g_esp_boot_ccount / ((CRYSTAL_USED * 2) * 1000);
+#else
+    const uint32_t ticks_per_ms = ((CRYSTAL_USED * 2) * 1000);
+    const uint32_t ms = 0;
+#endif
+
+    return soc_get_ccount() / ticks_per_ms + ms;
 }
 
 #ifndef BOOTLOADER_BUILD
@@ -190,16 +205,6 @@ static int esp_log_write_str(const char *s)
     return ret;
 }
 
-uint32_t esp_log_timestamp()
-{
-    static uint32_t base = 0;
-
-    if (base == 0) {
-        base = esp_log_early_timestamp();
-    }
-
-    return base + clock() * (1000 / CLOCKS_PER_SEC);
-}
 #endif
 
 /**
@@ -262,7 +267,7 @@ void esp_log_write(esp_log_level_t level, const char *tag,  const char *fmt, ...
     }
 #endif
     prefix = level >= ESP_LOG_MAX ? 'N' : s_log_prefix[level];
-    ret = asprintf(&pbuf, "%c (%d) %s: ", prefix, esp_log_timestamp(), tag);
+    ret = asprintf(&pbuf, "%c (%d) %s: ", prefix, esp_log_early_timestamp(), tag);
     if (ret < 0)
         goto out;
     ret = esp_log_write_str(pbuf);

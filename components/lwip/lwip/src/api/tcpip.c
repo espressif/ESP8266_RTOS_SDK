@@ -178,6 +178,10 @@ tcpip_inpkt(struct pbuf *p, struct netif *inp, netif_input_fn input_fn)
 #else /* LWIP_TCPIP_CORE_LOCKING_INPUT */
   struct tcpip_msg *msg;
 
+#if ESP_TCP_TXRX_PBUF_DEBUG
+  tcp_print_status(LWIP_RECV_DATA_FROM_WIFI, (void*)p, 0, 0, 0);
+#endif
+
   LWIP_ASSERT("Invalid mbox", sys_mbox_valid_val(mbox));
 
   msg = (struct tcpip_msg *)memp_malloc(MEMP_TCPIP_MSG_INPKT);

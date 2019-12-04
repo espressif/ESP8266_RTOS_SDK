@@ -1,18 +1,8 @@
 menu "Newlib"
 
-config NEWLIB_ENABLE
-    bool "Enable newlib"
-    default y
-    help
-        If you need use you own C library, make this option disable. The libraries and
-        header files at this component will not be used.
-
-        Note: ABI of the C library of your own must be same as SDK.
-
 choice NEWLIB_LIBRARY_LEVEL
     prompt "newlib level"
-    default NEWLIB_LIBRARY_LEVEL_NANO
-    depends on NEWLIB_ENABLE
+    default NEWLIB_LIBRARY_LEVEL_FLOAT_NANO
     help
         Choose newlib library level.
 
@@ -26,15 +16,37 @@ config NEWLIB_LIBRARY_LEVEL_NANO
     bool "nano"
     help
         The newlib library which has been compiled with so-called "nano"
-        formatting option. This option doesn't support 64-bit integer formats and C99
-        features, such as positional arguments.
+        formatting option. This option doesn't support 64-bit integer formats, C99
+        features and float formats, such as positional arguments.
 
         For more details about "nano" formatting option, please see newlib readme file,
         search for '--enable-newlib-nano-formatted-io':
         https://sourceware.org/newlib/README
 
-        If you do not need 64-bit integer formatting support or C99 features, select this
-        option.
+        If you do not need 64-bit integer formatting support, C99 features and float,
+        select this option.
+
+config NEWLIB_LIBRARY_LEVEL_FLOAT_NANO
+    bool "float nano"
+    help
+        The newlib library which has been compiled with so-called "float nano"
+        formatting option. This option doesn't support 64-bit integer formats and C99
+        features, but support float formats, such as positional arguments.
+
+        For more details about "nano" formatting option, please see newlib readme file,
+        search for '--enable-newlib-nano-formatted-io':
+        https://sourceware.org/newlib/README
+
+        If you do not need 64-bit integer formatting support and C99 features, but need float formats,
+        select this option.
+
+config NEWLIB_LIBRARY_CUSTOMER
+    bool "customer"
+    help
+        If you need use you own C library, select this option. The libraries and
+        header files at this component will not be used.
+
+        Note: ABI of the C library of your own must be same as SDK.
 
 endchoice
 

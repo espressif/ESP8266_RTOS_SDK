@@ -71,7 +71,7 @@ export IDF_PATH=~/esp/ESP8266_RTOS_SDK
 ```
 
 ## Start a Project
-Now you are ready to prepare your application for ESP8266. To start off quickly, we can use `examples/get-started/project_template` project from `examples` directory in SDK.
+Now you are ready to prepare your application for ESP8266. To start off quickly, we can use `examples/get-started/hello_world` project from `examples` directory in SDK.
 
 Once you've found the project you want to work with, change to its directory and you can configure and build it.
 
@@ -81,10 +81,10 @@ You are almost there. To be able to proceed further, connect ESP8266 board to PC
 
 ## Configuring the Project
 
-Being in terminal window, go to directory of `project_template` application by typing `cd ~/esp/ESP8266_RTOS_SDK/examples/get-started/project_template`. Then start project configuration utility `menuconfig`:
+Being in terminal window, go to directory of `hello_world` application by typing `cd ~/esp/ESP8266_RTOS_SDK/examples/get-started/hello_world`. Then start project configuration utility `menuconfig`:
 
 ```
-cd ~/esp/ESP8266_RTOS_SDK/examples/get-started/project_template
+cd ~/esp/ESP8266_RTOS_SDK/examples/get-started/hello_world
 make menuconfig
 ```
 

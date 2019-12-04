@@ -43,7 +43,8 @@
 
 static const char *TAG = "heap_trace";
 
-extern heap_region_t g_heap_region[HEAP_REGIONS_MAX];
+extern size_t g_heap_region_num;
+extern heap_region_t g_heap_region[];
 extern int __g_heap_trace_mode;
 
 /**
@@ -100,7 +101,7 @@ void heap_trace_dump(void)
     uint8_t num;
     mem_blk_t *mem_start, *mem_end, *p;
 
-    for (num = 0; num < HEAP_REGIONS_MAX; num++) {
+    for (num = 0; num < g_heap_region_num; num++) {
         mem_start = (mem_blk_t *)HEAP_ALIGN(g_heap_region[num].start_addr);
         mem_end = (mem_blk_t *)(HEAP_ALIGN(g_heap_region[num].start_addr + g_heap_region[num].total_size));
         if ((uint8_t *)mem_end != g_heap_region[num].start_addr + g_heap_region[num].total_size)

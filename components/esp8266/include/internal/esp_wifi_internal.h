@@ -53,7 +53,9 @@ typedef enum {
 #define WIFI_LOG_SUBMODULE_MAC       (1<<9)
 #define WIFI_LOG_SUBMODULE_WPA       (1<<10)
 #define WIFI_LOG_SUBMODULE_WPS       (1<<11)
-
+#define WIFI_LOG_SUBMODULE_AMPDU     (1<<12)
+#define WIFI_LOG_SUBMODULE_AMSDU     (1<<13)
+#define WIFI_LOG_SUBMODULE_FRAG      (1<<14)
 /**
   * @brief     Set WIFI received TCP/IP data cache ram type
   *

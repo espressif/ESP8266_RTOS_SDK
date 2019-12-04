@@ -14,7 +14,11 @@
 
 #include "esp_heap_caps.h"
 
+#define HEAP_REGION_IRAM_MIN 512
+#define HEAP_REGION_IRAM_MAX 0x00010000
+
 heap_region_t g_heap_region[HEAP_REGIONS_MAX];
+
 
 /**
  * @brief Initialize the capability-aware heap allocator.
@@ -22,18 +26,24 @@ heap_region_t g_heap_region[HEAP_REGIONS_MAX];
 void heap_caps_init(void)
 {
     extern char _bss_end;
+    size_t heap_region_num = 0;
 
-#ifndef CONFIG_SOC_FULL_ICACHE
+#ifndef CONFIG_HEAP_DISABLE_IRAM
     extern char _iram_end;
+    const size_t iram_size = 0x40100000 + CONFIG_SOC_IRAM_SIZE - ((size_t)&_iram_end);
 
-    g_heap_region[0].start_addr = (uint8_t *)&_iram_end;
-    g_heap_region[0].total_size = ((size_t)(0x4010C000 - (uint32_t)&_iram_end));
-    g_heap_region[0].caps = MALLOC_CAP_32BIT;
+    if (iram_size > HEAP_REGION_IRAM_MIN && iram_size < HEAP_REGION_IRAM_MAX) {
+        g_heap_region[heap_region_num].start_addr = (uint8_t *)&_iram_end;
+        g_heap_region[heap_region_num].total_size = iram_size;
+        g_heap_region[heap_region_num].caps = MALLOC_CAP_32BIT;
+        heap_region_num++;
+    }
 #endif
 
-    g_heap_region[HEAP_REGIONS_MAX - 1].start_addr = (uint8_t *)&_bss_end;
-    g_heap_region[HEAP_REGIONS_MAX - 1].total_size = ((size_t)(0x40000000 - (uint32_t)&_bss_end));
-    g_heap_region[HEAP_REGIONS_MAX - 1].caps = MALLOC_CAP_8BIT | MALLOC_CAP_32BIT | MALLOC_CAP_DMA;
+    g_heap_region[heap_region_num].start_addr = (uint8_t *)&_bss_end;
+    g_heap_region[heap_region_num].total_size = ((size_t)(0x40000000 - (uint32_t)&_bss_end));
+    g_heap_region[heap_region_num].caps = MALLOC_CAP_8BIT | MALLOC_CAP_32BIT | MALLOC_CAP_DMA;
+    heap_region_num++;
 
-    esp_heap_caps_init_region(g_heap_region, HEAP_REGIONS_MAX);
+    esp_heap_caps_init_region(g_heap_region, heap_region_num);
 }

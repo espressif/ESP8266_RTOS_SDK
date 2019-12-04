@@ -136,7 +136,7 @@ When the example starts up, it will print "ota: Starting OTA example..." then:
 
 * Check whether your PC can ping the ESP8266 at its IP, and make sure that the IP, AP and other configuration settings are correct in menuconfig.
 * Check if there is any firewall software on the PC that prevents incoming connections.
-* Check whether you can see the configured file (default project_template.ota.bin) when browsing the file listing at http://127.0.0.1/
+* Check whether you can see the configured file (default hello_world.ota.bin) when browsing the file listing at http://127.0.0.1/
 * If you have another PC or a phone, try viewing the file listing from the separate host.
 
 ## Error "ota_begin error err=0x104"

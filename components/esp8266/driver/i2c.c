@@ -109,14 +109,21 @@ static i2c_obj_t *p_i2c_obj[I2C_NUM_MAX] = {0};
 static i2c_config_t *i2c_config[I2C_NUM_MAX] = {NULL};
 static i2c_last_state_t *i2c_last_state[I2C_NUM_MAX] = {NULL};
 
-static void i2c_master_set_dc(i2c_port_t i2c_num, uint8_t sda, uint8_t scl)
+static inline void i2c_master_set_dc(i2c_port_t i2c_num, uint8_t sda, uint8_t scl)
 {
+    uint32_t i = 0;
+    uint32_t clk_stretch_tick = i2c_config[i2c_num]->clk_stretch_tick;
+    gpio_set_level(i2c_config[i2c_num]->sda_io_num, sda & 0x1);
+    gpio_set_level(i2c_config[i2c_num]->scl_io_num, scl & 0x1);
+    if ((i2c_last_state[i2c_num]->scl == 0) && ((scl & 0x1) == 1)) {
+        // An I2C slave is allowed to hold down the clock if it needs to reduce the bus speed. The master, on the other hand, is required to read back the clock signal after releasing it to the high state and wait until the line has actually gone high.
+        while (gpio_get_level(i2c_config[i2c_num]->scl_io_num) == 0 && (i++) < clk_stretch_tick); // Clock stretching
+    }
     i2c_last_state[i2c_num]->val = ((sda & 0x1) << 1) | (scl & 0x1);
-    gpio_set_level(i2c_config[i2c_num]->sda_io_num, i2c_last_state[i2c_num]->sda);
-    gpio_set_level(i2c_config[i2c_num]->scl_io_num, i2c_last_state[i2c_num]->scl);
+
 }
 
-static uint8_t i2c_master_get_dc(i2c_port_t i2c_num)
+static inline uint8_t i2c_master_get_dc(i2c_port_t i2c_num)
 {
     uint8_t sda_out;
     sda_out = gpio_get_level(i2c_config[i2c_num]->sda_io_num);

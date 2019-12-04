@@ -144,12 +144,12 @@ Python packages required by ESP8266\_RTOS\_SDK are located in the ``$IDF_PATH/re
 Start a Project
 ===============
 
-Now you are ready to prepare your application for ESP8266. To start off quickly, we will use :example:`get-started/project_template` project from :idf:`examples` directory in IDF.
+Now you are ready to prepare your application for ESP8266. To start off quickly, we will use :example:`get-started/hello_world` project from :idf:`examples` directory in IDF.
 
-Copy :example:`get-started/project_template` to ``~/esp`` directory::
+Copy :example:`get-started/hello_world` to ``~/esp`` directory::
 
     cd ~/esp
-    cp -r $IDF_PATH/examples/get-started/project_template .
+    cp -r $IDF_PATH/examples/get-started/hello_world .
 
 You can also find a range of example projects under the :idf:`examples` directory in ESP-IDF. These example project directories can be copied in the same way as presented above, to begin your own projects.
 
@@ -171,9 +171,9 @@ You are almost there. To be able to proceed further, connect ESP8266 board to PC
 Configure
 =========
 
-Being in terminal window, go to directory of ``project_template`` application by typing ``cd ~/esp/project_template``. Then start project configuration utility ``menuconfig``::
+Being in terminal window, go to directory of ``hello_world`` application by typing ``cd ~/esp/hello_world``. Then start project configuration utility ``menuconfig``::
 
-    cd ~/esp/project_template
+    cd ~/esp/hello_world
     make menuconfig
 
 If previous steps have been done correctly, the following menu will be displayed: 
@@ -245,7 +245,7 @@ This will compile the application and all the ESP8266\_RTOS\_SDK components, gen
     Leaving...
     Hard resetting via RTS pin...
 
-If there are no issues, at the end of build process, you should see messages describing progress of loading process. Finally, the end module will be reset and "project_template" application will start.
+If there are no issues, at the end of build process, you should see messages describing progress of loading process. Finally, the end module will be reset and "hello_world" application will start.
 
 If you'd like to use the Eclipse IDE instead of running ``make``, check out the :doc:`Eclipse guide <eclipse-setup>`.
 
@@ -255,7 +255,7 @@ If you'd like to use the Eclipse IDE instead of running ``make``, check out the 
 Monitor
 =======
 
-To see if "project_template" application is indeed running, type ``make monitor``.
+To see if "hello_world" application is indeed running, type ``make monitor``.
 
     $ make monitor
     MONITOR

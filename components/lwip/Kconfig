@@ -11,6 +11,7 @@ config LWIP_HIGH_THROUGHPUT
     select TCP_HIGH_SPEED_RETRANSMISSION
     select SOC_FULL_ICACHE
     select WIFI_TX_RATE_SEQUENCE_FROM_HIGH
+    select HEAP_DISABLE_IRAM
     help
         Enable this option, also enable "TCP_QUEUE_OOSEQ", "TCP_HIGH_SPEED_RETRANSMISSION" and
         "SOC_FULL_ICACHE", so lwip should cache TCP message received in disorder sequence and
@@ -44,6 +45,23 @@ config LWIP_ARP_MAXAGE
     int "The time an ARP entry stays valid after its last update"
     range 100 65535
     default 300
+
+config LWIP_ESP_GRATUITOUS_ARP
+    bool "Send gratuitous ARP periodically"
+    default n
+    help
+        Enable this option allows to send gratuitous ARP periodically.
+
+        This option solve the compatibility issues.If the ARP table of the AP is old, and the AP
+        doesn't send ARP request to update it's ARP table, this will lead to the STA sending IP packet fail.
+        Thus we send gratuitous ARP periodically to let AP update it's ARP table.
+
+config LWIP_GARP_TMR_INTERVAL
+    int "GARP timer interval(seconds)"
+    default 60
+    depends on LWIP_ESP_GRATUITOUS_ARP
+    help
+        Set the timer interval for gratuitous ARP. The default value is 60s
 
 endmenu # LWIP ARP
 
@@ -742,6 +760,11 @@ config LWIP_THREAD_SAFE_DEBUG
 
 config LWIP_PBUF_CACHE_DEBUG
     bool "Enable debugging for LWIP pbuf cache."
+    depends on LWIP_DEBUG
+    default n
+
+config LWIP_TCP_TXRX_PBUF_DEBUG
+    bool "Enable debugging for TCP TX/RX data."
     depends on LWIP_DEBUG
     default n
 

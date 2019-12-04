@@ -23,6 +23,8 @@ else()
 
     set(srcs
         "source/chip_boot.c"
+        "source/backtrace.c"
+        "source/esp_sleep.c"
         "source/esp_err_to_name.c"
         "source/esp_timer.c"
         "source/esp_wifi_os_adapter.c"
@@ -59,7 +61,7 @@ else()
     target_link_libraries(${COMPONENT_LIB} PUBLIC "-L ${CMAKE_CURRENT_SOURCE_DIR}/lib" "-lstdc++")
 
     if(NOT CONFIG_NO_BLOBS)
-        set(blobs "gcc" "hal" "core" "net80211" "phy" "pp" "smartconfig" "ssc" "wpa" "espnow" "wps")
+        set(blobs "gcc" "hal" "core" "net80211" "phy" "clk" "pp" "smartconfig" "ssc" "wpa" "espnow" "wps")
         foreach(blob ${blobs})
             add_library(${blob} STATIC IMPORTED)
             set_property(TARGET ${blob} PROPERTY IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/lib/lib${blob}.a)

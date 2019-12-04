@@ -29,6 +29,8 @@ void phy_afterwake_set_rfoption(uint8_t);
 void write_data_to_rtc(uint8_t *);
 
 void get_data_from_rtc(uint8_t *);
+int register_chipv6_phy(uint8_t* );
+void phy_disable_agc();
 
 uint8_t chip_init(uint8_t* init_data, uint8_t *mac, uint32_t uart_baudrate);
 

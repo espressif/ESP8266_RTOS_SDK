@@ -41,6 +41,8 @@
 
 #include "esp_attr.h"
 #include "esp_libc.h"
+#include "esp_task_wdt.h"
+#include "esp_sleep.h"
 
 #include "esp8266/eagle_soc.h"
 #include "rom/ets_sys.h"
@@ -57,14 +59,14 @@ uint32_t cpu_sr;
 
 uint32_t _xt_tick_divisor;
 
-int __g_is_task_overflow;
-
 /* Each task maintains its own interrupt status in the critical nesting
 variable. */
 static uint32_t uxCriticalNesting = 0;
 
-esp_tick_t g_cpu_ticks = 0;
-uint64_t g_os_ticks = 0;
+uint32_t g_esp_boot_ccount;
+uint64_t g_esp_os_ticks;
+uint64_t g_esp_os_us;
+uint64_t g_esp_os_cpu_clk;
 
 void vPortEnterCritical(void);
 void vPortExitCritical(void);
@@ -134,20 +136,41 @@ void esp_increase_tick_cnt(const TickType_t ticks)
 
     flag = soc_save_local_irq();
 
-    g_cpu_ticks = soc_get_ticks();
-    g_os_ticks += ticks;
+    g_esp_os_ticks += ticks;
 
     soc_restore_local_irq(flag);
 }
 
-void TASK_SW_ATTR xPortSysTickHandle(void *p)
+void IRAM_ATTR xPortSysTickHandle(void *p)
 {
-    const uint32_t cpu_clk_cnt = soc_get_ccount() + _xt_tick_divisor;
+    uint32_t us;
+    uint32_t ticks;
+    uint32_t ccount;
 
-    soc_set_ccompare(cpu_clk_cnt);
+    /**
+     * System or application may close interrupt too long, such as the operation of read/write/erase flash.
+     * And then the "ccount" value may be overflow.
+     *
+     * So add code here to calibrate system time.
+     */
+    ccount = soc_get_ccount();
+    us = ccount / g_esp_ticks_per_us;
+  
+    g_esp_os_us += us;
+    g_esp_os_cpu_clk += ccount;
 
-    g_cpu_ticks = soc_get_ticks();
-    g_os_ticks++;
+    soc_set_ccount(0);
+    soc_set_ccompare(_xt_tick_divisor);
+
+    ticks = us / 1000 / portTICK_PERIOD_MS;
+    if (!ticks) {
+        ticks = 1;
+    }
+
+    g_esp_os_ticks += ticks;
+    if (ticks > 1) {
+        vTaskStepTick(ticks - 1);
+    }
 
     if (xTaskIncrementTick() != pdFALSE) {
         vTaskSwitchContext();
@@ -186,12 +209,11 @@ portBASE_TYPE xPortStartScheduler(void)
     /* Initialize system tick timer interrupt and schedule the first tick. */
     _xt_tick_divisor = xtbsp_clock_freq_hz() / XT_TICK_PER_SEC;
 
+    g_esp_boot_ccount = soc_get_ccount();
+    soc_set_ccount(0);
     _xt_tick_timer_init();
 
     vTaskSwitchContext();
-
-    /* Get ticks before RTOS starts */
-    g_cpu_ticks = soc_get_ticks();
 
     /* Restore the context of the first task that is going to run. */
     _xt_enter_first_task();
@@ -341,7 +363,6 @@ int xPortInIsrContext(void)
 void __attribute__((weak, noreturn)) vApplicationStackOverflowHook(xTaskHandle xTask, const char *pcTaskName)
 {
     ets_printf("***ERROR*** A stack overflow in task %s has been detected.\r\n", pcTaskName);
-    __g_is_task_overflow = 1;
     abort();
 }
 

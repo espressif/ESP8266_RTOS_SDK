@@ -42,7 +42,7 @@ extern "C" {
 #include    "xtensa_rtos.h"
 
 #if defined(configUSE_NEWLIB_REENTRANT) && configUSE_NEWLIB_REENTRANT == 1
-#if defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NORMAL) || defined(CONFIG_NEWLIB_LIBRARY_LEVEL_NANO)
+#ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER
 #include "esp_newlib.h"
 
 #define _impure_ptr _global_impure_ptr
@@ -207,6 +207,15 @@ void esp_increase_tick_cnt(const TickType_t ticks);
 
 extern void esp_vApplicationIdleHook( void );
 extern void esp_vApplicationTickHook( void );
+
+extern const uint32_t g_esp_ticks_per_us;
+
+/*
+ * @brief Get FreeRTOS system idle ticks
+ *
+ * @return idle ticks
+ */
+TickType_t prvGetExpectedIdleTime(void);
 
 #ifdef __cplusplus
 }

@@ -26,7 +26,9 @@
 #define _EAGLE_SOC_H_
 
 #ifndef __ASSEMBLER__
+#include "sdkconfig.h"
 #include <stdint.h>
+#include <stddef.h>
 #include "driver/soc.h"
 #endif
 
@@ -96,6 +98,18 @@
 #define APB_CLK_FREQ                CPU_CLK_FREQ
 #define UART_CLK_FREQ               APB_CLK_FREQ
 #define TIMER_CLK_FREQ              (APB_CLK_FREQ >> 8) // divided by 256
+
+#define FREQ_1MHZ                   (1000 * 1000)
+#define FREQ_1KHZ                   (1000)
+
+#define CPU_FREQ_160MHZ             (160 * 1000 * 1000)
+#define CPU_FREQ_80MHz              (80 * 1000 * 1000)
+
+#define CPU_160M_TICKS_PRT_MS       (CPU_FREQ_160MHZ / FREQ_1MHZ)
+#define CPU_80M_TICKS_PRT_MS        (CPU_FREQ_80MHz / FREQ_1KHZ)
+
+#define CPU_160M_TICKS_PRT_US       (CPU_FREQ_160MHZ / FREQ_1MHZ)
+#define CPU_80M_TICKS_PRT_US        (CPU_FREQ_80MHz / FREQ_1MHZ)
 //}}
 
 //Peripheral device base address define{{
@@ -180,10 +194,10 @@
 #define DRAM_SIZE                       (96 * 1024)
 
 #define IRAM_BASE                       (0x40100000)
-#define IRAM_SIZE                       (48 * 1024)
+#define IRAM_SIZE                       (CONFIG_SOC_IRAM_SIZE)
 
 #define FLASH_BASE                      (0x40200000)
-#define FLASH_SIZE                      (2 * 1024 * 1024)
+#define FLASH_SIZE                      (1 * 1024 * 1024)
 
 #define RTC_SYS_BASE                    (0x60001000)
 #define RTC_SYS_SIZE                    (0x200)

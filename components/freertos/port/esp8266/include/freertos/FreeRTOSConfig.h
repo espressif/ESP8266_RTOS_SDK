@@ -158,8 +158,11 @@ NVIC value of 255. */
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
 
 #ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
+#ifndef __ASSEMBLER__
+extern uint64_t g_esp_os_cpu_clk;
+#define portGET_RUN_TIME_COUNTER_VALUE()  g_esp_os_cpu_clk
+#endif
 /* Fine resolution time */
-#define portGET_RUN_TIME_COUNTER_VALUE()  xthal_get_ccount()
 #elif defined(CONFIG_FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER)
 /* Coarse resolution time (us) */
 #ifndef __ASSEMBLER__

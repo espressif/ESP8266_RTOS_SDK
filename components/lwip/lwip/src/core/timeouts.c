@@ -80,6 +80,9 @@ const struct lwip_cyclic_timer lwip_cyclic_timers[] = {
 #endif /* IP_REASSEMBLY */
 #if LWIP_ARP
   {ARP_TMR_INTERVAL, HANDLER(etharp_tmr)},
+#if ESP_GRATUITOUS_ARP
+  {GARP_TMR_INTERVAL, HANDLER(garp_tmr)},
+#endif /* ESP_GRATUITOUS_ARP */
 #endif /* LWIP_ARP */
 #if LWIP_DHCP
   {DHCP_COARSE_TIMER_MSECS, HANDLER(dhcp_coarse_tmr)},
