@@ -7,4 +7,12 @@ config ESP_HTTP_CLIENT_ENABLE_HTTPS
     help
         This option will enable https protocol by linking mbedtls library and initializing SSL transport
 
+config HTTP_BUF_SIZE
+    int "Default HTTP Buffer Size (both send and receive)"
+    default 512
+    range 512 1460
+    help
+        Set HTTP Buffer Size. The larger buffer size will make send and receive more size packet once. 
+
+
 endmenu

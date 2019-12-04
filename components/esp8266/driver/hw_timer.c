@@ -159,7 +159,7 @@ uint32_t hw_timer_get_count_data()
     return frc1.count.data;
 }
 
-static void hw_timer_isr_cb(void* arg)
+static void IRAM_ATTR hw_timer_isr_cb(void* arg)
 {
     if (!frc1.ctrl.reload) {
         frc1.ctrl.en = 0;

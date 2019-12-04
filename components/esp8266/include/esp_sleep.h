@@ -75,14 +75,14 @@ void esp_deep_sleep_set_rf_option(uint8_t option);
   *
   * @return    null
   */
-void esp_wifi_fpm_open(void);
+void esp_wifi_fpm_open(void) __attribute__ ((deprecated));
 
 /**
   * @brief  Disable force sleep function.
   *
   * @return null
   */
-void esp_wifi_fpm_close(void);
+void esp_wifi_fpm_close(void) __attribute__ ((deprecated));
 
 /**
   * @brief     Wake ESP8266 up from MODEM_SLEEP_T force sleep.
@@ -93,7 +93,7 @@ void esp_wifi_fpm_close(void);
   *
   * @return    null
   */
-void esp_wifi_fpm_do_wakeup(void);
+void esp_wifi_fpm_do_wakeup(void) __attribute__ ((deprecated));
 
 /**
   * @brief     Set a callback of waken up from force sleep because of time out.
@@ -110,7 +110,7 @@ void esp_wifi_fpm_do_wakeup(void);
   *
   * @return    null
   */
-void esp_wifi_fpm_set_wakeup_cb(fpm_wakeup_cb cb);
+void esp_wifi_fpm_set_wakeup_cb(fpm_wakeup_cb cb) __attribute__ ((deprecated));
 
 /**
   * @brief     Force ESP8266 enter sleep mode, and it will wake up automatically when time out.
@@ -133,7 +133,7 @@ void esp_wifi_fpm_set_wakeup_cb(fpm_wakeup_cb cb);
   * @return  ESP_ERR_WIFI_PM_MODE_OPEN, fail to sleep, Please call esp_wifi_set_ps(WIFI_PS_NONE) first.
   * @return  ESP_ERR_WIFI_MODE, fail to sleep, Please call esp_wifi_set_mode(WIFI_MODE_NULL) first.
   */
-esp_err_t esp_wifi_fpm_do_sleep(uint32_t sleep_time_in_us);
+esp_err_t esp_wifi_fpm_do_sleep(uint32_t sleep_time_in_us) __attribute__ ((deprecated));
 
 /**
   * @brief     Set sleep type for force sleep function.
@@ -144,14 +144,14 @@ esp_err_t esp_wifi_fpm_do_sleep(uint32_t sleep_time_in_us);
   *
   * @return    null
   */
-void esp_wifi_fpm_set_sleep_type(wifi_sleep_type_t type);
+void esp_wifi_fpm_set_sleep_type(wifi_sleep_type_t type) __attribute__ ((deprecated));
 
 /**
   * @brief  Get sleep type of force sleep function.
   *
   * @return sleep type
   */
-wifi_sleep_type_t esp_wifi_fpm_get_sleep_type(void);
+wifi_sleep_type_t esp_wifi_fpm_get_sleep_type(void) __attribute__ ((deprecated));
 
 /**
   * @brief  Set a GPIO to wake the ESP8266 up from light-sleep mode 
@@ -171,12 +171,12 @@ wifi_sleep_type_t esp_wifi_fpm_get_sleep_type(void);
   *
   * @return   null
   */
-void esp_wifi_enable_gpio_wakeup(uint32_t gpio_num, gpio_int_type_t intr_status);
+void esp_wifi_enable_gpio_wakeup(uint32_t gpio_num, gpio_int_type_t intr_status) __attribute__ ((deprecated));
 
 /**
   * @brief  Disable the function that the GPIO can wake the ESP8266 up from light-sleep mode.
   */
-void esp_wifi_disable_gpio_wakeup(void);
+void esp_wifi_disable_gpio_wakeup(void) __attribute__ ((deprecated));
 
 /**
  * @brief Enable wakeup by timer
