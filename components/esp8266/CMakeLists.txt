@@ -47,11 +47,13 @@ else()
     set(include_dirs "include" "include/driver")
 
     set(priv_requires "wpa_supplicant" "log" "spi_flash" "tcpip_adapter" "esp_ringbuf" "bootloader_support" "nvs_flash" "util")
+    set(fragments linker.lf ld/esp8266_fragments.lf)
 
     idf_component_register(SRCS "${srcs}"
                     INCLUDE_DIRS "${include_dirs}"
                     REQUIRES "${requires}"
                     PRIV_REQUIRES "${priv_requires}"
+                    LDFRAGMENTS "${fragments}"
                     REQUIRED_IDF_TARGETS esp8266)
 
     target_link_libraries(${COMPONENT_LIB} PUBLIC "-L ${CMAKE_CURRENT_SOURCE_DIR}/lib" "-lstdc++")
@@ -73,7 +75,9 @@ else()
         endforeach()
     endif()
     target_linker_script(${COMPONENT_LIB} INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/esp8266_out.ld")
-    target_linker_script(${COMPONENT_LIB} INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/esp8266_common_out.ld")
+
+    target_linker_script(${COMPONENT_LIB} INTERFACE "${CMAKE_CURRENT_LIST_DIR}/ld/esp8266.project.ld.in" 
+                        PROCESS "${CMAKE_CURRENT_BINARY_DIR}/ld/esp8266.project.ld")
 
     target_linker_script(${COMPONENT_LIB} INTERFACE "ld/esp8266.rom.ld")
     target_linker_script(${COMPONENT_LIB} INTERFACE "ld/esp8266.peripherals.ld")
@@ -93,13 +97,7 @@ else()
         MAIN_DEPENDENCY ${LD_DIR}/esp8266.ld ${SDKCONFIG_H}
         COMMENT "Generating memory map linker script..."
         VERBATIM)
-    add_custom_command(
-        OUTPUT esp8266_common_out.ld
-        COMMAND "${CMAKE_C_COMPILER}" -C -P -x c -E -o esp8266_common_out.ld -I ${CONFIG_DIR} ${LD_DIR}/esp8266.common.ld
-        MAIN_DEPENDENCY ${LD_DIR}/esp8266.common.ld ${SDKCONFIG_H}
-        COMMENT "Generating section linker script..."
-        VERBATIM)
-    add_custom_target(esp8266_linker_script DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/esp8266_out.ld" "${CMAKE_CURRENT_BINARY_DIR}/esp8266_common_out.ld")
+    add_custom_target(esp8266_linker_script DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/esp8266_out.ld")
     add_dependencies(${COMPONENT_LIB} esp8266_linker_script)
 
     if(CONFIG_ESP8266_PHY_INIT_DATA_IN_PARTITION)
