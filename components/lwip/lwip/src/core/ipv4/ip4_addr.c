@@ -160,6 +160,12 @@ ip4addr_aton(const char *cp, ip4_addr_t *addr)
   u32_t parts[4];
   u32_t *pp = parts;
 
+#if ESP_IP4_ATON
+  char ch;
+  unsigned long cutoff;
+  int cutlim;
+#endif
+
   c = *cp;
   for (;;) {
     /*
@@ -181,6 +187,27 @@ ip4addr_aton(const char *cp, ip4_addr_t *addr)
         base = 8;
       }
     }
+
+#if ESP_IP4_ATON
+    cutoff =(unsigned long)0xffffffff / (unsigned long)base;
+    cutlim =(unsigned long)0xffffffff % (unsigned long)base;
+    for (;;) {
+      if (isdigit(c)) {
+    	ch = (int)(c - '0');
+    	if (val > cutoff || (val == cutoff && ch > cutlim))
+    		return (0);
+        val = (val * base) + (int)(c - '0');
+        c = *++cp;
+      } else if (base == 16 && isxdigit(c)) {
+    	ch = (int)(c + 10 - (islower(c) ? 'a' : 'A'));
+    	if (val > cutoff || (val == cutoff && ch > cutlim))
+    		return (0);
+    	val = (val << 4) | (int)(c + 10 - (islower(c) ? 'a' : 'A'));
+        c = *++cp;
+      } else
+        break;
+    }
+#else
     for (;;) {
       if (isdigit(c)) {
         val = (val * base) + (u32_t)(c - '0');
@@ -192,6 +219,8 @@ ip4addr_aton(const char *cp, ip4_addr_t *addr)
         break;
       }
     }
+#endif
+
     if (c == '.') {
       /*
        * Internet format:

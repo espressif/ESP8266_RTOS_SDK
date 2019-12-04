@@ -30,24 +30,24 @@
 #include "internal/phy_init_data.h"
 #include "phy.h"
 
-static const char *TAG = "phy_init";
+static const char* TAG = "phy_init";
 
-static uint8_t phy_check_calibration_data(uint8_t *rf_cal_data)
+static uint8_t phy_check_calibration_data(uint8_t* rf_cal_data)
 {
 #define CHECK_NUM   26
 #define CHIP_ID_L   24
 #define CHIP_ID_H   25
 
     uint8_t i;
-    uint32_t *cal_data_word = (uint32_t *)rf_cal_data;
+    uint32_t* cal_data_word = (uint32_t*)rf_cal_data;
     uint32_t check_sum = 0;
 
     /* L: flag_1[79:76], version[59:56], mac_map[55:48], mac_l[47:24] */
     uint32_t chip_id_l = ((REG_READ(0x3FF00058) & 0xF000) << 16) |
-            (REG_READ(0x3ff00054) & 0xFFFFFFF);
+                         (REG_READ(0x3ff00054) & 0xFFFFFFF);
     /* H: mac_l[31:24], mac_h[119:96] */
     uint32_t chip_id_h = (REG_READ(0x3FF00050) & 0xFF000000) |
-            (REG_READ(0x3ff0005C) & 0xFFFFFF);
+                         (REG_READ(0x3ff0005C) & 0xFFFFFF);
 
     cal_data_word[CHIP_ID_L] = chip_id_l;
     cal_data_word[CHIP_ID_H] = chip_id_h;
@@ -63,12 +63,12 @@ static uint8_t phy_check_calibration_data(uint8_t *rf_cal_data)
 /* ToDo: use rx_gain_dc_table in nvs, need to modify internal libraries */
 uint32_t rx_gain_dc_table[125];
 
-esp_err_t esp_phy_rf_init(const esp_phy_init_data_t *init_data, esp_phy_calibration_mode_t mode,
-                          esp_phy_calibration_data_t *calibration_data, phy_rf_module_t module)
+esp_err_t esp_phy_rf_init(const esp_phy_init_data_t* init_data, esp_phy_calibration_mode_t mode,
+                          esp_phy_calibration_data_t* calibration_data, phy_rf_module_t module)
 {
     esp_err_t status = ESP_OK;
     uint8_t sta_mac[6];
-    uint8_t *local_init_data = calloc(1, 256);
+    uint8_t* local_init_data = calloc(1, 256);
 #ifdef CONFIG_CONSOLE_UART_BAUDRATE
     const uint32_t uart_baudrate = CONFIG_CONSOLE_UART_BAUDRATE;
 #else
@@ -77,10 +77,10 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t *init_data, esp_phy_calibrat
 
     memcpy(local_init_data, init_data->params, 128);
 
-    extern uint32_t *phy_rx_gain_dc_table;
+    extern uint32_t* phy_rx_gain_dc_table;
     phy_rx_gain_dc_table = calibration_data->rx_gain_dc_table;
     uint8_t cal_data_check = phy_check_calibration_data(calibration_data->rf_cal_data) ||
-            phy_check_data_table(phy_rx_gain_dc_table, 125, 1);
+                             phy_check_data_table(phy_rx_gain_dc_table, 125, 1);
 
     phy_afterwake_set_rfoption(1);
 
@@ -90,8 +90,8 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t *init_data, esp_phy_calibrat
 
     esp_efuse_mac_get_default(sta_mac);
     chip_init(local_init_data, sta_mac, uart_baudrate);
-    ESP_LOGI(TAG, "phy ver: %d_%d", (READ_PERI_REG(0x6000107C)>>16)&0xFFF, READ_PERI_REG(0x6000107C)>>28);
-    get_data_from_rtc((uint8_t *)calibration_data);
+    ESP_LOGI(TAG, "phy ver: %d_%d", (READ_PERI_REG(0x6000107C) >> 16) & 0xFFF, READ_PERI_REG(0x6000107C) >> 28);
+    get_data_from_rtc((uint8_t*)calibration_data);
 
     memcpy(rx_gain_dc_table, calibration_data->rx_gain_dc_table, 4 * 125);
     phy_rx_gain_dc_table = rx_gain_dc_table;
@@ -101,9 +101,11 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t *init_data, esp_phy_calibrat
     if (cal_data_check == ESP_CAL_DATA_CHECK_FAIL) {
 #ifdef CONFIG_ESP_PHY_CALIBRATION_AND_DATA_STORAGE
         ESP_LOGW(TAG, "saving new calibration data because of checksum failure, mode(%d)", mode);
+
         if (mode != PHY_RF_CAL_FULL) {
             esp_phy_store_cal_data_to_nvs(calibration_data);
         }
+
 #endif
     }
 
@@ -121,9 +123,9 @@ esp_err_t esp_phy_rf_deinit(phy_rf_module_t module)
 #if CONFIG_ESP_PHY_INIT_DATA_IN_PARTITION
 #include "esp_partition.h"
 
-const esp_phy_init_data_t *esp_phy_get_init_data()
+const esp_phy_init_data_t* esp_phy_get_init_data()
 {
-    const esp_partition_t *partition = esp_partition_find_first(
+    const esp_partition_t* partition = esp_partition_find_first(
                                            ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_PHY, NULL);
 
     if (partition == NULL) {
@@ -134,7 +136,7 @@ const esp_phy_init_data_t *esp_phy_get_init_data()
     ESP_LOGD(TAG, "loading PHY init data from partition at offset 0x%x", partition->address);
     size_t init_data_store_length = sizeof(phy_init_magic_pre) +
                                     sizeof(esp_phy_init_data_t) + sizeof(phy_init_magic_post);
-    uint8_t *init_data_store = (uint8_t *) malloc(init_data_store_length);
+    uint8_t* init_data_store = (uint8_t*) malloc(init_data_store_length);
 
     if (init_data_store == NULL) {
         ESP_LOGE(TAG, "failed to allocate memory for PHY init data");
@@ -156,25 +158,25 @@ const esp_phy_init_data_t *esp_phy_get_init_data()
     }
 
     ESP_LOGD(TAG, "PHY data partition validated");
-    return (const esp_phy_init_data_t *)(init_data_store + sizeof(phy_init_magic_pre));
+    return (const esp_phy_init_data_t*)(init_data_store + sizeof(phy_init_magic_pre));
 }
 
-void esp_phy_release_init_data(const esp_phy_init_data_t *init_data)
+void esp_phy_release_init_data(const esp_phy_init_data_t* init_data)
 {
-    free((uint8_t *) init_data - sizeof(phy_init_magic_pre));
+    free((uint8_t*) init_data - sizeof(phy_init_magic_pre));
 }
 
 #else // CONFIG_ESP_PHY_INIT_DATA_IN_PARTITION
 
 // phy_init_data.h will declare static 'phy_init_data' variable initialized with default init data
 
-const esp_phy_init_data_t *esp_phy_get_init_data()
+const esp_phy_init_data_t* esp_phy_get_init_data()
 {
     ESP_LOGD(TAG, "loading PHY init data from application binary");
     return &phy_init_data;
 }
 
-void esp_phy_release_init_data(const esp_phy_init_data_t *init_data)
+void esp_phy_release_init_data(const esp_phy_init_data_t* init_data)
 {
     // no-op
 }
@@ -182,17 +184,17 @@ void esp_phy_release_init_data(const esp_phy_init_data_t *init_data)
 
 
 // PHY calibration data handling functions
-static const char *PHY_NAMESPACE = "phy";
-static const char *PHY_CAL_DATA_KEY = "cal_data";
-static const char *PHY_RX_GAIN_DC_TABLE_KEY = "dc_table";
+static const char* PHY_NAMESPACE = "phy";
+static const char* PHY_CAL_DATA_KEY = "cal_data";
+static const char* PHY_RX_GAIN_DC_TABLE_KEY = "dc_table";
 
 static esp_err_t load_cal_data_from_nvs_handle(nvs_handle handle,
-        esp_phy_calibration_data_t *out_cal_data);
+        esp_phy_calibration_data_t* out_cal_data);
 
 static esp_err_t store_cal_data_to_nvs_handle(nvs_handle handle,
-        const esp_phy_calibration_data_t *cal_data);
+        const esp_phy_calibration_data_t* cal_data);
 
-esp_err_t esp_phy_load_cal_data_from_nvs(esp_phy_calibration_data_t *out_cal_data)
+esp_err_t esp_phy_load_cal_data_from_nvs(esp_phy_calibration_data_t* out_cal_data)
 {
     nvs_handle handle;
     esp_err_t err = nvs_open(PHY_NAMESPACE, NVS_READONLY, &handle);
@@ -210,7 +212,7 @@ esp_err_t esp_phy_load_cal_data_from_nvs(esp_phy_calibration_data_t *out_cal_dat
     return err;
 }
 
-esp_err_t esp_phy_store_cal_data_to_nvs(const esp_phy_calibration_data_t *cal_data)
+esp_err_t esp_phy_store_cal_data_to_nvs(const esp_phy_calibration_data_t* cal_data)
 {
     nvs_handle handle;
     esp_err_t err = nvs_open(PHY_NAMESPACE, NVS_READWRITE, &handle);
@@ -226,7 +228,7 @@ esp_err_t esp_phy_store_cal_data_to_nvs(const esp_phy_calibration_data_t *cal_da
 }
 
 static esp_err_t load_cal_data_from_nvs_handle(nvs_handle handle,
-        esp_phy_calibration_data_t *out_cal_data)
+        esp_phy_calibration_data_t* out_cal_data)
 {
     esp_err_t err;
 
@@ -261,7 +263,7 @@ static esp_err_t load_cal_data_from_nvs_handle(nvs_handle handle,
 }
 
 static esp_err_t store_cal_data_to_nvs_handle(nvs_handle handle,
-        const esp_phy_calibration_data_t *cal_data)
+        const esp_phy_calibration_data_t* cal_data)
 {
     esp_err_t err;
 
@@ -290,15 +292,15 @@ static esp_err_t store_cal_data_to_nvs_handle(nvs_handle handle,
 
 void esp_phy_load_cal_and_init(phy_rf_module_t module)
 {
-    esp_phy_calibration_data_t *cal_data =
-        (esp_phy_calibration_data_t *) calloc(sizeof(esp_phy_calibration_data_t), 1);
+    esp_phy_calibration_data_t* cal_data =
+        (esp_phy_calibration_data_t*) calloc(sizeof(esp_phy_calibration_data_t), 1);
 
     if (cal_data == NULL) {
         ESP_LOGE(TAG, "failed to allocate memory for RF calibration data");
         abort();
     }
 
-    const esp_phy_init_data_t *init_data = esp_phy_get_init_data();
+    const esp_phy_init_data_t* init_data = esp_phy_get_init_data();
 
     if (init_data == NULL) {
         ESP_LOGE(TAG, "failed to obtain PHY init data");
@@ -334,4 +336,27 @@ void esp_phy_load_cal_and_init(phy_rf_module_t module)
     esp_phy_release_init_data(init_data);
 
     free(cal_data); // PHY maintains a copy of calibration data, so we can free this
+}
+
+uint16_t esp_wifi_get_vdd33(void)
+{
+    if (phy_init_data.params[107] != 0xFF) {
+        ESP_LOGE(TAG, "Please set VDD33 const to 0xff");
+        return 0xFFFF;
+    }
+
+    extern uint16_t phy_get_vdd33();
+    uint16_t ret = phy_get_vdd33();
+
+    if (ret != 0xFFFF) {
+        ret = ret * 12 / 11;
+    }
+
+    return ret;
+}
+
+void esp_wifi_set_max_tx_power_via_vdd33(uint16_t vdd33)
+{
+    extern void phy_vdd33_set_tpw(uint16_t vdd33);
+    phy_vdd33_set_tpw(vdd33);
 }

@@ -34,7 +34,8 @@
 
 #include "lwip/sockets.h"
 
-#ifdef CONFIG_USING_ESP_VFS
+#if !LWIP_POSIX_SOCKETS_IO_NAMES
 #include <unistd.h>
 #include <fcntl.h>
-#endif
+#include <sys/ioctl.h>
+#endif /* !LWIP_POSIX_SOCKETS_IO_NAMES */

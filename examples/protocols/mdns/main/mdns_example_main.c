@@ -46,6 +46,9 @@ static bool auto_reconnect = true;
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
+    /* For accessing reason codes in case of disconnection */
+    system_event_info_t *info = &event->event_info;
+
     switch(event->event_id) {
     case SYSTEM_EVENT_STA_START:
         esp_wifi_connect();
@@ -64,6 +67,11 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         /* This is a workaround as ESP32 WiFi libs don't currently
            auto-reassociate. */
         if (auto_reconnect) {
+            ESP_LOGE(TAG, "Disconnect reason : %d", info->disconnected.reason);
+            if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
+                /*Switch to 802.11 bgn mode */
+                esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+            }
             esp_wifi_connect();
         }
         xEventGroupClearBits(wifi_event_group, IP4_CONNECTED_BIT | IP6_CONNECTED_BIT);
@@ -137,13 +145,13 @@ static void mdns_print_results(mdns_result_t * results){
         if(r->txt_count){
             printf("  TXT : [%u] ", r->txt_count);
             for(t=0; t<r->txt_count; t++){
-                printf("%s=%s; ", r->txt[t].key, r->txt[t].value);
+                printf("%s=%s; ", r->txt[t].key, r->txt[t].value?r->txt[t].value:"NULL");
             }
             printf("\n");
         }
         a = r->addr;
         while(a){
-            if(a->addr.type == MDNS_IP_PROTOCOL_V6){
+            if(a->addr.type == IPADDR_TYPE_V6){
                 printf("  AAAA: " IPV6STR "\n", IPV62STR(a->addr.u_addr.ip6));
             } else {
                 printf("  A   : " IPSTR "\n", IP2STR(&(a->addr.u_addr.ip4)));
@@ -162,7 +170,7 @@ static void query_mdns_service(const char * service_name, const char * proto)
     mdns_result_t * results = NULL;
     esp_err_t err = mdns_query_ptr(service_name, proto, 3000, 20,  &results);
     if(err){
-        ESP_LOGE(TAG, "Query Failed");
+        ESP_LOGE(TAG, "Query Failed: %s", esp_err_to_name(err));
         return;
     }
     if(!results){
@@ -184,10 +192,10 @@ static void query_mdns_host(const char * host_name)
     esp_err_t err = mdns_query_a(host_name, 2000,  &addr);
     if(err){
         if(err == ESP_ERR_NOT_FOUND){
-            ESP_LOGW(TAG, "Host was not found!");
+            ESP_LOGW(TAG, "%s: Host was not found!", esp_err_to_name(err));
             return;
         }
-        ESP_LOGE(TAG, "Query Failed");
+        ESP_LOGE(TAG, "Query Failed: %s", esp_err_to_name(err));
         return;
     }
 
