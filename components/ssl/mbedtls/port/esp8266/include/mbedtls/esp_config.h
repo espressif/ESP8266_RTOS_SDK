@@ -275,7 +275,6 @@
  *            digests and ciphers instead.
  *
  */
-//#define MBEDTLS_ARC4_ALT
 //#define MBEDTLS_BLOWFISH_ALT
 //#define MBEDTLS_CAMELLIA_ALT
 //#define MBEDTLS_CCM_ALT
@@ -286,7 +285,6 @@
 //#define MBEDTLS_GCM_ALT
 //#define MBEDTLS_MD2_ALT
 //#define MBEDTLS_MD4_ALT
-//#define MBEDTLS_MD5_ALT
 //#define MBEDTLS_RIPEMD160_ALT
 //#define MBEDTLS_RSA_ALT
 //#define MBEDTLS_XTEA_ALT
@@ -299,6 +297,14 @@
 #define MBEDTLS_SHA1_ALT
 #define MBEDTLS_SHA256_ALT
 #define MBEDTLS_SHA512_ALT
+#endif
+
+#ifdef CONFIG_ESP_MD5
+#define MBEDTLS_MD5_ALT
+#endif
+
+#ifdef CONFIG_ESP_ARC4
+#define MBEDTLS_ARC4_ALT
 #endif
 
 /*
