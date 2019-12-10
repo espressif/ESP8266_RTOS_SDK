@@ -31,7 +31,7 @@ extern "C" {
 
 #include "esp_sha.h"
 
-typedef esp_sha_t mbedtls_sha256_context;
+typedef esp_sha256_t mbedtls_sha256_context;
 
 #endif /* MBEDTLS_SHA256_ALT */
 

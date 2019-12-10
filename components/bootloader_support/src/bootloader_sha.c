@@ -222,11 +222,11 @@ void bootloader_sha256_finish(bootloader_sha256_handle_t handle, uint8_t *digest
 
 // typedef esp_sha_t* bootloader_sha256_handle_t;
 
-static esp_sha_t s_sha256_ctx;
+static esp_sha256_t s_sha256_ctx;
 
 bootloader_sha256_handle_t bootloader_sha256_start()
 {
-    esp_sha_t *ctx = &s_sha256_ctx;
+    esp_sha256_t *ctx = &s_sha256_ctx;
 
     esp_sha256_init(ctx);
 
@@ -235,12 +235,12 @@ bootloader_sha256_handle_t bootloader_sha256_start()
 
 void bootloader_sha256_data(bootloader_sha256_handle_t handle, const void *data, size_t data_len)
 {
-    esp_sha256_update((esp_sha_t *)handle, data, data_len);
+    esp_sha256_update((esp_sha256_t *)handle, data, data_len);
 }
 
 void bootloader_sha256_finish(bootloader_sha256_handle_t handle, uint8_t *digest)
 {
-    esp_sha256_finish((esp_sha_t *)handle, digest);
+    esp_sha256_finish((esp_sha256_t *)handle, digest);
 }
 
 #endif
