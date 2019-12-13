@@ -76,6 +76,7 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t* init_data, esp_phy_calibrat
 #endif
 
     memcpy(local_init_data, init_data->params, 128);
+    memcpy(local_init_data + 128, calibration_data->rf_cal_data, 128);
 
     extern uint32_t* phy_rx_gain_dc_table;
     phy_rx_gain_dc_table = calibration_data->rx_gain_dc_table;
@@ -85,7 +86,10 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t* init_data, esp_phy_calibrat
     phy_afterwake_set_rfoption(1);
 
     if (!cal_data_check) {
+        phy_set_powerup_option(1);
         write_data_to_rtc(calibration_data->rf_cal_data);
+    } else {
+        phy_set_powerup_option(3);
     }
 
     esp_efuse_mac_get_default(sta_mac);

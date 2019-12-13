@@ -26,6 +26,8 @@ uint8_t phy_check_data_table(uint32_t *table, uint8_t, uint8_t);
 
 void phy_afterwake_set_rfoption(uint8_t);
 
+void phy_set_powerup_option(uint8_t);
+
 void write_data_to_rtc(uint8_t *);
 
 void get_data_from_rtc(uint8_t *);

@@ -472,9 +472,12 @@ config ESP_PHY_CALIBRATION_AND_DATA_STORAGE
     default y
     help
         If this option is enabled, NVS will be initialized and calibration data will be loaded from there.
-        PHY calibration will be skipped on deep sleep wakeup. If calibration data is not found, full calibration
-        will be performed and stored in NVS. Normally, only partial calibration will be performed. 
-        If this option is disabled, full calibration will be performed.
+        If calibration data is not found, full calibration will be performed and stored in NVS. Normally,
+        only partial calibration will be performed. If this option is disabled, full calibration will be performed.
+
+        Full calibration needs 170 - 180ms.
+        Partial calibration needs 35 - 40ms.
+        No calibration needs 3.260 - 3.264ms.
 
         If it's easy that your board calibrate bad data, choose 'n'.
         Two cases for example, you should choose 'n':
