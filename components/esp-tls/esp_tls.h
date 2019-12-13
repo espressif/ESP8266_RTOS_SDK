@@ -249,6 +249,28 @@ typedef struct esp_tls_cfg_server {
  * @brief      ESP-TLS Connection Handle 
  */
 typedef struct esp_tls {
+    int sockfd;                                                                 /*!< Underlying socket file descriptor. */
+
+    ssize_t (*_read)(struct esp_tls  *tls, char *data, size_t datalen);          /*!< Callback function for reading data from TLS/SSL
+                                                                                     connection. */
+
+    ssize_t (*_write)(struct esp_tls *tls, const char *data, size_t datalen);    /*!< Callback function for writing data to TLS/SSL
+                                                                                     connection. */
+
+    esp_tls_conn_state_t  conn_state;                                           /*!< ESP-TLS Connection state */
+
+    fd_set rset;                                                                /*!< read file descriptors */
+
+    fd_set wset;                                                                /*!< write file descriptors */
+
+    bool is_tls;                                                                /*!< indicates connection type (TLS or NON-TLS) */
+
+    esp_tls_role_t role;                                                        /*!< esp-tls role
+                                                                                     - ESP_TLS_CLIENT
+                                                                                     - ESP_TLS_SERVER */
+
+    esp_tls_error_handle_t error_handle;                                        /*!< handle to error descriptor */
+
 #ifdef CONFIG_ESP_TLS_USING_MBEDTLS
     mbedtls_ssl_context ssl;                                                    /*!< TLS/SSL context */
  
@@ -282,28 +304,6 @@ typedef struct esp_tls {
     void *priv_ctx;
     void *priv_ssl;
 #endif
-    int sockfd;                                                                 /*!< Underlying socket file descriptor. */
- 
-    ssize_t (*_read)(struct esp_tls  *tls, char *data, size_t datalen);          /*!< Callback function for reading data from TLS/SSL
-                                                                                     connection. */
- 
-    ssize_t (*_write)(struct esp_tls *tls, const char *data, size_t datalen);    /*!< Callback function for writing data to TLS/SSL
-                                                                                     connection. */
-
-    esp_tls_conn_state_t  conn_state;                                           /*!< ESP-TLS Connection state */
-
-    fd_set rset;                                                                /*!< read file descriptors */
-
-    fd_set wset;                                                                /*!< write file descriptors */
-
-    bool is_tls;                                                                /*!< indicates connection type (TLS or NON-TLS) */
-
-    esp_tls_role_t role;                                                        /*!< esp-tls role
-                                                                                     - ESP_TLS_CLIENT
-                                                                                     - ESP_TLS_SERVER */
-
-    esp_tls_error_handle_t error_handle;                                        /*!< handle to error descriptor */
-
 } esp_tls_t;
 
 
