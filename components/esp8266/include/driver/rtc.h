@@ -56,6 +56,11 @@ void rtc_init_clk(uint8_t *init_param);
 void rtc_lightsleep_init(void);
 
 /**
+ * @brief Configure CPU sleep mode
+ */
+void pm_set_sleep_mode(uint32_t mode);
+
+/**
  * @brief Initialize hardware when CPU wakes up from light sleep
  */
 void rtc_wakeup_init(void);
