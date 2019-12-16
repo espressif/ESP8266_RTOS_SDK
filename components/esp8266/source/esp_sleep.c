@@ -21,7 +21,9 @@
 #include "FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/soc.h"
+#include "driver/gpio.h"
 #include "esp8266/timer_struct.h"
+#include "esp8266/gpio_struct.h"
 #include "esp8266/rom_functions.h"
 #include "driver/rtc.h"
 #include "rom/uart.h"
@@ -37,10 +39,11 @@
 #define FRC2_TICKS_PER_US       (5)
 #define FRC2_TICKS_MAX          (UINT32_MAX / 4)
 
-#define SLEEP_MIN_TIME          (1000)
-#define SLEEP_PROC_TIME         (4450)
+#define SLEEP_PROC_TIME         (3072)
 #define WAKEUP_EARLY_TICKS      (264) // PLL and STAL wait ticks
-#define MIN_SLEEP_US            (SLEEP_MIN_TIME + SLEEP_PROC_TIME) 
+#define MIN_SLEEP_US            (6500)
+#define RTC_TICK_CAL            (100) 
+#define RTC_TICK_OFF            (1245 + RTC_TICK_CAL)
 
 #define TAG                     "esp8266_pm"
 
@@ -51,6 +54,11 @@ typedef struct pm_soc_clk {
     uint32_t    frc2_cnt;
 
     uint32_t    wdev_cnt;
+
+    uint32_t    rtc_val;
+    uint32_t    cal_period;
+
+    uint32_t    sleep_us;
 } pm_soc_clk_t;
 
 static uint16_t s_lock_cnt = 1;
@@ -76,6 +84,8 @@ static inline void restore_local_wdev(uint32_t reg)
 
 static inline void save_soc_clk(pm_soc_clk_t *clk)
 {
+    clk->rtc_val = REG_READ(RTC_SLP_CNT_VAL);
+
     clk->ccount = soc_get_ccount();
 
     clk->frc2_enable = REG_READ(FRC2_CTL) & FRC2_CNTL_ENABLE;
@@ -96,24 +106,50 @@ static inline uint32_t min_sleep_us(pm_soc_clk_t *clk)
         const uint32_t frc2_sleep_ticks = REG_READ(FRC2_ALARM) - clk->frc2_cnt;
         const uint32_t frc2_sleep_us = frc2_sleep_ticks < FRC2_TICKS_MAX ? frc2_sleep_ticks / FRC2_TICKS_PER_US : 0;
 
-        return MIN(ccompare_sleep_us, frc2_sleep_us);
+        clk->sleep_us = MIN(ccompare_sleep_us, frc2_sleep_us);
     } else {
-        return ccompare_sleep_us;
+        clk->sleep_us = ccompare_sleep_us;
     }
+
+    return clk->sleep_us;
 }
 
-static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
+static inline uint32_t sleep_rtc_ticks(pm_soc_clk_t *clk)
+{
+    uint32_t rtc_ticks;
+
+    clk->cal_period = pm_rtc_clock_cali_proc();
+
+    rtc_ticks = pm_usec2rtc(clk->sleep_us - SLEEP_PROC_TIME, clk->cal_period);
+
+    return rtc_ticks;
+}
+
+static inline void update_soc_clk(pm_soc_clk_t *clk)
 {
     extern uint32_t WdevTimOffSet;
 
-    const uint32_t os_ccount = us * g_esp_ticks_per_us + clk->ccount;
+    uint32_t slept_us, total_rtc, end_rtc = REG_READ(RTC_SLP_CNT_VAL);
+
+    if (end_rtc > clk->rtc_val)
+        total_rtc = end_rtc - clk->rtc_val;
+    else
+        total_rtc = UINT32_MAX - clk->rtc_val + end_rtc;
+    slept_us = pm_rtc2usec(total_rtc, clk->cal_period) + RTC_TICK_OFF;
+
+    if (slept_us > clk->sleep_us)
+        slept_us = clk->sleep_us;
+    else
+        slept_us -= RTC_TICK_CAL;
+
+    const uint32_t os_ccount = slept_us * g_esp_ticks_per_us + clk->ccount;
 
     if (os_ccount >= _xt_tick_divisor) 
         soc_set_ccompare(os_ccount + 32);
     soc_set_ccount(os_ccount);
 
     if (clk->frc2_enable) {
-        const uint32_t frc2_cnt = us * FRC2_TICKS_PER_US + clk->frc2_cnt - 1;
+        const uint32_t frc2_cnt = slept_us * FRC2_TICKS_PER_US + clk->frc2_cnt - 1;
 
         REG_WRITE(FRC2_LOAD,  frc2_cnt);
     }
@@ -122,9 +158,9 @@ static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
     uint32_t wdev_cnt = REG_READ(WDEV_COUNT_REG);
 
     if (clk->wdev_cnt < wdev_cnt)
-        wdev_us = us - (wdev_cnt - clk->wdev_cnt);
+        wdev_us = slept_us - (wdev_cnt - clk->wdev_cnt);
     else
-        wdev_us = us - (UINT32_MAX - clk->wdev_cnt + wdev_cnt);
+        wdev_us = slept_us - (UINT32_MAX - clk->wdev_cnt + wdev_cnt);
 
     WdevTimOffSet += wdev_us;
 }
@@ -132,6 +168,32 @@ static inline void update_soc_clk(pm_soc_clk_t *clk, uint32_t us)
 static int cpu_is_wait_mode(void)
 {
     return (s_sleep_mode == ESP_CPU_WAIT) || s_lock_cnt;
+}
+
+static int cpu_reject_sleep(void)
+{
+    int ret = 0;
+
+    if (s_sleep_wakup_triggers & RTC_GPIO_TRIG_EN) {
+        for (int gpio = 0; gpio < 16; gpio++) {
+            if (!GPIO.pin[gpio].wakeup_enable)
+                continue;
+
+            if (GPIO.pin[gpio].int_type == GPIO_INTR_LOW_LEVEL) {
+                if (!((GPIO.in >> gpio) & 1)) {
+                    ret = 1;
+                    break;
+                }
+            } else if (GPIO.pin[gpio].int_type == GPIO_INTR_HIGH_LEVEL) {
+                if ((GPIO.in >> gpio) & 1) {
+                    ret = 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    return ret;
 }
 
 void esp_wifi_hw_open(void)
@@ -209,13 +271,13 @@ esp_err_t esp_light_sleep_start(void)
     esp_irqflag_t irqflag = soc_save_local_irq();
     uint32_t wdevflag = save_local_wdev();
     uint32_t period = pm_rtc_clock_cali_proc();
-    const uint32_t sleep_rtc_ticks = pm_usec2rtc(s_sleep_duration, period);
+    const uint32_t rtc_ticks = pm_usec2rtc(s_sleep_duration, period);
 
-    if (sleep_rtc_ticks > WAKEUP_EARLY_TICKS + 1) {
+    if (rtc_ticks > WAKEUP_EARLY_TICKS + 1) {
         const rtc_cpu_freq_t cpu_freq = rtc_clk_cpu_freq_get();
 
-        rtc_lightsleep_init();
-        pm_set_sleep_cycles(sleep_rtc_ticks - WAKEUP_EARLY_TICKS);
+        pm_set_sleep_mode(2);
+        pm_set_sleep_cycles(rtc_ticks - WAKEUP_EARLY_TICKS);
         rtc_light_sleep_start(s_sleep_wakup_triggers, 0);
         rtc_wakeup_init();
 
@@ -253,7 +315,7 @@ void esp_sleep_set_mode(esp_sleep_mode_t mode)
 
 void esp_sleep_start(void)
 {
-    if (cpu_is_wait_mode()) {
+    if (cpu_is_wait_mode() || cpu_reject_sleep()) {
         soc_wait_int();
         return ;
     }
@@ -266,7 +328,7 @@ void esp_sleep_start(void)
     const esp_irqflag_t irqflag = soc_save_local_irq();
     const uint32_t wdevflag = save_local_wdev();
 
-    if (cpu_is_wait_mode()) {
+    if (cpu_is_wait_mode() || cpu_reject_sleep()) {
         cpu_wait = 0;
         goto exit;
     }
@@ -275,20 +337,18 @@ void esp_sleep_start(void)
 
     const uint32_t sleep_us = min_sleep_us(&clk);
     if (sleep_us > MIN_SLEEP_US) {
-        uint32_t period = pm_rtc_clock_cali_proc();
-        const uint32_t sleep_rtc_ticks = pm_usec2rtc(sleep_us - SLEEP_PROC_TIME, period);
-
-        if (sleep_rtc_ticks > WAKEUP_EARLY_TICKS + 1) {
+        uint32_t rtc_ticks = sleep_rtc_ticks(&clk);
+        if (rtc_ticks > WAKEUP_EARLY_TICKS + 1) {
             const rtc_cpu_freq_t cpu_freq = rtc_clk_cpu_freq_get();
-
-            rtc_lightsleep_init();
-            pm_set_sleep_cycles(sleep_rtc_ticks - WAKEUP_EARLY_TICKS);
+     
+            pm_set_sleep_mode(2);
+            pm_set_sleep_cycles(rtc_ticks - WAKEUP_EARLY_TICKS);
             rtc_light_sleep_start(s_sleep_wakup_triggers | RTC_TIMER_TRIG_EN, 0);
             rtc_wakeup_init();
 
             rtc_clk_cpu_freq_set(cpu_freq);   
 
-            update_soc_clk(&clk, sleep_us);
+            update_soc_clk(&clk);
 
             cpu_wait = 0;
         }
