@@ -11,7 +11,7 @@ config util_assert
 
 config ESP_SHA
    bool "Enable Espressif SHA"
-   default y
+   default n
    help
        Enable Espressif SHA1, SHA256, SHA384 & SHA512 for other components to
        save code size for ESP8285(ESP8266 + 1MB flash) users.

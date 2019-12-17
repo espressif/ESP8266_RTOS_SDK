@@ -19,7 +19,7 @@
 #ifdef CONFIG_ESP_SHA
 #include "esp_sha.h"
 
-typedef esp_sha_t SHA1_CTX;
+typedef esp_sha1_t SHA1_CTX;
 
 #define SHA1Init(_sha)              esp_sha1_init(_sha)
 #define SHA1Update(_sha, _s, _l)    esp_sha1_update(_sha, _s, _l)
