@@ -5,3 +5,7 @@
 [submodule "components/mbedtls/mbedtls"]
 	path = components/mbedtls/mbedtls
 	url = ../../espressif/mbedtls.git
+
+[submodule "components/lwip/lwip"]
+	path = components/lwip/lwip
+	url = ../../espressif/esp-lwip.git
