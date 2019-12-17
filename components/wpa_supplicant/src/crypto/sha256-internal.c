@@ -23,11 +23,11 @@
 #ifdef CONFIG_ESP_SHA
 #include "esp_sha.h"
 
-typedef esp_sha_t sha256_state_t;
+typedef esp_sha256_t sha256_state_t;
 
 #define sha256_init(_sha)               esp_sha256_init(_sha)
 #define sha256_process(_sha, _s, _l)    esp_sha256_update(_sha, _s, _l)
-#define sha256_done(_sha, _d)           esp_sha1_finish(_sha, _d)
+#define sha256_done(_sha, _d)           esp_sha256_finish(_sha, _d)
 #else /* CONFIG_ESP_SHA */
 #define SHA256_BLOCK_SIZE 64
 
