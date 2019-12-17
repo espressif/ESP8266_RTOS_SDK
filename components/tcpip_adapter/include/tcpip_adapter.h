@@ -127,11 +127,12 @@ typedef struct {
 #define ESP_ERR_TCPIP_ADAPTER_NO_MEM                ESP_ERR_TCPIP_ADAPTER_BASE + 0x06
 #define ESP_ERR_TCPIP_ADAPTER_DHCP_NOT_STOPPED      ESP_ERR_TCPIP_ADAPTER_BASE + 0x07
 
-/* TODO: add Ethernet interface */
+/* @brief On-chip network interfaces */
 typedef enum {
-    TCPIP_ADAPTER_IF_STA = 0,     /**< TCP-IP adatpter station interface */
-    TCPIP_ADAPTER_IF_AP,          /**< TCP-IP adatpter soft-AP interface */
-    TCPIP_ADAPTER_IF_ETH,         /**< TCP-IP adatpter ethernet interface */
+    TCPIP_ADAPTER_IF_STA = 0,     /**< Wi-Fi STA (station) interface */
+    TCPIP_ADAPTER_IF_AP,          /**< Wi-Fi soft-AP interface */
+    TCPIP_ADAPTER_IF_ETH,         /**< Ethernet interface */
+    TCPIP_ADAPTER_IF_TEST,        /**< tcpip stack test interface */
     TCPIP_ADAPTER_IF_MAX
 } tcpip_adapter_if_t;
 
@@ -659,6 +660,15 @@ esp_err_t tcpip_adapter_set_default_wifi_handlers();
  *      - one of the errors from esp_event on failure
  */
 esp_err_t tcpip_adapter_clear_default_wifi_handlers();
+
+/**
+ * @brief  Search nefit index through netif interface
+ * @param[in]   tcpip_if Interface to search for netif index
+ * @return
+ *      - netif_index on success
+ *      - -1 if an invalid parameter is supplied
+ */
+int tcpip_adapter_get_netif_index(tcpip_adapter_if_t tcpip_if);
 
 #ifdef __cplusplus
 }

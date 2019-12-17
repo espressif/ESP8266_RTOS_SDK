@@ -1,13 +1,15 @@
+idf_build_get_property(target IDF_TARGET)
 set(include_dirs
     include/apps
     include/apps/sntp
     lwip/src/include
-    port/esp32/include
-    port/esp32/include/arch
+    port/${target}/include
+    port/${target}/include/arch
     )
 
 set(srcs
     "apps/dhcpserver/dhcpserver.c"
+    "apps/multi-threads/sockets_mt.c"
     "apps/ping/esp_ping.c"
     "apps/ping/ping.c"
     "apps/ping/ping_sock.c"
@@ -85,12 +87,16 @@ set(srcs
     "lwip/src/netif/ppp/upap.c"
     "lwip/src/netif/ppp/utils.c"
     "lwip/src/netif/ppp/vj.c"
-    "port/esp32/vfs_lwip.c"
-    "port/esp32/debug/lwip_debug.c"
-    "port/esp32/freertos/sys_arch.c"
-    "port/esp32/netif/dhcp_state.c"
-    "port/esp32/netif/nettestif.c"
-    "port/esp32/netif/wlanif.c")
+    "port/${target}/vfs_lwip.c"
+    "port/${target}/debug/lwip_debug.c"
+    "port/${target}/freertos/sys_arch.c"
+    "port/${target}/netif/dhcp_state.c"
+    "port/${target}/netif/wlanif.c")
+
+if(CONFIG_IDF_TARGET_ESP32)
+    list(APPEND srcs
+        "port/${target}/netif/nettestif.c")
+endif()
 
 if(CONFIG_LWIP_PPP_SUPPORT)
     list(APPEND srcs
@@ -130,11 +136,15 @@ if(CONFIG_ETH_ENABLED)
     list(APPEND srcs "port/esp32/netif/ethernetif.c")
 endif()
 
+if(CONFIG_LWIP_SOCKET_MULTITHREAD)
+    set(COMPONENT_OBJEXCLUDE lwip/src/api/sockets.c)
+endif()
+
 idf_component_register(SRCS "${srcs}"
                     INCLUDE_DIRS "${include_dirs}"
                     LDFRAGMENTS linker.lf
-                    REQUIRES vfs esp_wifi
-                    PRIV_REQUIRES ${priv_requires} esp_eth tcpip_adapter nvs_flash)
+                    REQUIRES vfs
+                    PRIV_REQUIRES ${priv_requires} tcpip_adapter nvs_flash)
 
 # lots of LWIP source files evaluate macros that check address of stack variables
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-address)

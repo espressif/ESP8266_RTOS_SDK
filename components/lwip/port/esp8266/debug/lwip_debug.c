@@ -23,10 +23,14 @@
 #include "lwip/memp.h"
 #include "esp_log.h"
 
+#if LWIP_IPV4 && LWIP_IPV6
 #define DBG_LWIP_IP_SHOW(info, ip)  ESP_LWIP_LOGI("%s type=%d ip=%x", (info), (ip).type, (ip).u_addr.ip4.addr)
+#else
+#define DBG_LWIP_IP_SHOW(info, ip)  ESP_LWIP_LOGI("%s ip=%x", (info), (ip).addr)
+#endif
 #define DBG_LWIP_IP_PCB_SHOW(pcb) \
         DBG_LWIP_IP_SHOW("local ip", (pcb)->local_ip);\
-        DBG_LWIP_IP_SHOW("remote ip", (pcb)->local_ip);\
+        DBG_LWIP_IP_SHOW("remote ip", (pcb)->remote_ip);\
         ESP_LWIP_LOGI("so_options=%x, tos=%d ttl=%d", (pcb)->so_options, (pcb)->tos, (pcb)->ttl)
 
 #define DBG_LWIP_SEG_SHOW(seg) while(seg) { ESP_LWIP_LOGI("\tseg=%p next=%p pbuf=%p flags=%x", (seg), (seg)->next, (seg)->p, (seg)->flags); (seg)=(seg)->next;}
@@ -186,11 +190,13 @@ void dbg_lwip_stats_show(void)
     LINK_STATS_DISPLAY();
     MEM_STATS_DISPLAY();
     SYS_STATS_DISPLAY();
+#if LWIP_IPV6
     IP6_STATS_DISPLAY();
     ICMP6_STATS_DISPLAY();
     IP6_FRAG_STATS_DISPLAY();
     MLD6_STATS_DISPLAY();
     ND6_STATS_DISPLAY();
+#endif
 }
 
 #if (ESP_STATS_MEM == 1)

@@ -77,6 +77,11 @@ typedef struct {
  * @brief Default ping configuration
  *
  */
+#if LWIP_IPV4 && LWIP_IPV6
+#define PING_TARGET_ADDR ip_addr_any_type
+#else
+#define PING_TARGET_ADDR ip_addr_any
+#endif
 #define ESP_PING_DEFAULT_CONFIG()        \
     {                                    \
         .count = 5,                      \
@@ -84,7 +89,7 @@ typedef struct {
         .timeout_ms = 1000,              \
         .data_size = 56,                 \
         .tos = 0,                        \
-        .target_addr = ip_addr_any_type, \
+        .target_addr = PING_TARGET_ADDR, \
         .task_stack_size = 2048,         \
         .task_prio = 2,                  \
     }

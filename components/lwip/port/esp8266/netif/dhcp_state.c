@@ -31,6 +31,7 @@ static const char *interface_key[] = {"IF_STA", "IF_AP", "IF_ETH", "IF_TEST"};
 _Static_assert(sizeof(interface_key) / sizeof(char*) == TCPIP_ADAPTER_IF_MAX,
                "Number interface keys differs from number of interfaces");
 
+typedef nvs_handle nvs_handle_t;
 bool dhcp_ip_addr_restore(void *netif)
 {
     nvs_handle_t nvs;

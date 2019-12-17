@@ -7,8 +7,8 @@ COMPONENT_ADD_INCLUDEDIRS := \
 	include/apps \
 	include/apps/sntp \
 	lwip/src/include \
-	port/esp32/include \
-	port/esp32/include/arch
+	port/esp8266/include \
+	port/esp8266/include/arch
 
 COMPONENT_SRCDIRS := \
 	apps/dhcpserver \
@@ -21,14 +21,20 @@ COMPONENT_SRCDIRS := \
 	lwip/src/core/ipv4 \
 	lwip/src/core/ipv6 \
 	lwip/src/netif \
-	port/esp32 \
-	port/esp32/freertos \
-	port/esp32/netif \
-	port/esp32/debug
+	port/esp8266 \
+	port/esp8266/freertos \
+	port/esp8266/netif \
+	port/esp8266/debug
 
 ifndef CONFIG_IDF_TARGET_ESP32
-    COMPONENT_OBJEXCLUDE := port/esp32/netif/ethernetif.o
+    COMPONENT_OBJEXCLUDE := port/esp8266/netif/ethernetif.o
 endif
+
+ifdef CONFIG_LWIP_SOCKET_MULTITHREAD
+    COMPONENT_SRCDIRS += apps/multi-threads
+    COMPONENT_OBJEXCLUDE += lwip/src/api/sockets.o
+endif
+
 
 ifdef CONFIG_LWIP_PPP_SUPPORT
     COMPONENT_SRCDIRS += lwip/src/netif/ppp lwip/src/netif/ppp/polarssl

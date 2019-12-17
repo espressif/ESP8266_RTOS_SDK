@@ -112,13 +112,15 @@ static int esp_ping_receive(esp_ping_t *ep)
                 struct sockaddr_in *from4 = (struct sockaddr_in *)&from;
                 inet_addr_to_ip4addr(ip_2_ip4(&ep->recv_addr), &from4->sin_addr);
                 IP_SET_TYPE_VAL(ep->recv_addr, IPADDR_TYPE_V4);
-            } else {
+            }
+#if LWIP_IPV6
+            else {
                 // IPv6
                 struct sockaddr_in6 *from6 = (struct sockaddr_in6 *)&from;
                 inet6_addr_to_ip6addr(ip_2_ip6(&ep->recv_addr), &from6->sin6_addr);
                 IP_SET_TYPE_VAL(ep->recv_addr, IPADDR_TYPE_V6);
             }
-
+#endif
             // Currently we only process IPv4
             if (IP_IS_V4_VAL(ep->recv_addr)) {
                 struct ip_hdr *iphdr = (struct ip_hdr *)buf;
@@ -236,12 +238,18 @@ esp_err_t esp_ping_new_session(const esp_ping_config_t *config, const esp_ping_c
         d[i] = 'A' + i;
     }
 
-    /* create socket */
-    if (IP_IS_V4(&config->target_addr) || ip6_addr_isipv4mappedipv6(ip_2_ip6(&config->target_addr))) {
+#if LWIP_IPV4 && LWIP_IPV6
+     if (IP_IS_V4(&config->target_addr) || ip6_addr_isipv4mappedipv6(ip_2_ip6(&config->target_addr))) {
+         ep->sock = socket(AF_INET, SOCK_RAW, IP_PROTO_ICMP);
+     } else {
+         ep->sock = socket(AF_INET6, SOCK_RAW, IP6_NEXTH_ICMP6);
+     }
+#else
+    if (IP_IS_V4(&config->target_addr)) {
         ep->sock = socket(AF_INET, SOCK_RAW, IP_PROTO_ICMP);
-    } else {
-        ep->sock = socket(AF_INET6, SOCK_RAW, IP6_NEXTH_ICMP6);
     }
+#endif
+
     PING_CHECK(ep->sock > 0, "create socket failed: %d", err, ESP_FAIL, ep->sock);
 
     struct timeval timeout;
@@ -259,11 +267,13 @@ esp_err_t esp_ping_new_session(const esp_ping_config_t *config, const esp_ping_c
         to4->sin_family = AF_INET;
         inet_addr_from_ip4addr(&to4->sin_addr, ip_2_ip4(&config->target_addr));
     }
+#if LWIP_IPV6
     if (IP_IS_V6(&config->target_addr)) {
         struct sockaddr_in6 *to6 = (struct sockaddr_in6 *)&ep->target_addr;
         to6->sin6_family = AF_INET6;
         inet6_addr_from_ip6addr(&to6->sin6_addr, ip_2_ip6(&config->target_addr));
     }
+#endif
     /* return ping handle to user */
     *hdl_out = (esp_ping_handle_t)ep;
     return ESP_OK;

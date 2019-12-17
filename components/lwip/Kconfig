@@ -124,6 +124,24 @@ menu "LWIP"
         help
             Enabling this option allows LWIP statistics
 
+    config LWIP_SOCKET_MULTITHREAD
+        bool "LWIP socket supports multithread"
+        default y
+        help
+            Enable the option can enable LWIP socket multithread and all
+            function will be thread safe.
+
+    config SET_SOLINGER_DEFAULT
+        bool "set socket SO_LINGER default"
+        default y
+        depends on LWIP_SOCKET_MULTITHREAD
+        help
+            The function is only used by socket multi-thread.
+
+            Enable this option can set the target socket to enable the "SO_LINGER" and config timeout to be "0" when it is created.
+            It means that if close the socket, all send queue will be dropped, so heap memory can be collected immediately,
+            but some packets which are waiting to be sent will lost.
+
     config LWIP_ETHARP_TRUST_IP_MAC
         bool "Enable LWIP ARP trust"
         default n
@@ -484,7 +502,7 @@ menu "LWIP"
 
     config LWIP_TCPIP_TASK_STACK_SIZE
         int "TCP/IP Task Stack Size"
-        default 3072
+        default 2048
         # for high log levels, tcpip_adapter API calls can end up
         # a few calls deep and logging there can trigger a stack overflow
         range 2048 65536 if LOG_DEFAULT_LEVEL < 4
@@ -592,6 +610,12 @@ menu "LWIP"
                 limit is determined by available heap memory at runtime.
 
     endmenu  # LWIP RAW API
+
+    config LWIP_IPV6
+        bool "Enable IPv6"
+        default n
+        help
+            Enable IPV6
 
     menu "SNTP"
 

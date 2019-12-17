@@ -41,10 +41,12 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include "esp_task.h"
+#include "esp_libc.h"
 #include "esp_system.h"
 #include "sdkconfig.h"
 #include "sntp.h"
 #include "netif/dhcp_state.h"
+#include "driver/soc.h"
 
 /* Enable all Espressif-only options */
 
@@ -100,6 +102,16 @@
  */
 #define MEM_ALIGNMENT           4
 
+#define mem_clib_free(s) heap_caps_free(s)
+#define mem_clib_malloc(s) heap_caps_malloc(s, MALLOC_CAP_8BIT)
+#define mem_clib_calloc(n, s) heap_caps_calloc(n, s, MALLOC_CAP_8BIT)
+
+/**
+ * @brief System
+ */
+#define SYS_ARCH_DECL_PROTECT(_lev)    esp_irqflag_t _lev
+#define SYS_ARCH_PROTECT(_lev)         _lev = soc_save_local_irq()
+#define SYS_ARCH_UNPROTECT(_lev)       soc_restore_local_irq(_lev)
 /*
    ------------------------------------------------
    ---------- Internal Memory Pool Sizes ----------
@@ -386,6 +398,13 @@
    ---------- Pbuf options ----------
    ----------------------------------
 */
+/**
+ * PBUF_LINK_ENCAPSULATION_HLEN: the number of bytes that should be allocated
+ * for an additional encapsulation header before ethernet headers (e.g. 802.11)
+ */
+#define PBUF_LINK_ENCAPSULATION_HLEN    36u
+
+#define LWIP_SUPPORT_CUSTOM_PBUF    1
 
 /*
    ------------------------------------------------
@@ -549,6 +568,13 @@
 #define LWIP_SO_RCVBUF                  CONFIG_LWIP_SO_RCVBUF
 
 /**
+ * LWIP_SO_LINGER==1: Enable SO_LINGER processing.
+ */
+#define LWIP_SO_LINGER                  1
+
+#define SET_SOLINGER_DEFAULT            CONFIG_SET_SOLINGER_DEFAULT
+
+/**
  * SO_REUSE==1: Enable SO_REUSEADDR option.
  * This option is set via menuconfig.
  */
@@ -668,7 +694,7 @@
 /**
  * LWIP_IPV6==1: Enable IPv6
  */
-#define LWIP_IPV6                       1
+#define LWIP_IPV6                       CONFIG_LWIP_IPV6
 
 /*
    ---------------------------------------
@@ -766,7 +792,9 @@
 #define LWIP_SOCKET_OFFSET              (FD_SETSIZE - CONFIG_LWIP_MAX_SOCKETS)
 
 /* Enable all Espressif-only options */
-
+#ifdef CONFIG_LWIP_SOCKET_MULTITHREAD
+#define SOCKETS_MT
+#endif
 #define ESP_LWIP                        1
 #define ESP_LWIP_ARP                    1
 #define ESP_PER_SOC_TCP_WND             0
@@ -774,7 +802,7 @@
 #define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_OFF
 #define ESP_DHCP                        1
 #define ESP_DNS                         1
-#define ESP_IPV6_AUTOCONFIG             1
+#define ESP_IPV6_AUTOCONFIG             LWIP_IPV6
 #define ESP_PERF                        0
 #define ESP_RANDOM_TCP_PORT             1
 #define ESP_IP4_ATON                    1
@@ -793,7 +821,7 @@
 #define ESP_AUTO_IP                     1
 #define ESP_PBUF                        1
 #define ESP_PPP                         1
-#define ESP_IPV6                        1
+#define ESP_IPV6                        LWIP_IPV6
 #define ESP_SOCKET                      1
 #define ESP_LWIP_SELECT                 1
 
@@ -819,6 +847,16 @@
 #define DHCP_DEBUG                      LWIP_DBG_OFF
 #define LWIP_DEBUG                      LWIP_DBG_OFF
 #define TCP_DEBUG                       LWIP_DBG_OFF
+
+#define ESP_TCP_TXRX_PBUF_DEBUG         LWIP_DBG_OFF
+#define LWIP_SEND_DATA_TO_WIFI                           1
+#define LWIP_RESEND_DATA_TO_WIFI_WHEN_WIFI_SEND_FAILED   2
+#define LWIP_RECV_DATA_FROM_WIFI                         3
+#define LWIP_RETRY_DATA_WHEN_RECV_ACK_TIMEOUT            4
+#define LWIP_FETCH_DATA_AT_TCPIP_THREAD                  5
+#define WIFI_SEND_DATA_FAILED                            6
+
+void tcp_print_status(int status, void* p, uint32_t tmp1, uint32_t tmp2, uint32_t tmp3);
 
 #define CHECKSUM_CHECK_UDP              0
 #define CHECKSUM_CHECK_IP               0

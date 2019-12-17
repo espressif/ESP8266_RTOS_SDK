@@ -49,6 +49,8 @@ extern int wifi_nvs_init(void);
 extern esp_err_t esp_pthread_init(void);
 extern void phy_get_bb_evm(void);
 extern void uart_div_modify(uint8_t uart_no, uint16_t DivLatchValue);
+/*Only for calling esp_wifi_set_ps can compile successfully */
+uint32_t LwipTimOutLim = 0;
 
 static inline int should_load(uint32_t load_addr)
 {
