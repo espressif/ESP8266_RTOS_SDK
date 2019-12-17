@@ -1,6 +1,6 @@
 gwen:
     core:       27927af
-    net80211:   b7de510
+    net80211:   a2ac2bd
     pp:         b01a3a6
     wpa:        27927af
     espnow:     27927af
