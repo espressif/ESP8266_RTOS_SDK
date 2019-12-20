@@ -446,7 +446,7 @@ void pthread_exit(void *value_ptr)
     }
     xSemaphoreGive(s_threads_mux);
 
-    ESP_LOGD(TAG, "Task stk_wm = %ld", uxTaskGetStackHighWaterMark(NULL));
+    ESP_LOGD(TAG, "Task stk_wm = %u", uxTaskGetStackHighWaterMark(NULL));
 
     if (detached) {
         vTaskDelete(NULL);

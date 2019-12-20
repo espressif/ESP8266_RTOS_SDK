@@ -182,5 +182,9 @@ uint32_t esp_get_time(void);
 #define configIDLE_TASK_STACK_SIZE CONFIG_FREERTOS_IDLE_TASK_STACKSIZE
 #endif /* configIDLE_TASK_STACK_SIZE */
 
+#ifndef configENABLE_TASK_SNAPSHOT
+#define configENABLE_TASK_SNAPSHOT          1
+#endif
+
 #endif /* FREERTOS_CONFIG_H */
 
