@@ -256,9 +256,10 @@ int esp_sha384_finish(esp_sha384_t *ctx, void *dest)
 
     ctx->buffer[used++] = 0x80;
 
-    memset(ctx->buffer + used, 0, 112 - used);
-
-    if (used > 112) {
+    if (used <= 112)
+        memset(ctx->buffer + used, 0, 112 - used);
+    else {
+        memset(ctx->buffer + used, 0, 128 - used);
         esp_sha512_transform(ctx, ctx->buffer);
         memset(ctx->buffer, 0, 112);
     }
