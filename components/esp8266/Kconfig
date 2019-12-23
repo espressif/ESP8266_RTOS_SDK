@@ -391,7 +391,7 @@ config ESP8266_WIFI_RX_BUFFER_NUM
 config ESP8266_WIFI_LEFT_CONTINUOUS_RX_BUFFER_NUM
     int "The min number of WiFi continuous RX buffer"
     range 0 16
-    default 4
+    default 8
     help
         Set the number of WiFi continuous RX buffer num.
         The smaller the value, the easier RX hang will appear. Most of time we should NOT change the default
