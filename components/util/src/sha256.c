@@ -79,7 +79,7 @@ static const uint32_t K[64] = {
     0x90befffaUL, 0xa4506cebUL, 0xbef9a3f7UL, 0xc67178f2UL
 };
 
-static void esp_sha256_transform(esp_sha256_t *ctx, uint8_t *buf)
+static void esp_sha256_transform(esp_sha256_t *ctx, const uint8_t *buf)
 {
     uint32_t S[8], W[64], t0, t1;
     uint32_t t;
@@ -108,8 +108,8 @@ int esp_sha256_init(esp_sha256_t *ctx)
 {
     util_assert(ctx);
 
-    ctx->curlen = 0;
-    ctx->length = 0;
+    ctx->total[0] = 0;
+    ctx->total[1] = 0;
 
     ctx->state[0] = 0x6A09E667UL;
     ctx->state[1] = 0xBB67AE85UL;
@@ -127,8 +127,8 @@ int esp_sha224_init(esp_sha224_t *ctx)
 {
     util_assert(ctx);
 
-    ctx->curlen = 0;
-    ctx->length = 0;
+    ctx->total[0] = 0;
+    ctx->total[1] = 0;
 
     ctx->state[0] = 0xC1059ED8;
     ctx->state[1] = 0x367CD507;
@@ -144,38 +144,42 @@ int esp_sha224_init(esp_sha224_t *ctx)
 
 int esp_sha256_update(esp_sha256_t *ctx, const void *src, size_t size)
 {
-    const uint8_t *in = (const uint8_t *)src;
-    uint32_t n;
+    size_t fill;
+    uint32_t left;
+    const uint8_t *input = (const uint8_t *)src;
 
     util_assert(ctx);
     util_assert(src);
     util_assert(size);
 
-    if (ctx->curlen >= sizeof(ctx->buf))
-        return -1;
+    left = ctx->total[0] & 0x3F;
+    fill = 64 - left;
 
-    while (size > 0) {
-        if (ctx->curlen == 0 && size >= 64) {
-            esp_sha256_transform(ctx, (uint8_t *) in);
-    
-            ctx->length += 64 * 8;
-            in += 64;
-            size -= 64;
-        } else {
-            n = MIN(size, (64 - ctx->curlen));
-            memcpy(ctx->buf + ctx->curlen, in, n);
-            ctx->curlen += n;
-            in += n;
-            size -= n;
+    ctx->total[0] += size;
+    ctx->total[0] &= 0xFFFFFFFF;
 
-            if (ctx->curlen == 64) {
-                esp_sha256_transform(ctx, ctx->buf);
+    if (ctx->total[0] < size)
+        ctx->total[1]++;
 
-                ctx->length += 8 * 64;
-                ctx->curlen = 0;
-            }
-        }
+    if (left && size >= fill) {
+        memcpy(ctx->buffer + left, input, fill);
+
+        esp_sha256_transform(ctx, ctx->buffer);
+
+        input += fill;
+        size  -= fill;
+        left = 0;
     }
+
+    while (size >= 64) {
+        esp_sha256_transform(ctx, input);
+
+        input += 64;
+        size  -= 64;
+    }
+
+    if (size > 0)
+        memcpy(ctx->buffer + left, input, size);
 
     return 0;
 }
@@ -191,37 +195,42 @@ int esp_sha224_update(esp_sha224_t *ctx, const void *src, size_t size)
 
 int esp_sha224_finish(esp_sha224_t *ctx, void *dest)
 {
-    int i;
+    uint32_t used;
+    uint32_t high, low;
     uint8_t *out = (uint8_t *)dest;
 
     util_assert(ctx);
     util_assert(dest);
 
-    if (ctx->curlen >= sizeof(ctx->buf))
-        return -1;
+    used = ctx->total[0] & 0x3F;
 
-    ctx->length += ctx->curlen * 8;
+    ctx->buffer[used++] = 0x80;
 
-    ctx->buf[ctx->curlen++] = 0x80;
-
-    if (ctx->curlen > 56) {
-        while (ctx->curlen < 64)
-            ctx->buf[ctx->curlen++] = 0;
-
-        esp_sha256_transform(ctx, ctx->buf);
-        ctx->curlen = 0;
+    if (used <= 56) {
+        memset(ctx->buffer + used, 0, 56 - used);
+    } else {
+        memset(ctx->buffer + used, 0, 64 - used);
+        esp_sha256_transform(ctx, ctx->buffer);
+        memset(ctx->buffer, 0, 56);
     }
 
-    while (ctx->curlen < 56)
-        ctx->buf[ctx->curlen++] = 0;
+    high = (ctx->total[0] >> 29) | (ctx->total[1] <<  3);
+    low  = (ctx->total[0] <<  3);
 
-    ESP_PUT_BE64(ctx->buf + 56, ctx->length);
-    esp_sha256_transform(ctx, ctx->buf);
+    ESP_PUT_BE32(ctx->buffer +  56, high);
+    ESP_PUT_BE32(ctx->buffer +  60, low);
 
-    for (i = 0; i < 7; i++)
-        ESP_PUT_BE32(out + (4 * i), ctx->state[i]);
+    esp_sha256_transform(ctx, ctx->buffer);
 
-    return 0;
+    ESP_PUT_BE32(out +  0, ctx->state[0]);
+    ESP_PUT_BE32(out +  4, ctx->state[1]);
+    ESP_PUT_BE32(out +  8, ctx->state[2]);
+    ESP_PUT_BE32(out + 12, ctx->state[3]);
+    ESP_PUT_BE32(out + 16, ctx->state[4]);
+    ESP_PUT_BE32(out + 20, ctx->state[5]);
+    ESP_PUT_BE32(out + 24, ctx->state[6]);
+
+    return( 0 );
 }
 
 int esp_sha256_finish(esp_sha256_t *ctx, void *dest)
