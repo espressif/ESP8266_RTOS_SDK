@@ -134,6 +134,21 @@ static inline void soc_wait_int(void)
     );
 }
 
+static inline uint32_t soc_debug_reason(void)
+{
+    uint32_t tmp;
+
+    __asm__ __volatile__(
+            "movi %0, 0\n"
+            "wsr  %0, dbreakc0\n"
+            "rsr.debugcause %0\n"
+            : "=r"(tmp)
+            :
+            : "memory");
+
+    return tmp;
+}
+
 #ifdef __cplusplus
 }
 #endif

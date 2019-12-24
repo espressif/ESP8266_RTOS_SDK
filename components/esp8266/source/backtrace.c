@@ -57,7 +57,12 @@ int xt_retaddr_callee(const void *i_pc, const void *i_sp, const void *i_lr, void
             }
 
             sp -= stk_size;
-            pc = *(uint32_t *)(sp - 4);
+
+            if (off <= 3) {
+                pc = lr;
+            } else {
+                pc = *(uint32_t *)(sp - 4);
+            }
 
             *o_sp = (void *)sp;
             *o_pc = (void *)pc;

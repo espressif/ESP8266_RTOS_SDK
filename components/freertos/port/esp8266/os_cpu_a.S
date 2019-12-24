@@ -97,6 +97,18 @@ _xt_int_exit:
 	l32i    sp,  sp,  0
 	l32i	sp,	 sp,  0
 
+#ifdef CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK
+    movi    a2,  pxCurrentTCB
+    l32i    a2,  a2,  0
+    l32i    a2,  a2,  48
+    movi    a4,  ~(0xf)
+    and     a4,  a4,  a2
+    wsr     a4,  dbreaka0
+
+    movi    a3,  0xc0000030
+    wsr     a3,  dbreakc0
+#endif
+
     /*
     We come here only if there was no context switch, that is if this 
     is a nested interrupt or the interrupted task was not preempted.
@@ -228,6 +240,18 @@ _xt_enter_first_task:
     movi    sp,  pxCurrentTCB
     l32i    sp,  sp,  0
     l32i    sp,	 sp,  0
+
+#ifdef CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK
+    movi    a2,  pxCurrentTCB
+    l32i    a2,  a2,  0
+    l32i    a2,  a2,  48
+    movi    a4,  ~(0xf)
+    and     a4,  a4,  a2
+    wsr     a4,  dbreaka0
+
+    movi    a3,  0xc0000030
+    wsr     a3,  dbreakc0
+#endif
 
     movi    a14, pxCurrentTCB
     l32i    a14, a14, 0
