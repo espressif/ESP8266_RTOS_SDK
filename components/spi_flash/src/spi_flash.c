@@ -392,7 +392,7 @@ static bool spi_flash_check_wr_protect(void)
     }
     //GD25Q32C:0X16409D
     //GD25Q128
-    else if(((flash_id&0xFFFFFFFF)==0X1640C8)||((flash_id&0xFFFFFFFF)==0X1840C8)) {
+    else if((flash_id & 0xFFFF) == 0x40C8) {
         if(spi_flash_read_status(&status)==0) { //Read status Ok
             if(status&SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS) {
                 special_flash_write_status(0x01, status&(~(SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS)), 1, true);
