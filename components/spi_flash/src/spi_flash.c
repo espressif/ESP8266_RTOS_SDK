@@ -430,7 +430,7 @@ void user_spi_flash_dio_to_qio_pre_init(void)
             to_qio = true;
         }
         //ENABLE FLASH QIO 0X31H+BIT2
-    } else if (((flash_id & 0xFFFFFF) == 0x1640C8) || ((flash_id & 0xFFFFFF) == 0x1840C8)) {
+    } else if ((flash_id & 0xFFFF) == 0x40C8) {
         if (flash_gd25q32c_enable_QIO_mode() == true) {
             to_qio = true;
         }
