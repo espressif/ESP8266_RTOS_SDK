@@ -28,10 +28,9 @@ typedef struct {
 } esp_sha1_t;
 
 typedef struct {
-    uint64_t        length;
-    uint32_t        curlen;
+    uint32_t        total[2];
     uint32_t        state[8];
-    uint8_t         buf[64];
+    uint8_t         buffer[64];
 } esp_sha256_t;
 
 typedef struct {

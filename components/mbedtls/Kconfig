@@ -116,51 +116,6 @@ menu "mbedTLS"
         default 3 if MBEDTLS_DEBUG_LEVEL_DEBUG
         default 4 if MBEDTLS_DEBUG_LEVEL_VERBOSE
 
-    config MBEDTLS_HARDWARE_AES
-        bool "Enable hardware AES acceleration"
-        default y
-        help
-            Enable hardware accelerated AES encryption & decryption.
-
-            Note that if the ESP32 CPU is running at 240MHz, hardware AES does not
-            offer any speed boost over software AES.
-
-    config MBEDTLS_HARDWARE_MPI
-        bool "Enable hardware MPI (bignum) acceleration"
-        default n
-        help
-            Enable hardware accelerated multiple precision integer operations.
-
-            Hardware accelerated multiplication, modulo multiplication,
-            and modular exponentiation for up to 4096 bit results.
-
-            These operations are used by RSA.
-
-    config MBEDTLS_MPI_USE_INTERRUPT
-        bool "Use interrupt for MPI operations"
-        depends on MBEDTLS_HARDWARE_MPI
-        default n
-        help
-            Use an interrupt to coordinate MPI operations.
-
-            This allows other code to run on the CPU while an MPI operation is pending.
-            Otherwise the CPU busy-waits.
-
-    config MBEDTLS_HARDWARE_SHA
-        bool "Enable hardware SHA acceleration"
-        default y
-        help
-            Enable hardware accelerated SHA1, SHA256, SHA384 & SHA512 in mbedTLS.
-
-            Due to a hardware limitation, hardware acceleration is only
-            guaranteed if SHA digests are calculated one at a time. If more
-            than one SHA digest is calculated at the same time, one will
-            be calculated fully in hardware and the rest will be calculated
-            (at least partially calculated) in software. This happens automatically.
-
-            SHA hardware acceleration is faster than software in some situations but
-            slower in others. You should benchmark to find the best setting for you.
-
     config MBEDTLS_HAVE_TIME
         bool "Enable mbedtls time"
         depends on !ESP32_TIME_SYSCALL_USE_NONE
