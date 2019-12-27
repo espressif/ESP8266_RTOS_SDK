@@ -366,6 +366,7 @@ menu "mbedTLS"
         bool "TLS: Server Support for RFC 5077 SSL session tickets"
         default y
         depends on MBEDTLS_TLS_ENABLED
+        depends on MBEDTLS_GCM_C || MBEDTLS_CCM_C || MBEDTLS_CHACHAPOLY_C
         help
             Server support for RFC 5077 session tickets. See mbedTLS documentation for more details.
             Disabling this option will save some code size.
