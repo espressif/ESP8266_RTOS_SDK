@@ -171,6 +171,8 @@ int esp_sha512_init(esp_sha512_t *ctx)
     ctx->state[6] = UL64(0x1F83D9ABFB41BD6B);
     ctx->state[7] = UL64(0x5BE0CD19137E2179);
 
+    ctx->is384 = 0;
+
     return 0;   
 }
 
@@ -189,6 +191,8 @@ int esp_sha384_init(esp_sha384_t *ctx)
     ctx->state[5] = UL64(0x8EB44A8768581511);
     ctx->state[6] = UL64(0xDB0C2E0D64F98FA7);
     ctx->state[7] = UL64(0x47B5481DBEFA4FA4);
+
+    ctx->is384 = 1;
 
     return 0;   
 }
@@ -291,8 +295,10 @@ int esp_sha512_finish(esp_sha512_t *ctx, void *dest)
 
     esp_sha384_finish(ctx, dest);
 
-    PUT_UINT64_BE(ctx->state[6], output, 48);
-    PUT_UINT64_BE(ctx->state[7], output, 56);
+    if (!ctx->is384) {
+        PUT_UINT64_BE(ctx->state[6], output, 48);
+        PUT_UINT64_BE(ctx->state[7], output, 56);
+    }
 
     return 0;
 }
