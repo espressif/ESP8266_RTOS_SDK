@@ -2,7 +2,7 @@ menu "MQTT"
 
 choice MQTT_LIBRARY_CHOOSE
     prompt "Choose MQTT library"
-    default MQTT_USING_IBM
+    default MQTT_USING_ESP
     help
         Choose the MQTT library which you want to use.
 
@@ -11,7 +11,7 @@ choice MQTT_LIBRARY_CHOOSE
 config MQTT_USING_ESP
     bool "ESP-MQTT(Recommended)"
 config MQTT_USING_IBM
-    bool "IBM-MQTT(not recommended and will be removed at v4.0)"
+    bool "IBM-MQTT(not recommended and will be removed at v3.4)"
 endchoice
 
 menu "IBM-MQTT(paho)"
