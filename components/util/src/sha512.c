@@ -159,6 +159,8 @@ int esp_sha512_init(esp_sha512_t *ctx)
 {
     util_assert(ctx);
 
+    ctx->is384 = 0;
+
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -177,6 +179,8 @@ int esp_sha512_init(esp_sha512_t *ctx)
 int esp_sha384_init(esp_sha384_t *ctx)
 {
     util_assert(ctx);
+
+    ctx->is384 = 1;
 
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -279,20 +283,20 @@ int esp_sha384_finish(esp_sha384_t *ctx, void *dest)
     PUT_UINT64_BE(ctx->state[4], output, 32);
     PUT_UINT64_BE(ctx->state[5], output, 40);
 
+    if (!ctx->is384) {
+        PUT_UINT64_BE(ctx->state[6], output, 48);
+        PUT_UINT64_BE(ctx->state[7], output, 56);
+    }
+
     return 0;
 }
 
 int esp_sha512_finish(esp_sha512_t *ctx, void *dest)
 {
-    uint8_t *output = (uint8_t *)dest;
-
     util_assert(ctx);
     util_assert(dest);
 
     esp_sha384_finish(ctx, dest);
-
-    PUT_UINT64_BE(ctx->state[6], output, 48);
-    PUT_UINT64_BE(ctx->state[7], output, 56);
 
     return 0;
 }

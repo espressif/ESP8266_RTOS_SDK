@@ -46,6 +46,7 @@ static void sha256_libsodium_to_mbedtls(mbedtls_sha256_context *mb_ctx, crypto_h
     memcpy(mb_ctx->total, &ls_state->count, sizeof(mb_ctx->total));
     memcpy(mb_ctx->state, ls_state->state, sizeof(mb_ctx->state));
     memcpy(mb_ctx->buffer, ls_state->buf, sizeof(mb_ctx->buffer));
+    mb_ctx->is224 = 0;
 }
 
 int
