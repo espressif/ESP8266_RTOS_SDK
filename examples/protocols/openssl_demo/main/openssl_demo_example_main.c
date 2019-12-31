@@ -139,6 +139,12 @@ static void openssl_task(void *p)
 
     ESP_LOGI(TAG, "OK");
 
+#if configENABLE_TASK_MODIFY_STACK_DEPTH == 1
+    ESP_LOGI(TAG, "Before modification stack depth of this thread, free heap size is %u", esp_get_free_heap_size());
+    vTaskModifyStackDepth(NULL, 2048);
+    ESP_LOGI(TAG, "After modification stack depth of this thread, free heap size is %u", esp_get_free_heap_size());
+#endif
+
     ESP_LOGI(TAG,  "send request to %s port %d ......", OPENSSL_DEMO_TARGET_NAME, OPENSSL_DEMO_TARGET_TCP_PORT);
     ret = SSL_write(ssl, send_data, send_bytes);
 

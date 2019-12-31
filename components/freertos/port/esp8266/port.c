@@ -29,6 +29,7 @@
 /* Scheduler includes. */
 
 #include <stdint.h>
+#include <string.h>
 
 #include <xtensa/config/core.h>
 #include <xtensa/tie/xt_interrupt.h>
@@ -216,6 +217,15 @@ portBASE_TYPE xPortStartScheduler(void)
 
     /* Should not get here as the tasks are now running! */
     return pdTRUE;
+}
+
+void vPortInitContextFromOldStack(StackType_t *newStackTop, StackType_t *oldStackTop, UBaseType_t stackSize)
+{
+    uintptr_t *sp;
+
+    memcpy(newStackTop, oldStackTop, stackSize);
+    sp = (uintptr_t *)newStackTop;
+    sp[XT_STK_A1 / sizeof(uintptr_t)] = (uintptr_t)sp + XT_STK_FRMSZ;
 }
 
 void vPortEndScheduler(void)
