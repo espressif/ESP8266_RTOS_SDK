@@ -109,7 +109,7 @@ uint32_t rtc_light_sleep_start(uint32_t wakeup_opt, uint32_t reject_opt);
  *
  * @return number of clock cycles
  */
-uint32_t pm_usec2rtc(uint32_t time_in_us, uint32_t period);
+uint32_t us_to_rtc_clk(uint32_t time_in_us, uint32_t period);
 
 /**
  * @brief Convert time interval from RTC_CLK to microseconds
@@ -119,7 +119,7 @@ uint32_t pm_usec2rtc(uint32_t time_in_us, uint32_t period);
  *
  * @return time interval in microseconds
  */
-uint32_t pm_rtc2usec(uint32_t rtc_cycles, uint32_t period);
+uint32_t rtc_clk_to_us(uint32_t rtc_cycles, uint32_t period);
 
 /**
  * @brief Get the calibration value of RTC clock
