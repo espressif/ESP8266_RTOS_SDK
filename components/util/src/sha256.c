@@ -108,6 +108,8 @@ int esp_sha256_init(esp_sha256_t *ctx)
 {
     util_assert(ctx);
 
+    ctx->is224 = 0;
+
     ctx->total[0] = 0;
     ctx->total[1] = 0;
 
@@ -126,6 +128,8 @@ int esp_sha256_init(esp_sha256_t *ctx)
 int esp_sha224_init(esp_sha224_t *ctx)
 {
     util_assert(ctx);
+
+    ctx->is224 = 1;
 
     ctx->total[0] = 0;
     ctx->total[1] = 0;
@@ -230,19 +234,19 @@ int esp_sha224_finish(esp_sha224_t *ctx, void *dest)
     ESP_PUT_BE32(out + 20, ctx->state[5]);
     ESP_PUT_BE32(out + 24, ctx->state[6]);
 
+    if (!ctx->is224) {
+        ESP_PUT_BE32(out + 28, ctx->state[7]);
+    }
+
     return( 0 );
 }
 
 int esp_sha256_finish(esp_sha256_t *ctx, void *dest)
 {
-    uint8_t *out = (uint8_t *)dest;
-
     util_assert(ctx);
     util_assert(dest);
 
     esp_sha224_finish(ctx, dest);
-
-    ESP_PUT_BE32(out + 28, ctx->state[7]);
 
     return 0;
 }
