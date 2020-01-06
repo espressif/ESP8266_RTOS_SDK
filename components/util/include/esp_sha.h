@@ -31,12 +31,16 @@ typedef struct {
     uint32_t        total[2];
     uint32_t        state[8];
     uint8_t         buffer[64];
+
+    int             is224;
 } esp_sha256_t;
 
 typedef struct {
     uint64_t        total[2];
     uint64_t        state[8];
     uint8_t         buffer[128];
+
+    int             is384;
 } esp_sha512_t;
 
 typedef esp_sha256_t esp_sha224_t;
