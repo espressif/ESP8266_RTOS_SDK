@@ -20,7 +20,12 @@
 #include "phy.h"
 
 const size_t _g_esp_wifi_ppt_task_stk_size = CONFIG_WIFI_PPT_TASKSTACK_SIZE;
-const bool _g_esp_wifi_connect_open_router_when_pwd_is_set = CONFIG_ESP8266_WIFI_CONNECT_OPEN_ROUTER_WHEN_PWD_IS_SET;
+
+#if CONFIG_ESP8266_WIFI_CONNECT_OPEN_ROUTER_WHEN_PWD_IS_SET
+const bool _g_esp_wifi_connect_open_router_when_pwd_is_set = true;
+#else
+const bool _g_esp_wifi_connect_open_router_when_pwd_is_set = false;
+#endif
 
 esp_err_t esp_wifi_init_internal(const wifi_init_config_t *config);
 
