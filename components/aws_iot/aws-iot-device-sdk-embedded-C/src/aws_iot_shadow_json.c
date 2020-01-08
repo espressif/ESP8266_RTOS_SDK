@@ -309,7 +309,11 @@ static IoT_Error_t convertDataToString(char *pStringBuffer, size_t maxSizoString
 	} else if(type == SHADOW_JSON_DOUBLE) {
 		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%f,", *(double *) (pData));
 	} else if(type == SHADOW_JSON_FLOAT) {
-		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%f,", *(float *) (pData));
+//		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%f,", *(float *) (pData));
+//		snPrintfReturn = sprintf(pStringBuffer,  "%d.%02d,", *(int *) (pData),(*(int *) (pData))*100%100);
+		float Data=*(float *)pData;
+		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%d.%02d,", (int )Data,(int )(Data*100)%100);
+//		printf("debug :%s\r\n", pStringBuffer);
 	} else if(type == SHADOW_JSON_BOOL) {
 		snPrintfReturn = snprintf(pStringBuffer, maxSizoStringBuffer, "%s,", *(bool *) (pData) ? "true" : "false");
 	} else if(type == SHADOW_JSON_STRING) {
