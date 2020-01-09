@@ -419,6 +419,11 @@ esp_err_t uart_isr_register(uart_port_t uart_num, void (*fn)(void *), void *arg)
 {
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
 
+    for (int num = 0; num < UART_NUM_MAX; num++) {
+        if (p_uart_obj[num] == NULL) {
+            uart_disable_intr_mask(num, UART_INTR_MASK);
+        }
+    }
     UART_ENTER_CRITICAL();
     _xt_isr_mask(1 << ETS_UART_INUM);
     _xt_isr_attach(ETS_UART_INUM, uart_intr_service, NULL);
