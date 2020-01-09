@@ -107,7 +107,7 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params) {
         ret = SSL_CONNECTION_ERROR;
     } else {
         int tls_ret = esp_tls_conn_new_sync(pNetwork->tlsConnectParams.pDestinationURL, strlen(pNetwork->tlsConnectParams.pDestinationURL), pNetwork->tlsConnectParams.DestinationPort, &cfg, tls);
-        if (tls_ret) {
+        if (tls_ret == -1) {
             ret = SSL_CONNECTION_ERROR;
             esp_tls_conn_delete(tls);
         }
