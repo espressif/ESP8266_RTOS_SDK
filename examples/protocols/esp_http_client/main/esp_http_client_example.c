@@ -9,12 +9,16 @@
 
 #include <string.h>
 #include <stdlib.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_log.h"
 #include "esp_system.h"
+#include "esp_log.h"
+#include "esp_netif.h"
+#include "esp_event.h"
+#include "protocol_examples_common.h"
+#include "nvs.h"
 #include "nvs_flash.h"
-#include "app_wifi.h"
 
 #include "esp_http_client.h"
 
@@ -375,7 +379,6 @@ static void https_async()
 
 static void http_test_task(void *pvParameters)
 {
-    app_wifi_wait_connected();
     ESP_LOGI(TAG, "Connected to AP, begin http example");
     http_rest();
     http_auth_basic();
@@ -394,13 +397,12 @@ static void http_test_task(void *pvParameters)
 
 void app_main()
 {
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-    app_wifi_initialise();
+    ESP_ERROR_CHECK(nvs_flash_init());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+
+    ESP_ERROR_CHECK(example_connect());
 
     xTaskCreate(&http_test_task, "http_test_task", 8192, NULL, 5, NULL);
 }

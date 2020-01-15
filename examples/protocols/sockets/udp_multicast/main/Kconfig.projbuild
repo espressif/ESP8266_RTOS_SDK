@@ -1,19 +1,5 @@
 menu "Example Configuration"
 
-config WIFI_SSID
-    string "WiFi SSID"
-	default "myssid"
-	help
-		SSID (network name) for the example to connect to.
-
-config WIFI_PASSWORD
-    string "WiFi Password"
-	default "mypassword"
-	help
-		WiFi password (WPA or WPA2) for the example to use.
-
-		Can be left blank if the network has no security set.
-
 choice EXAMPLE_IP_MODE
     prompt "Multicast IP type"
     help
@@ -38,7 +24,7 @@ config EXAMPLE_IPV4
     bool
 config EXAMPLE_IPV6
     bool
-    select LWIP_IPV6
+    select EXAMPLE_CONNECT_IPV6
 
 config EXAMPLE_MULTICAST_IPV4_ADDR
     string "Multicast IPV4 Address (send & receive)"

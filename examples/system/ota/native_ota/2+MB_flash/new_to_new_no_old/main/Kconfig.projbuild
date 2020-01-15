@@ -1,19 +1,5 @@
 menu "Example Configuration"
 
-config WIFI_SSID
-    string "WiFi SSID"
-	default "myssid"
-	help
-		SSID (network name) for the example to connect to.
-
-config WIFI_PASSWORD
-    string "WiFi Password"
-	default "myssid"
-	help
-		WiFi password (WPA or WPA2) for the example to use.
-
-		Can be left blank if the network has no security set.
-
 config SERVER_IP
     string "HTTP Server IP"
 	default "192.168.0.3"

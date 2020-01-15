@@ -8,6 +8,7 @@
  */
 
 #include <string.h>
+
 #include "protocol_examples_common.h"
 #include "sdkconfig.h"
 #include "esp_event.h"
@@ -32,7 +33,8 @@
 
 static EventGroupHandle_t s_connect_event_group;
 static ip4_addr_t s_ip_addr;
-static const char *s_connection_name;
+static char s_connection_name[32] = CONFIG_EXAMPLE_WIFI_SSID;
+static char s_connection_passwd[32] = CONFIG_EXAMPLE_WIFI_PASSWORD;
 
 #ifdef CONFIG_EXAMPLE_CONNECT_IPV6
 static ip6_addr_t s_ipv6_addr;
@@ -40,65 +42,70 @@ static ip6_addr_t s_ipv6_addr;
 
 static const char *TAG = "example_connect";
 
-static esp_err_t event_handler(void *ctx, system_event_t *event)
+static void on_wifi_disconnect(void *arg, esp_event_base_t event_base,
+                               int32_t event_id, void *event_data)
 {
-    /* For accessing reason codes in case of disconnection */
-    system_event_info_t *info = &event->event_info;
+    system_event_sta_disconnected_t *event = (system_event_sta_disconnected_t *)event_data;
 
-    switch (event->event_id) {
-    case SYSTEM_EVENT_STA_START:
-        esp_wifi_connect();
-        break;
-    case SYSTEM_EVENT_STA_GOT_IP:
-        memcpy(&s_ip_addr, &event->event_info.got_ip.ip_info.ip, sizeof(s_ip_addr));
-        xEventGroupSetBits(s_connect_event_group, GOT_IPV4_BIT);;
-        break;
-#ifdef CONFIG_EXAMPLE_CONNECT_IPV6
-    case SYSTEM_EVENT_STA_CONNECTED:
-        tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA);
-        break;
-    case SYSTEM_EVENT_AP_STA_GOT_IP6:
-        memcpy(&s_ipv6_addr, &event->event_info.got_ip6.ip6_info, sizeof(s_ipv6_addr));
-        xEventGroupSetBits(s_connect_event_group, GOT_IPV6_BIT);
-        break;
-#endif
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-        ESP_LOGE(TAG, "Disconnect reason : %d", info->disconnected.reason);
-        if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
-            /*Switch to 802.11 bgn mode */
-            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
-        }
-        esp_wifi_connect();
-        xEventGroupClearBits(s_connect_event_group, GOT_IPV4_BIT);
-#ifdef CONFIG_EXAMPLE_CONNECT_IPV6
-        xEventGroupClearBits(s_connect_event_group, GOT_IPV6_BIT);
-#endif
-        break;
-    default:
-        break;
+    ESP_LOGI(TAG, "Wi-Fi disconnected, trying to reconnect...");
+    if (event->reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
+        /*Switch to 802.11 bgn mode */
+        esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
     }
-    return ESP_OK;
+    ESP_ERROR_CHECK(esp_wifi_connect());
 }
+
+#ifdef CONFIG_EXAMPLE_CONNECT_IPV6
+static void on_wifi_connect(void *arg, esp_event_base_t event_base,
+                            int32_t event_id, void *event_data)
+{
+    tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA);
+}
+#endif
+
+static void on_got_ip(void *arg, esp_event_base_t event_base,
+                      int32_t event_id, void *event_data)
+{
+    ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+    memcpy(&s_ip_addr, &event->ip_info.ip, sizeof(s_ip_addr));
+    xEventGroupSetBits(s_connect_event_group, GOT_IPV4_BIT);
+}
+
+#ifdef CONFIG_EXAMPLE_CONNECT_IPV6
+
+static void on_got_ipv6(void *arg, esp_event_base_t event_base,
+                        int32_t event_id, void *event_data)
+{
+    ip_event_got_ip6_t *event = (ip_event_got_ip6_t *)event_data;
+    memcpy(&s_ipv6_addr, &event->ip6_info.ip, sizeof(s_ipv6_addr));
+    xEventGroupSetBits(s_connect_event_group, GOT_IPV6_BIT);
+}
+
+#endif // CONFIG_EXAMPLE_CONNECT_IPV6
 
 static void start(void)
 {
-    ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
-
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &on_wifi_disconnect, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &on_got_ip, NULL));
+#ifdef CONFIG_EXAMPLE_CONNECT_IPV6
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, &on_wifi_connect, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_GOT_IP6, &on_got_ipv6, NULL));
+#endif    
+
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = CONFIG_EXAMPLE_WIFI_SSID,
-            .password = CONFIG_EXAMPLE_WIFI_PASSWORD,
-        },
-    };
+    wifi_config_t wifi_config = { 0 };
+
+    strncpy((char *)&wifi_config.sta.ssid, s_connection_name, 32);
+    strncpy((char *)&wifi_config.sta.password, s_connection_passwd, 32);
+
     ESP_LOGI(TAG, "Connecting to %s...", wifi_config.sta.ssid);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
-    s_connection_name = CONFIG_EXAMPLE_WIFI_SSID;
+    ESP_ERROR_CHECK(esp_wifi_connect());
 }
 
 static void stop(void)
@@ -108,6 +115,14 @@ static void stop(void)
         return;
     }
     ESP_ERROR_CHECK(err);
+
+    ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &on_wifi_disconnect));
+    ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &on_got_ip));
+#ifdef CONFIG_EXAMPLE_CONNECT_IPV6
+    ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_GOT_IP6, &on_got_ipv6));
+    ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, &on_wifi_connect));
+#endif
+
     ESP_ERROR_CHECK(esp_wifi_deinit());
 }
 
@@ -137,6 +152,14 @@ esp_err_t example_disconnect(void)
     s_connect_event_group = NULL;
     stop();
     ESP_LOGI(TAG, "Disconnected from %s", s_connection_name);
-    s_connection_name = NULL;
+    s_connection_name[0] = '\0';
+    return ESP_OK;
+}
+
+esp_err_t example_set_connection_info(const char *ssid, const char *passwd)
+{
+    strncpy(s_connection_name, ssid, sizeof(s_connection_name));
+    strncpy(s_connection_passwd, passwd, sizeof(s_connection_passwd));
+
     return ESP_OK;
 }

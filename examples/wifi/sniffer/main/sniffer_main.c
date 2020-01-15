@@ -12,7 +12,7 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_timer.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 #include "nvs_flash.h"
 
 #include "freertos/FreeRTOS.h"
@@ -155,27 +155,27 @@ static void sniffer_task(void* pvParameters)
     vTaskDelete(NULL);
 }
 
-static esp_err_t event_handler(void* ctx, system_event_t* event)
+static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+                                    int32_t event_id, void* event_data)
 {
-    switch (event->event_id) {
-        case SYSTEM_EVENT_STA_START:
-            xEventGroupSetBits(wifi_event_group, START_BIT);
-            break;
-
-        default:
-            break;
+    if (event_id == WIFI_EVENT_STA_START) {
+        xEventGroupSetBits(wifi_event_group, START_BIT);
     }
-
-    return ESP_OK;
 }
 
 static void initialise_wifi(void)
 {
     tcpip_adapter_init();
+
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
     wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
+
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());
 }
