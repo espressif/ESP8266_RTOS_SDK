@@ -86,7 +86,10 @@ static gpio_isr_func_t *gpio_isr_func = NULL;
 esp_err_t gpio_pullup_en(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
-    GPIO_CHECK(!RTC_GPIO_IS_VALID_GPIO(gpio_num), "The RTC GPIO of esp8266 can not be pulled up.", ESP_ERR_INVALID_ARG);
+
+    if (RTC_GPIO_IS_VALID_GPIO(gpio_num)) {
+        return ESP_OK;
+    }
 
     gpio_pin_reg_t pin_reg;
     pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(gpio_num));
@@ -98,7 +101,10 @@ esp_err_t gpio_pullup_en(gpio_num_t gpio_num)
 esp_err_t gpio_pullup_dis(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
-    GPIO_CHECK(!RTC_GPIO_IS_VALID_GPIO(gpio_num), "The RTC GPIO of esp8266 can not be pulled up.", ESP_ERR_INVALID_ARG);
+
+    if (RTC_GPIO_IS_VALID_GPIO(gpio_num)) {
+        return ESP_OK;
+    }
 
     gpio_pin_reg_t pin_reg;
     pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(gpio_num));
@@ -110,7 +116,10 @@ esp_err_t gpio_pullup_dis(gpio_num_t gpio_num)
 esp_err_t gpio_pulldown_en(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
-    GPIO_CHECK(RTC_GPIO_IS_VALID_GPIO(gpio_num), "The GPIO of esp8266 can not be pulled down except RTC GPIO.", ESP_ERR_INVALID_ARG);
+
+    if (!RTC_GPIO_IS_VALID_GPIO(gpio_num)) {
+        return ESP_OK;
+    }
 
     gpio_pin_reg_t pin_reg;
     pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(gpio_num));
@@ -122,7 +131,10 @@ esp_err_t gpio_pulldown_en(gpio_num_t gpio_num)
 esp_err_t gpio_pulldown_dis(gpio_num_t gpio_num)
 {
     GPIO_CHECK(GPIO_IS_VALID_GPIO(gpio_num), "GPIO number error", ESP_ERR_INVALID_ARG);
-    GPIO_CHECK(RTC_GPIO_IS_VALID_GPIO(gpio_num), "The GPIO of esp8266 can not be pulled down except RTC GPIO.", ESP_ERR_INVALID_ARG);
+
+    if (!RTC_GPIO_IS_VALID_GPIO(gpio_num)) {
+        return ESP_OK;
+    }
 
     gpio_pin_reg_t pin_reg;
     pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(gpio_num));
