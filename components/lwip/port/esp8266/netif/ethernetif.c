@@ -299,6 +299,10 @@ static void low_level_init(struct netif* netif)
     netif->flags |= NETIF_FLAG_IGMP;
 #endif
     /* Do whatever else is needed to initialize interface. */
+
+#if LWIP_IPV6_AUTOCONFIG
+    netif->ip6_autoconfig_enabled = 1;
+#endif /* LWIP_IPV6_AUTOCONFIG */
 }
 
 /*
