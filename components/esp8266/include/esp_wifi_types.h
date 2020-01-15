@@ -18,8 +18,10 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <sys/queue.h>
 #include "esp_err.h"
 #include "esp_interface.h"
+#include "esp_event_base.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -417,6 +419,91 @@ typedef struct {
     unsigned wifi_tx_rate: 8;               /*!< TX rate, descripted by "wifi_tx_rate_t" */
     unsigned unused: 4;                     /*!< Resolved */
 } wifi_tx_status_t;
+
+/** @cond **/
+/** @brief WiFi event base declaration */
+ESP_EVENT_DECLARE_BASE(WIFI_EVENT);
+/** @endcond **/
+
+/** WiFi event declarations */
+typedef enum {
+    WIFI_EVENT_WIFI_READY = 0,           /**< WiFi ready */
+    WIFI_EVENT_SCAN_DONE,                /**< finish scanning AP */
+    WIFI_EVENT_STA_START,                /**< station start */
+    WIFI_EVENT_STA_STOP,                 /**< station stop */
+    WIFI_EVENT_STA_CONNECTED,            /**< station connected to AP */
+    WIFI_EVENT_STA_DISCONNECTED,         /**< station disconnected from AP */
+    WIFI_EVENT_STA_AUTHMODE_CHANGE,      /**< the auth mode of AP connected by station changed */
+    WIFI_EVENT_STA_WPS_ER_SUCCESS,       /**< station wps succeeds in enrollee mode */
+    WIFI_EVENT_STA_WPS_ER_FAILED,        /**< station wps fails in enrollee mode */
+    WIFI_EVENT_STA_WPS_ER_TIMEOUT,       /**< station wps timeout in enrollee mode */
+    WIFI_EVENT_STA_WPS_ER_PIN,           /**< station wps pin code in enrollee mode */
+    WIFI_EVENT_AP_START,                 /**< soft-AP start */
+    WIFI_EVENT_AP_STOP,                  /**< soft-AP stop */
+    WIFI_EVENT_AP_STACONNECTED,          /**< a station connected to soft-AP */
+    WIFI_EVENT_AP_STADISCONNECTED,       /**< a station disconnected from soft-AP */
+    WIFI_EVENT_AP_PROBEREQRECVED,        /**< Receive probe request packet in soft-AP interface */
+} wifi_event_t;
+
+/** Argument structure for WIFI_EVENT_STA_WPS_ER_FAILED event */
+typedef enum {
+    WPS_FAIL_REASON_NORMAL = 0,     /**< WPS normal fail reason */
+    WPS_FAIL_REASON_RECV_M2D,       /**< WPS receive M2D frame */
+    WPS_FAIL_REASON_MAX
+} wifi_event_sta_wps_fail_reason_t;
+
+/** Argument structure for WIFI_EVENT_SCAN_DONE event */
+typedef struct {
+    uint32_t status;          /**< status of scanning APs: 0 — success, 1 - failure */
+    uint8_t  number;          /**< number of scan results */
+    uint8_t  scan_id;         /**< scan sequence number, used for block scan */
+} wifi_event_sta_scan_done_t;
+
+/** Argument structure for WIFI_EVENT_STA_CONNECTED event */
+typedef struct {
+    uint8_t ssid[32];         /**< SSID of connected AP */
+    uint8_t ssid_len;         /**< SSID length of connected AP */
+    uint8_t bssid[6];         /**< BSSID of connected AP*/
+    uint8_t channel;          /**< channel of connected AP*/
+    wifi_auth_mode_t authmode;/**< authentication mode used by AP*/
+} wifi_event_sta_connected_t;
+
+/** Argument structure for WIFI_EVENT_STA_AUTHMODE_CHANGE event */
+typedef struct {
+    wifi_auth_mode_t old_mode;         /**< the old auth mode of AP */
+    wifi_auth_mode_t new_mode;         /**< the new auth mode of AP */
+} wifi_event_sta_authmode_change_t;
+
+/** Argument structure for WIFI_EVENT_STA_WPS_ER_PIN event */
+typedef struct {
+    uint8_t pin_code[8];         /**< PIN code of station in enrollee mode */
+} wifi_event_sta_wps_er_pin_t;
+
+/** Argument structure for WIFI_EVENT_AP_STACONNECTED event */
+typedef struct {
+    uint8_t mac[6];           /**< MAC address of the station connected to soft-AP */
+    uint8_t aid;              /**< the aid that soft-AP gives to the station connected to  */
+} wifi_event_ap_staconnected_t;
+
+/** Argument structure for WIFI_EVENT_AP_STADISCONNECTED event */
+typedef struct {
+    uint8_t mac[6];           /**< MAC address of the station disconnects to soft-AP */
+    uint8_t aid;              /**< the aid that soft-AP gave to the station disconnects to  */
+} wifi_event_ap_stadisconnected_t;
+
+/** Argument structure for WIFI_EVENT_AP_PROBEREQRECVED event */
+typedef struct {
+    int rssi;                 /**< Received probe request signal strength */
+    uint8_t mac[6];           /**< MAC address of the station which send probe request */
+} wifi_event_ap_probe_req_rx_t;
+
+/** Argument structure for WIFI_EVENT_STA_DISCONNECTED event */
+typedef struct {
+    uint8_t ssid[32];         /**< SSID of disconnected AP */
+    uint8_t ssid_len;         /**< SSID length of disconnected AP */
+    uint8_t bssid[6];         /**< BSSID of disconnected AP */
+    uint8_t reason;           /**< reason of disconnection */
+} wifi_event_sta_disconnected_t;
 
 #ifdef __cplusplus
 }

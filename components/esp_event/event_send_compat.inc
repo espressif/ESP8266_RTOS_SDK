@@ -17,7 +17,6 @@
 #include "esp_event_legacy.h"
 #include "esp_wifi_types.h"
 #include "tcpip_adapter.h"
-#include "esp_eth.h"
 
 /**
  * The purpose of this file is to provide an "esp_event_send_to_default_loop"
@@ -80,7 +79,6 @@ esp_err_t esp_event_send_to_default_loop(system_event_t *event)
         HANDLE_SYS_EVENT(WIFI, STA_WPS_ER_TIMEOUT);
         HANDLE_SYS_EVENT_ARG(WIFI, STA_WPS_ER_FAILED, sta_er_fail_reason);
         HANDLE_SYS_EVENT_ARG(WIFI, STA_WPS_ER_PIN, sta_er_pin);
-        HANDLE_SYS_EVENT(WIFI, STA_WPS_ER_PBC_OVERLAP);
 
         /* AP events */
         HANDLE_SYS_EVENT(WIFI, AP_START);
@@ -89,21 +87,8 @@ esp_err_t esp_event_send_to_default_loop(system_event_t *event)
         HANDLE_SYS_EVENT_ARG(WIFI, AP_STADISCONNECTED, sta_disconnected);
         HANDLE_SYS_EVENT_ARG(WIFI, AP_PROBEREQRECVED, ap_probereqrecved);
 
-        /* Ethernet events */
-        /* Some extra defines to fit the old naming scheme... */
-#define ETH_EVENT_ETH_START ETHERNET_EVENT_START
-#define ETH_EVENT_ETH_STOP ETHERNET_EVENT_STOP
-#define ETH_EVENT_ETH_CONNECTED ETHERNET_EVENT_CONNECTED
-#define ETH_EVENT_ETH_DISCONNECTED ETHERNET_EVENT_DISCONNECTED
-
-        HANDLE_SYS_EVENT(ETH, ETH_START);
-        HANDLE_SYS_EVENT(ETH, ETH_STOP);
-        HANDLE_SYS_EVENT(ETH, ETH_CONNECTED);
-        HANDLE_SYS_EVENT(ETH, ETH_DISCONNECTED);
-
         /* IP events */
         HANDLE_SYS_EVENT_ARG(IP, STA_GOT_IP, got_ip);
-        HANDLE_SYS_EVENT_ARG(IP, ETH_GOT_IP, got_ip);
         HANDLE_SYS_EVENT(IP, STA_LOST_IP);
         HANDLE_SYS_EVENT_ARG(IP, GOT_IP6, got_ip6);
         HANDLE_SYS_EVENT(IP, AP_STAIPASSIGNED);
@@ -234,10 +219,6 @@ static void esp_system_event_debug(const system_event_t* event)
             ESP_LOGD(TAG, "SYSTEM_EVENT_STA_WPS_ER_PIN");
             break;
         }
-        case SYSTEM_EVENT_STA_WPS_ER_PBC_OVERLAP: {
-            ESP_LOGD(TAG, "SYSTEM_EVENT_STA_WPS_ER_PBC_OVERLAP");
-            break;
-        }
         case SYSTEM_EVENT_AP_START: {
             ESP_LOGD(TAG, "SYSTEM_EVENT_AP_START");
             break;
@@ -269,6 +250,7 @@ static void esp_system_event_debug(const system_event_t* event)
                        MAC2STR(ap_probereqrecved->mac));
             break;
         }
+#if LWIP_IPV6
         case SYSTEM_EVENT_GOT_IP6: {
             const ip6_addr_t *addr = &event->event_info.got_ip6.ip6_info.ip;
             ESP_LOGD(TAG, "SYSTEM_EVENT_AP_STA_GOT_IP6 address %04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x",
@@ -282,30 +264,7 @@ static void esp_system_event_debug(const system_event_t* event)
                      IP6_ADDR_BLOCK8(addr));
             break;
         }
-        case SYSTEM_EVENT_ETH_START: {
-            ESP_LOGD(TAG, "SYSTEM_EVENT_ETH_START");
-            break;
-        }
-        case SYSTEM_EVENT_ETH_STOP: {
-            ESP_LOGD(TAG, "SYSTEM_EVENT_ETH_STOP");
-            break;
-        }
-        case SYSTEM_EVENT_ETH_CONNECTED: {
-            ESP_LOGD(TAG, "SYSTEM_EVENT_ETH_CONNECETED");
-            break;
-        }
-        case SYSTEM_EVENT_ETH_DISCONNECTED: {
-            ESP_LOGD(TAG, "SYSTEM_EVENT_ETH_DISCONNECETED");
-            break;
-        }
-        case SYSTEM_EVENT_ETH_GOT_IP: {
-            const system_event_sta_got_ip_t *got_ip = &event->event_info.got_ip;
-            ESP_LOGD(TAG, "SYSTEM_EVENT_ETH_GOT_IP, ip:" IPSTR ", mask:" IPSTR ", gw:" IPSTR,
-                IP2STR(&got_ip->ip_info.ip),
-                IP2STR(&got_ip->ip_info.netmask),
-                IP2STR(&got_ip->ip_info.gw));
-            break;
-        }
+#endif
         default: {
             ESP_LOGW(TAG, "unexpected system event %d!", event->event_id);
             break;

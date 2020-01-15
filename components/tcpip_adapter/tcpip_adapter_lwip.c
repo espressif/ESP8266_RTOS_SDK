@@ -79,6 +79,8 @@ static bool tcpip_inited = false;
 
 static const char* TAG = "tcpip_adapter";
 
+ESP_EVENT_DEFINE_BASE(IP_EVENT);
+
 /* Avoid warning. No header file has include these function */
 err_t ethernetif_init(struct netif* netif);
 void system_station_got_ip_set();
@@ -93,6 +95,7 @@ static void tcpip_adapter_dhcps_cb(u8_t client_ip[4])
                 client_ip[0],client_ip[1],client_ip[2],client_ip[3]);
     system_event_t evt;
     evt.event_id = SYSTEM_EVENT_AP_STAIPASSIGNED;
+    memcpy(&evt.event_info.ap_staipassigned.ip, client_ip, 4);
     esp_event_send(&evt);
 }
 
@@ -584,6 +587,7 @@ esp_err_t tcpip_adapter_set_ip_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_i
                     evt.event_info.got_ip.ip_changed = true;
                 }
 
+                evt.event_info.got_ip.if_index = TCPIP_ADAPTER_IF_STA;
                 memcpy(&evt.event_info.got_ip.ip_info, ip_info, sizeof(tcpip_adapter_ip_info_t));
                 memcpy(&esp_ip_old[tcpip_if], ip_info, sizeof(tcpip_adapter_ip_info_t));
                 esp_event_send(&evt);
