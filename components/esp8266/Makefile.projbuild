@@ -42,7 +42,7 @@ ESP8266_COMPONENT_PATH := $(COMPONENT_PATH)
 
 $(PHY_INIT_DATA_OBJ): $(ESP8266_COMPONENT_PATH)/include/internal/phy_init_data.h $(BUILD_DIR_BASE)/include/sdkconfig.h
 	$(summary) CC $(notdir $@)
-	printf "#include \"internal/phy_init_data.h\"\n" | $(CC) -I $(BUILD_DIR_BASE)/include -I $(ESP8266_COMPONENT_PATH) -I $(ESP8266_COMPONENT_PATH)/include -c -o $@ -xc -
+	printf "#include \"internal/phy_init_data.h\"\n" | $(CC) -I $(BUILD_DIR_BASE)/include -I $(ESP8266_COMPONENT_PATH) -I $(ESP8266_COMPONENT_PATH)/include -I $(ESP8266_COMPONENT_PATH)/../esp_common/include -c -o $@ -xc -
 
 $(PHY_INIT_DATA_BIN): $(PHY_INIT_DATA_OBJ)
 	$(summary) BIN $(notdir $@)

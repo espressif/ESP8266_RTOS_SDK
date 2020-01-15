@@ -4,8 +4,9 @@ if(BOOTLOADER_BUILD)
     set_property(TARGET ${COMPONENT_LIB} APPEND PROPERTY INTERFACE_LINK_LIBRARIES "-Wl,--gc-sections")
 else()
     # Regular app build
-    idf_component_register(SRCS "src/stack_check.c"
-                        INCLUDE_DIRS include)
+    idf_component_register(SRCS "src/stack_check.c" "src/esp_err_to_name.c"
+                        INCLUDE_DIRS include
+                        PRIV_REQUIRES "tcpip_adapter")
 
     set_source_files_properties(
         "src/stack_check.c"
