@@ -18,6 +18,7 @@ import os
 from pyparsing import Word, alphanums, printables, Combine, Literal, hexnums, quotedString, Optional, nums, removeQuotes, oneOf, Group, infixNotation, opAssoc
 
 import sys
+sys.path.insert(0, os.environ.get('IDF_PATH') + '/tools/kconfig_new')
 try:
     import kconfiglib
 except ImportError:

@@ -1,3 +1,8 @@
+[sections:text_0]
+entries:
+    .text
+    .literal
+
 [sections:text]
 entries:
     .text+
@@ -50,6 +55,7 @@ entries:
 
 [scheme:default]
 entries:
+    text_0 -> iram0_text
     text -> flash_text
     rodata -> flash_rodata
     data -> dram0_data
@@ -87,3 +93,7 @@ entries:
 [scheme:wifi_iram]
 entries:
     wifi_iram -> iram0_text
+
+[scheme:inflash_text]
+entries:
+    text -> flash_text

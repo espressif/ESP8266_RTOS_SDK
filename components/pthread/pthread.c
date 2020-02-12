@@ -78,6 +78,17 @@ static void esp_pthread_cfg_key_destructor(void *value)
     free(value);
 }
 
+int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock_id) 
+{
+    ESP_LOGW(TAG, "%s: not yet supported!", __func__);
+    return 0;
+}
+
+int pthread_setcancelstate(int state, int *oldstate)
+{
+    return 0;
+}
+
 esp_err_t esp_pthread_init(void)
 {
     if (pthread_key_create(&s_pthread_cfg_key, esp_pthread_cfg_key_destructor) != 0) {

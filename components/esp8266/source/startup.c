@@ -35,9 +35,7 @@
 #include "task.h"
 #include "esp_task.h"
 
-#ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER
 #include "esp_newlib.h"
-#endif
 
 extern esp_err_t esp_pthread_init(void);
 extern void chip_boot(void);
@@ -85,9 +83,7 @@ static void user_init_entry(void *param)
     esp_task_wdt_init();
 #endif
 
-#ifdef CONFIG_ENABLE_PTHREAD
     assert(esp_pthread_init() == 0);
-#endif
 
 #ifdef CONFIG_BOOTLOADER_FAST_BOOT
     REG_CLR_BIT(DPORT_CTL_REG, DPORT_CTL_DOUBLE_CLK);
@@ -167,9 +163,7 @@ void call_start_cpu(size_t start_addr)
     assert(__esp_os_init() == 0);
 #endif
 
-#ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER
-    esp_newlib_init();
-#endif
+    assert(esp_newlib_init() == 0);
 
     assert(xTaskCreate(user_init_entry, "uiT", ESP_TASK_MAIN_STACK, NULL, ESP_TASK_MAIN_PRIO, NULL) == pdPASS);
 
