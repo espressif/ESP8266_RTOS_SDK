@@ -22,31 +22,31 @@
       "versions": [
         {
           "linux-amd64": {
-            "sha256": "706a02853759c2f85d912f68df4f5b4566ecb41422de5afe35a45d064eb8e494",
-            "size": 37049855,
-            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz"
+            "sha256": "0a1804b5e2231c6db8b72af6bc2a0f9a5b6994cfba29956d412651109f13fe7e",
+            "size": 88885561,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz"
           },
           "linux-i686": {
-            "sha256": "a94df9788a73a362f01f32a6f9d46b8630a0aab708eec8d6523e72342f382769",
-            "size": 38388423,
-            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-linux32-1.22.0-100-ge567ec7-5.2.0.tar.gz"
+            "sha256": "c8dce7e8eb58c1fdf4e03ba74eb8094e803a0b5b8ad6a9d571216f60eb72cb36",
+            "size": 90887617,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-linux-i686.tar.gz"
           },
           "macos": {
-            "sha256": "4e3b2e6ba8ab7ff4dc4b70d90a181763b2077e4b6a69106241f8c175bab18184",
-            "size": 43153405,
-            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-macos-1.22.0-100-ge567ec7-5.2.0.tar.gz"
+            "sha256": "7823c5fdf3cea2b588cf0c5bd962774ab60a30b8d9c19ae0056a0ef3697537db",
+            "size": 95436978,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-macos.tar.gz"
           },
-          "name": "1.22.0-100-ge567ec7-5.2.0",
+          "name": "esp-2020r3-49-gd5524c1-8.4.0",
           "status": "recommended",
           "win32": {
-            "sha256": "0756bb6e768fb986ec557bf1136a8978e106d7d2cca1bbb21fca5d566a30e468",
-            "size": 39567257,
-            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-win32-1.22.0-100-ge567ec7-5.2.0.zip"
+            "sha256": "733b4da8723471b430f8692b943a7917ad5920b98e7bc6bdf9fb7617182c2b33",
+            "size": 108711860,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-win32.zip"
           },
           "win64": {
-            "sha256": "0756bb6e768fb986ec557bf1136a8978e106d7d2cca1bbb21fca5d566a30e468",
-            "size": 39567257,
-            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-win32-1.22.0-100-ge567ec7-5.2.0.zip"
+            "sha256": "733b4da8723471b430f8692b943a7917ad5920b98e7bc6bdf9fb7617182c2b33",
+            "size": 108711860,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-win32.zip"
           }
         }
       ]

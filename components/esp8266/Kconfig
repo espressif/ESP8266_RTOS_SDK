@@ -27,30 +27,6 @@ config ESP8266_DEFAULT_CPU_FREQ_MHZ
     default 80 if ESP8266_DEFAULT_CPU_FREQ_80
     default 160 if ESP8266_DEFAULT_CPU_FREQ_160
 
-choice NEWLIB_STDOUT_LINE_ENDING
-    prompt "Line ending for UART output"
-    default NEWLIB_STDOUT_LINE_ENDING_CRLF
-    help
-        This option allows configuring the desired line endings sent to UART
-        when a newline ('\n', LF) appears on stdout.
-        Three options are possible:
-
-        CRLF: whenever LF is encountered, prepend it with CR
-
-        LF: no modification is applied, stdout is sent as is
-
-        CR: each occurence of LF is replaced with CR
-
-        This option doesn't affect behavior of the UART driver (drivers/uart.h).
-
-config NEWLIB_STDOUT_LINE_ENDING_CRLF
-    bool "CRLF"
-config NEWLIB_STDOUT_LINE_ENDING_LF
-    bool "LF"
-config NEWLIB_STDOUT_LINE_ENDING_CR
-    bool "CR"
-endchoice
-
 choice ESP_FILENAME_MACRO
     prompt "File name macro text"
     default ESP_FILENAME_MACRO_NO_PATH

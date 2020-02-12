@@ -204,9 +204,11 @@ static esp_err_t load_partitions()
         item->info.encrypted = false;
 #endif
 
+        const int label_size = sizeof(it->label);
+
         // it->label may not be zero-terminated
-        strncpy(item->info.label, (const char*) it->label, sizeof(it->label));
-        item->info.label[sizeof(it->label)] = 0;
+        strncpy(item->info.label, (const char*) it->label, label_size);
+        item->info.label[label_size] = 0;
         // add it to the list
         if (last == NULL) {
             SLIST_INSERT_HEAD(&s_partition_list, item, next);
