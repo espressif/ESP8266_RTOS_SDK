@@ -22,6 +22,7 @@ extern "C" {
 #endif
 
 #define RTC_SYS_RAM_SIZE            256
+#define ESP_SYSTEM_FAST_BOOT_IMAGE  0x5aa5a55a
 
 /**
  * @brief Station's AP base information of old SDK
@@ -50,6 +51,13 @@ struct _rtc_sys_info {
     uint32_t        hint;   // software reset reason
     uint32_t        old_sysconf_addr;   /*<! old SDK system configuration parameters base address, 
                                              if your bootloader is older than v3.2, please don't use this */
+    struct {
+        uint32_t    magic;
+        uint32_t    image_start;
+        uint32_t    image_size;
+        uint32_t    image_entry;
+        uint32_t    crc32;
+    } fast_boot;
 };
 
 /**

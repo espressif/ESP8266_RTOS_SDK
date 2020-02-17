@@ -30,6 +30,7 @@ const bool _g_esp_wifi_connect_open_router_when_pwd_is_set = true;
 const bool _g_esp_wifi_connect_open_router_when_pwd_is_set = false;
 #endif
 
+esp_err_t mac_init(void);
 esp_err_t esp_wifi_init_internal(const wifi_init_config_t *config);
 
 ESP_EVENT_DEFINE_BASE(WIFI_EVENT);
@@ -129,6 +130,10 @@ static void esp_wifi_set_debug_log()
   */
 esp_err_t esp_wifi_init(const wifi_init_config_t *config)
 {
+    mac_init();
+
+    esp_wifi_set_rx_pbuf_mem_type(WIFI_RX_PBUF_DRAM);
+
     esp_err_t result = esp_wifi_init_internal(config);
     if (result == ESP_OK) {
         esp_wifi_set_debug_log();

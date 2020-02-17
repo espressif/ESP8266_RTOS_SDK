@@ -205,6 +205,9 @@
 #define CACHE_READ_EN_BIT               BIT8
 //}}
 
+#define ESP_CACHE1_ADDR_MAX             (0x100000)
+#define ESP_CACHE2_ADDR_MAX             (0x200000)
+
 #define DRAM_BASE                       (0x3FFE8000)
 #define DRAM_SIZE                       (96 * 1024)
 

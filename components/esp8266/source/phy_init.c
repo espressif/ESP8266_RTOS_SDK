@@ -72,11 +72,6 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t* init_data, esp_phy_calibrat
     esp_err_t status = ESP_OK;
     uint8_t sta_mac[6];
     uint8_t *local_init_data = calloc(1, 256);
-#ifdef CONFIG_ESP_CONSOLE_UART_BAUDRATE
-    const uint32_t uart_baudrate = CONFIG_ESP_CONSOLE_UART_BAUDRATE;
-#else
-    const uint32_t uart_baudrate = 74880; // ROM default baudrate
-#endif
 
     memcpy(local_init_data, init_data->params, 128);
     memcpy(local_init_data + 128, calibration_data->rf_cal_data, 128);
@@ -102,12 +97,7 @@ esp_err_t esp_phy_rf_init(const esp_phy_init_data_t* init_data, esp_phy_calibrat
      * so UARTs must be flush here, then reconfigurate the UART frequency dividor
      */
     uart_tx_wait_idle(0);
-    uart_div_modify(0, UART_CLK_FREQ / uart_baudrate);
-
     uart_tx_wait_idle(1);
-    uart_div_modify(1, UART_CLK_FREQ / uart_baudrate);
-
-    rtc_init_clk(local_init_data);
 
     int ret = register_chipv6_phy(local_init_data);
     if (ret) {

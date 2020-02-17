@@ -2,7 +2,7 @@ if(BOOTLOADER_BUILD)
     # For bootloader, all we need from esp8266 is headers
     set(COMPONENT_ADD_INCLUDEDIRS include)
     # set(COMPONENT_REQUIRES ${COMPONENTS})
-    set(COMPONENT_SRCS source/ets_printf.c source/crc.c)
+    set(COMPONENT_SRCS source/ets_printf.c source/crc.c source/esp_fast_boot.c)
     register_component(esp8266)
 
     # as cmake won't attach linker args to a header-only library, attach
@@ -37,6 +37,7 @@ else()
         "source/task_wdt.c"
         "source/rom.c"
         "source/hw_random.c"
+        "source/esp_fast_boot.c"
         "driver/adc.c"
         "driver/gpio.c"
         "driver/hw_timer.c"
@@ -53,7 +54,7 @@ else()
     set(include_dirs "include" "include/driver")
 
     set(requires "esp_common" "esp_event")
-    set(priv_requires "wpa_supplicant" "log" "spi_flash" "tcpip_adapter" "esp_ringbuf" "bootloader_support" "nvs_flash")
+    set(priv_requires "wpa_supplicant" "log" "spi_flash" "tcpip_adapter" "esp_ringbuf" "bootloader_support" "nvs_flash" "app_update")
     set(fragments linker.lf ld/esp8266_fragments.lf ld/esp8266_bss_fragments.lf)
 
     idf_component_register(SRCS "${srcs}"

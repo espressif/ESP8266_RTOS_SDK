@@ -2,7 +2,7 @@
 # Component Makefile
 #
 ifdef IS_BOOTLOADER_BUILD
-COMPONENT_OBJS := source/ets_printf.o source/crc.o
+COMPONENT_OBJS := source/ets_printf.o source/crc.o source/esp_fast_boot.o
 COMPONENT_SRCDIRS := source
 else
 COMPONENT_ADD_INCLUDEDIRS += include

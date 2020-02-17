@@ -50,6 +50,7 @@ typedef enum {
     ESP_RST_DEEPSLEEP,      //!< Reset after exiting deep sleep mode
     ESP_RST_BROWNOUT,       //!< Brownout reset (software or hardware)
     ESP_RST_SDIO,           //!< Reset over SDIO
+    ESP_RST_FAST_SW,        //!< Fast reboot
 } esp_reset_reason_t;
 
 /**
@@ -186,6 +187,13 @@ uint32_t esp_random(void);
  * @param len Length of buffer in bytes
  */
 void esp_fill_random(void *buf, size_t len);
+
+/**
+ * @brief Initialize MAC address
+ * 
+ * @return 0 if sucess or others failed
+ */
+esp_err_t esp_mac_init(void);
 
 typedef enum {
     FLASH_SIZE_4M_MAP_256_256 = 0,  /**<  Flash size : 4Mbits. Map : 256KBytes + 256KBytes */
