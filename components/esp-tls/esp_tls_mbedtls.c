@@ -470,8 +470,8 @@ int esp_mbedtls_server_session_create(esp_tls_cfg_server_t *cfg, int sockfd, esp
         tls->conn_state = ESP_TLS_FAIL;
         return -1;
     }
-    tls->read = esp_mbedtls_read;
-    tls->write = esp_mbedtls_write;
+    tls->_read = esp_mbedtls_read;
+    tls->_write = esp_mbedtls_write;
     int ret;
     while ((ret = mbedtls_ssl_handshake(&tls->ssl)) != 0) {
         if (ret != ESP_TLS_ERR_SSL_WANT_READ && ret != ESP_TLS_ERR_SSL_WANT_WRITE) {
