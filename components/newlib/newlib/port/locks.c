@@ -20,8 +20,6 @@
 #include "semphr.h"
 #include "task.h"
 
-#define portYIELD_FROM_ISR portYIELD
-
 /* Initialize the given lock by allocating a new mutex semaphore
    as the _lock_t value.
 

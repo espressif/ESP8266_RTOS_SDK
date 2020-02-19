@@ -111,6 +111,7 @@ extern void vTaskSwitchContext( void );				\
 	}												\
 }
 
+void portYIELD_FROM_ISR(void);
 
 /*-----------------------------------------------------------*/
 extern unsigned cpu_sr;
