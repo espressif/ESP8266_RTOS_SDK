@@ -14,11 +14,14 @@
 
 #pragma once
 
+#include "sdkconfig.h"
 #include "esp_err.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef CONFIG_HEAP_TRACING
 
 typedef enum {
 	HEAP_TRACE_NONE = 0,
@@ -79,6 +82,8 @@ esp_err_t heap_trace_resume(void);
  * entries unless heap tracing is stopped first.
  */
 void heap_trace_dump(void);
+
+#endif /* CONFIG_HEAP_TRACING */
 
 #ifdef __cplusplus
 }

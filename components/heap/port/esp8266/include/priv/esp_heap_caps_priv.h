@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include "sdkconfig.h"
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -21,7 +22,12 @@ extern "C" {
 #endif
 
 #define MEM_BLK_TAG             0x80000000  ///< Mark the memory block used
+
+#ifdef CONFIG_HEAP_TRACING
 #define MEM_BLK_TRACE           0x80000000  ///< Mark the memory block traced
+#else
+#define MEM_BLK_TRACE           0x00000000  ///< Mark the memory block traced
+#endif
 
 #define _mem_blk_get_ptr(_mem_blk, _offset, _mask)                          \
     ((mem_blk_t *)((((uint32_t *)(_mem_blk))[_offset]) & (~_mask)))
@@ -47,12 +53,14 @@ static inline size_t mem_blk_head_size(bool trace)
 
 static inline void mem_blk_set_traced(mem2_blk_t *mem_blk, const char *file, size_t line)
 {
+#ifdef CONFIG_HEAP_TRACING
     uint32_t *val = (uint32_t *)mem_blk + 1;
 
     *val |= MEM_BLK_TRACE;
 
     mem_blk->file = file;
     mem_blk->line = line | MEM_BLK_TRACE;
+#endif
 }
 
 static inline void mem_blk_set_untraced(mem2_blk_t *mem_blk)
@@ -154,10 +162,12 @@ static inline size_t ptr_size(void *ptr)
     return size;
 }
 
+#ifdef CONFIG_HEAP_TRACING
 static inline size_t mem2_blk_line(mem2_blk_t *mem2_blk)
 {
     return mem2_blk->line & ~MEM_BLK_TRACE;
 }
+#endif
 
 #ifdef __cplusplus
 }

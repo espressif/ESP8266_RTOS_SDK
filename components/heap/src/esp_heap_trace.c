@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_HEAP_TRACING
+
 #include <string.h>
 
 #include "esp_heap_caps.h"
@@ -146,3 +150,5 @@ void heap_trace_dump(void)
         _heap_caps_unlock(num);
     }
 }
+
+#endif /* CONFIG_HEAP_TRACING */
