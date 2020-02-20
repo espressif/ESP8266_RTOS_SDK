@@ -46,6 +46,14 @@
 // Forces read-only data into RTC memory.
 #define RTC_RODATA_ATTR _SECTION_ATTR_IMPL(".rtc.rodata", __COUNTER__)
 
+// Forces data into RTC memory of .noinit section.
+// Any variable marked with this attribute will keep its value
+// after restart or during a deep sleep / wake cycle.
+#define RTC_NOINIT_ATTR  _SECTION_ATTR_IMPL(".rtc_noinit", __COUNTER__)
+
+// Forces data into noinit section to avoid initialization after restart.
+#define __NOINIT_ATTR _SECTION_ATTR_IMPL(".noinit", __COUNTER__)
+
 // Forces to put some user defined data in the binary file header, the offset is 0x10.
 #define USER_DATA_ATTR _SECTION_ATTR_IMPL(".user.data", __COUNTER__)
 
