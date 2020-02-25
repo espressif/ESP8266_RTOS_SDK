@@ -178,12 +178,7 @@ static void https_get_task(void *pvParameters)
             bzero(buf, sizeof(buf));
             ret = esp_tls_conn_read(tls, (char *)buf, len);
 
-            if
-#if CONFIG_SSL_USING_MBEDTLS
-            (ret == MBEDTLS_ERR_SSL_WANT_WRITE  || ret == MBEDTLS_ERR_SSL_WANT_READ)
-#else
-            (ret == WOLFSSL_ERROR_WANT_READ  && ret == WOLFSSL_ERROR_WANT_WRITE)
-#endif
+            if (ret == ESP_TLS_ERR_SSL_WANT_READ  || ret == ESP_TLS_ERR_SSL_WANT_WRITE)
                 continue;
             
             if(ret < 0)
