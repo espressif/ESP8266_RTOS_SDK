@@ -13,24 +13,15 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/event_groups.h"
-
+#include "esp_system.h"
 #include "esp_log.h"
-#include "esp_wifi.h"
-#include "esp_event_loop.h"
+#include "esp_netif.h"
+#include "esp_event.h"
+#include "protocol_examples_common.h"
 
 #include "nvs_flash.h"
 
 #include "coap.h"
-
-/* The examples use simple WiFi configuration that you can set via
-   'make menuconfig'.
-
-   If you'd rather not, just change the below entries to strings with
-   the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
-*/
-#define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
-#define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASSWORD
 
 #define COAP_DEFAULT_TIME_SEC 5
 #define COAP_DEFAULT_TIME_USEC 0
@@ -42,13 +33,6 @@
    the config you want - ie #define COAP_DEFAULT_DEMO_URI "coap://californium.eclipse.org"
 */
 #define COAP_DEFAULT_DEMO_URI CONFIG_TARGET_DOMAIN_URI
-
-static EventGroupHandle_t wifi_event_group;
-
-/* The event group allows multiple bits for each event,
-   but we only care about one event - are we connected
-   to the AP with an IP? */
-const static int CONNECTED_BIT = BIT0;
 
 const static char *TAG = "CoAP_client";
 
@@ -81,13 +65,6 @@ static void coap_example_task(void *p)
     uint8_t     get_method = 1;
 
     while (1) {
-        /* Wait for the callback to set the CONNECTED_BIT in the
-           event group.
-        */
-        xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
-                            false, true, portMAX_DELAY);
-        ESP_LOGI(TAG, "Connected to AP");
-
         if (coap_split_uri((const uint8_t *)server_uri, strlen(server_uri), &uri) == -1) {
             ESP_LOGE(TAG, "CoAP server uri error");
             break;
@@ -157,55 +134,14 @@ static void coap_example_task(void *p)
     vTaskDelete(NULL);
 }
 
-static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
-{
-    /* For accessing reason codes in case of disconnection */
-    system_event_info_t *info = &event->event_info;
-
-    switch(event->event_id) {
-    case SYSTEM_EVENT_STA_START:
-        esp_wifi_connect();
-        break;
-    case SYSTEM_EVENT_STA_GOT_IP:
-        xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
-        break;
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-        ESP_LOGE(TAG, "Disconnect reason : %d", info->disconnected.reason);
-        if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
-            /*Switch to 802.11 bgn mode */
-            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
-        }
-        esp_wifi_connect();
-        xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
-        break;
-    default:
-        break;
-    }
-    return ESP_OK;
-}
-
-static void wifi_conn_init(void)
-{
-    tcpip_adapter_init();
-    wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK( esp_event_loop_init(wifi_event_handler, NULL) );
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = EXAMPLE_WIFI_SSID,
-            .password = EXAMPLE_WIFI_PASS,
-        },
-    };
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
-    ESP_ERROR_CHECK( esp_wifi_start() );
-}
-
 void app_main(void)
 {
-    ESP_ERROR_CHECK( nvs_flash_init() );
-    wifi_conn_init();
+    ESP_ERROR_CHECK(nvs_flash_init());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+
+    ESP_ERROR_CHECK(example_connect());
+
     xTaskCreate(coap_example_task, "coap", 2048, NULL, 5, NULL);
 }

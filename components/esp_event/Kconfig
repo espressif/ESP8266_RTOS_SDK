@@ -1,0 +1,17 @@
+menu "Event Loop Library"
+
+    config ESP_EVENT_LOOP_PROFILING
+        bool "Enable event loop profiling"
+        default n
+        help
+            Enables collections of statistics in the event loop library such as the number of events posted
+            to/recieved by an event loop, number of callbacks involved, number of events dropped to to a full event
+            loop queue, run time of event handlers, and number of times/run time of each event handler.
+
+    config ESP_EVENT_POST_FROM_ISR
+        bool "Support posting events from ISRs"
+        default y
+        help
+            Enable posting events from interrupt handlers.
+
+endmenu

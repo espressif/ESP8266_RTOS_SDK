@@ -48,6 +48,11 @@ esp_err_t example_disconnect(void);
  */
 esp_err_t example_configure_stdin_stdout(void);
 
+/**
+ * @brief Configure SSID and password
+ */
+esp_err_t example_set_connection_info(const char *ssid, const char *passwd);
+
 #ifdef __cplusplus
 }
 #endif

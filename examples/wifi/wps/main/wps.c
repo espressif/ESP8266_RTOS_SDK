@@ -39,77 +39,72 @@
 static const char* TAG = "example_wps";
 static esp_wps_config_t config = WPS_CONFIG_INIT_DEFAULT(WPS_TEST_MODE);
 
-static esp_err_t event_handler(void* ctx, system_event_t* event)
+static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+                                int32_t event_id, void* event_data)
 {
-    /* For accessing reason codes in case of disconnection */
-    system_event_info_t *info = &event->event_info;
-    
-    switch (event->event_id) {
-        case SYSTEM_EVENT_STA_START:
-            ESP_LOGI(TAG, "SYSTEM_EVENT_STA_START");
+    switch (event_id) {
+        case WIFI_EVENT_STA_START:
+            ESP_LOGI(TAG, "WIFI_EVENT_STA_START");
             break;
+        case WIFI_EVENT_STA_DISCONNECTED: {
+                system_event_sta_disconnected_t *event = (system_event_sta_disconnected_t *)event_data;
 
-        case SYSTEM_EVENT_STA_GOT_IP:
-            ESP_LOGI(TAG, "SYSTEM_EVENT_STA_GOT_IP");
-            ESP_LOGI(TAG, "got ip:%s\n",
-                     ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
-            break;
-
-        case SYSTEM_EVENT_STA_DISCONNECTED:
-            ESP_LOGI(TAG, "SYSTEM_EVENT_STA_DISCONNECTED");
-            ESP_LOGE(TAG, "Disconnect reason : %d", info->disconnected.reason);
-            if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
-                /*Switch to 802.11 bgn mode */
-                esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+                ESP_LOGI(TAG, "WIFI_EVENT_STA_DISCONNECTED");
+                if (event->reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
+                    /*Switch to 802.11 bgn mode */
+                    esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+                }
+                ESP_ERROR_CHECK(esp_wifi_connect());
             }
-            ESP_ERROR_CHECK(esp_wifi_connect());
             break;
-
-        case SYSTEM_EVENT_STA_WPS_ER_SUCCESS:
-            /*point: the function esp_wifi_wps_start() only get ssid & password
-             * so call the function esp_wifi_connect() here
-             * */
-            ESP_LOGI(TAG, "SYSTEM_EVENT_STA_WPS_ER_SUCCESS");
+        case WIFI_EVENT_STA_WPS_ER_SUCCESS:
+            ESP_LOGI(TAG, "WIFI_EVENT_STA_WPS_ER_SUCCESS");
+            /* esp_wifi_wps_start() only gets ssid & password, so call esp_wifi_connect() here. */
             ESP_ERROR_CHECK(esp_wifi_wps_disable());
             ESP_ERROR_CHECK(esp_wifi_connect());
             break;
-
-        case SYSTEM_EVENT_STA_WPS_ER_FAILED:
-            ESP_LOGI(TAG, "SYSTEM_EVENT_STA_WPS_ER_FAILED");
+        case WIFI_EVENT_STA_WPS_ER_FAILED:
+            ESP_LOGI(TAG, "WIFI_EVENT_STA_WPS_ER_FAILED");
             ESP_ERROR_CHECK(esp_wifi_wps_disable());
             ESP_ERROR_CHECK(esp_wifi_wps_enable(&config));
             ESP_ERROR_CHECK(esp_wifi_wps_start(0));
             break;
-
-        case SYSTEM_EVENT_STA_WPS_ER_TIMEOUT:
-            ESP_LOGI(TAG, "SYSTEM_EVENT_STA_WPS_ER_TIMEOUT");
+        case WIFI_EVENT_STA_WPS_ER_TIMEOUT:
+            ESP_LOGI(TAG, "WIFI_EVENT_STA_WPS_ER_TIMEOUT");
             ESP_ERROR_CHECK(esp_wifi_wps_disable());
             ESP_ERROR_CHECK(esp_wifi_wps_enable(&config));
             ESP_ERROR_CHECK(esp_wifi_wps_start(0));
             break;
-
-        case SYSTEM_EVENT_STA_WPS_ER_PIN:
-            ESP_LOGI(TAG, "SYSTEM_EVENT_STA_WPS_ER_PIN");
-            /*show the PIN code here*/
-            ESP_LOGI(TAG, "WPS_PIN = "PINSTR, PIN2STR(event->event_info.sta_er_pin.pin_code));
+        case WIFI_EVENT_STA_WPS_ER_PIN:
+            ESP_LOGI(TAG, "WIFI_EVENT_STA_WPS_ER_PIN");
+            /* display the PIN code */
+            wifi_event_sta_wps_er_pin_t* event = (wifi_event_sta_wps_er_pin_t*) event_data;
+            ESP_LOGI(TAG, "WPS_PIN = " PINSTR, PIN2STR(event->pin_code));
             break;
-
         default:
             break;
     }
+}
 
-    return ESP_OK;
+static void got_ip_event_handler(void* arg, esp_event_base_t event_base,
+                             int32_t event_id, void* event_data)
+{
+    ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+    ESP_LOGI(TAG, "got ip: %s", ip4addr_ntoa(&event->ip_info.ip));
 }
 
 /*init wifi as sta and start wps*/
 static void start_wps(void)
 {
     tcpip_adapter_init();
-    ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &got_ip_event_handler, NULL));
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());

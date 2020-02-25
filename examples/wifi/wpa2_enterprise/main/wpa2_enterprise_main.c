@@ -77,51 +77,23 @@ extern uint8_t client_crt_end[]   asm("_binary_wpa2_client_crt_end");
 extern uint8_t client_key_start[] asm("_binary_wpa2_client_key_start");
 extern uint8_t client_key_end[]   asm("_binary_wpa2_client_key_end");
 
-static esp_err_t event_handler(void* ctx, system_event_t* event)
+static void event_handler(void* arg, esp_event_base_t event_base, 
+                                int32_t event_id, void* event_data)
 {
-    /* For accessing reason codes in case of disconnection */
-    system_event_info_t* info = &event->event_info;
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        system_event_sta_disconnected_t *event = (system_event_sta_disconnected_t *)event_data;
 
-    switch (event->event_id) {
-        case SYSTEM_EVENT_STA_START:
-            esp_wifi_connect();
-            break;
-
-        case SYSTEM_EVENT_STA_GOT_IP:
-            ESP_LOGI(TAG, "got ip:%s",
-                     ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
-            xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
-            break;
-
-        case SYSTEM_EVENT_AP_STACONNECTED:
-            ESP_LOGI(TAG, "station:"MACSTR" join, AID=%d",
-                     MAC2STR(event->event_info.sta_connected.mac),
-                     event->event_info.sta_connected.aid);
-            break;
-
-        case SYSTEM_EVENT_AP_STADISCONNECTED:
-            ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d",
-                     MAC2STR(event->event_info.sta_disconnected.mac),
-                     event->event_info.sta_disconnected.aid);
-            break;
-
-        case SYSTEM_EVENT_STA_DISCONNECTED:
-            ESP_LOGE(TAG, "Disconnect reason : %d", info->disconnected.reason);
-
-            if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
-                /*Switch to 802.11 bgn mode */
-                esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
-            }
-
-            esp_wifi_connect();
-            xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
-            break;
-
-        default:
-            break;
+        if (event->reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
+            /*Switch to 802.11 bgn mode */
+            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+        }
+        esp_wifi_connect();
+        xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
     }
-
-    return ESP_OK;
 }
 
 static void initialise_wifi(void)
@@ -133,9 +105,11 @@ static void initialise_wifi(void)
 
     tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {

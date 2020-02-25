@@ -6,22 +6,6 @@ config CONNECT_ORIGINAL_AP
 	help
 		Connect to the original AP of old SDK
 
-config WIFI_SSID
-    string "WiFi SSID"
-	default "myssid"
-	depends on !CONNECT_ORIGINAL_AP
-	help
-		SSID (network name) for the example to connect to.
-
-config WIFI_PASSWORD
-    string "WiFi Password"
-	default "myssid"
-	depends on !CONNECT_ORIGINAL_AP
-	help
-		WiFi password (WPA or WPA2) for the example to use.
-
-		Can be left blank if the network has no security set.
-
 config SERVER_IP
     string "HTTP Server IP"
 	default "192.168.0.3"
