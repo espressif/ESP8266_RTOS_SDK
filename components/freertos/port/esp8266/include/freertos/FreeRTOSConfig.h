@@ -72,7 +72,10 @@
 #define INCLUDE_xTaskGetIdleTaskHandle 1
 #define INCLUDE_xTimerGetTimerDaemonTaskHandle 1
 
+#ifndef CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK
 #define configCHECK_FOR_STACK_OVERFLOW  2
+#endif
+
 #define configUSE_MUTEXES  1
 #define configUSE_RECURSIVE_MUTEXES  1
 #define configUSE_COUNTING_SEMAPHORES   1

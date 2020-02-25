@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "stdlib.h"
-
+#include <string.h>
 #include "esp_attr.h"
 #include "esp_libc.h"
 #include "esp_system.h"
@@ -27,6 +27,7 @@
 #include "esp_err.h"
 
 #include "FreeRTOS.h"
+#include "task.h"
 #include "freertos/xtensa_context.h"
 
 #define PANIC(_fmt, ...)    ets_printf(_fmt, ##__VA_ARGS__)
@@ -77,17 +78,31 @@ static inline void panic_frame(XtExcFrame *frame)
     void *o_pc;
     void *o_sp;
 
-    const char *reason = frame->exccause < 30 ? edesc[frame->exccause] : "unknown";
-    const uint32_t *regs = (const uint32_t *)frame;
+#ifdef CONFIG_FREERTOS_WATCHPOINT_END_OF_STACK
+    if (frame->exccause == 1) {
+        uint32_t reason = soc_debug_reason();
 
-    PANIC("Guru Meditation Error: Core  0 panic'ed (%s). Exception was unhandled.\r\n", reason);
-    PANIC("Core 0 register dump:\n");
+        if (reason & XCHAL_DEBUGCAUSE_DBREAK_MASK) {
+            char name[configMAX_TASK_NAME_LEN];
 
-    for (int i = 0; i < 20; i += 4) {
-        for (int j = 0; j < 4; j++) {
-            PANIC("%-8s: 0x%08x  ", sdesc[i + j], regs[i + j + 1]);
+            strncpy(name, pcTaskGetTaskName(NULL), configMAX_TASK_NAME_LEN);
+            ets_printf("Stack canary watchpoint triggered (%s)\n", name);
         }
-        PANIC("\r\n");
+    } else
+#endif
+    {
+        const char *reason = frame->exccause < 30 ? edesc[frame->exccause] : "unknown";
+        const uint32_t *regs = (const uint32_t *)frame;
+
+        PANIC("Guru Meditation Error: Core  0 panic'ed (%s). Exception was unhandled.\r\n", reason);
+        PANIC("Core 0 register dump:\n");
+
+        for (int i = 0; i < 20; i += 4) {
+            for (int j = 0; j < 4; j++) {
+                PANIC("%-8s: 0x%08x  ", sdesc[i + j], regs[i + j + 1]);
+            }
+            PANIC("\r\n");
+        }
     }
 
     PANIC("\r\nBacktrace: %p:%p ", i_pc, i_sp);

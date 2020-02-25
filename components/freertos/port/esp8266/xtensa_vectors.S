@@ -107,6 +107,7 @@ STRUCT_END(HighPriFrame)
     .align  16
 _chip_nmi_stk:    .space  PRI_N_STACK_SIZE + HESF_TOTALSIZE + PRI_N_STACK_SIZE2 + HESF_TOTALSIZE
 
+
     .global LoadStoreErrorHandlerStack
     .balign 16
 LoadStoreErrorHandlerStack:
@@ -559,14 +560,22 @@ Debug Exception.
     .align      4
     .literal_position
 _DebugExceptionVector:
-    wsr     a0,  EXCSAVE + XCHAL_DEBUGLEVEL         /* save original a0 somewhere */
     wsr     a0,  EXCSAVE_1
     wsr     a1,  EXCSAVE_2
-    call0   _xt_ext_panic                           /* does not return */
-    rfi     XCHAL_DEBUGLEVEL                        /* make a0 point here not later */
+    movi    a0,  1
+    wsr     a0,  EXCCAUSE
+    call0   _xt_debug_exc
 
     .end        literal_prefix
 
+
+    .section    .text
+    .type       _xt_user_exc,@function
+    .align      4
+_xt_debug_exc:
+    rsr     a0,  (EPC + XCHAL_DEBUGLEVEL)
+    wsr     a0,  EPC1
+    call0   _xt_ext_panic                           /* does not return */
 
 /*
 --------------------------------------------------------------------------------
