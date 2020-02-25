@@ -58,7 +58,7 @@ static void test_bignum_mult(const char *a_str, const char *b_str, const char *e
             mbedtls_mpi_set_bit(&M, i, 1);
         }
 
-        TEST_ASSERT_FALSE(esp_mpi_mul_mpi_mod(&X, &A, &B, &M));
+        TEST_ASSERT_FALSE(mbedtls_mpi_exp_mod(&X, &A, &B, &M, NULL));
 
         mbedtls_mpi_write_string(&X, 16, x_buf, sizeof(x_buf)-1, &x_buf_len);
         TEST_ASSERT_EQUAL_STRING_MESSAGE(e_str, x_buf, "esp_mpi_mul_mpi_mod result wrong");

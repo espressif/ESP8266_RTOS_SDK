@@ -7,6 +7,12 @@ config DISABLE_FREERTOS
         Enable this option, FreeRTOS will not be compiled and linked, and the user
         can user other OS platform.
 
+config FREERTOS_UNICORE
+    bool
+    default y
+    help
+        Only for code compatible.
+
 config FREERTOS_ENABLE_REENT
     bool "Enable \"reent\" function"
     default n

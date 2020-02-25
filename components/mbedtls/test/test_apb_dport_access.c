@@ -6,11 +6,12 @@
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "soc/uart_periph.h"
 #include "test_apb_dport_access.h"
 #include "test_utils.h"
 
 #ifndef CONFIG_FREERTOS_UNICORE
+
+#include "soc/uart_periph.h"
 
 static void apb_access_loop_task(void *ignore);
 
