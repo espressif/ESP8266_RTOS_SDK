@@ -16,6 +16,7 @@ CXXFLAGS =
 
 #We cannot include the esp8266 component directly but we need its includes.
 CFLAGS += -I $(IDF_PATH)/components/esp8266/include -I $(IDF_PATH)/components/util/include
+CFLAGS += -I $(IDF_PATH)/components/esp_common/include
 
 # The bootloader pseudo-component is also included in this build, for its Kconfig.projbuild to be included.
 #

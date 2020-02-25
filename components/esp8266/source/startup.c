@@ -33,6 +33,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "esp_task.h"
 
 #ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER
 #include "esp_newlib.h"
@@ -93,7 +94,7 @@ static void user_init_entry(void *param)
     esp_reset_reason_init();
 #endif
 
-#ifdef CONFIG_TASK_WDT
+#ifdef CONFIG_ESP_TASK_WDT
     esp_task_wdt_init();
 #endif
 
@@ -175,7 +176,7 @@ void call_start_cpu(size_t start_addr)
     esp_newlib_init();
 #endif
 
-    assert(xTaskCreate(user_init_entry, "uiT", CONFIG_MAIN_TASK_STACK_SIZE, NULL, configMAX_PRIORITIES, NULL) == pdPASS);
+    assert(xTaskCreate(user_init_entry, "uiT", ESP_TASK_MAIN_STACK, NULL, configMAX_PRIORITIES, NULL) == pdPASS);
 
     vTaskStartScheduler();
 }

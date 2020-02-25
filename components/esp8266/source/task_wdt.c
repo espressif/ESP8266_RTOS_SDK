@@ -23,7 +23,7 @@
 
 static const char *TAG = "wdt";
 
-#ifdef CONFIG_TASK_WDT_PANIC
+#ifdef CONFIG_ESP_TASK_WDT_PANIC
 /**
   * @brief  Task watch dog interrupt function and it should do panic
   */
@@ -43,7 +43,7 @@ esp_err_t esp_task_wdt_init(void)
 {
     CLEAR_WDT_REG_MASK(WDT_CTL_ADDRESS, BIT0);
 
-#ifdef CONFIG_TASK_WDT_PANIC
+#ifdef CONFIG_ESP_TASK_WDT_PANIC
     const uint32_t panic_time_param = 11;
 
     // Just for soft restart
@@ -59,9 +59,9 @@ esp_err_t esp_task_wdt_init(void)
     const uint32_t panic_time_param = 1;
 #endif
 
-    ESP_LOGD(TAG, "task watch dog trigger time parameter is %u", CONFIG_TASK_WDT_TIMEOUT_S);
+    ESP_LOGD(TAG, "task watch dog trigger time parameter is %u", CONFIG_ESP_TASK_WDT_TIMEOUT_S);
 
-    WDT_REG_WRITE(WDT_OP_ADDRESS, CONFIG_TASK_WDT_TIMEOUT_S);   // 2^n * 0.8ms, mask 0xf, n = 13 -> (2^13 = 8192) * 0.8 * 0.001 = 6.5536
+    WDT_REG_WRITE(WDT_OP_ADDRESS, CONFIG_ESP_TASK_WDT_TIMEOUT_S);   // 2^n * 0.8ms, mask 0xf, n = 13 -> (2^13 = 8192) * 0.8 * 0.001 = 6.5536
     WDT_REG_WRITE(WDT_OP_ND_ADDRESS, panic_time_param);         // 2^n * 0.8ms, mask 0xf, n = 11 -> (2^11 = 2048) * 0.8 * 0.001 = 1.6384
 
     SET_PERI_REG_BITS(PERIPHS_WDT_BASEADDR + WDT_CTL_ADDRESS, WDT_CTL_RSTLEN_MASK, 7 << WDT_CTL_RSTLEN_LSB, 0);

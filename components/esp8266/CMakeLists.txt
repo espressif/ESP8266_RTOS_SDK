@@ -25,7 +25,6 @@ else()
         "source/chip_boot.c"
         "source/backtrace.c"
         "source/esp_sleep.c"
-        "source/esp_err_to_name.c"
         "source/esp_timer.c"
         "source/esp_wifi_os_adapter.c"
         "source/esp_wifi.c"
@@ -54,6 +53,7 @@ else()
 
     set(include_dirs "include" "include/driver")
 
+    set(requires "esp_common")
     set(priv_requires "wpa_supplicant" "log" "spi_flash" "tcpip_adapter" "esp_ringbuf" "bootloader_support" "nvs_flash" "util")
     set(fragments linker.lf ld/esp8266_fragments.lf ld/esp8266_bss_fragments.lf)
 

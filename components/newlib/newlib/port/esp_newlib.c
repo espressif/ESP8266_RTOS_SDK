@@ -52,7 +52,7 @@ void esp_reent_init(struct _reent* r)
  */
 int esp_newlib_init(void)
 {
-    const char *default_uart_dev = "/dev/uart/" STR(CONFIG_CONSOLE_UART_NUM);
+    const char *default_uart_dev = "/dev/uart/" STR(CONFIG_ESP_CONSOLE_UART_NUM);
 
     esp_reent_init(_global_impure_ptr);
 

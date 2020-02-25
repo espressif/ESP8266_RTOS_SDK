@@ -94,66 +94,11 @@ config SOC_IRAM_SIZE
     default 0x8000 if SOC_FULL_ICACHE
     default 0xC000 if !SOC_FULL_ICACHE
 
-choice CONSOLE_UART
-    prompt "UART for console output"
-    default CONSOLE_UART_DEFAULT
-    help
-        Select whether to use UART for console output (through stdout and stderr).
-
-        - Default is to use UART0.
-        - If "Custom" is selected, UART0 or UART1 can be chosen.
-        - If "None" is selected, there will be no console output on any UART.
-
-config CONSOLE_UART_DEFAULT
-    bool "Default: UART0"
-config CONSOLE_UART_CUSTOM
-    bool "Custom"
-config CONSOLE_UART_NONE
-    bool "None"
-endchoice
-
-choice CONSOLE_UART_NUM
-    prompt "UART peripheral to use for console output (0-1)"
-    depends on CONSOLE_UART_CUSTOM
-    default CONSOLE_UART_CUSTOM_NUM_0
-    help
-        Configrate output console UART for "ets_printf", "printf", "ESP_LOGX" and so on.
-
-config CONSOLE_UART_CUSTOM_NUM_0
-    bool "UART0"
-config CONSOLE_UART_CUSTOM_NUM_1
-    bool "UART1"
-endchoice
-
-config CONSOLE_UART_NUM
-    int
-    default 0 if CONSOLE_UART_DEFAULT || CONSOLE_UART_NONE
-    default 0 if CONSOLE_UART_CUSTOM_NUM_0
-    default 1 if CONSOLE_UART_CUSTOM_NUM_1
-
-config CONSOLE_UART_BAUDRATE
-    int "UART console baud rate"
-    depends on CONSOLE_UART_DEFAULT || CONSOLE_UART_CUSTOM
-    default 74880
-    range 1200 4000000
-
-config UART0_SWAP_IO
-    bool "Swap UART0 I/O pins"
-    default n
-    help
-        Enable this option, UART0's I/O pins are swaped: TXD <-> RTS, RTX <-> CTS.
-
 config DISABLE_ROM_UART_PRINT
     bool "Disable ROM UART print"
     default n
     help
         "Disable main part of ROM UART print when rom bootloader process."
-
-config PANIC_FULL_STACK
-    bool "Output full stack data of task"
-    default n
-    help
-        Output full stack data of task although some stack space is not used.
 
 choice ESP_PANIC
     prompt "Panic handler behaviour"
@@ -189,51 +134,6 @@ config ESP_PANIC_GDBSTUB
         The UART's baudrate should be 115200 or others which can be recognized by xtensa GDB.
 endchoice
 
-config MAIN_TASK_STACK_SIZE
-    int "Main task stack size"
-    default 3584
-    help
-        Configure the "main task" stack size. This is the stack of the task
-        which calls app_main(). If app_main() returns then this task is deleted
-        and its stack memory is freed.
-
-config TASK_WDT
-    bool "Initialize Task Watchdog Timer on startup"
-    default y
-    help
-        The Task Watchdog Timer can be used to make sure individual tasks are still
-        running. Enabling this option will cause the Task Watchdog Timer to be
-        initialized automatically at startup. The Task Watchdog timer can be 
-        initialized after startup as well.
-
-config TASK_WDT_PANIC
-    bool "Invoke panic handler on Task Watchdog timeout"
-    default y
-    help
-        If this option is enabled, the Task Watchdog Timer will be configured to
-        trigger the panic handler when it times out. And it may cost some time.
-
-choice TASK_WDT_TIMEOUT_S
-    prompt "Task Watchdog timeout period (seconds)"
-    default TASK_WDT_TIMEOUT_15N
-    help
-        Timeout period configuration for the Task Watchdog Timer in seconds.
-        This is also configurable at run time.
-
-config TASK_WDT_TIMEOUT_13N
-    bool "6.5536s"
-config TASK_WDT_TIMEOUT_14N
-    bool "13.1072s"
-config TASK_WDT_TIMEOUT_15N
-    bool "26.2144s"
-endchoice
-
-config TASK_WDT_TIMEOUT_S
-    int
-    default 13 if TASK_WDT_TIMEOUT_13N
-    default 14 if TASK_WDT_TIMEOUT_14N
-    default 15 if TASK_WDT_TIMEOUT_15N
-
 config RESET_REASON
     bool "Enable reset reason"
     default y
@@ -248,12 +148,6 @@ config WIFI_PPT_TASKSTACK_SIZE
         Configure the "ppT task" stack size. This is the stack of the task
         which calls promiscuous callback function. So if user's function is
         complex, the stack must be set larger.
-
-config EVENT_LOOP_STACK_SIZE
-    int "Event loop stack size"
-    default 2048
-    help
-        Configure the Event loop task stack size per application.
 
 config ESP8266_CORE_GLOBAL_DATA_LINK_IRAM
     bool "Link libcore.a internal global data to IRAM"
@@ -306,16 +200,6 @@ config ESP8266_BOOT_COPY_APP
 
         Enable this option, when it is that "OTA1" application is to run after update by OTA,
         bootloader will copy "OTA1" application to "OTA0" partition and run "OTA0".
-
-config ESP_ERR_TO_NAME_LOOKUP
-    bool "Enable lookup of error code strings"
-    default "y"
-    help
-        Functions esp_err_to_name() and esp_err_to_name_r() return string
-        representations of error codes from a pre-generated lookup table.
-        This option can be used to turn off the use of the look-up table in
-        order to save memory but this comes at the price of sacrificing
-        distinguishable (meaningful) output string representations.
 
     choice ESP8266_TIME_SYSCALL
         prompt "Timers used for gettimeofday function"

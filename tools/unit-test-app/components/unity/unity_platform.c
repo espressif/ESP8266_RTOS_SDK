@@ -194,7 +194,7 @@ static void unity_run_single_test(const struct test_desc_t* test)
     printf("Running %s...\n", test->name);
     // Unit test runner expects to see test name before the test starts
     fflush(stdout);
-    uart_tx_wait_idle(CONFIG_CONSOLE_UART_NUM);
+    uart_tx_wait_idle(CONFIG_ESP_CONSOLE_UART_NUM);
 
     Unity.TestFile = test->file;
     Unity.CurrentDetail1 = test->desc;
