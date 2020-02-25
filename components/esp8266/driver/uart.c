@@ -35,8 +35,6 @@
 #include "driver/uart.h"
 #include "driver/uart_select.h"
 
-#define portYIELD_FROM_ISR() taskYIELD()
-
 #define UART_ENTER_CRITICAL()    portENTER_CRITICAL()
 #define UART_EXIT_CRITICAL()     portEXIT_CRITICAL()
 

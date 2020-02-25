@@ -43,7 +43,6 @@ static const char *I2S_TAG = "i2s";
         return (ret_val); \
     }
 
-#define portYIELD_FROM_ISR() taskYIELD()
 #define dma_intr_enable() _xt_isr_unmask(1 << ETS_SLC_INUM)
 #define dma_intr_disable() _xt_isr_mask(1 << ETS_SLC_INUM)
 #define dma_intr_register(a, b) _xt_isr_attach(ETS_SLC_INUM, (a), (b))
