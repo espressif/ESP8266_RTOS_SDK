@@ -12,6 +12,7 @@ COMPONENT_SRCDIRS += apps/dhcpserver \
                      apps/multi-threads \
                      apps/ping \
                      lwip/src/api \
+                     lwip/src/apps/mdns \
                      lwip/src/apps/sntp \
                      lwip/src/core \
                      lwip/src/core/ipv4 \

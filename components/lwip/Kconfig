@@ -313,6 +313,36 @@ config DNS_MAX_SERVERS
     default 3 if ESP_DNS
     default 2 if !ESP_DNS
 
+config LWIP_MDNS_RESPONDER
+    bool "Enable mDNS responder"
+    default n
+    select LWIP_NETIF_CLIENT_DATA
+    help
+        This requires an LWIP_NUM_NETIF_CLIENT_DATA slot, so that option
+        must be >= 1
+
+menuconfig LWIP_NETIF_CLIENT_DATA
+    bool "Enable per-interface client data"
+    default n
+    help
+        Enabling this pre-allocates extra space for each netif
+        for your own app to store data in
+
+config LWIP_NUM_NETIF_CLIENT_DATA
+    int "Enable client data array in netif"
+    default 2
+    range 1 10
+    depends on LWIP_NETIF_CLIENT_DATA
+    help
+        Number of slots available to associate your own app data
+        to a particular netif
+
+        From LWIP header: "Number of clients that may store data in 
+        client_data member array of struct netif."
+
+        This is set to 2 initially just incase this has been auto enabled
+        by more than one dependency
+
 menuconfig LWIP_NETIF_LOOPBACK
     bool "Enable per-interface loopback"
     default n
