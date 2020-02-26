@@ -124,6 +124,9 @@
 #undef MBEDTLS_MPI_EXP_MOD_ALT
 #undef MBEDTLS_MPI_MUL_MPI_ALT
 
+/* This option will speed up calculation of "32-bit * 32-bit" */
+#define MBEDTLS_NO_UDBL_DIVISION
+
 /**
  * \def MBEDTLS_ENTROPY_HARDWARE_ALT
  *
