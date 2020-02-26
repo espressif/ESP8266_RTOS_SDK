@@ -60,6 +60,7 @@ export EXAMPLE_MQTT_BROKER_CERTIFICATE="https://www.espressif.com/"
 export EXAMPLE_MQTT_BROKER_WS="https://www.espressif.com/"
 export EXAMPLE_MQTT_BROKER_WSS="https://www.espressif.com/"
 export EXAMPLE_MQTT_BROKER_SSL="https://www.espressif.com/"
+export EXAMPLE_MQTT_BROKER_TCP="https://www.espressif.com/"
 
 shopt -s lastpipe # Workaround for Bash to use variables in loops (http://mywiki.wooledge.org/BashFAQ/024)
 
