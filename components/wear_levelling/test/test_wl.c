@@ -2,17 +2,25 @@
 #include <string.h>
 #include "unity.h"
 #include "wear_levelling.h"
+#include "esp_system.h"
+#include "esp_timer.h"
 #include "test_utils.h"
 #include "freertos/FreeRTOS.h"
-#include "freertos/portable.h"
+//#include "freertos/portable.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #ifdef CONFIG_IDF_TARGET_ESP32
 #include "esp32/clk.h"
+#include "soc/cpu.h"
 #elif defined(CONFIG_IDF_TARGET_ESP32S2BETA)
 #include "esp32s2beta/clk.h"
-#endif
 #include "soc/cpu.h"
+#elif CONFIG_IDF_TARGET_ESP8266
+#include "esp_clk.h"
+#endif
+
+#define xPortGetFreeHeapSize() esp_get_free_heap_size()
+#define RSR(_c, _t) _t = (uint32_t) esp_timer_get_time()
 
 TEST_CASE("wl_unmount doesn't leak memory", "[wear_levelling]")
 {
@@ -101,7 +109,7 @@ static void read_write_task(void* param)
     esp_err_t err;
     srand(args->seed);
     for (size_t i = 0; i < args->word_count; ++i) {
-        uint32_t val = rand();
+        uint32_t val = i * 77;
         if (args->write) {
             err = wl_write(args->handle, args->offset + i * sizeof(val), &val, sizeof(val));
             if (err != ESP_OK) {
