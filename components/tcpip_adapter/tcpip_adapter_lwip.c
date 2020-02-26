@@ -1223,28 +1223,6 @@ esp_err_t tcpip_adapter_get_netif(tcpip_adapter_if_t tcpip_if, void ** netif)
     return ESP_OK;
 }
 
-struct netif* ip4_route_src_hook(const ip4_addr_t* dest, const ip4_addr_t* src)
-{
-    extern struct netif *netif_list;
-    struct netif *netif = NULL;
-
-    /* destination IP is broadcast IP? */
-    if ((src != NULL) && !ip4_addr_isany(src)) {
-        /* iterate through netifs */
-        for (netif = netif_list; netif != NULL; netif = netif->next) {
-        /* is the netif up, does it have a link and a valid address? */
-            if (netif_is_up(netif) && netif_is_link_up(netif) && !ip4_addr_isany_val(*netif_ip4_addr(netif))) {
-                /* source IP matches? */
-                if (ip4_addr_cmp(src, netif_ip4_addr(netif))) {
-                    /* return netif on which to forward IP packet */
-                    return netif;
-                }
-            }
-        }
-    }
-    return netif;
-}
-
 bool tcpip_adapter_is_netif_up(tcpip_adapter_if_t tcpip_if)
 {
     if (esp_netif[tcpip_if] != NULL && netif_is_up(esp_netif[tcpip_if])) {
@@ -1252,6 +1230,14 @@ bool tcpip_adapter_is_netif_up(tcpip_adapter_if_t tcpip_if)
     } else {
         return false;
     }
+}
+
+int tcpip_adapter_get_netif_index(tcpip_adapter_if_t tcpip_if)
+{
+    if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || esp_netif[tcpip_if] == NULL) {
+        return -1;
+    }
+    return netif_get_index(esp_netif[tcpip_if]);
 }
 
 #endif /* CONFIG_TCPIP_LWIP */

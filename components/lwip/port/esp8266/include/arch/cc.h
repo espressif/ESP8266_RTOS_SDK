@@ -34,50 +34,63 @@
 #ifndef __ARCH_CC_H__
 #define __ARCH_CC_H__
 
-#define EFAULT 14
+#include <stdint.h>
+#include <errno.h>
+#include <assert.h>
+#include <stdio.h>
 
-#define LWIP_ERRNO_INCLUDE "sys/errno.h"
+#include "arch/sys_arch.h"
 
-#if (1)
+#ifndef BYTE_ORDER
 #define BYTE_ORDER LITTLE_ENDIAN
-#else
-#define BYTE_ORDER BIG_ENDIAN
-#endif
+#endif // BYTE_ORDER
+
+typedef uint8_t  u8_t;
+typedef int8_t   s8_t;
+typedef uint16_t u16_t;
+typedef int16_t  s16_t;
+typedef uint32_t u32_t;
+typedef int32_t  s32_t;
+
 
 typedef int sys_prot_t;
 
-#define S16_F "hd"
-#define U16_F "hu"
-#define X16_F "hx"
+#define S16_F "d"
+#define U16_F "d"
+#define X16_F "x"
 
 #define S32_F "d"
-#define U32_F "u"
+#define U32_F "d"
 #define X32_F "x"
 
-//#define PACK_STRUCT_FIELD(x) x __attribute__((packed))
 #define PACK_STRUCT_FIELD(x) x
 #define PACK_STRUCT_STRUCT __attribute__((packed))
 #define PACK_STRUCT_BEGIN
 #define PACK_STRUCT_END
 
 #include <stdio.h>
-#include <assert.h>
 
-#ifdef LWIP_DEBUG
 #define LWIP_PLATFORM_DIAG(x)   do {printf x;} while(0)
-#define LWIP_PLATFORM_ASSERT(x) do {printf(x); assert(0);} while(0)
+// __assert_func is the assertion failure handler from newlib, defined in assert.h
+#define LWIP_PLATFORM_ASSERT(message) __assert_func(__FILE__, __LINE__, __ASSERT_FUNC, message)
+
+#ifdef NDEBUG
+#define LWIP_NOASSERT
+#else // Assertions enabled
+
+// If assertions are on, the default LWIP_ERROR handler behaviour is to
+// abort w/ an assertion failure. Don't do this, instead just print the error (if LWIP_DEBUG is set)
+// and run the handler (same as the LWIP_ERROR behaviour if LWIP_NOASSERT is set).
+#ifdef LWIP_DEBUG
+#define LWIP_ERROR(message, expression, handler) do { if (!(expression)) { \
+  puts(message); handler;}} while(0)
 #else
-#define LWIP_PLATFORM_DIAG(x)
-#define LWIP_PLATFORM_ASSERT(x)
-#endif
+// If LWIP_DEBUG is not set, return the error silently (default LWIP behaviour, also.)
+#define LWIP_ERROR(message, expression, handler) do { if (!(expression)) { \
+  handler;}} while(0)
+#endif // LWIP_DEBUG
 
-#ifndef LWIP_PLATFORM_BYTESWAP
-#define LWIP_PLATFORM_BYTESWAP 1
-#endif
+#endif /* NDEBUG */
 
-#define LWIP_PLATFORM_HTONS(_n)  ((u16_t)((((_n) & 0xff) << 8) | (((_n) >> 8) & 0xff)))
-#define LWIP_PLATFORM_HTONL(_n)  ((u32_t)( (((_n) & 0xff) << 24) | (((_n) & 0xff00) << 8) | (((_n) >> 8)  & 0xff00) | (((_n) >> 24) & 0xff) ))
-
-#define LWIP_TIMEVAL_PRIVATE 0
 
 #endif /* __ARCH_CC_H__ */

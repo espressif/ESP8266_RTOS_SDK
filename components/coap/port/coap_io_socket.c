@@ -217,6 +217,7 @@ coap_free_endpoint(coap_endpoint_t *ep) {
 /* define struct in6_pktinfo and struct in_pktinfo if not available
    FIXME: check with configure
 */
+#if 0 //update lwip and have conflict. Later will update COAP.
 struct in6_pktinfo {
   struct in6_addr ipi6_addr;	/* src/dst IPv6 address */
   unsigned int ipi6_ifindex;	/* send/recv interface index */
@@ -227,6 +228,7 @@ struct in_pktinfo {
   struct in_addr ipi_spec_dst;
   struct in_addr ipi_addr;
 };
+#endif
 #endif
 
 #if defined(WITH_POSIX) && !defined(SOL_IP)

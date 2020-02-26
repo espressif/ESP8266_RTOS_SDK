@@ -135,9 +135,9 @@ esp_err_t esp_ping_result(uint8_t res_val, uint16_t ping_len, uint32_t ping_time
     ping_option_info->ping_res.ping_err = res_val;
 
     if (res_val != PING_RES_FINISH) {
-        ping_option_info->ping_res.bytes = ping_option_info->ping_data_len;
+        ping_option_info->ping_res.bytes = ping_len;
         ping_option_info->ping_res.resp_time = ping_time;
-        ping_option_info->ping_res.total_bytes += ping_option_info->ping_data_len;
+        ping_option_info->ping_res.total_bytes += ping_len;
         ping_option_info->ping_res.send_count ++;
 
         if (res_val == PING_RES_TIMEOUT) {

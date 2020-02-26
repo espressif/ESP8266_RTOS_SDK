@@ -15,11 +15,11 @@
 #ifndef __ESP_SYS_SELECT_H__
 #define __ESP_SYS_SELECT_H__
 
-#include "sdkconfig.h"
-
-#ifdef CONFIG_USING_ESP_VFS
-
+/* Newlib 2.2.0 does not provide sys/select.h, and fd_set is defined in sys/types.h */
 #include <sys/types.h>
+#ifndef fd_set
+#include_next <sys/select.h>
+#else // fd_set
 #include <sys/time.h>
 
 #ifdef __cplusplus
@@ -32,11 +32,6 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds, struct
 } // extern "C"
 #endif
 
-#else
-
-#include "lwip/sockets.h"
-
-#endif
+#endif // fd_set
 
 #endif //__ESP_SYS_SELECT_H__
-

@@ -22,6 +22,10 @@ config FREERTOS_ENABLE_REENT
 
         The configuration will enable newlib.
 
+config FREERTOS_NO_AFFINITY
+    hex
+    default 0x7FFFFFFF
+
 config FREERTOS_HZ
     int "Tick rate (Hz)"
     range 1 1000

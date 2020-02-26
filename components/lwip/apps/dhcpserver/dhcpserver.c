@@ -1,4 +1,4 @@
-// Copyright 2018 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,27 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include <stdbool.h>
+//#include "esp_common.h"
+#include <stdlib.h>
 #include <string.h>
-#include <strings.h>
-
-#include "esp_libc.h"
-#include "esp_wifi.h"
-
-#include "rom/ets_sys.h"
-
-#include "sdkconfig.h"
 #include "lwip/inet.h"
 #include "lwip/err.h"
 #include "lwip/pbuf.h"
 #include "lwip/udp.h"
 #include "lwip/mem.h"
-#include "lwip/timeouts.h"
+#include "lwip/ip_addr.h"
+#include "tcpip_adapter.h"
+
 #include "dhcpserver/dhcpserver.h"
 #include "dhcpserver/dhcpserver_options.h"
 
-#include "FreeRTOS.h"
+#if ESP_DHCP
 
 #define BOOTP_BROADCAST 0x8000
 
@@ -529,11 +523,13 @@ static void send_offer(struct dhcps_msg *m, u16_t len)
         return;
     }
 
+    ip_addr_t ip_temp = IPADDR4_INIT(0x0);
+    ip4_addr_set(ip_2_ip4(&ip_temp), &broadcast_dhcps);
 #if DHCPS_DEBUG
-    SendOffer_err_t = udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    SendOffer_err_t = udp_sendto(pcb_dhcps, p, &ip_temp, DHCPS_CLIENT_PORT);
     DHCPS_LOG("dhcps: send_offer>>udp_sendto result %x\n", SendOffer_err_t);
 #else
-    udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    udp_sendto(pcb_dhcps, p, &ip_temp, DHCPS_CLIENT_PORT);
 #endif
 
     if (p->ref != 0) {
@@ -604,11 +600,13 @@ static void send_nak(struct dhcps_msg *m, u16_t len)
         return;
     }
 
+    ip_addr_t ip_temp = IPADDR4_INIT(0x0);
+    ip4_addr_set(ip_2_ip4(&ip_temp), &broadcast_dhcps);
 #if DHCPS_DEBUG
-    SendNak_err_t = udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    SendNak_err_t = udp_sendto(pcb_dhcps, p, &ip_temp, DHCPS_CLIENT_PORT);
     DHCPS_LOG("dhcps: send_nak>>udp_sendto result %x\n", SendNak_err_t);
 #else
-    udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
+    udp_sendto(pcb_dhcps, p, &ip_temp, DHCPS_CLIENT_PORT);
 #endif
 
     if (p->ref != 0) {
@@ -678,8 +676,9 @@ static void send_ack(struct dhcps_msg *m, u16_t len)
         return;
     }
 
-    SendAck_err_t = udp_sendto(pcb_dhcps, p, IP_ADDR_BROADCAST, DHCPS_CLIENT_PORT);
-
+    ip_addr_t ip_temp = IPADDR4_INIT(0x0);
+    ip4_addr_set(ip_2_ip4(&ip_temp), &broadcast_dhcps);
+    SendAck_err_t = udp_sendto(pcb_dhcps, p, &ip_temp, DHCPS_CLIENT_PORT);
 #if DHCPS_DEBUG
     DHCPS_LOG("dhcps: send_ack>>udp_sendto result %x\n", SendAck_err_t);
 #endif
@@ -897,12 +896,12 @@ POOL_CHECK:
         if ((client_address.addr > dhcps_poll.end_ip.addr) || (ip4_addr_isany(&client_address))) {
             if (pnode != NULL) {
                 node_remove_from_list(&plist, pnode);
-                os_free(pnode);
+                free(pnode);
                 pnode = NULL;
             }
 
             if (pdhcps_pool != NULL) {
-                os_free(pdhcps_pool);
+                free(pdhcps_pool);
                 pdhcps_pool = NULL;
             }
 
@@ -914,12 +913,12 @@ POOL_CHECK:
         if (ret == DHCPS_STATE_RELEASE) {
             if (pnode != NULL) {
                 node_remove_from_list(&plist, pnode);
-                os_free(pnode);
+                free(pnode);
                 pnode = NULL;
             }
 
             if (pdhcps_pool != NULL) {
-                os_free(pdhcps_pool);
+                free(pdhcps_pool);
                 pdhcps_pool = NULL;
             }
 
@@ -1059,7 +1058,7 @@ static void handle_dhcp(void *arg,
     DHCPS_LOG("dhcps: handle_dhcp-> pbuf_free(p)\n");
 #endif
     pbuf_free(p);
-    os_free(pmsg_dhcps);
+    free(pmsg_dhcps);
     pmsg_dhcps = NULL;
 }
 
@@ -1136,8 +1135,10 @@ void dhcps_set_new_lease_cb(dhcps_cb_t cb)
 *******************************************************************************/
 void dhcps_start(struct netif *netif, ip4_addr_t ip)
 {
-    if (pcb_dhcps != NULL) {
-        udp_remove(pcb_dhcps);
+    struct netif *apnetif = netif;
+
+    if (apnetif->dhcps_pcb != NULL) {
+        udp_remove(apnetif->dhcps_pcb);
     }
 
     pcb_dhcps = udp_new();
@@ -1145,6 +1146,8 @@ void dhcps_start(struct netif *netif, ip4_addr_t ip)
     if (pcb_dhcps == NULL || ip4_addr_isany_val(ip)) {
         printf("dhcps_start(): could not obtain pcb\n");
     }
+
+    apnetif->dhcps_pcb = pcb_dhcps;
 
     IP4_ADDR(&broadcast_dhcps, 255, 255, 255, 255);
 
@@ -1155,7 +1158,6 @@ void dhcps_start(struct netif *netif, ip4_addr_t ip)
 
     udp_bind(pcb_dhcps, &netif->ip_addr, DHCPS_SERVER_PORT);
     udp_recv(pcb_dhcps, handle_dhcp, NULL);
-    sys_timeout(1000, (sys_timeout_handler)dhcps_coarse_tmr, NULL);
 #if DHCPS_DEBUG
     DHCPS_LOG("dhcps:dhcps_start->udp_recv function Set a receive callback handle_dhcp for UDP_PCB pcb_dhcps\n");
 #endif
@@ -1177,12 +1179,10 @@ void dhcps_stop(struct netif *netif)
         return;
     }
 
-    sys_untimeout((sys_timeout_handler)dhcps_coarse_tmr, NULL);
-
-    if (pcb_dhcps != NULL) {
-        udp_disconnect(pcb_dhcps);
-        udp_remove(pcb_dhcps);
-        pcb_dhcps = NULL;
+    if (apnetif->dhcps_pcb != NULL) {
+        udp_disconnect(apnetif->dhcps_pcb);
+        udp_remove(apnetif->dhcps_pcb);
+        apnetif->dhcps_pcb = NULL;
     }
 
     list_node *pnode = NULL;
@@ -1193,9 +1193,9 @@ void dhcps_stop(struct netif *netif)
         pback_node = pnode;
         pnode = pback_node->pnext;
         node_remove_from_list(&plist, pback_node);
-        os_free(pback_node->pnode);
+        free(pback_node->pnode);
         pback_node->pnode = NULL;
-        os_free(pback_node);
+        free(pback_node);
         pback_node = NULL;
     }
 }
@@ -1230,9 +1230,9 @@ static void kill_oldest_dhcps_pool(void)
     }
 
     minpre->pnext = minp->pnext;
-    os_free(minp->pnode);
+    free(minp->pnode);
     minp->pnode = NULL;
-    os_free(minp);
+    free(minp);
     minp = NULL;
 }
 
@@ -1258,9 +1258,9 @@ void dhcps_coarse_tmr(void)
             pback_node = pnode;
             pnode = pback_node->pnext;
             node_remove_from_list(&plist, pback_node);
-            os_free(pback_node->pnode);
+            free(pback_node->pnode);
             pback_node->pnode = NULL;
-            os_free(pback_node);
+            free(pback_node);
             pback_node = NULL;
         } else {
             pnode = pnode ->pnext;
@@ -1270,11 +1270,6 @@ void dhcps_coarse_tmr(void)
 
     if (num_dhcps_pool > MAX_STATION_NUM) {
         kill_oldest_dhcps_pool();
-    }
-
-    /*Do not restart timer when dhcp server is stopped*/
-    if  (pcb_dhcps != NULL) {
-        sys_timeout(1000, (sys_timeout_handler)dhcps_coarse_tmr, NULL);
     }
 }
 
@@ -1327,8 +1322,9 @@ dhcps_dns_setserver(const ip_addr_t *dnsserver)
  * Returns      : ip4_addr_t
 *******************************************************************************/
 ip4_addr_t 
-dhcps_dns_getserver()
+dhcps_dns_getserver(void)
 {
     return dns_server;
 }
+#endif
 

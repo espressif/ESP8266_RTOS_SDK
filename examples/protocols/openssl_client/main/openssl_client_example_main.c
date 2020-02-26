@@ -61,7 +61,7 @@ static void openssl_client_task(void* p)
     SSL_CTX* ctx;
     SSL* ssl;
 
-    int socket;
+    int sockfd;
     struct sockaddr_in sock_addr;
     struct hostent* entry = NULL;
     int recv_bytes = 0;
@@ -108,9 +108,9 @@ static void openssl_client_task(void* p)
     SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
 
     printf("create socket ......");
-    socket = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-    if (socket < 0) {
+    if (sockfd < 0) {
         printf("failed\n");
         goto failed3;
     }
@@ -122,7 +122,7 @@ static void openssl_client_task(void* p)
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_addr.s_addr = 0;
     sock_addr.sin_port = htons(OPENSSL_CLIENT_LOCAL_TCP_PORT);
-    ret = bind(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
+    ret = bind(sockfd, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
 
     if (ret) {
         printf("failed\n");
@@ -136,7 +136,7 @@ static void openssl_client_task(void* p)
     sock_addr.sin_family = AF_INET;
     sock_addr.sin_addr.s_addr = ((struct in_addr*)(entry->h_addr))->s_addr;
     sock_addr.sin_port = htons(CONFIG_TARGET_PORT_NUMBER);
-    ret = connect(socket, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
+    ret = connect(sockfd, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
 
     if (ret) {
         printf("failed\n");
@@ -155,7 +155,7 @@ static void openssl_client_task(void* p)
 
     printf("OK\n");
 
-    SSL_set_fd(ssl, socket);
+    SSL_set_fd(ssl, sockfd);
 
     printf("SSL connected to %s port %d ......", CONFIG_TARGET_DOMAIN, CONFIG_TARGET_PORT_NUMBER);
     ret = SSL_connect(ssl);
@@ -198,7 +198,7 @@ failed7:
 failed6:
 failed5:
 failed4:
-    close(socket);
+    close(sockfd);
 failed3:
 failed2:
     SSL_CTX_free(ctx);

@@ -260,7 +260,7 @@ exit:
 static int _sock_lock(int s, int l)
 {
     int ret = ERR_OK;
-    if (tryget_socket(s) == NULL)
+    if (tryget_socket_unconn_nouse(s) == NULL)
         return -1;
 
     SOCK_MT_DEBUG(1, "s %d l %d enter ", s, l);
@@ -310,7 +310,7 @@ static int lwip_enter_mt_select(int s, fd_set *read_set, fd_set *write_set)
 
     for (i = 0; i < s; i++) {
         if(FD_ISSET(i, read_set) || FD_ISSET(i, write_set))
-            if (tryget_socket(i) == NULL)
+            if (tryget_socket_unconn_nouse(i) == NULL)
                 goto failed1;
 
         if (FD_ISSET(i, read_set)) {
@@ -443,7 +443,7 @@ static err_t lwip_do_sync_select_state(struct tcpip_api_call_data *call)
 
 static void lwip_sync_state_mt(int s)
 {
-    struct lwip_sock *sock = tryget_socket(s);
+    struct lwip_sock *sock = tryget_socket_unconn_nouse(s);
     int state = _sock_get_state(s);
     socket_conn_sync_t sync = {
         .conn = sock->conn,
@@ -466,7 +466,7 @@ static void lwip_sync_state_mt(int s)
 
 static void lwip_sync_recv_mt(int s)
 {
-    struct lwip_sock *sock = tryget_socket(s);
+    struct lwip_sock *sock = tryget_socket_unconn_nouse(s);
     socket_conn_sync_t sync = {
         .conn = sock->conn,
     };
@@ -476,7 +476,7 @@ static void lwip_sync_recv_mt(int s)
 
 static void lwip_sync_select_mt(int s)
 {
-    struct lwip_sock *sock = tryget_socket(s);
+    struct lwip_sock *sock = tryget_socket_unconn_nouse(s);
     socket_conn_sync_t sync = {
         .conn = sock->conn,
     };
@@ -491,7 +491,6 @@ static void lwip_sync_mt(int s, int how)
     do {
         if (_sock_is_lock(s, lock)) {
             int need_wait = 0;
-            extern void sys_arch_msleep(int ms);
 
             if (!_sock_get_select(s, SOCK_MT_SELECT_RECV | SOCK_MT_SELECT_SEND)) {
                 switch (lock) {
@@ -512,7 +511,7 @@ static void lwip_sync_mt(int s, int how)
             }
 
             if (need_wait)
-                sys_arch_msleep(LWIP_SYNC_MT_SLEEP_MS);
+                sys_delay_ms(LWIP_SYNC_MT_SLEEP_MS);
         } else
             lock = _sock_next_lock(lock);
     }  while (lock < SOCK_MT_LOCK_MAX);
@@ -522,7 +521,7 @@ static void lwip_sync_mt(int s, int how)
 #if LWIP_SO_LINGER
 static void lwip_socket_set_so_link(int s, int linger)
 {
-    struct lwip_sock *sock = get_socket(s);
+    struct lwip_sock *sock = tryget_socket_unconn_nouse(s);
 
     if (sock) {
         /*
@@ -661,7 +660,7 @@ int lwip_getsockopt(int s, int level, int optname, void *optval, socklen_t *optl
 {
     int ret;
 
-    if (tryget_socket(s) == NULL)
+    if (tryget_socket_unconn_nouse(s) == NULL)
         return -1;
 
     if (optname == SO_ERROR) {
@@ -777,7 +776,7 @@ int lwip_close(int s)
     int ret;
     SYS_ARCH_DECL_PROTECT(lev);
 
-    if (tryget_socket(s) == NULL)
+    if (tryget_socket_unconn_nouse(s) == NULL)
         return -1;
 
     SYS_ARCH_PROTECT(lev);
@@ -789,11 +788,6 @@ int lwip_close(int s)
         return -1;
     }
 
-#if ESP_UDP
-    struct lwip_sock *sock = get_socket(s);
-    if (sock)
-        udp_sync_close_netconn(sock->conn);
-#endif
 
     lwip_sync_mt(s, SHUT_RDWR);
 

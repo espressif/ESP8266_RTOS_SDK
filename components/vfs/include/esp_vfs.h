@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include <unistd.h>
+#include <utime.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_err.h"
@@ -27,6 +28,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/termios.h>
+#include <sys/poll.h>
 #include <dirent.h>
 #include <string.h>
 #include "sdkconfig.h"
@@ -379,6 +381,21 @@ void esp_vfs_select_triggered(SemaphoreHandle_t *signal_sem);
  */
 void esp_vfs_select_triggered_isr(SemaphoreHandle_t *signal_sem, BaseType_t *woken);
 
+/**
+ * @brief Implements the VFS layer for synchronous I/O multiplexing by poll()
+ *
+ * The implementation is based on esp_vfs_select. The parameters and return values are compatible with POSIX poll().
+ *
+ * @param fds         Pointer to the array containing file descriptors and events poll() should consider.
+ * @param nfds        Number of items in the array fds.
+ * @param timeout     Poll() should wait at least timeout milliseconds. If the value is 0 then it should return
+ *                    immediately. If the value is -1 then it should wait (block) until the event occurs.
+ *
+ * @return            A positive return value indicates the number of file descriptors that have been selected. The 0
+ *                    return value indicates a timed-out poll. -1 is return on failure and errno is set accordingly.
+ *
+ */
+int esp_vfs_poll(struct pollfd *fds, int nfds, int timeout);
 #ifdef __cplusplus
 } // extern "C"
 #endif

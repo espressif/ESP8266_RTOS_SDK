@@ -2,6 +2,7 @@ menu "PThreads"
 
         config ENABLE_PTHREAD
             bool  "Enable Pthread"
+            default y
             help
                 Enable this option and then pthread is to be used.
 
