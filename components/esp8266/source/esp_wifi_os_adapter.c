@@ -43,7 +43,7 @@ void __wifi_task_delete(void *task)
 
 void __wifi_task_yield_from_isr(void)
 {
-    portYIELD();
+    portYIELD_FROM_ISR();
 }
 
 void __wifi_task_delay(uint32_t tick)
@@ -122,6 +122,11 @@ int __wifi_queue_recv(void *queue, void *item, uint32_t block_time_tick)
     }
 
     return ret == pdPASS ? true : false;
+}
+
+uint32_t __wifi_queue_msg_num(void *queue)
+{
+    return (uint32_t)uxQueueMessagesWaiting((const QueueHandle_t)queue);
 }
 
 void *__wifi_timer_create(const char *name, uint32_t period_ticks, bool auto_load, void *arg, void (*cb)(void *timer))
