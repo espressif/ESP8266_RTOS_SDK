@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if 0
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -296,5 +298,7 @@ TEST_CASE("(SD) opendir, readdir, rewinddir, seekdir work as expected using UTF-
     test_teardown();
 }
 #endif // CONFIG_FATFS_API_ENCODING_UTF_8 && CONFIG_FATFS_CODEPAGE == 936
+
+#endif
 
 #endif

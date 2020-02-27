@@ -694,7 +694,7 @@ static void read_write_task(void* param)
 
     srand(args->seed);
     for (size_t i = 0; i < args->word_count; ++i) {
-        uint32_t val = rand();
+        uint32_t val = i * 77;
         if (args->write) {
             int cnt = fwrite(&val, sizeof(val), 1, f);
             if (cnt != 1) {

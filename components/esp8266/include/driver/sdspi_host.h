@@ -19,7 +19,7 @@
 #include "esp_err.h"
 #include "sdmmc_types.h"
 #include "driver/gpio.h"
-#include "driver/spi_master.h"
+// #include "driver/spi_master.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,7 +32,7 @@ extern "C" {
  *
  * 'slot' can be set to one of HSPI_HOST, VSPI_HOST.
  */
-#define SDSPI_HOST_DEFAULT() {\
+/*#define SDSPI_HOST_DEFAULT() {\
     .flags = SDMMC_HOST_FLAG_SPI, \
     .slot = HSPI_HOST, \
     .max_freq_khz = SDMMC_FREQ_DEFAULT, \
@@ -47,7 +47,7 @@ extern "C" {
     .io_int_enable = &sdspi_host_io_int_enable, \
     .io_int_wait = &sdspi_host_io_int_wait, \
     .command_timeout_ms = 0, \
-}
+}*/
 
 /**
  * Extra configuration for SPI host

@@ -41,13 +41,30 @@ static void test_setup(size_t max_files)
     };
     const esp_partition_t* part = get_test_data_partition();
 
-    TEST_ASSERT(part->size == (fatfs_end - fatfs_start - 1));
+    TEST_ASSERT(part->size >= (fatfs_end - fatfs_start - 1));
 
-    spi_flash_mmap_handle_t mmap_handle;
-    const void* mmap_ptr;
-    TEST_ESP_OK(esp_partition_mmap(part, 0, part->size, SPI_FLASH_MMAP_DATA, &mmap_ptr, &mmap_handle));
-    bool content_valid = memcmp(fatfs_start, mmap_ptr, part->size) == 0;
-    spi_flash_munmap(mmap_handle);
+    // spi_flash_mmap_handle_t mmap_handle;
+    // const void* mmap_ptr;
+    // TEST_ESP_OK(esp_partition_mmap(part, 0, part->size, SPI_FLASH_MMAP_DATA, &mmap_ptr, &mmap_handle));
+    // bool content_valid = memcmp(fatfs_start, mmap_ptr, part->size) == 0;
+    // spi_flash_munmap(mmap_handle);
+
+    size_t max_space_size = MIN(part->size, fatfs_end - fatfs_start - 1);
+    bool content_valid = true;
+    char *buf = malloc(4096);
+    TEST_ASSERT_NOT_NULL(buf);
+
+    for (size_t i = 0; i < max_space_size; i += 4096) {
+        size_t bytes = MIN(4096, max_space_size - i);
+
+        TEST_ESP_OK(esp_partition_read(part, i, buf, bytes));
+        if (memcmp(fatfs_start + i, buf, bytes)) {
+            content_valid = false;
+            break;
+        }
+    }
+
+    free(buf);
 
     if (!content_valid) {
         printf("Copying fatfs.img into test partition...\n");

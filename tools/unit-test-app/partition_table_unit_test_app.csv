@@ -9,6 +9,6 @@ factory,    0,    0,        0x10000, 0xF0000
 ota_0,      0,    ota_0,    ,        64K
 ota_1,      0,    ota_1,    ,        64K
 # flash_test partition used for SPI flash tests, WL FAT tests, and SPIFFS tests
-flash_test, data, fat,      ,        528K
+flash_test, data, fat,      ,        896K
 
 # Note: still 1MB of a 4MB flash left free for some other purpose

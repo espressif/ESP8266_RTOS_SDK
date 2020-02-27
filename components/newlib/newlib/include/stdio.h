@@ -110,7 +110,7 @@ typedef _fpos64_t fpos64_t;
 #ifdef __FOPEN_MAX__
 #define FOPEN_MAX	__FOPEN_MAX__
 #else
-#define	FOPEN_MAX	20
+#define	FOPEN_MAX	10
 #endif
 
 #ifdef __FILENAME_MAX__
