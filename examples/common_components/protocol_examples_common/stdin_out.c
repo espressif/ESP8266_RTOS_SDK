@@ -13,7 +13,6 @@
 #include "driver/uart.h"
 #include "sdkconfig.h"
 
-#ifdef CONFIG_USING_ESP_VFS
 esp_err_t example_configure_stdin_stdout(void)
 {
     // Initialize VFS & UART so we can use std::cout/cin
@@ -29,4 +28,3 @@ esp_err_t example_configure_stdin_stdout(void)
     esp_vfs_dev_uart_set_tx_line_endings(ESP_LINE_ENDINGS_CRLF);
     return ESP_OK;
 }
-#endif

@@ -16,118 +16,16 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <reent.h>
 #include <sys/stat.h>
 #include <sys/errno.h>
+#include <sys/fcntl.h>
 
 #include "esp_libc.h"
 #include "FreeRTOS.h"
 #include "esp_log.h"
 
-#ifdef CONFIG_USING_ESP_VFS
-
 #include "esp_vfs.h"
-
-int _open_r(struct _reent *r, const char *filename, int flags, int mode)
-{
-    return esp_vfs_open(r, filename, flags, mode);
-}
-
-_ssize_t _read_r(struct _reent *r, int fd, void *buf, size_t len)
-{
-    return esp_vfs_read(r, fd, buf, len);
-}
-
-_ssize_t _write_r(struct _reent *r, int fd, const void *buf, size_t len)
-{
-    return esp_vfs_write(r, fd, buf, len);
-}
-
-_off_t _lseek_r(struct _reent *r, int fd, _off_t where, int whence)
-{
-    return esp_vfs_lseek(r, fd, where, whence);
-}
-
-int _close_r(struct _reent *r, int fd)
-{
-    return esp_vfs_close(r, fd);
-}
-
-int _rename_r(struct _reent *r, const char *from, const char *to)
-{
-    return esp_vfs_rename(r, from, to);
-}
-
-int _unlink_r(struct _reent *r, const char *filename)
-{
-    return esp_vfs_unlink(r, filename);
-}
-
-int _fstat_r(struct _reent *r, int fd, struct stat *s)
-{
-    return esp_vfs_fstat(r, fd, s);
-}
-
-int _stat_r(struct _reent *r, const char *path, struct stat *st)
-{
-    return esp_vfs_stat(r, path, st);
-}
-
-#else
-
-int _open_r(struct _reent *r, const char *filename, int flags, int mode)
-{
-    return 0;
-}
-
-_ssize_t _read_r(struct _reent *r, int fd, void *buf, size_t len)
-{
-    return 0;
-}
-
-_ssize_t _write_r(struct _reent *r, int fd, const void *buf, size_t len)
-{
-    int i;
-    const char *cbuf = buf;
-
-    for (i = 0; i < len; i++)
-        ets_putc(cbuf[i]);
-
-    return len;
-}
-
-_off_t _lseek_r(struct _reent *r, int fd, _off_t where, int whence)
-{
-    return 0;
-}
-
-int _close_r(struct _reent *r, int fd)
-{
-    return 0;
-}
-
-int _rename_r(struct _reent *r, const char *from, const char *to)
-{
-    return 0;
-}
-
-int _unlink_r(struct _reent *r, const char *filename)
-{
-    return 0;
-}
-
-int _fstat_r(struct _reent *r, int fd, struct stat *s)
-{
-    s->st_mode = S_IFCHR;
-
-    return 0;
-}
-
-int _stat_r(struct _reent *r, const char *path, struct stat *st)
-{
-    return 0;
-}
-
-#endif /* CONFIG_USING_ESP_VFS */
 
 void *_malloc_r(struct _reent *r, size_t n)
 {
@@ -183,4 +81,15 @@ int _getpid_r(struct _reent *r)
 {
     __errno_r(r) = ENOSYS;
     return -1;
+}
+
+/* Replaces newlib fcntl, which has been compiled without HAVE_FCNTL */
+int fcntl(int fd, int cmd, ...)
+{
+    va_list args;
+    va_start(args, cmd);
+    int arg = va_arg(args, int);
+    va_end(args);
+    struct _reent* r = __getreent();
+    return _fcntl_r(r, fd, cmd, arg);
 }

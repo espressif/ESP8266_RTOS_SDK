@@ -18,9 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#ifdef CONFIG_USING_ESP_VFS
 #include "esp_vfs_dev.h"
-#endif
 
 #define _STR(_s)    #_s
 #define STR(_s)     _STR(_s)
@@ -56,9 +54,7 @@ int esp_newlib_init(void)
 
     esp_reent_init(_global_impure_ptr);
 
-#ifdef CONFIG_USING_ESP_VFS
     esp_vfs_dev_uart_register();
-#endif
 
     _GLOBAL_REENT->_stdout = fopen(default_uart_dev, "w");
     if (!_GLOBAL_REENT->_stdout)

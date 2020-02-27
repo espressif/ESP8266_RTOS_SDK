@@ -1,9 +1,4 @@
 #
-# Virtual file system
-#
-CONFIG_USING_ESP_VFS=y
-
-#
 # PThreads
 #
 CONFIG_ENABLE_PTHREAD=y

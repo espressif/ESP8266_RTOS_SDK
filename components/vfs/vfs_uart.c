@@ -22,15 +22,23 @@
 #include "esp_vfs.h"
 #include "esp_vfs_dev.h"
 #include "esp_attr.h"
-#include "soc/uart_periph.h"
 #include "driver/uart.h"
 #include "sdkconfig.h"
 #include "driver/uart_select.h"
 #if CONFIG_IDF_TARGET_ESP32
 #include "esp32/rom/uart.h"
+#include "soc/uart_periph.h"
 #elif CONFIG_IDF_TARGET_ESP32S2BETA
 #include "esp32s2beta/rom/uart.h"
+#include "soc/uart_periph.h"
+#elif CONFIG_IDF_TARGET_ESP8266
+#include "rom/uart.h"
 #endif
+
+#define SOC_UART_NUM 2
+#define UART0 uart0
+#define UART1 uart1
+
 
 // TODO: make the number of UARTs chip dependent
 #define UART_NUM SOC_UART_NUM
@@ -128,7 +136,6 @@ typedef struct {
 
 static uart_select_args_t **s_registered_selects = NULL;
 static int s_registered_select_num = 0;
-static portMUX_TYPE s_registered_select_lock = portMUX_INITIALIZER_UNLOCKED;
 
 static esp_err_t uart_end_select(void *end_select_args);
 
@@ -142,8 +149,6 @@ static int uart_open(const char * path, int flags, int mode)
         fd = 0;
     } else if (strcmp(path, "/1") == 0) {
         fd = 1;
-    } else if (strcmp(path, "/2") == 0) {
-        fd = 2;
     } else {
         errno = ENOENT;
         return fd;
@@ -164,6 +169,8 @@ static void uart_tx_char(int fd, int c)
     uart->fifo.rw_byte = c;
 #elif CONFIG_IDF_TARGET_ESP32S2BETA
     uart->ahb_fifo.rw_byte = c;
+#elif CONFIG_IDF_TARGET_ESP8266
+    uart->fifo.rw_byte = c;
 #endif
 }
 
@@ -183,6 +190,8 @@ static int uart_rx_char(int fd)
     return uart->fifo.rw_byte;
 #elif CONFIG_IDF_TARGET_ESP32S2BETA
     return READ_PERI_REG(UART_FIFO_AHB_REG(fd));
+#elif CONFIG_IDF_TARGET_ESP8266
+    return uart->fifo.rw_byte;
 #endif
 }
 
@@ -354,7 +363,7 @@ static esp_err_t register_select(uart_select_args_t *args)
     esp_err_t ret = ESP_ERR_INVALID_ARG;
 
     if (args) {
-        portENTER_CRITICAL(&s_registered_select_lock);
+        portENTER_CRITICAL();
         const int new_size = s_registered_select_num + 1;
         if ((s_registered_selects = realloc(s_registered_selects, new_size * sizeof(uart_select_args_t *))) == NULL) {
             ret = ESP_ERR_NO_MEM;
@@ -363,7 +372,7 @@ static esp_err_t register_select(uart_select_args_t *args)
             s_registered_select_num = new_size;
             ret = ESP_OK;
         }
-        portEXIT_CRITICAL(&s_registered_select_lock);
+        portEXIT_CRITICAL();
     }
 
     return ret;
@@ -374,7 +383,7 @@ static esp_err_t unregister_select(uart_select_args_t *args)
     esp_err_t ret = ESP_OK;
     if (args) {
         ret = ESP_ERR_INVALID_STATE;
-        portENTER_CRITICAL(&s_registered_select_lock);
+        portENTER_CRITICAL();
         for (int i = 0; i < s_registered_select_num; ++i) {
             if (s_registered_selects[i] == args) {
                 const int new_size = s_registered_select_num - 1;
@@ -391,14 +400,14 @@ static esp_err_t unregister_select(uart_select_args_t *args)
                 break;
             }
         }
-        portEXIT_CRITICAL(&s_registered_select_lock);
+        portEXIT_CRITICAL();
     }
     return ret;
 }
 
 static void select_notif_callback_isr(uart_port_t uart_num, uart_select_notif_t uart_select_notif, BaseType_t *task_woken)
 {
-    portENTER_CRITICAL_ISR(&s_registered_select_lock);
+    portENTER_CRITICAL();
     for (int i = 0; i < s_registered_select_num; ++i) {
         uart_select_args_t *args = s_registered_selects[i];
         if (args) {
@@ -424,7 +433,7 @@ static void select_notif_callback_isr(uart_port_t uart_num, uart_select_notif_t 
             }
         }
     }
-    portEXIT_CRITICAL_ISR(&s_registered_select_lock);
+    portEXIT_CRITICAL();
 }
 
 static esp_err_t uart_start_select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
@@ -458,7 +467,7 @@ static esp_err_t uart_start_select(int nfds, fd_set *readfds, fd_set *writefds, 
     FD_ZERO(writefds);
     FD_ZERO(exceptfds);
 
-    portENTER_CRITICAL(uart_get_selectlock());
+    portENTER_CRITICAL();
 
     //uart_set_select_notif_callback sets the callbacks in UART ISR
     for (int i = 0; i < max_fds; ++i) {
@@ -480,12 +489,12 @@ static esp_err_t uart_start_select(int nfds, fd_set *readfds, fd_set *writefds, 
 
     esp_err_t ret = register_select(args);
     if (ret != ESP_OK) {
-        portEXIT_CRITICAL(uart_get_selectlock());
+        portEXIT_CRITICAL();
         free(args);
         return ret;
     }
 
-    portEXIT_CRITICAL(uart_get_selectlock());
+    portEXIT_CRITICAL();
 
     *end_select_args = args;
     return ESP_OK;
@@ -495,12 +504,12 @@ static esp_err_t uart_end_select(void *end_select_args)
 {
     uart_select_args_t *args = end_select_args;
 
-    portENTER_CRITICAL(uart_get_selectlock());
+    portENTER_CRITICAL();
     esp_err_t ret = unregister_select(args);
     for (int i = 0; i < UART_NUM; ++i) {
         uart_set_select_notif_callback(i, NULL);
     }
-    portEXIT_CRITICAL(uart_get_selectlock());
+    portEXIT_CRITICAL();
 
     if (args) {
         free(args);

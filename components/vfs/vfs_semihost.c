@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if 0
+
 #include <string.h>
 #include <stdbool.h>
 #include <stdarg.h>
@@ -214,3 +216,5 @@ esp_err_t esp_vfs_semihost_unregister(const char* base_path)
     ESP_LOGD(TAG, "Unregistered semihosting driver @ '%s'", base_path);
     return ESP_OK;
 }
+
+#endif

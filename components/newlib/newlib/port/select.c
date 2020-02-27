@@ -15,7 +15,6 @@
 #include <sys/select.h>
 #include "sdkconfig.h"
 
-#ifdef CONFIG_USING_ESP_VFS
 #include "esp_vfs.h"
 
 #ifdef CONFIG_USE_ONLY_LWIP_SELECT
@@ -64,4 +63,3 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *errorfds, struct
     return esp_vfs_select(nfds, readfds, writefds, errorfds, timeout);
 #endif
 }
-#endif /* CONFIG_USING_ESP_VFS */
