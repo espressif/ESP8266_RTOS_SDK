@@ -13,3 +13,7 @@
 [submodule "components/mqtt/esp-mqtt"]
 	path = components/mqtt/esp-mqtt
 	url = ../../espressif/esp-mqtt.git
+
+[submodule "components/coap/libcoap"]
+	path = components/coap/libcoap
+	url = ../../espressif/libcoap
