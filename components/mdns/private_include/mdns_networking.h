@@ -21,7 +21,6 @@
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "esp_event.h"
-#include "esp_eth.h"
 
 
 /**

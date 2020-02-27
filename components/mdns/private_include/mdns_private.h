@@ -14,7 +14,11 @@
 #ifndef MDNS_PRIVATE_H_
 #define MDNS_PRIVATE_H_
 
-#include "esp_event_base.h"
+#include <stdint.h>
+#include <stdbool.h>
+#include "tcpip_adapter.h"
+#include "esp_timer.h"
+#include "mdns.h"
 
 //#define MDNS_ENABLE_DEBUG
 

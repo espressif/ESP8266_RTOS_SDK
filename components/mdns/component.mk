@@ -1,2 +1,11 @@
 COMPONENT_ADD_INCLUDEDIRS := include
 COMPONENT_PRIV_INCLUDEDIRS := private_include
+
+ifndef CONFIG_ENABLE_MDNS
+COMPONENT_OBJEXCLUDE += mdns.o
+COMPONENT_OBJEXCLUDE += mdns_networking.o
+endif
+
+ifndef CONFIG_ENABLE_MDNS_CONSOLE
+COMPONENT_OBJEXCLUDE += mdns_console.o
+endif

@@ -15,7 +15,7 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
-#include "tcpip_adapter.h"
+#include "esp_netif.h"
 #include "protocol_examples_common.h"
 #include "mdns.h"
 #include "driver/gpio.h"
@@ -137,8 +137,8 @@ static void query_mdns_host(const char * host_name)
 static void initialise_button(void)
 {
     gpio_config_t io_conf = {0};
-    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
-    io_conf.pin_bit_mask = BIT64(EXAMPLE_BUTTON_GPIO);
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.pin_bit_mask = 1;
     io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pull_up_en = 1;
     io_conf.pull_down_en = 0;
@@ -179,7 +179,7 @@ static void mdns_example_task(void *pvParameters)
 void app_main()
 {
     ESP_ERROR_CHECK(nvs_flash_init());
-    tcpip_adapter_init();
+    ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     initialise_mdns();
