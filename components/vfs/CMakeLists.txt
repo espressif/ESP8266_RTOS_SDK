@@ -1,13 +1,8 @@
+idf_component_register(SRCS "vfs.c"
+                            "vfs_uart.c"
+                            "vfs_semihost.c"
+                    INCLUDE_DIRS include)
 
-if(CONFIG_USING_ESP_VFS)
-    set(COMPONENT_SRCS "vfs.c"
-                       "vfs_uart.c")
-else()
-    set(COMPONENT_SRCDIRS "port")    
-endif()
-
-set(COMPONENT_ADD_INCLUDEDIRS "include")
-
-set(COMPONENT_REQUIRES "lwip")
-
-register_component()
+# Some newlib syscalls are implemented in vfs.c, make sure these are always
+# seen by the linker
+target_link_libraries(${COMPONENT_LIB} INTERFACE "-u vfs_include_syscalls_impl")
