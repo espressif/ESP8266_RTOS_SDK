@@ -268,6 +268,12 @@ esp_err_t bootloader_flash_erase_sector(size_t sector)
 #include "esp_spi_flash.h"
 #endif
 
+#ifdef CONFIG_SOC_FULL_ICACHE
+#define SOC_CACHE_SIZE 1 // 32KB
+#else
+#define SOC_CACHE_SIZE 0 // 16KB
+#endif
+
 extern void Cache_Read_Disable();
 extern void Cache_Read_Enable(uint8_t map, uint8_t p, uint8_t v);
 
@@ -290,21 +296,48 @@ const void *bootloader_mmap(uint32_t src_addr, uint32_t size)
         return NULL; /* can't map twice */
     }
 
-    /* ToDo: Improve the map policy! */
+    /* 0: 0x000000 - 0x1fffff */
+    /* 1: 0x200000 - 0x3fffff */
+    /* 2: 0x400000 - 0x5fffff */
+    /* 3: 0x600000 - 0x7fffff */
+
+    uint32_t region;
+    uint32_t sub_region;
+    uint32_t mapped_src;
+
+    if (src_addr < 0x200000) {
+        region = 0;
+    } else if (src_addr < 0x400000) {
+        region = 1;
+    } else if (src_addr < 0x600000) {
+        region = 2;
+    } else if (src_addr < 0x800000) {
+        region = 3;
+    } else {
+        ESP_LOGE(TAG, "flash mapped address %p is invalid", (void *)src_addr);
+        while (1);
+    }
+
+    /* 0: 0x000000 - 0x0fffff \              */
+    /*                         \             */
+    /*                           0x40200000  */
+    /*                         /             */
+    /* 1: 0x100000 - 0x1fffff /              */
+    mapped_src =  src_addr & 0x1fffff;
+    if (mapped_src < 0x100000) {
+        sub_region = 0;
+    } else {
+        sub_region = 1;
+        mapped_src -= 0x100000;
+    }
 
     Cache_Read_Disable();
 
-    /* 0 and 0x100000 address use same mmap addresss 0x40200000 */
-    if (src_addr < 0x100000) {
-        Cache_Read_Enable(0, 0, 0);
-    } else {
-        Cache_Read_Enable(1, 0, 0);
-        src_addr -= 0x100000;
-    }
+    Cache_Read_Enable(sub_region, region, SOC_CACHE_SIZE);
 
     mapped = true;
 
-    return (void *)(0x40200000 + src_addr);
+    return (void *)(0x40200000 + mapped_src);
 }
 
 void bootloader_munmap(const void *mapping)

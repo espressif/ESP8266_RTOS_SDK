@@ -495,15 +495,6 @@ static void set_cache_and_start_app(
 #include "esp_flash_partitions.h"
 #include "internal/esp_system_internal.h"
 
-#ifdef CONFIG_SOC_FULL_ICACHE
-#define SOC_CACHE_SIZE 1 // 32KB
-#else
-#define SOC_CACHE_SIZE 0 // 16KB
-#endif
-
-#define ESP_CACHE1_ADDR_MAX 0x100000
-#define ESP_CACHE2_ADDR_MAX 0x200000
-
 static const char* TAG = "boot";
 
 bool bootloader_utility_load_partition_table(bootloader_state_t* bs)
@@ -803,7 +794,6 @@ bool bootloader_utility_load_boot_image(const bootloader_state_t *bs, int start_
 void bootloader_utility_load_image(const esp_image_metadata_t* image_data)
 {
     void (*user_start)(size_t start_addr);
-    extern void Cache_Read_Enable(uint8_t map, uint8_t p, uint8_t v);
 
 #if defined(CONFIG_SECURE_BOOT_ENABLED) || defined(CONFIG_FLASH_ENCRYPTION_ENABLED)
     esp_err_t err;
@@ -848,22 +838,7 @@ void bootloader_utility_load_image(const esp_image_metadata_t* image_data)
     copy loaded segments to RAM, set up caches for mapped segments, and start application
     unpack_load_app(image_data);
 #else
-    size_t map;
-
-    if (image_data->start_addr < ESP_CACHE1_ADDR_MAX
-        && image_data->start_addr + image_data->image_len < ESP_CACHE1_ADDR_MAX) { 
-        map = 0;
-    } else if (image_data->start_addr >= ESP_CACHE1_ADDR_MAX
-               && image_data->start_addr < ESP_CACHE2_ADDR_MAX
-               && image_data->start_addr + image_data->image_len < ESP_CACHE2_ADDR_MAX) {
-        map = 1;
-    } else {
-        ESP_LOGE(TAG, "ERROR: app bin error, start_addr %x image_len %d\n", image_data->start_addr, image_data->image_len);
-        /* Blocking here to let user judge. */
-        while (1);
-    }
-
-    Cache_Read_Enable(map, 0, SOC_CACHE_SIZE);
+    bootloader_mmap(image_data->start_addr, image_data->image_len);
 
     user_start = (void *)image_data->image.entry_addr;
     user_start(image_data->start_addr);
