@@ -1,9 +1,9 @@
-
+idf_build_get_property(target IDF_TARGET)
 if(CONFIG_ESP_WOLFSSL_INTERNAL)
 set(COMPONENT_ADD_INCLUDEDIRS wolfssl/include wolfssl/wolfssl wolfssl/wolfssl/wolfssl)
 set(COMPONENT_SRCDIRS "wolfssl/source")
 
-set(COMPONENT_REQUIRES "lwip" "esp8266" "util")
+set(COMPONENT_REQUIRES "lwip" "${target}")
 endif()
 
 register_component()

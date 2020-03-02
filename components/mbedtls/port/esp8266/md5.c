@@ -28,7 +28,7 @@ static const uint8_t esp_md5_padding[64] =
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-int esp_md5_process(esp_md5_context_t *ctx, const uint8_t data[64])
+static int esp_md5_process(esp_md5_context_t *ctx, const uint8_t data[64])
 {
     uint32_t X[64], Y[4];
     util_assert(ctx);

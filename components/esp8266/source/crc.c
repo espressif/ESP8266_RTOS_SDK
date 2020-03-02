@@ -14,7 +14,7 @@
 
 #include <stdint.h>
 
-#include "crc.h"
+#include "rom/crc.h"
 #include "ibus_data.h"
 
 static const uint32_t crc32_le_table[256] = {

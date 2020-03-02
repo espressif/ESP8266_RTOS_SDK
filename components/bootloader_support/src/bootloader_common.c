@@ -169,7 +169,7 @@ bool bootloader_common_erase_part_type_data(const char *list_erase, bool ota_dat
 
 #include "esp_err.h"
 #include "esp_log.h"
-#include "crc.h"
+#include "rom/crc.h"
 
 #include "rom/gpio.h"
 

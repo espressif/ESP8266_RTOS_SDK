@@ -19,7 +19,7 @@
 #include "esp_system.h"
 #include "internal/esp_system_internal.h"
 
-#include "crc.h"
+#include "rom/crc.h"
 
 #include "esp8266/eagle_soc.h"
 #include "esp8266/efuse_register.h"

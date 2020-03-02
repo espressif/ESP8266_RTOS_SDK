@@ -15,7 +15,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
-#include "crc.h"
+#include "rom/crc.h"
 #include "unity.h"
 
 #define TEST_CRC_COUNT 4096

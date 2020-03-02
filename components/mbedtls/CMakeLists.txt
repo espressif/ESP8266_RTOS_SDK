@@ -1,12 +1,13 @@
-idf_component_register(INCLUDE_DIRS "port/include" "port/esp8266/include" "mbedtls/include"
-                    REQUIRES lwip util)
+idf_build_get_property(target IDF_TARGET)
+idf_component_register(INCLUDE_DIRS "port/include" "port/include/${target}" "mbedtls/include"
+                    REQUIRES lwip)
 
 # Only build mbedtls libraries
 set(ENABLE_TESTING CACHE BOOL OFF)
 set(ENABLE_PROGRAMS CACHE BOOL OFF)
 
 # Needed to for include_next includes to work from within mbedtls
-include_directories("${COMPONENT_DIR}/port/include" "${COMPONENT_DIR}/port/esp8266/include")
+include_directories("${COMPONENT_DIR}/port/include" "${COMPONENT_DIR}/port/include/${target}")
 
 # Import mbedtls library targets
 add_subdirectory(mbedtls)
@@ -25,10 +26,17 @@ target_sources(mbedtls PRIVATE  "${COMPONENT_DIR}/port/mbedtls_debug.c"
 target_sources(mbedcrypto PRIVATE "${COMPONENT_DIR}/port/esp_hardware.c"
                                   "${COMPONENT_DIR}/port/esp_mem.c"
                                   "${COMPONENT_DIR}/port/esp_timing.c"
-                                  "${COMPONENT_DIR}/port/esp8266/aes.c"
-                                  "${COMPONENT_DIR}/port/esp8266/sha1.c"
-                                  "${COMPONENT_DIR}/port/esp8266/sha256.c"
-                                  "${COMPONENT_DIR}/port/esp8266/sha512.c")
+                                  "${COMPONENT_DIR}/port/esp_aes.c"
+                                  "${COMPONENT_DIR}/port/esp_sha1.c"
+                                  "${COMPONENT_DIR}/port/esp_sha256.c"
+                                  "${COMPONENT_DIR}/port/esp_sha512.c"
+                                  "${COMPONENT_DIR}/port/${target}/aes.c"
+                                  "${COMPONENT_DIR}/port/${target}/arc4.c"
+                                  "${COMPONENT_DIR}/port/${target}/base64.c"
+                                  "${COMPONENT_DIR}/port/${target}/md5.c"
+                                  "${COMPONENT_DIR}/port/${target}/sha1.c"
+                                  "${COMPONENT_DIR}/port/${target}/sha256.c"
+                                  "${COMPONENT_DIR}/port/${target}/sha512.c")
 
 foreach(target ${mbedtls_targets})
     target_compile_definitions(${target} PUBLIC -DMBEDTLS_CONFIG_FILE="mbedtls/esp_config.h" -DCONFIG_SSL_USING_MBEDTLS)

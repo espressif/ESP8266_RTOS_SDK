@@ -8,14 +8,14 @@ endif
 
 PROJECT_NAME := bootloader
 
-COMPONENTS := esptool_py main bootloader_support spi_flash log esp8266 util
+COMPONENTS := esptool_py main bootloader_support spi_flash log $(IDF_TARGET)
 
 # Clear C and CXX from top level project
 CFLAGS =
 CXXFLAGS =
 
 #We cannot include the esp8266 component directly but we need its includes.
-CFLAGS += -I $(IDF_PATH)/components/esp8266/include -I $(IDF_PATH)/components/util/include
+CFLAGS += -I $(IDF_PATH)/components/$(IDF_TARGET)/include -I $(IDF_PATH)/components/mbedtls/port/include/$(IDF_TARGET)
 CFLAGS += -I $(IDF_PATH)/components/esp_common/include
 
 # The bootloader pseudo-component is also included in this build, for its Kconfig.projbuild to be included.
