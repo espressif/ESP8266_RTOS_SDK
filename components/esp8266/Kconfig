@@ -420,7 +420,7 @@ config ESP8266_WIFI_NVS_ENABLED
         Select this option to enable WiFi NVS flash
 
 config ESP8266_WIFI_CONNECT_OPEN_ROUTER_WHEN_PWD_IS_SET
-    bool "Connent open router when wifi password is set"
+    bool "Connect open router when wifi password is set"
     default y
     help
         When this option is enabled, ESP8266 will connect to open router even if wifi password is set, otherwise 
