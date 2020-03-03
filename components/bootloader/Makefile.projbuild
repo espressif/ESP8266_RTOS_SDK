@@ -18,7 +18,7 @@ SECURE_BOOT_SIGNING_KEY=$(abspath $(call dequote,$(CONFIG_SECURE_BOOT_SIGNING_KE
 export SECURE_BOOT_SIGNING_KEY  # used by bootloader_support component
 
 # Has a matching value in bootloader_support esp_flash_partitions.h
-BOOTLOADER_OFFSET := 0x0000
+BOOTLOADER_OFFSET := $(CONFIG_BOOTLOADER_STORE_OFFSET)
 
 # Custom recursive make for bootloader sub-project
 #

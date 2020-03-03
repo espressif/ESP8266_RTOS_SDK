@@ -25,7 +25,7 @@ MEMORY
   iram0_0_seg (RX) :                 org = 0x40100000, len = CONFIG_SOC_IRAM_SIZE
 
   /* Even though the segment name is iram, it is actually mapped to flash and mapped constant data */
-  iram0_2_seg (RX) :                 org = 0x40200010 + APP_OFFSET,
+  iram0_2_seg (RX) :                 org = 0x40200010 + (APP_OFFSET & (0x100000 - 1)),
                                      len = APP_SIZE - 0x10
 
   /*

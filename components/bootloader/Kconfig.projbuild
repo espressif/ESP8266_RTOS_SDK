@@ -150,6 +150,14 @@ config BOOTLOADER_HOLD_TIME_GPIO
         The GPIO must be held low continuously for this period of time after reset 
         before a factory reset or test partition boot (as applicable) is performed.
 
+config BOOTLOADER_STORE_OFFSET
+    hex "Bootloader store offset in the flash"
+    default 0x0
+    help
+        Bootloader store offset in the flash, if you have extra private bootloader to boot the
+        bootloader of the SDK's bootloader, you can set the option to store SDK's bootloader
+        to other space in the flash instead of "0x0".
+
 endmenu  # Bootloader
 
 
