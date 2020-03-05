@@ -17,7 +17,9 @@
 #include "esp_log.h"
 #include "esp_libc.h"
 #include "esp_task_wdt.h"
+#include "esp_attr.h"
 #include "portmacro.h"
+#include "esp8266/rom_functions.h"
 #include "esp8266/eagle_soc.h"
 #include "driver/soc.h"
 
@@ -33,6 +35,73 @@ static void esp_task_wdt_isr(void *param)
     extern void *__wifi_task_top_sp(void);
 
     panicHandler(__wifi_task_top_sp(), 1);
+}
+#endif
+
+#ifdef CONFIG_ESP8266_NMI_WDT
+
+#if CONFIG_ESP_TASK_WDT_TIMEOUT_S == 13
+#define NMI_WD_TOTAL_PERIOD (6553600)
+#elif CONFIG_ESP_TASK_WDT_TIMEOUT_S == 14
+#define NMI_WD_TOTAL_PERIOD (13107200)
+#elif CONFIG_ESP_TASK_WDT_TIMEOUT_S == 15
+#define NMI_WD_TOTAL_PERIOD (26214400)
+#endif
+
+#define NMI_WD_CHECK_PERIOD (1 * 1000 * 1000)
+
+static int s_nmi_wd_state;
+
+static void nmi_panic_wd(void)
+{
+    extern uint32_t _chip_nmi_cnt;
+    extern uint8_t _chip_nmi_stk[];
+    extern void panicHandler(void *frame, int wdt);
+    uint32_t *p;
+
+    if (_chip_nmi_cnt == 1) {
+        p = (uint32_t *)&_chip_nmi_stk[512];
+    } else {
+        p = (uint32_t *)&_chip_nmi_stk[512 + 124 + 256];
+    }
+
+    panicHandler(p - 1, 1);
+}
+
+static void IRAM_ATTR nmi_set_wd_time(uint32_t us)
+{
+    REG_WRITE(WDEVTSF0TIMER_ENA, REG_READ(WDEVTSF0TIMER_ENA) & (~WDEV_TSF0TIMER_ENA));
+
+    REG_WRITE(WDEVTSFSW0_LO, 0);
+    REG_WRITE(WDEVTSFSW0_HI, 0);
+    REG_WRITE(WDEVTSFSW0_LO, 0);
+
+    REG_WRITE(WDEVTSF0_TIMER_LO, 0);
+    REG_WRITE(WDEVTSF0_TIMER_HI, 0);
+
+    REG_WRITE(WDEVTSF0_TIMER_LO, us);
+
+    REG_WRITE(WDEVTSF0TIMER_ENA, WDEV_TSF0TIMER_ENA);
+}
+
+static void IRAM_ATTR nmi_check_wd(void)
+{
+    switch (s_nmi_wd_state) {
+        case 0:
+            s_nmi_wd_state = 1;
+            nmi_set_wd_time(NMI_WD_CHECK_PERIOD);
+            break;
+        case 1:
+            s_nmi_wd_state = 2;
+            nmi_set_wd_time(NMI_WD_TOTAL_PERIOD - NMI_WD_CHECK_PERIOD);
+            break;
+        case 2:
+            Cache_Read_Enable_New();
+            nmi_panic_wd();
+            break;
+        default:
+            break;
+    }
 }
 #endif
 
@@ -72,6 +141,15 @@ esp_err_t esp_task_wdt_init(void)
 
     WDT_FEED();
 
+#ifdef CONFIG_ESP8266_NMI_WDT
+    {
+        extern void wDev_MacTimSetFunc(void *func);
+
+        wDev_MacTimSetFunc(nmi_check_wd);;
+        nmi_set_wd_time(NMI_WD_CHECK_PERIOD);
+    }
+#endif
+
     return 0;
 }
 
@@ -82,6 +160,10 @@ esp_err_t esp_task_wdt_init(void)
 void esp_task_wdt_reset(void)
 {
     WDT_FEED();
+
+#ifdef CONFIG_ESP8266_NMI_WDT
+    s_nmi_wd_state = 0;
+#endif
 }
 
 /**

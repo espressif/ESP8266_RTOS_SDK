@@ -80,14 +80,14 @@ Add to compile passing.
 #define _INTERRUPT_LEVEL 3
 
 STRUCT_BEGIN
-STRUCT_FIELD (long,4,HESF_,SAR)
-STRUCT_FIELD (long,4,HESF_,EPC1)
-STRUCT_FIELD (long,4,HESF_,EXCCAUSE)
-STRUCT_FIELD (long,4,HESF_,EXCVADDR)
-STRUCT_FIELD (long,4,HESF_,EXCSAVE1)
 STRUCT_FIELD (long,4,HESF_,EPC3)
 STRUCT_FIELD (long,4,HESF_,EPS3)
 STRUCT_AFIELD(long,4,HESF_,AREG, 16)    /* address registers ar0..ar15 */
+STRUCT_FIELD (long,4,HESF_,SAR)
+STRUCT_FIELD (long,4,HESF_,EXCCAUSE)
+STRUCT_FIELD (long,4,HESF_,EPC1)
+STRUCT_FIELD (long,4,HESF_,EXCVADDR)
+STRUCT_FIELD (long,4,HESF_,EXCSAVE1)
 #define HESF_AR(n)  HESF_AREG+((n)*4)
 STRUCT_END(HighPriFrame)
 #define HESF_TOTALSIZE  HighPriFrameSize+32 /* 32 bytes for interrupted code's save areas under SP */
