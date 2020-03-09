@@ -6,6 +6,7 @@ Peripherals API
 
    GPIO <gpio>
    I2C <i2c>
+   I2S <i2s>
    SPI <spi>
    PWM <pwm>
    UART <uart>

@@ -51,6 +51,7 @@ INPUT = \
     ##
     ../../components/esp8266/include/driver/gpio.h \
     ../../components/esp8266/include/driver/i2c.h \
+    ../../components/esp8266/include/driver/i2s.h \
     ../../components/esp8266/include/driver/pwm.h \
     ../../components/esp8266/include/driver/uart.h \
     ../../components/esp8266/include/driver/adc.h \
