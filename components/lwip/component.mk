@@ -30,12 +30,6 @@ ifndef CONFIG_IDF_TARGET_ESP32
     COMPONENT_OBJEXCLUDE := port/esp8266/netif/ethernetif.o
 endif
 
-ifdef CONFIG_LWIP_SOCKET_MULTITHREAD
-    COMPONENT_SRCDIRS += apps/multi-threads
-    COMPONENT_OBJEXCLUDE += lwip/src/api/sockets.o
-endif
-
-
 ifdef CONFIG_LWIP_PPP_SUPPORT
     COMPONENT_SRCDIRS += lwip/src/netif/ppp lwip/src/netif/ppp/polarssl
 endif
@@ -46,5 +40,7 @@ ifeq ($(GCC_NOT_5_2_0), 1)
 lwip/src/netif/ppp/ppp.o: CFLAGS += -Wno-uninitialized
 lwip/src/netif/ppp/pppos.o: CFLAGS += -Wno-implicit-fallthrough
 endif
+
+lwip/src/core/tcp.o: CFLAGS += -Wno-type-limits
 
 COMPONENT_ADD_LDFRAGMENTS += linker.lf

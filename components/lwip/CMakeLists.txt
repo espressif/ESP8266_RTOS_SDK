@@ -9,7 +9,6 @@ set(include_dirs
 
 set(srcs
     "apps/dhcpserver/dhcpserver.c"
-    "apps/multi-threads/sockets_mt.c"
     "apps/ping/esp_ping.c"
     "apps/ping/ping.c"
     "apps/ping/ping_sock.c"
@@ -136,10 +135,6 @@ if(CONFIG_ETH_ENABLED)
     list(APPEND srcs "port/esp32/netif/ethernetif.c")
 endif()
 
-if(CONFIG_LWIP_SOCKET_MULTITHREAD)
-    set(COMPONENT_OBJEXCLUDE lwip/src/api/sockets.c)
-endif()
-
 idf_component_register(SRCS "${srcs}"
                     INCLUDE_DIRS "${include_dirs}"
                     LDFRAGMENTS linker.lf
@@ -161,3 +156,11 @@ if(GCC_NOT_5_2_0)
         -Wno-implicit-fallthrough
         )
 endif()
+
+# "comparison is always false due to limited range of data type" warning
+# when setting CONFIG_LWIP_TCP_WND_DEFAULT to 65535
+set_source_files_properties(
+    lwip/src/core/tcp.c
+    PROPERTIES COMPILE_FLAGS
+    -Wno-type-limits
+)
