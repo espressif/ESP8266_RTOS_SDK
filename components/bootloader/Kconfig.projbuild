@@ -10,6 +10,15 @@ config BOOTLOADER_INIT_SPI_FLASH
         If your system bootloader is based on v3.0, the option must not be enable, because the v3.0 bootloader don't support
         this function.
 
+config BOOTLOADER_DISABLE_JTAG_IO
+    bool "Bootloader disable JTAG I/O"
+    default n 
+    help
+        Enable this option, when SoC brings up and bootloader initializes hardware, it will
+        disable JTAG's I/O and set these GPIOs to be normal I/O with inputting mode.
+
+        If users use JTAG to help develop, please disable this option.
+
 choice LOG_BOOTLOADER_LEVEL
    bool "Bootloader log verbosity"
    default LOG_BOOTLOADER_LEVEL_INFO
