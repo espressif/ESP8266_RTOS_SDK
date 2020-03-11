@@ -24,3 +24,14 @@ We split the native OTA example into several sub-examples to let custemors to ch
 ^^^^^^^^^^^^^^^^^^
 
 For better compatibility, the SDK is in bg mode by default. And application can set it to be bgn mode for reconnecting when it fails to connect some 11n only APs, refer to the `examples/wifi/simple_wifi <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/wifi/simple_wifi/>`_.
+
+4. JTAG I/O
+^^^^^^^^^^^
+
+In some cases, if enable JTAG I/O (default options), it will cost some more current so that the hardware will cost more power.
+So if users don't use Jtag or these GPIOs directly and want to save more power, please enable this option in the menuconfig:
+
+::
+
+    "Bootloader config  --->
+        [ ] Bootloader disable JTAG I/O"
