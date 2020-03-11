@@ -568,13 +568,6 @@
 #define LWIP_SO_RCVBUF                  CONFIG_LWIP_SO_RCVBUF
 
 /**
- * LWIP_SO_LINGER==1: Enable SO_LINGER processing.
- */
-#define LWIP_SO_LINGER                  1
-
-#define SET_SOLINGER_DEFAULT            CONFIG_SET_SOLINGER_DEFAULT
-
-/**
  * SO_REUSE==1: Enable SO_REUSEADDR option.
  * This option is set via menuconfig.
  */
@@ -792,9 +785,7 @@
 #define LWIP_SOCKET_OFFSET              (FD_SETSIZE - CONFIG_LWIP_MAX_SOCKETS)
 
 /* Enable all Espressif-only options */
-#ifdef CONFIG_LWIP_SOCKET_MULTITHREAD
-#define SOCKETS_MT
-#endif
+
 #define ESP_LWIP                        1
 #define ESP_LWIP_ARP                    1
 #define ESP_PER_SOC_TCP_WND             0
@@ -824,6 +815,7 @@
 #define ESP_IPV6                        LWIP_IPV6
 #define ESP_SOCKET                      1
 #define ESP_LWIP_SELECT                 1
+#define ESP_LWIP_LOCK                   1
 
 #ifdef ESP_IRAM_ATTR
 #undef ESP_IRAM_ATTR
