@@ -17,6 +17,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#define ERRNO_TLS_INDEX (configNUM_THREAD_LOCAL_STORAGE_POINTERS - 1)
+
 static struct _reent impure_data;
 struct _reent *_global_impure_ptr = &impure_data;
 
@@ -43,4 +45,9 @@ struct _reent *__getreent()
      */
 #endif
     return _global_impure_ptr;
+}
+
+int *__errno(void)
+{
+    return (int *)pvTaskGetThreadLocalStorageBufferPointer(NULL, ERRNO_TLS_INDEX);
 }

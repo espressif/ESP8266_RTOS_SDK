@@ -128,10 +128,15 @@ NVIC value of 255. */
 #define configUSE_NEWLIB_REENTRANT  1
 #endif
 
+/**
+ * 0: LwIP
+ * 1: pthread (optional)
+ * 2: errno
+ */
 #ifdef CONFIG_ENABLE_PTHREAD
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 2
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 3
 #else
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 1
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 2
 #endif
 #define configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS 1
 
