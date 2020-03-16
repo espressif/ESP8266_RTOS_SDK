@@ -1,7 +1,7 @@
 gwen:
     core:       71005fb
     net80211:   484628a
-    pp:         f25f892
+    pp:         b7f598d
     wpa:        e1fe83a
     espnow:     e1fe83a
     wps:        e1fe83a
