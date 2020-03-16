@@ -3490,6 +3490,24 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
 		return pvReturn;
 	}
 
+	void **pvTaskGetThreadLocalStorageBufferPointer( TaskHandle_t xTaskToQuery, BaseType_t xIndex )
+	{
+	void **pvReturn = NULL;
+	TCB_t *pxTCB;
+
+		if( xIndex < configNUM_THREAD_LOCAL_STORAGE_POINTERS )
+		{
+			pxTCB = prvGetTCBFromHandle( xTaskToQuery );
+			pvReturn = &pxTCB->pvThreadLocalStoragePointers[ xIndex ];
+		}
+		else
+		{
+			pvReturn = NULL;
+		}
+
+		return pvReturn;
+	}
+
 #endif /* configNUM_THREAD_LOCAL_STORAGE_POINTERS */
 /*-----------------------------------------------------------*/
 
