@@ -129,6 +129,11 @@ typedef struct {
     uint8_t mac[6];           /**< MAC address of the station which send probe request */
 } system_event_ap_probe_req_rx_t;
 
+/** Event structure for IP_EVENT_AP_STAIPASSIGNED event */
+typedef struct {
+    ip4_addr_t ip; /*!< IP address which was assigned to the station */
+} system_event_ap_staipassigned_t;
+
 typedef union {
     system_event_sta_connected_t               connected;          /**< ESP8266 station connected to AP */
     system_event_sta_disconnected_t            disconnected;       /**< ESP8266 station disconnected to AP */
@@ -140,6 +145,7 @@ typedef union {
     system_event_ap_staconnected_t             sta_connected;      /**< a station connected to ESP8266 soft-AP */
     system_event_ap_stadisconnected_t          sta_disconnected;   /**< a station disconnected to ESP8266 soft-AP */
     system_event_ap_probe_req_rx_t             ap_probereqrecved;  /**< ESP8266 soft-AP receive probe request packet */
+    system_event_ap_staipassigned_t            ap_staipassigned;   /**< ESP8266 soft-AP assign an IP to the station*/
     system_event_got_ip6_t                     got_ip6;            /**< ESP8266 station　or ap or ethernet ipv6 addr state change to preferred */
 } system_event_info_t;
 
