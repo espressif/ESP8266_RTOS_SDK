@@ -101,11 +101,11 @@ _xt_int_exit:
     movi    a2,  pxCurrentTCB
     l32i    a2,  a2,  0
     l32i    a2,  a2,  48
-    movi    a4,  ~(0xf)
+    movi    a4,  ~(0x7)
     and     a4,  a4,  a2
     wsr     a4,  dbreaka0
 
-    movi    a3,  0xc0000030
+    movi    a3,  0xc0000038
     wsr     a3,  dbreakc0
 #endif
 
@@ -245,11 +245,11 @@ _xt_enter_first_task:
     movi    a2,  pxCurrentTCB
     l32i    a2,  a2,  0
     l32i    a2,  a2,  48
-    movi    a4,  ~(0xf)
+    movi    a4,  ~(0x7)
     and     a4,  a4,  a2
     wsr     a4,  dbreaka0
 
-    movi    a3,  0xc0000030
+    movi    a3,  0xc0000038
     wsr     a3,  dbreakc0
 #endif
 
