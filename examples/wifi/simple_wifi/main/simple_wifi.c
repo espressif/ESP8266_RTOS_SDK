@@ -70,6 +70,10 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
         break;
+    case SYSTEM_EVENT_AP_STAIPASSIGNED:
+        ESP_LOGI(TAG, "assigned ip:%s",
+                 ip4addr_ntoa(&event->event_info.ap_staipassigned.ip));
+        break;
     default:
         break;
     }
