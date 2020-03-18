@@ -590,7 +590,11 @@ static void uart_rx_intr_handler_default(void *param)
                         }
 
                         if (p_uart->tx_len_tot == 0) {
-                            en_tx_flg = false;
+                            if (tx_fifo_rem == 0) {
+                                en_tx_flg = true;
+                            } else{
+                                en_tx_flg = false;
+                            }
                             xSemaphoreGiveFromISR(p_uart->tx_done_sem, &task_woken);
                             if (task_woken == pdTRUE) {
                                 portYIELD_FROM_ISR();
