@@ -183,10 +183,29 @@ typedef struct {
 } wifi_fast_scan_threshold_t;
 
 typedef enum {
+    WIFI_STATE_DEINIT=0,
+    WIFI_STATE_INIT,
+    WIFI_STATE_START
+}wifi_state_t;
+
+typedef enum {
     WIFI_PS_NONE,        /**< No power save */
-    WIFI_PS_MAX_MODEM,   /**< Maximum modem power saving. In this mode, station close cpu and RF in DTIM period */
-    WIFI_PS_MIN_MODEM,   /**< Minimum modem power saving. In this mode, station close RF in DTIM period */
+    WIFI_PS_MIN_MODEM,   /**< Minimum modem power saving. In this mode, station wakes up to receive beacon every DTIM period */
+    WIFI_PS_MAX_MODEM,   /**< Maximum modem power saving. In this mode, interval to receive beacons is determined by the listen_interval 
+                              parameter in wifi_sta_config_t. 
+                              Attention: Using this option may cause ping failures. Not recommended */
 } wifi_ps_type_t;
+
+/**
+ * @brief Power management config for ESP8266
+ *
+ * Pass a pointer to this structure as an argument to esp_pm_configure function.
+ */
+typedef struct {
+    int max_freq_mhz;   /*!< Not used in ESP8266 */
+    int min_freq_mhz;   /*!< Not used in ESP8266 */
+    bool light_sleep_enable;        /*!< Enter light sleep when no locks are taken */
+} esp_pm_config_esp8266_t;
 
 #define WIFI_PS_MODEM WIFI_PS_MIN_MODEM /**< @deprecated Use WIFI_PS_MIN_MODEM or WIFI_PS_MAX_MODEM instead */
 

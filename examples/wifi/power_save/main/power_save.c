@@ -10,7 +10,7 @@
 /*
    this example shows how to use power save mode
    set a router or a AP using the same SSID&PASSWORD as configuration of this example.
-   start esp32 and when it connected to AP it will enter power save mode
+   start esp8266 and when it connected to AP it will enter power save mode
 */
 #include <string.h>
 #include "freertos/FreeRTOS.h"
@@ -18,6 +18,7 @@
 #include "freertos/event_groups.h"
 #include "rom/ets_sys.h"
 #include "esp_wifi.h"
+#include "esp_sleep.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
@@ -104,6 +105,13 @@ static void wifi_power_save(void)
              EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
     ESP_LOGI(TAG, "esp_wifi_set_ps().");
     esp_wifi_set_ps(DEFAULT_PS_MODE);
+
+#if CONFIG_PM_ENABLE
+    esp_pm_config_esp8266_t pm_config = {
+            .light_sleep_enable = true
+    };
+    ESP_ERROR_CHECK( esp_pm_configure(&pm_config) );
+#endif // CONFIG_PM_ENABLE
 }
 
 void app_main(void)
