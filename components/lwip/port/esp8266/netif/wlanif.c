@@ -485,13 +485,6 @@ static int8_t low_level_output(struct netif* netif, struct pbuf* p)
      */
     err = ieee80211_output_pbuf(&aio);
     if (err != ERR_OK) {
-        if (err == ERR_MEM) {
-#if ESP_TCP
-            insert_to_list(aio.fd, p);
-#endif
-            err = ERR_OK;
-        }
-
         pbuf_free(p);
     }
 
