@@ -1097,6 +1097,12 @@ size_t memp_malloc_get_size(size_t type);
  */
 #define LWIP_WND_SCALE                  0
 #define TCP_RCV_SCALE                   0
+
+/**
+ * LWIP_TCP_RTO_TIME: make TCP RTO time configurable.
+ * Default is 1 second.
+ */
+#define LWIP_TCP_RTO_TIME             CONFIG_LWIP_TCP_RTO_TIME
 /**
  * @}
  */

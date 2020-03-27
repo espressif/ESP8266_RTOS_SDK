@@ -479,6 +479,13 @@ config LWIP_TCP_TIMESTAMPS
         really used locally. Therefore, it is only enabled when a TS option is
         received in the initial SYN packet from a remote host.
 
+config LWIP_TCP_RTO_TIME
+    int "Default TCP RTO TIME"
+    default 1000
+    help
+        Set default TCP RTO time for a reasonable initial RTO.
+        Advise to set initial RTO to 1 second
+
 endmenu # TCP
 
 menu "UDP"
