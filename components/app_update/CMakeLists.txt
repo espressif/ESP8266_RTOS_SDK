@@ -1,4 +1,4 @@
-idf_component_register(SRCS "esp_ota_ops.c"
+idf_component_register(SRCS "esp_ota_ops.c" "esp_app_desc.c"
                     INCLUDE_DIRS "include"
                     REQUIRES spi_flash partition_table bootloader_support
                     PRIV_REQUIRES util)
@@ -14,7 +14,7 @@ string(SUBSTRING "${project_ver}" 0 31 PROJECT_VER_CUT)
 string(SUBSTRING "${project_name}" 0 31 PROJECT_NAME_CUT)
 
 set_source_files_properties(
-    SOURCE "esp_app_desc.c"
+    SOURCE "esp_app_desc.c" "esp_app_desc.c"
     PROPERTIES COMPILE_DEFINITIONS
     "PROJECT_VER=\"${PROJECT_VER_CUT}\"; PROJECT_NAME=\"${PROJECT_NAME_CUT}\"")
 
