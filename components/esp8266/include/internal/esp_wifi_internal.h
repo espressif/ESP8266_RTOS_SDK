@@ -175,6 +175,22 @@ esp_err_t esp_wifi_internal_set_log_mod(uint32_t submodule);
   */
 esp_err_t esp_wifi_internal_get_log(wifi_log_level_t *log_level, uint32_t *log_mod);
 
+/**
+  * @brief     Receive broadcast/multicast packet or not when WiFi in power save.
+  *
+  * @param     enable  receive broadcast/multicast packet when set to true.
+  */
+void esp_wifi_set_pm_recv_multi_data(bool enable);
+
+/**
+  * @brief     Receive broadcast/multicast packet or not when WiFi in power save
+  *
+  * @return
+  *    - true: receive broadcast/multicast packet or not when WiFi in power save
+  *    - false: drop broadcast/multicast packet or not when WiFi in power save
+  */
+bool esp_wifi_get_pm_recv_multi_data(void);
+
 #ifdef __cplusplus
 }
 #endif

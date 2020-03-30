@@ -977,6 +977,16 @@ esp_err_t esp_wifi_get_event_mask(uint32_t *mask);
   */
 esp_err_t esp_wifi_80211_tx(wifi_interface_t ifx, const void *buffer, int len, bool en_sys_seq);
 
+/**
+ * @brief Operation system start check time and enter sleep
+ * 
+ * @note This function is called by system, user should not call this
+ *
+ * @return
+ *      - wifi state
+ */
+wifi_state_t esp_wifi_get_state(void);
+
 #ifdef __cplusplus
 }
 #endif

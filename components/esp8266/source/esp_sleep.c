@@ -18,6 +18,7 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_sleep.h"
+#include "esp_wifi.h"
 #include "FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/soc.h"
@@ -374,6 +375,10 @@ esp_err_t esp_light_sleep_start(void)
         .flush_uart = 1
     };
 
+    if (esp_wifi_get_state() >= WIFI_STATE_START) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
     return esp_light_sleep_internal(&proc);
 }
 
@@ -406,4 +411,19 @@ void esp_sleep_start(void)
     };
 
     esp_light_sleep_internal(&proc);
+}
+
+esp_err_t esp_pm_configure(const void* vconfig)
+{
+#ifndef CONFIG_PM_ENABLE
+    return ESP_ERR_NOT_SUPPORTED;
+#endif
+
+    const esp_pm_config_esp8266_t* config = (const esp_pm_config_esp8266_t*) vconfig;
+    if (config->light_sleep_enable) {
+        s_sleep_mode = ESP_CPU_LIGHTSLEEP;
+    } else {
+        s_sleep_mode = ESP_CPU_WAIT;
+    }
+    return ESP_OK;
 }
