@@ -231,6 +231,7 @@ static esp_err_t set_client_config(const char *hostname, size_t hostlen, esp_tls
     }
 
     if (!cfg->skip_common_name) {
+#ifdef HAVE_SNI
         char *use_host = NULL;
         if (cfg->common_name != NULL) {
             use_host = strdup(cfg->common_name);
@@ -248,6 +249,7 @@ static esp_err_t set_client_config(const char *hostname, size_t hostlen, esp_tls
             return ESP_ERR_WOLFSSL_SSL_SET_HOSTNAME_FAILED;
         }
         free(use_host);
+#endif /* HAVE_SNI */
     }
 
     if (cfg->alpn_protos) {
@@ -438,8 +440,8 @@ int esp_wolfssl_server_session_create(esp_tls_cfg_server_t *cfg, int sockfd, esp
         tls->conn_state = ESP_TLS_FAIL;
         return -1;
     }
-    tls->read = esp_wolfssl_read;
-    tls->write = esp_wolfssl_write;
+    tls->_read = esp_wolfssl_read;
+    tls->_write = esp_wolfssl_write;
     int ret;
     while ((ret = wolfSSL_accept((WOLFSSL *)tls->priv_ssl)) != WOLFSSL_SUCCESS) {
         if (ret != ESP_TLS_ERR_SSL_WANT_READ && ret != ESP_TLS_ERR_SSL_WANT_WRITE) {

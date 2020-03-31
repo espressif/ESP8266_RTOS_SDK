@@ -249,8 +249,8 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
             return -1;
         }
         if (!cfg) {
-            tls->read = tcp_read;
-            tls->write = tcp_write;
+            tls->_read = tcp_read;
+            tls->_write = tcp_write;
             ESP_LOGD(TAG, "non-tls connection established");
             return 1;
         }
@@ -295,8 +295,8 @@ static int esp_tls_low_level_conn(const char *hostname, int hostlen, int port, c
             tls->conn_state = ESP_TLS_FAIL;
             return -1;
         }
-        tls->read = _esp_tls_read;
-        tls->write = _esp_tls_write;
+        tls->_read = _esp_tls_read;
+        tls->_write = _esp_tls_write;
         tls->conn_state = ESP_TLS_HANDSHAKE;
     /* falls through */
     case ESP_TLS_HANDSHAKE:
