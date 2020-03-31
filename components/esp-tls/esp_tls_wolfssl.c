@@ -231,6 +231,7 @@ static esp_err_t set_client_config(const char *hostname, size_t hostlen, esp_tls
     }
 
     if (!cfg->skip_common_name) {
+#ifdef HAVE_SNI
         char *use_host = NULL;
         if (cfg->common_name != NULL) {
             use_host = strdup(cfg->common_name);
@@ -248,6 +249,7 @@ static esp_err_t set_client_config(const char *hostname, size_t hostlen, esp_tls
             return ESP_ERR_WOLFSSL_SSL_SET_HOSTNAME_FAILED;
         }
         free(use_host);
+#endif /* HAVE_SNI */
     }
 
     if (cfg->alpn_protos) {
