@@ -33,7 +33,8 @@
 #include "sdkconfig.h"
 
 #include "lwip/sockets.h"
-
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #if !LWIP_POSIX_SOCKETS_IO_NAMES
 #include <unistd.h>
 #include <fcntl.h>
