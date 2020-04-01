@@ -1,8 +1,8 @@
 gwen:
-    crypto:     8943c89
-    core:       64146c3
-    net80211:   fd702f4
-    pp:         2f7b347
+    crypto:     b590a53
+    core:       b590a53
+    net80211:   b590a53
+    pp:         b590a53
     smartconfig:  2.8.0
-    wpa:        e28c056
+    wpa:        b590a53
     phy:	1058.13
