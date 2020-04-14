@@ -5,7 +5,7 @@ gwen:
     wpa:        7743eff5
     espnow:     7743eff5
     wps:        7743eff5
-    wpa2:       9a2e4686
+    wpa2:       705ad69a
 
     smartconfig:  2.8.2
     phy:          1156.0
