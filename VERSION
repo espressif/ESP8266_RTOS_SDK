@@ -1,12 +1,12 @@
 gwen:
-    crypto:     9ec59b5
-    espnow:     79c549f
-    main:       f4cdb80
-    net80211:   27d4974
-    pp:         6eff19d
+    crypto:     47f2f44
+    espnow:     47f2f44
+    main:       47f2f44
+    net80211:   47f2f44
+    pp:         47f2f44
     pwm:        8b5441e
-    wpa:        a8b0acd
-    wps:        ff84a8b
+    wpa:        47f2f44
+    wps:        47f2f44
     phy:        1058.13
 
 gitlab:
