@@ -769,7 +769,7 @@ int lwip_fcntl(int s, int cmd, int val)
 
 int lwip_shutdown(int s, int how)
 {
-    return 0;
+    return lwip_shutdown_esp(s, how);
 }
 
 int lwip_close(int s)
