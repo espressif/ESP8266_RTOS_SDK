@@ -1,11 +1,11 @@
 gwen:
-    core:       1eac3bc
-    net80211:   effb599
-    pp:         1eac3bc
-    wpa:        e1fe83a
-    espnow:     e1fe83a
-    wps:        e1fe83a
-    wpa2:       e1fe83a
+    core:       56518b7
+    net80211:   56518b7
+    pp:         56518b7
+    wpa:        56518b7
+    espnow:     56518b7
+    wps:        56518b7
+    wpa2:       56518b7
 
     smartconfig:  2.8.2
     phy:          1156.0
