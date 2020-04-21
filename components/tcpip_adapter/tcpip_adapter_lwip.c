@@ -449,9 +449,7 @@ esp_err_t tcpip_adapter_up(tcpip_adapter_if_t tcpip_if)
             return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;
         }
 
-        /* use last obtained ip, or static ip */
-        netif_set_addr(esp_netif[tcpip_if], &esp_ip[tcpip_if].ip, &esp_ip[tcpip_if].netmask, &esp_ip[tcpip_if].gw);
-        netif_set_up(esp_netif[tcpip_if]);
+        esp_netif[tcpip_if]->flags |= NETIF_FLAG_UP;
     }
 
     tcpip_adapter_update_default_netif();
@@ -482,9 +480,7 @@ esp_err_t tcpip_adapter_down(tcpip_adapter_if_t tcpip_if)
             tcpip_adapter_reset_ip_info(tcpip_if);
         }
 
-        netif_set_addr(esp_netif[tcpip_if], IP4_ADDR_ANY4, IP4_ADDR_ANY4, IP4_ADDR_ANY4);
-        netif_set_down(esp_netif[tcpip_if]);
-        tcpip_adapter_start_ip_lost_timer(tcpip_if);
+        esp_netif[tcpip_if]->flags &= ~NETIF_FLAG_UP;
     }
 
     tcpip_adapter_update_default_netif();
