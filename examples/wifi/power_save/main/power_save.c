@@ -10,7 +10,7 @@
 /*
    this example shows how to use power save mode
    set a router or a AP using the same SSID&PASSWORD as configuration of this example.
-   start esp32 and when it connected to AP it will enter power save mode
+   start esp8266 and when it connected to AP it will enter power save mode
 */
 #include <string.h>
 
@@ -21,6 +21,7 @@
 #include "esp_netif.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
+#include "esp_sleep.h"
 #include "protocol_examples_common.h"
 #include "nvs.h"
 #include "nvs_flash.h"
@@ -44,4 +45,14 @@ void app_main(void)
     ESP_ERROR_CHECK(example_connect());
     
     esp_wifi_set_ps(DEFAULT_PS_MODE);
+
+#if CONFIG_PM_ENABLE
+    // Configure dynamic frequency scaling:
+    // maximum and minimum frequencies are set in sdkconfig,
+    // automatic light sleep is enabled if tickless idle support is enabled.
+    esp_pm_config_esp8266_t pm_config = {
+            .light_sleep_enable = true
+    };
+    ESP_ERROR_CHECK( esp_pm_configure(&pm_config) );
+#endif // CONFIG_PM_ENABLE
 }

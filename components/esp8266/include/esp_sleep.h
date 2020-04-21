@@ -46,7 +46,7 @@ typedef enum {
 } esp_sleep_source_t;
 
 /**
-  * @brief     Set the chip to deep-sleep mode.
+  * @brief     Enter deep-sleep mode.
   *
   *            The device will automatically wake up after the deep-sleep time set
   *            by the users. Upon waking up, the device boots up from user_init.
@@ -56,6 +56,9 @@ typedef enum {
   * @attention 2. system_deep_sleep(0): there is no wake up timer; in order to wake
   *               up, connect a GPIO to pin RST, the chip will wake up by a falling-edge
   *               on pin RST
+  * @attention 3. esp_deep_sleep does not shut down WiFi and higher level protocol
+  *               connections gracefully. Make sure esp_wifi_stop are called to close any
+  *               connections and deinitialize the peripherals.
   *
   * @param     time_in_us  deep-sleep time, unit: microsecond
   *
@@ -63,6 +66,15 @@ typedef enum {
   */
 void esp_deep_sleep(uint32_t time_in_us);
 
+/**
+ * @brief Set implementation-specific power management configuration
+ * @param config pointer to implementation-specific configuration structure (e.g. esp_pm_config_esp32)
+ * @return
+ *      - ESP_OK on success
+ *      - ESP_ERR_INVALID_ARG if the configuration values are not correct
+ *      - ESP_ERR_NOT_SUPPORTED if certain combination of values is not supported.
+ */
+esp_err_t esp_pm_configure(const void* config);
 
 /**
   * @brief  Call this API before esp_deep_sleep and esp_wifi_init to set the activity after the
@@ -207,9 +219,12 @@ esp_err_t esp_sleep_enable_timer_wakeup(uint32_t time_in_us);
 /**
  * @brief Enter light sleep with the configured wakeup options
  *
+ * @attention esp_deep_sleep does not shut down WiFi and higher level protocol
+ *               connections gracefully. Make sure esp_wifi_stop are called to close any
+ *               connections and deinitialize the peripherals.
  * @return
  *  - ESP_OK on success (returned after wakeup)
- *  - ESP_ERR_INVALID_STATE if WiFi or BT is not stopped
+ *  - ESP_ERR_INVALID_STATE if WiFi is not stopped
  */
 esp_err_t esp_light_sleep_start(void);
 
