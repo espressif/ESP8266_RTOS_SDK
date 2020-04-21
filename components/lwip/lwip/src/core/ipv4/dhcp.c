@@ -518,6 +518,8 @@ dhcp_timeout(struct netif *netif)
     } else {
       dhcp_discover(netif);
     }
+  } else if (dhcp->state == DHCP_STATE_REBINDING) {
+    dhcp->t2_rebind_time = 1;
   }
 }
 
