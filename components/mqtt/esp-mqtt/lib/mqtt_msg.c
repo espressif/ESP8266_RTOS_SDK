@@ -34,7 +34,7 @@
 #include "mqtt_config.h"
 #include "platform.h"
 
-#define MQTT_MAX_FIXED_HEADER_SIZE 3
+#define MQTT_MAX_FIXED_HEADER_SIZE 5
 
 enum mqtt_connect_flag
 {
@@ -105,22 +105,42 @@ static mqtt_message_t* fail_message(mqtt_connection_t* connection)
 
 static mqtt_message_t* fini_message(mqtt_connection_t* connection, int type, int dup, int qos, int retain)
 {
-    int remaining_length = connection->message.length - MQTT_MAX_FIXED_HEADER_SIZE;
-
-    if (remaining_length > 127)
-    {
-        connection->buffer[0] = ((type & 0x0f) << 4) | ((dup & 1) << 3) | ((qos & 3) << 1) | (retain & 1);
-        connection->buffer[1] = 0x80 | (remaining_length % 128);
-        connection->buffer[2] = remaining_length / 128;
-        connection->message.length = remaining_length + 3;
-        connection->message.data = connection->buffer;
+    int message_length = connection->message.length - MQTT_MAX_FIXED_HEADER_SIZE;
+    int total_length = message_length;
+    int encoded_length = 0;
+    uint8_t encoded_lens[4] = {0};
+    // Check if we have fragmented message and update total_len
+    if (connection->message.fragmented_msg_total_length) {
+        total_length = connection->message.fragmented_msg_total_length - MQTT_MAX_FIXED_HEADER_SIZE;
     }
-    else
-    {
-        connection->buffer[1] = ((type & 0x0f) << 4) | ((dup & 1) << 3) | ((qos & 3) << 1) | (retain & 1);
-        connection->buffer[2] = remaining_length;
-        connection->message.length = remaining_length + 2;
-        connection->message.data = connection->buffer + 1;
+
+    // Encode MQTT message length
+    int len_bytes = 0; // size of encoded message length
+    do {
+        encoded_length = total_length % 128;
+        total_length /= 128;
+        if (total_length > 0) {
+            encoded_length |= 0x80;
+        }
+        encoded_lens[len_bytes] = encoded_length;
+        len_bytes++;
+    } while (total_length > 0);
+
+    // Sanity check for MQTT header
+    if (len_bytes + 1 > MQTT_MAX_FIXED_HEADER_SIZE) {
+        return fail_message(connection);
+    }
+
+    // Save the header bytes
+    connection->message.length = message_length + len_bytes + 1; // msg len + encoded_size len + type (1 byte)
+    int offs = MQTT_MAX_FIXED_HEADER_SIZE - 1 - len_bytes;
+    connection->message.data = connection->buffer + offs;
+    connection->message.fragmented_msg_data_offset -= offs;
+    // type byte
+    connection->buffer[offs++] =  ((type & 0x0f) << 4) | ((dup & 1) << 3) | ((qos & 3) << 1) | (retain & 1);
+    // length bytes
+    for (int j = 0; j<len_bytes; j++) {
+        connection->buffer[offs++] = encoded_lens[j];
     }
 
     return &connection->message;
@@ -377,11 +397,17 @@ mqtt_message_t* mqtt_msg_publish(mqtt_connection_t* connection, const char* topi
     else
         *message_id = 0;
 
-    if (connection->message.length + data_length > connection->buffer_length)
-        return fail_message(connection);
-    memcpy(connection->buffer + connection->message.length, data, data_length);
-    connection->message.length += data_length;
-
+    if (connection->message.length + data_length > connection->buffer_length) {
+        // Not enough size in buffer -> fragment this message
+        connection->message.fragmented_msg_data_offset = connection->message.length;
+        memcpy(connection->buffer + connection->message.length, data, connection->buffer_length - connection->message.length);
+        connection->message.length = connection->buffer_length;
+        connection->message.fragmented_msg_total_length = data_length + connection->message.fragmented_msg_data_offset;
+    } else {
+        memcpy(connection->buffer + connection->message.length, data, data_length);
+        connection->message.length += data_length;
+        connection->message.fragmented_msg_total_length = 0;
+    }
     return fini_message(connection, MQTT_MSG_TYPE_PUBLISH, 0, qos, retain);
 }
 

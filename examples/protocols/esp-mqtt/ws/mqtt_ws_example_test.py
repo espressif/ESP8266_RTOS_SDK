@@ -82,7 +82,6 @@ def test_examples_protocol_mqtt_ws(env, extra_data):
         client = mqtt.Client(transport="websockets")
         client.on_connect = on_connect
         client.on_message = on_message
-        client.ws_set_options(path="/ws", headers=None)
         print("Connecting...")
         client.connect(broker_url, broker_port, 60)
     except Exception:
@@ -110,6 +109,7 @@ def test_examples_protocol_mqtt_ws(env, extra_data):
     finally:
         event_stop_client.set()
         thread1.join()
+
 
 if __name__ == '__main__':
     test_examples_protocol_mqtt_ws()

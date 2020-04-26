@@ -84,8 +84,8 @@ def test_examples_protocol_mqtt_wss(env, extra_data):
         client.on_connect = on_connect
         client.on_message = on_message
         client.tls_set(None,
-                    None,
-                    None, cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLSv1, ciphers=None)
+                       None,
+                       None, cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLSv1_2, ciphers=None)
         print("Connecting...")
         client.connect(broker_url, broker_port, 60)
     except Exception:
@@ -113,6 +113,7 @@ def test_examples_protocol_mqtt_wss(env, extra_data):
     finally:
         event_stop_client.set()
         thread1.join()
+
 
 if __name__ == '__main__':
     test_examples_protocol_mqtt_wss()

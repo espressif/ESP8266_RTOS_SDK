@@ -13,6 +13,8 @@ addons:
 before_install:
   # Save path to the git respository
   - PROJECT_PATH=$(pwd)
+  # Have to checkout a temp branch for later in tree reference
+  - git checkout -b temporary_ref_branch
   - CI_COMMIT_SHA=$(git rev-parse HEAD)
 
 install:
