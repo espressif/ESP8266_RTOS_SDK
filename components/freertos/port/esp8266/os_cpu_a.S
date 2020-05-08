@@ -105,7 +105,7 @@ _xt_int_exit:
     and     a4,  a4,  a2
     wsr     a4,  dbreaka0
 
-    movi    a3,  0xc0000038
+    movi    a3,  0x80000038
     wsr     a3,  dbreakc0
 #endif
 
@@ -249,7 +249,7 @@ _xt_enter_first_task:
     and     a4,  a4,  a2
     wsr     a4,  dbreaka0
 
-    movi    a3,  0xc0000038
+    movi    a3,  0x80000038
     wsr     a3,  dbreakc0
 #endif
 
