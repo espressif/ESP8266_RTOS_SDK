@@ -600,6 +600,13 @@ menu "mbedTLS"
 
             # end of Elliptic Curve options
 
+    config MBEDTLS_HKDF_C
+        bool "HKDF algorithm (RFC 5869)"
+        default n
+        help
+            Enable support for the Hashed Message Authentication Code
+            (HMAC)-based key derivation function (HKDF).
+
     menu "Util"
 
         config util_assert
