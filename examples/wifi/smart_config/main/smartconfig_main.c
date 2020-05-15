@@ -31,7 +31,13 @@ static const int CONNECTED_BIT = BIT0;
 static const int ESPTOUCH_DONE_BIT = BIT1;
 static const char *TAG = "sc";
 
-void smartconfig_example_task(void * parm);
+static void smartconfig_example_task(void * parm);
+
+static void on_wifi_start(void *arg, esp_event_base_t event_base,
+                          int32_t event_id, void *event_data)
+{
+    xTaskCreate(smartconfig_example_task, "smartconfig_example_task", 4096, NULL, 3, NULL);
+}
 
 static void on_wifi_disconnect(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
@@ -63,6 +69,7 @@ static void initialise_wifi(void)
 
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
 
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_START, &on_wifi_start, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &on_wifi_disconnect, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &on_got_ip, NULL));
 
@@ -116,7 +123,7 @@ static void sc_callback(smartconfig_status_t status, void *pdata)
     }
 }
 
-void smartconfig_example_task(void * parm)
+static void smartconfig_example_task(void * parm)
 {
     EventBits_t uxBits;
     ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH_AIRKISS) );
