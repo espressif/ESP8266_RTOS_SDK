@@ -116,17 +116,35 @@ static inline void panic_frame(XtExcFrame *frame)
 #endif /* ESP_PANIC_PRINT */
 
 #ifdef ESP_PANIC_REBOOT
+static void hardware_restart(void)
+{
+    CLEAR_WDT_REG_MASK(WDT_CTL_ADDRESS, BIT0);
+    WDT_REG_WRITE(WDT_OP_ADDRESS, 1);
+    WDT_REG_WRITE(WDT_OP_ND_ADDRESS, 1);
+    SET_PERI_REG_BITS(PERIPHS_WDT_BASEADDR + WDT_CTL_ADDRESS,
+                      WDT_CTL_RSTLEN_MASK,
+                      7 << WDT_CTL_RSTLEN_LSB,
+                      0);
+    SET_PERI_REG_BITS(PERIPHS_WDT_BASEADDR + WDT_CTL_ADDRESS,
+                      WDT_CTL_RSPMOD_MASK,
+                      0 << WDT_CTL_RSPMOD_LSB,
+                      0);
+    SET_PERI_REG_BITS(PERIPHS_WDT_BASEADDR + WDT_CTL_ADDRESS,
+                      WDT_CTL_EN_MASK,
+                      1 << WDT_CTL_EN_LSB,
+                      0);
+}
+
 static void esp_panic_reset(void)
 {
     uart_tx_wait_idle(0);
-    uart_tx_wait_idle(1);    
-
-    rom_i2c_writeReg(0x67, 4, 1, 0x08);
-    rom_i2c_writeReg(0x67, 4, 2, 0x81);
+    uart_tx_wait_idle(1);
 
     esp_reset_reason_set_hint(ESP_RST_PANIC);
 
-    rom_software_reboot();
+    hardware_restart();
+
+    while (1);
 }
 #endif
 
