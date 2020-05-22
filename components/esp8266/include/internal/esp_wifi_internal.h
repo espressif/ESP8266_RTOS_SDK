@@ -191,6 +191,17 @@ void esp_wifi_set_pm_recv_multi_data(bool enable);
   */
 bool esp_wifi_get_pm_recv_multi_data(void);
 
+/**
+  * @brief     Enable/Disable Wi-Fi send PLCP (with long option)
+  *
+  * @param     enable         Enable or Disable this option
+  * @param     tx_with_long   Send with long PLCP or not
+  * 
+  * @return
+  *    None
+  */
+void esp_wifi_set_11b_tx_plcp(bool enable, bool tx_with_long);
+
 #ifdef __cplusplus
 }
 #endif
