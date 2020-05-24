@@ -98,7 +98,7 @@ hmac_sha256_vector(const u8 *key, size_t key_len, size_t num_elem,
  * @key_len: Length of the key in bytes
  * @data: Pointers to the data area
  * @data_len: Length of the data area
- * @mac: Buffer for the hash (20 bytes)
+ * @mac: Buffer for the hash (32 bytes)
  */
 void 
 hmac_sha256(const u8 *key, size_t key_len, const u8 *data,
