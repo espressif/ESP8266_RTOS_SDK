@@ -136,7 +136,7 @@ static const char *BACKUP_MAC_DATA_KEY = "backup_mac_data";
 static esp_err_t load_backup_mac_data(uint8_t *mac)
 {
     esp_err_t err;
-    nvs_handle handle;
+    nvs_handle_t handle;
     uint32_t efuse[4];
     uint8_t efuse_crc = 0;
     uint8_t calc_crc = 0;
@@ -221,7 +221,7 @@ static esp_err_t load_backup_mac_data(uint8_t *mac)
 static esp_err_t store_backup_mac_data()
 {
     esp_err_t err;
-    nvs_handle handle;
+    nvs_handle_t handle;
     uint32_t efuse[4];
     efuse[0] = REG_READ(EFUSE_DATA0_REG);
     efuse[1] = REG_READ(EFUSE_DATA1_REG);

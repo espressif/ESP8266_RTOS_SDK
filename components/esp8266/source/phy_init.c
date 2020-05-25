@@ -214,15 +214,15 @@ static const char* PHY_NAMESPACE = "phy";
 static const char* PHY_CAL_DATA_KEY = "cal_data";
 static const char* PHY_RX_GAIN_DC_TABLE_KEY = "dc_table";
 
-static esp_err_t load_cal_data_from_nvs_handle(nvs_handle handle,
+static esp_err_t load_cal_data_from_nvs_handle(nvs_handle_t handle,
         esp_phy_calibration_data_t* out_cal_data);
 
-static esp_err_t store_cal_data_to_nvs_handle(nvs_handle handle,
+static esp_err_t store_cal_data_to_nvs_handle(nvs_handle_t handle,
         const esp_phy_calibration_data_t* cal_data);
 
 esp_err_t esp_phy_load_cal_data_from_nvs(esp_phy_calibration_data_t* out_cal_data)
 {
-    nvs_handle handle;
+    nvs_handle_t handle;
     esp_err_t err = nvs_open(PHY_NAMESPACE, NVS_READONLY, &handle);
 
     if (err == ESP_ERR_NVS_NOT_INITIALIZED) {
@@ -240,7 +240,7 @@ esp_err_t esp_phy_load_cal_data_from_nvs(esp_phy_calibration_data_t* out_cal_dat
 
 esp_err_t esp_phy_store_cal_data_to_nvs(const esp_phy_calibration_data_t* cal_data)
 {
-    nvs_handle handle;
+    nvs_handle_t handle;
     esp_err_t err = nvs_open(PHY_NAMESPACE, NVS_READWRITE, &handle);
 
     if (err != ESP_OK) {
@@ -253,7 +253,7 @@ esp_err_t esp_phy_store_cal_data_to_nvs(const esp_phy_calibration_data_t* cal_da
     }
 }
 
-static esp_err_t load_cal_data_from_nvs_handle(nvs_handle handle,
+static esp_err_t load_cal_data_from_nvs_handle(nvs_handle_t handle,
         esp_phy_calibration_data_t* out_cal_data)
 {
     esp_err_t err;
@@ -288,7 +288,7 @@ static esp_err_t load_cal_data_from_nvs_handle(nvs_handle handle,
     return ESP_OK;
 }
 
-static esp_err_t store_cal_data_to_nvs_handle(nvs_handle handle,
+static esp_err_t store_cal_data_to_nvs_handle(nvs_handle_t handle,
         const esp_phy_calibration_data_t* cal_data)
 {
     esp_err_t err;

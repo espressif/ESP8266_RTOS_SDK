@@ -21,23 +21,33 @@
 #include <algorithm>
 #include "nvs.h"
 #include "compressed_enum_table.hpp"
+#include "string.h"
 
+using namespace std;
 
 namespace nvs
 {
 
 enum class ItemType : uint8_t {
-    U8   = 0x01,
-    I8   = 0x11,
-    U16  = 0x02,
-    I16  = 0x12,
-    U32  = 0x04,
-    I32  = 0x14,
-    U64  = 0x08,
-    I64  = 0x18,
-    SZ   = 0x21,
+    U8   = NVS_TYPE_U8,
+    I8   = NVS_TYPE_I8,
+    U16  = NVS_TYPE_U16,
+    I16  = NVS_TYPE_I16,
+    U32  = NVS_TYPE_U32,
+    I32  = NVS_TYPE_I32,
+    U64  = NVS_TYPE_U64,
+    I64  = NVS_TYPE_I64,
+    SZ   = NVS_TYPE_STR,
     BLOB = 0x41,
-    ANY  = 0xff
+    BLOB_DATA = NVS_TYPE_BLOB,
+    BLOB_IDX  = 0x48,
+    ANY  = NVS_TYPE_ANY
+};
+
+enum class VerOffset: uint8_t {
+    VER_0_OFFSET = 0x0,
+    VER_1_OFFSET = 0x80,
+    VER_ANY = 0xff,
 };
 
 template<typename T, typename std::enable_if<std::is_integral<T>::value, void*>::type = nullptr>
@@ -52,6 +62,13 @@ constexpr ItemType itemTypeOf(const T&)
     return itemTypeOf<T>();
 }
 
+inline bool isVariableLengthType(ItemType type)
+{
+    return (type == ItemType::BLOB ||
+            type == ItemType::SZ ||
+            type == ItemType::BLOB_DATA);
+}
+
 class Item
 {
 public:
@@ -60,15 +77,21 @@ public:
             uint8_t  nsIndex;
             ItemType datatype;
             uint8_t  span;
-            uint8_t  reserved;
+            uint8_t  chunkIndex;
             uint32_t crc32;
             char     key[16];
             union {
                 struct {
                     uint16_t dataSize;
-                    uint16_t reserved2;
+                    uint16_t reserved;
                     uint32_t dataCrc32;
                 } varLength;
+                struct {
+                    uint32_t   dataSize;
+                    uint8_t    chunkCount; // Number of children data blobs.
+                    VerOffset  chunkStart; // Offset from which the chunkIndex for children blobs starts
+                    uint16_t   reserved;
+                } blobIndex;
                 uint8_t data[8];
             };
         };
@@ -77,8 +100,12 @@ public:
 
     static const size_t MAX_KEY_LENGTH = sizeof(key) - 1;
 
-    Item(uint8_t nsIndex, ItemType datatype, uint8_t span, const char* key_)
-        : nsIndex(nsIndex), datatype(datatype), span(span), reserved(0xff)
+    // 0xff cannot be used as a valid chunkIndex for blob datatype.
+    static const uint8_t CHUNK_ANY = 0xff;
+
+
+    Item(uint8_t nsIndex, ItemType datatype, uint8_t span, const char* key_, uint8_t chunkIdx = CHUNK_ANY)
+        : nsIndex(nsIndex), datatype(datatype), span(span), chunkIndex(chunkIdx)
     {
         std::fill_n(reinterpret_cast<uint32_t*>(key),  sizeof(key)  / 4, 0xffffffff);
         std::fill_n(reinterpret_cast<uint32_t*>(data), sizeof(data) / 4, 0xffffffff);
@@ -100,7 +127,8 @@ public:
 
     void getKey(char* dst, size_t dstSize)
     {
-        strncpy(dst, key, (dstSize<MAX_KEY_LENGTH)?dstSize:MAX_KEY_LENGTH);
+        strncpy(dst, key, min(dstSize, sizeof(key)));
+        dst[dstSize-1] = 0;
     }
 
     template<typename T>
@@ -112,7 +140,5 @@ public:
 };
 
 } // namespace nvs
-
-
 
 #endif /* nvs_types_h */
