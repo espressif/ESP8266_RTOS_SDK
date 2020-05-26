@@ -18,6 +18,13 @@
 #include <string.h>
 #include <sys/param.h>
 #include "esp_system.h"
+#include "esp8266/eagle_soc.h"
+
+extern unsigned int adc_rand_noise;
+uint32_t esp_random(void)
+{
+    return (adc_rand_noise ^ REG_READ(WDEV_RAND));
+}
 
 void esp_fill_random(void *buf, size_t len)
 {
