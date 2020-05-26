@@ -2,7 +2,6 @@ gwen:
     core:       8d27139
     net80211:   8d27139
     pp:         56518b7
-    wpa:        56518b7
     espnow:     56518b7
     wps:        56518b7
     wpa2:       56518b7
