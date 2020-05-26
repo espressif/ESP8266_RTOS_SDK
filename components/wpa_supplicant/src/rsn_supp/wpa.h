@@ -23,100 +23,15 @@
 #include "esp_wifi_crypto_types.h"
 #include "wpa_i.h"
 
-//#include "net80211/ieee80211_var.h"
-//#include "net80211/ieee80211_node.h"
 
 #define WPA_SM_STATE(_sm) ((_sm)->wpa_state)
 
 struct wpa_sm;
 
 int wpa_sm_rx_eapol(u8 *src_addr, u8 *buf, u32 len);
+bool wpa_sta_is_cur_pmksa_set(void);
 
-#define WPA_ASSERT  ASSERT
-
-struct install_key {
-    int mic_errors_seen; /* Michael MIC errors with the current PTK */
-    int keys_cleared;
-    enum wpa_alg alg;
-    u8 addr[ETH_ALEN];
-    int key_idx;
-    int set_tx;
-    u8 seq[10];
-    u8 key[32];
-};
-
-/**
- * struct wpa_sm - Internal WPA state machine data
- */
-struct wpa_sm {
-    u8 pmk[PMK_LEN];
-    size_t pmk_len;
-
-//    char *passphrase;  //wlan password
-//    u8 *ssid;               //wlan network name
-//    size_t ssid_len;
-
-    struct wpa_ptk ptk, tptk;
-    int ptk_set, tptk_set;
-    u8 snonce[WPA_NONCE_LEN];
-    u8 anonce[WPA_NONCE_LEN]; /* ANonce from the last 1/4 msg */
-    int renew_snonce;
-    u8 rx_replay_counter[WPA_REPLAY_COUNTER_LEN];
-    int rx_replay_counter_set;
-    u8 request_counter[WPA_REPLAY_COUNTER_LEN];
-
-//    void *network_ctx;
-
-    unsigned int pairwise_cipher;
-    unsigned int group_cipher;
-    unsigned int key_mgmt;
-    unsigned int mgmt_group_cipher;
-
-    int rsn_enabled; /* Whether RSN is enabled in configuration */
-
-    int countermeasures; /*TKIP countermeasures state flag, 1:in countermeasures state*/
-    os_timer_t  cm_timer;
-
-    u8 *assoc_wpa_ie; /* Own WPA/RSN IE from (Re)AssocReq */
-    size_t assoc_wpa_ie_len;
-
-    u8 eapol_version;
-
-    int wpa_ptk_rekey;
-    u8 own_addr[ETH_ALEN];
-
-    u8 bssid[ETH_ALEN];
-
-    unsigned int proto;
-    enum wpa_states wpa_state;
-
-    u8 *ap_wpa_ie, *ap_rsn_ie;
-    size_t ap_wpa_ie_len, ap_rsn_ie_len;
-
-    bool key_install;  //Fix 4-way-handshake reinstall key vulnerability
-    struct install_key install_ptk;
-    struct install_key install_gtk;
-    int  key_entry_valid;   //present current avaliable entry for bssid, for pairkey:0,5,10,15,20, gtk: pairkey_no+i (i:1~4)
-	
-//    char *msg;   //send eapol msg buff
-//    size_t msg_len;  //msg length:6 + sizeof(eth) + data_len
-
-//    struct netif *ifp;
-    uint8_t *wpadata;
-    uint16_t wpadatalen;
-    uint8_t flags;
-
-    void (* sendto) (u8 *wpadata, u16 wpadatalen);
-    void (*config_assoc_ie) (uint8_t proto, u8 *assoc_buf, u32 assoc_wpa_ie_len);
-    void (*install_ppkey) (enum wpa_alg alg, uint8_t *addr, int key_idx, int set_tx,
-               uint8_t *seq, size_t seq_len, uint8_t *key, size_t key_len, int key_entry_valid);
-    int (*get_ppkey) (uint8_t *ifx, int *alg, uint8_t *addr, int *key_idx,
-    		   uint8_t *key, size_t key_len, int key_entry_valid);
-    void (*wpa_deauthenticate)(uint8_t reason_code);
-    void (*wpa_neg_complete)();
-    struct wpa_gtk_data gd; //used for calllback save param
-    uint16_t key_info; 	//used for txcallback param    
-};
+#define WPA_ASSERT  assert
 
 struct l2_ethhdr {
     u8 h_dest[ETH_ALEN];
@@ -189,11 +104,13 @@ struct l2_ethhdr {
  * handler if send_eapol() is used.
  */
 
-#define KEYENTRY_TABLE_MAP(key_entry_valid)  ((key_entry_valid)%5) 
+#define KEYENTRY_TABLE_MAP(key_entry_valid)  ((key_entry_valid)%5)
 
-void pp_michael_mic_failure(uint16_t isunicast);
+void wpa_michael_mic_failure(u16 isunicast);
 
 void wpa_sm_set_state(enum wpa_states state);
+
+void wpa_set_pmk(uint8_t *pmk, const u8 *pmkid, bool cache_pmksa);
 
 int ppGetKey(uint8_t *ifx, int *alg, uint8_t *addr, int *key_idx,
 		uint8_t *key, size_t key_len, int key_entry_valid);

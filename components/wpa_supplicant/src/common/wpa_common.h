@@ -42,9 +42,6 @@
 #define WPA_CIPHER_SUITE_NONE RSN_SELECTOR(0x00, 0x50, 0xf2, 0)
 #define WPA_CIPHER_SUITE_WEP40 RSN_SELECTOR(0x00, 0x50, 0xf2, 1)
 #define WPA_CIPHER_SUITE_TKIP RSN_SELECTOR(0x00, 0x50, 0xf2, 2)
-#if 0
-#define WPA_CIPHER_SUITE_WRAP RSN_SELECTOR(0x00, 0x50, 0xf2, 3)
-#endif
 #define WPA_CIPHER_SUITE_CCMP RSN_SELECTOR(0x00, 0x50, 0xf2, 4)
 #define WPA_CIPHER_SUITE_WEP104 RSN_SELECTOR(0x00, 0x50, 0xf2, 5)
 
@@ -57,13 +54,11 @@
 #endif /* CONFIG_IEEE80211R */
 #define RSN_AUTH_KEY_MGMT_802_1X_SHA256 RSN_SELECTOR(0x00, 0x0f, 0xac, 5)
 #define RSN_AUTH_KEY_MGMT_PSK_SHA256 RSN_SELECTOR(0x00, 0x0f, 0xac, 6)
+#define RSN_AUTH_KEY_MGMT_SAE RSN_SELECTOR(0x00, 0x0f, 0xac, 8)
 
 #define RSN_CIPHER_SUITE_NONE RSN_SELECTOR(0x00, 0x0f, 0xac, 0)
 #define RSN_CIPHER_SUITE_WEP40 RSN_SELECTOR(0x00, 0x0f, 0xac, 1)
 #define RSN_CIPHER_SUITE_TKIP RSN_SELECTOR(0x00, 0x0f, 0xac, 2)
-#if 0
-#define RSN_CIPHER_SUITE_WRAP RSN_SELECTOR(0x00, 0x0f, 0xac, 3)
-#endif
 #define RSN_CIPHER_SUITE_CCMP RSN_SELECTOR(0x00, 0x0f, 0xac, 4)
 #define RSN_CIPHER_SUITE_WEP104 RSN_SELECTOR(0x00, 0x0f, 0xac, 5)
 #ifdef CONFIG_IEEE80211W
@@ -76,9 +71,6 @@
  * GroupKey and PeerKey require encryption, otherwise, encryption is optional.
  */
 #define RSN_KEY_DATA_GROUPKEY RSN_SELECTOR(0x00, 0x0f, 0xac, 1)
-#if 0
-#define RSN_KEY_DATA_STAKEY RSN_SELECTOR(0x00, 0x0f, 0xac, 2)
-#endif
 #define RSN_KEY_DATA_MAC_ADDR RSN_SELECTOR(0x00, 0x0f, 0xac, 3)
 #define RSN_KEY_DATA_PMKID RSN_SELECTOR(0x00, 0x0f, 0xac, 4)
 #ifdef CONFIG_PEERKEY
@@ -129,6 +121,7 @@
 
 /* IEEE 802.11, 8.5.2 EAPOL-Key frames */
 #define WPA_KEY_INFO_TYPE_MASK ((u16) (BIT(0) | BIT(1) | BIT(2)))
+#define WPA_KEY_INFO_TYPE_AKM_DEFINED 0
 #define WPA_KEY_INFO_TYPE_HMAC_MD5_RC4 BIT(0)
 #define WPA_KEY_INFO_TYPE_HMAC_SHA1_AES BIT(1)
 #define WPA_KEY_INFO_TYPE_AES_128_CMAC 3
@@ -328,5 +321,18 @@ void wpa_pmk_to_ptk(const u8 *pmk, size_t pmk_len, const char *label,
 
 void rsn_pmkid(const u8 *pmk, size_t pmk_len, const u8 *aa, const u8 *spa,
 	       u8 *pmkid, int use_sha256);
+
+int wpa_cipher_key_len(int cipher);
+
+int wpa_cipher_to_alg(int cipher);
+
+u32 wpa_cipher_to_suite(int proto, int cipher);
+
+int wpa_cipher_put_suites(u8 *pos, int ciphers);
+
+int wpa_parse_wpa_ie_wpa(const u8 *wpa_ie, size_t wpa_ie_len,
+           struct wpa_ie_data *data);
+
+int rsn_cipher_put_suites(u8 *pos, int ciphers);
 
 #endif /* WPA_COMMON_H */

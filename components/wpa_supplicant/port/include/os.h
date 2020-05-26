@@ -218,6 +218,9 @@ char * ets_strdup(const char *s);
 #ifndef os_memcmp
 #define os_memcmp(s1, s2, n) memcmp((s1), (s2), (n))
 #endif
+#ifndef os_memcmp_const
+#define os_memcmp_const(s1, s2, n) memcmp((s1), (s2), (n))
+#endif
 
 #ifndef os_strlen
 #define os_strlen(s) strlen(s)
@@ -260,9 +263,14 @@ char * ets_strdup(const char *s);
 #ifdef _MSC_VER
 #define os_snprintf _snprintf
 #else
-#define os_snprintf vsnprintf
+#define os_snprintf snprintf
 #endif
 #endif
+
+static inline int os_snprintf_error(size_t size, int res)
+{
+        return res < 0 || (unsigned int) res >= size;
+}
 
 /**
  * os_strlcpy - Copy a string with size bound and NUL-termination
@@ -279,5 +287,44 @@ size_t os_strlcpy(char *dest, const char *src, size_t siz);
 void *_xmalloc(size_t n);
 void _xfree(void *ptr);
 void *_xrealloc(void *ptr, size_t n);
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef CONFIG_IDF_TARGET_ESP8266
+/**
+ * @brief save IRQ state and disable IRQ
+ *
+ * @return saved IRQ state
+ */
+static inline uint32_t arch_local_irq_save(void)
+{
+    uint32_t tmp;
+
+    __asm__ __volatile__ ("rsil %0, 3" : "=a" (tmp) :: "memory");
+
+    return tmp;
+}
+
+/**
+ * @brief restore IRQ state
+ *
+ * @param tmp saved IRQ state
+ */
+static inline void arch_local_irq_restore(uint32_t tmp)
+{
+    __asm__ __volatile__ ("wsr %0, ps" :: "a" (tmp) : "memory");
+}
+
+#define local_irq_declare(_t)       uint32_t (_t)
+#define local_irq_save(_t)          (_t) = arch_local_irq_save()
+#define local_irq_restore(_t)       arch_local_irq_restore(_t)
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OS_H */

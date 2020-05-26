@@ -316,12 +316,15 @@ static inline int is_zero_ether_addr(const u8 *a)
 	return !(a[0] | a[1] | a[2] | a[3] | a[4] | a[5]);
 }
 
-extern const struct eth_addr ethbroadcast;
-#define broadcast_ether_addr &ethbroadcast
+#define broadcast_ether_addr  (const u8 *) "\xff\xff\xff\xff\xff\xff"
 
 #include "utils/wpabuf.h"
 #include "utils/wpa_debug.h"
 
+void wpa_bin_clear_free(void *bin, size_t len);
+int int_array_len(const int *a);
+void bin_clear_free(void *bin, size_t len);
+void str_clear_free(char *str);
 
 /*
  * gcc 4.4 ends up generating strict-aliasing warnings about some very common
@@ -334,5 +337,7 @@ extern const struct eth_addr ethbroadcast;
  */
 void * __hide_aliasing_typecast(void *foo);
 #define aliasing_hide_typecast(a,t) (t *) __hide_aliasing_typecast((a))
+
+#define IANA_SECP256R1 19
 
 #endif /* COMMON_H */

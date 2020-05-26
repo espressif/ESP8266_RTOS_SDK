@@ -53,4 +53,7 @@ int wpa_supplicant_parse_ies(const u8 *buf, size_t len,
 			     struct wpa_eapol_ie_parse *ie);
 int wpa_gen_wpa_ie(struct wpa_sm *sm, u8 *wpa_ie, size_t wpa_ie_len);
 
+int wpa_parse_wpa_ie(const u8 *wpa_ie, size_t wpa_ie_len,
+             struct wpa_ie_data *data);
+
 #endif /* WPA_IE_H */

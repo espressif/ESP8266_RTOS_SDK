@@ -9,9 +9,9 @@
 #ifndef WPA_AUTH_H
 #define WPA_AUTH_H
 
-#include "wpa/defs.h"
-#include "wpa/eapol_common.h"
-#include "wpa/wpa_common.h"
+#include "common/defs.h"
+#include "common/eapol_common.h"
+#include "common/wpa_common.h"
 
 #ifdef _MSC_VER
 #pragma pack(push, 1)

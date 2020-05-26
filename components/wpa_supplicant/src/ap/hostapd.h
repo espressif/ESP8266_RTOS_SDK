@@ -9,8 +9,8 @@
 #ifndef HOSTAPD_H
 #define HOSTAPD_H
 
-#include "wpa/defs.h"
-#include "wpa/ap_config.h"
+#include "common/defs.h"
+#include "ap/ap_config.h"
 
 struct wpa_driver_ops;
 struct wpa_ctrl_dst;

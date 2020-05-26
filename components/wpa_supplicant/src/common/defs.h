@@ -85,35 +85,84 @@ typedef enum { FALSE = 0, TRUE = 1 } Boolean;
 #define WPA_KEY_MGMT_IEEE8021X_SHA256 BIT(7)
 #define WPA_KEY_MGMT_PSK_SHA256 BIT(8)
 #define WPA_KEY_MGMT_WPS BIT(9)
+#define WPA_KEY_MGMT_SAE BIT(10)
+#define WPA_KEY_MGMT_FT_SAE BIT(11)
+#define WPA_KEY_MGMT_WAPI_PSK BIT(12)
+#define WPA_KEY_MGMT_WAPI_CERT BIT(13)
 #define WPA_KEY_MGMT_CCKM BIT(14)
+#define WPA_KEY_MGMT_OSEN BIT(15)
+#define WPA_KEY_MGMT_IEEE8021X_SUITE_B BIT(16)
+#define WPA_KEY_MGMT_IEEE8021X_SUITE_B_192 BIT(17)
 
 static inline int wpa_key_mgmt_wpa_ieee8021x(int akm)
 {
 	return !!(akm & (WPA_KEY_MGMT_IEEE8021X |
 			 WPA_KEY_MGMT_FT_IEEE8021X |
 			 WPA_KEY_MGMT_CCKM |
-			 WPA_KEY_MGMT_IEEE8021X_SHA256));
+			 WPA_KEY_MGMT_OSEN |
+			 WPA_KEY_MGMT_IEEE8021X_SHA256 |
+			 WPA_KEY_MGMT_IEEE8021X_SUITE_B |
+			 WPA_KEY_MGMT_IEEE8021X_SUITE_B_192));
 }
 
 static inline int wpa_key_mgmt_wpa_psk(int akm)
 {
-	return akm == WPA_KEY_MGMT_PSK ||
-		akm == WPA_KEY_MGMT_FT_PSK ||
-		akm == WPA_KEY_MGMT_PSK_SHA256;
+	return !!(akm & (WPA_KEY_MGMT_PSK |
+			 WPA_KEY_MGMT_FT_PSK |
+			 WPA_KEY_MGMT_PSK_SHA256 |
+			 WPA_KEY_MGMT_SAE |
+			 WPA_KEY_MGMT_FT_SAE));
 }
 
 static inline int wpa_key_mgmt_ft(int akm)
 {
-	return akm == WPA_KEY_MGMT_FT_PSK ||
-		akm == WPA_KEY_MGMT_FT_IEEE8021X;
+	return !!(akm & (WPA_KEY_MGMT_FT_PSK |
+			 WPA_KEY_MGMT_FT_IEEE8021X |
+			 WPA_KEY_MGMT_FT_SAE));
+}
+
+static inline int wpa_key_mgmt_sae(int akm)
+{
+	return !!(akm & (WPA_KEY_MGMT_SAE |
+			 WPA_KEY_MGMT_FT_SAE));
 }
 
 static inline int wpa_key_mgmt_sha256(int akm)
 {
-	return akm == WPA_KEY_MGMT_PSK_SHA256 ||
-		akm == WPA_KEY_MGMT_IEEE8021X_SHA256;
+	return !!(akm & (WPA_KEY_MGMT_PSK_SHA256 |
+			 WPA_KEY_MGMT_IEEE8021X_SHA256 |
+			 WPA_KEY_MGMT_OSEN |
+			 WPA_KEY_MGMT_SAE |
+			 WPA_KEY_MGMT_IEEE8021X_SUITE_B));
 }
 
+static inline int wpa_key_mgmt_sha384(int akm)
+{
+	return !!(akm & WPA_KEY_MGMT_IEEE8021X_SUITE_B_192);
+}
+
+static inline int wpa_key_mgmt_suite_b(int akm)
+{
+	return !!(akm & (WPA_KEY_MGMT_IEEE8021X_SUITE_B |
+			 WPA_KEY_MGMT_IEEE8021X_SUITE_B_192));
+}
+
+static inline int wpa_key_mgmt_wpa(int akm)
+{
+	return wpa_key_mgmt_wpa_ieee8021x(akm) ||
+		wpa_key_mgmt_wpa_psk(akm) ||
+		wpa_key_mgmt_sae(akm);
+}
+
+static inline int wpa_key_mgmt_wpa_any(int akm)
+{
+	return wpa_key_mgmt_wpa(akm) || (akm & WPA_KEY_MGMT_WPA_NONE);
+}
+
+static inline int wpa_key_mgmt_cckm(int akm)
+{
+	return akm == WPA_KEY_MGMT_CCKM;
+}
 
 #define WPA_PROTO_WPA BIT(0)
 #define WPA_PROTO_RSN BIT(1)
@@ -292,6 +341,16 @@ enum wpa_states {
 
 #define MLME_SETPROTECTION_KEY_TYPE_GROUP 0
 #define MLME_SETPROTECTION_KEY_TYPE_PAIRWISE 1
+
+/**
+ * enum mfp_options - Management frame protection (IEEE 802.11w) options
+ */
+enum mfp_options {
+	NO_MGMT_FRAME_PROTECTION = 0,
+	MGMT_FRAME_PROTECTION_OPTIONAL = 1,
+	MGMT_FRAME_PROTECTION_REQUIRED = 2,
+};
+#define MGMT_FRAME_PROTECTION_DEFAULT 3
 
 /**
  * enum hostapd_hw_mode - Hardware mode
