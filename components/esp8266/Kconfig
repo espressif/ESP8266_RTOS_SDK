@@ -142,8 +142,10 @@ config RESET_REASON
 
 config WIFI_PPT_TASKSTACK_SIZE
     int "ppT task stack size"
-    default 2048
     range 2048 8192
+    default 2048 if !ESP8266_WIFI_ENABLE_WPA3_SAE
+    default 5120 if ESP8266_WIFI_ENABLE_WPA3_SAE
+
     help
         Configure the "ppT task" stack size. This is the stack of the task
         which calls promiscuous callback function. So if user's function is
@@ -330,6 +332,14 @@ config ESP8266_WIFI_CONNECT_OPEN_ROUTER_WHEN_PWD_IS_SET
     help
         When this option is enabled, ESP8266 will connect to open router even if wifi password is set, otherwise 
         ESP8266 will not connect to open router when wifi password is set.
+
+config ESP8266_WIFI_ENABLE_WPA3_SAE
+    bool "Enable WPA3-Personal"
+    default y
+    help
+        Select this option to allow the device to establish a WPA3-Personal connection with eligible AP's.
+        PMF (Protected Management Frames) is a prerequisite feature for a WPA3 connection, it needs to be
+        explicitly configured before attempting connection. Please refer to the Wi-Fi Driver API Guide for details.
 
 config ESP8266_WIFI_DEBUG_LOG_ENABLE
     bool "Enable WiFi debug log"

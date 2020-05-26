@@ -110,6 +110,7 @@ typedef struct {
     uint8_t                tx_buf_num;              /**< WiFi TX buffer number */
     uint8_t                nvs_enable;              /**< WiFi NVS flash enable flag */
     uint8_t                nano_enable;             /**< Nano option for printf/scan family enable flag */
+    uint8_t                wpa3_sae_enable;         /**< WiFi WPA3 feature enable flag*/
     uint32_t               magic;                 /**< WiFi init magic number, it should be the last field */
 } wifi_init_config_t;
 
@@ -146,6 +147,12 @@ typedef struct {
 #define WIFI_NVS_ENABLED          0
 #endif
 
+#if CONFIG_ESP8266_WIFI_ENABLE_WPA3_SAE
+#define WIFI_WPA3_ENABLED        1
+#else
+#define WIFI_WPA3_ENABLED        0
+#endif
+
 #define WIFI_INIT_CONFIG_MAGIC    0x1F2F3F4F
 
 #define WIFI_INIT_CONFIG_DEFAULT() { \
@@ -165,6 +172,7 @@ typedef struct {
     .tx_buf_num = CONFIG_ESP8266_WIFI_TX_PKT_NUM,\
     .nvs_enable = WIFI_NVS_ENABLED,\
     .nano_enable = 0,\
+    .wpa3_sae_enable = WIFI_WPA3_ENABLED, \
     .magic = WIFI_INIT_CONFIG_MAGIC\
 };
 
