@@ -7,15 +7,15 @@
  */
 #ifdef EAP_TLS
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
-#include "wpa2/tls/tls.h"
-#include "wpa2/eap_peer/eap_i.h"
-#include "wpa2/eap_peer/eap_defs.h"
-#include "wpa2/eap_peer/eap_tls_common.h"
-#include "wpa2/eap_peer/eap_config.h"
-#include "wpa2/eap_peer/eap_methods.h"
+#include "utils/common.h"
+#include "tls/tls.h"
+#include "eap_peer/eap_i.h"
+#include "eap_peer/eap_defs.h"
+#include "eap_peer/eap_tls_common.h"
+#include "eap_peer/eap_config.h"
+#include "eap_peer/eap_methods.h"
 
 #ifdef MEMLEAK_DEBUG
 static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;

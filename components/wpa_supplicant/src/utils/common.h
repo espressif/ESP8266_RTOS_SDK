@@ -319,8 +319,8 @@ static inline int is_zero_ether_addr(const u8 *a)
 extern const struct eth_addr ethbroadcast;
 #define broadcast_ether_addr &ethbroadcast
 
-#include "wpabuf.h"
-#include "wpa_debug.h"
+#include "utils/wpabuf.h"
+#include "utils/wpa_debug.h"
 
 
 /*

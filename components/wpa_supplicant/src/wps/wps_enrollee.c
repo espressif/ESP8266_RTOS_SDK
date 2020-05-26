@@ -6,8 +6,8 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
-#include "wpa/common.h"
+#include "utils/includes.h"
+#include "utils/common.h"
 #include "wps/wps_i.h"
 #include "wps/wps.h"
 #include "wps/wps_dev_attr.h"
@@ -18,7 +18,6 @@
 
 //#include "pp/mac_register_v6.h"
 #ifdef CONFIG_IDF_TARGET_ESP8266
-#include "wps/asm/irqflags.h"
 #include "esp_wifi_osi.h"
 
 #ifdef MEMLEAK_DEBUG

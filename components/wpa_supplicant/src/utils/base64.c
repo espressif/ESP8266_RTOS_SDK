@@ -6,10 +6,10 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
 #include "os.h"
-#include "wpa2/utils/base64.h"
+#include "utils/base64.h"
 
 #ifdef MEMLEAK_DEBUG
 static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;

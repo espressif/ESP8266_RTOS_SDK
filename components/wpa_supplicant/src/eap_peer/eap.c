@@ -18,24 +18,24 @@
 
 #include "esp_err.h"
 
-#include "wpa/includes.h"
-#include "wpa/common.h"
-#include "wpa/wpa_debug.h"
-#include "wpa/eapol_common.h"
-#include "wpa/ieee802_11_defs.h"
-#include "wpa/state_machine.h"
-#include "wpa/wpa.h"
+#include "utils/includes.h"
+#include "utils/common.h"
+#include "utils/wpa_debug.h"
+#include "common/eapol_common.h"
+#include "common/ieee802_11_defs.h"
+#include "utils/state_machine.h"
+#include "rsn_supp/wpa.h"
 
 #include "crypto/crypto.h"
 
-#include "wpa2/utils/ext_password.h"
-#include "wpa2/tls/tls.h"
-#include "wpa2/eap_peer/eap_i.h"
-#include "wpa2/eap_peer/eap_config.h"
-#include "wpa2/eap_peer/eap.h"
-#include "wpa2/eap_peer/eap_tls.h"
+#include "utils/ext_password.h"
+#include "tls/tls.h"
+#include "eap_peer/eap_i.h"
+#include "eap_peer/eap_config.h"
+#include "eap_peer/eap.h"
+#include "eap_peer/eap_tls.h"
 #ifdef EAP_PEER_METHOD
-#include "wpa2/eap_peer/eap_methods.h"
+#include "eap_peer/eap_methods.h"
 #endif
 
 

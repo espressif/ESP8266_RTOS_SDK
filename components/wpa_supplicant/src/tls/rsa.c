@@ -6,11 +6,11 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
-#include "wpa/common.h"
-#include "wpa2/tls/asn1.h"
-#include "wpa2/tls/bignum.h"
-#include "wpa2/tls/rsa.h"
+#include "utils/includes.h"
+#include "utils/common.h"
+#include "tls/asn1.h"
+#include "tls/bignum.h"
+#include "tls/rsa.h"
 #include "esp_system.h"
 
 #ifdef MEMLEAK_DEBUG

@@ -9,9 +9,9 @@
 #ifndef HOSTAPD_CONFIG_H
 #define HOSTAPD_CONFIG_H
 
-#include "wpa/defs.h"
+#include "common/defs.h"
 //#include "ip_addr.h"
-#include "wpa/wpa_common.h"
+#include "common/wpa_common.h"
 //#include "common/ieee802_11_common.h"
 //#include "wps/wps.h"
 

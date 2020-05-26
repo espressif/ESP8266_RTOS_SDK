@@ -4,8 +4,8 @@
  */
 #ifdef CHAP_MD5
 
-#include "wpa/includes.h"
-#include "wpa/common.h"
+#include "utils/includes.h"
+#include "utils/common.h"
 #include "crypto/crypto.h"
 #include "wpa2/eap_peer/chap.h"
 

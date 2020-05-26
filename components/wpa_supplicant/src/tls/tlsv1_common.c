@@ -6,14 +6,14 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
+#include "utils/common.h"
 #include "crypto/sha1.h"
 #include "crypto/sha256.h"
-#include "wpa2/tls/tls.h"
-#include "wpa2/tls/x509v3.h"
-#include "wpa2/tls/tlsv1_common.h"
+#include "tls/tls.h"
+#include "tls/x509v3.h"
+#include "tls/tlsv1_common.h"
 
 
 /*

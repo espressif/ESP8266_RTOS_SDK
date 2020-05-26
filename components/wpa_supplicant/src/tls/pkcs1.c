@@ -6,11 +6,11 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
-#include "wpa2/tls/rsa.h"
-#include "wpa2/tls/pkcs1.h"
+#include "utils/common.h"
+#include "tls/rsa.h"
+#include "tls/pkcs1.h"
 
 
 static int pkcs1_generate_encryption_block(u8 block_type, size_t modlen,

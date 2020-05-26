@@ -15,10 +15,13 @@
 #ifndef WPA_H
 #define WPA_H
 
-#include "common.h"
+#include "utils/common.h"
 #include "rom/ets_sys.h"
-#include "wpa/defs.h"
-#include "wpa/wpa_common.h"
+#include "common/defs.h"
+#include "common/wpa_common.h"
+#include "esp_wifi_types.h"
+#include "esp_wifi_crypto_types.h"
+#include "wpa_i.h"
 
 //#include "net80211/ieee80211_var.h"
 //#include "net80211/ieee80211_node.h"

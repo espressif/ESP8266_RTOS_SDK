@@ -6,10 +6,10 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
-#include "wpa2/tls/asn1.h"
+#include "utils/common.h"
+#include "tls/asn1.h"
 
 int asn1_get_next(const u8* buf, size_t len, struct asn1_hdr* hdr)
 {

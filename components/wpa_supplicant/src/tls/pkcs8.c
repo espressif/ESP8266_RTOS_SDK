@@ -6,14 +6,14 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
-#include "wpa2/tls/asn1.h"
-#include "wpa2/tls/bignum.h"
-#include "wpa2/tls/rsa.h"
-#include "wpa2/tls/pkcs5.h"
-#include "wpa2/tls/pkcs8.h"
+#include "utils/common.h"
+#include "tls/asn1.h"
+#include "tls/bignum.h"
+#include "tls/rsa.h"
+#include "tls/pkcs5.h"
+#include "tls/pkcs8.h"
 
 #ifdef MEMLEAK_DEBUG
 static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;

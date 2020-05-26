@@ -5,16 +5,16 @@
  * This software may be distributed under the terms of the BSD license.
  * See README for more details.
  */
-#include "wpa/includes.h"
-#include "wpa/common.h"
-#include "wpa/list.h"
-#include "wpa/ieee802_11_defs.h"
+#include "utils/includes.h"
+#include "utils/common.h"
+#include "utils/list.h"
+#include "common/ieee802_11_defs.h"
 
-#include "wps/utils/uuid.h"
+#include "utils/uuid.h"
 #include "wps/wps_i.h"
 #include "wps/wps_dev_attr.h"
 
-#include "crypto/base64.h"
+#include "utils/base64.h"
 #include "crypto/crypto.h"
 #include "crypto/sha256.h"
 #include "crypto/random.h"

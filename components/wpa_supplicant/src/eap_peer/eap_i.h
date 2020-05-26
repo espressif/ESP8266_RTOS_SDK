@@ -9,7 +9,7 @@
 #ifndef EAP_I_H
 #define EAP_I_H
 
-#include "wpa/wpabuf.h"
+#include "utils/wpabuf.h"
 #include "eap.h"
 #include "eap_common.h"
 #include "eap_config.h"

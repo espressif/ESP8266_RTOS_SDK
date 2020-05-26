@@ -9,18 +9,18 @@
 
 #ifdef EAP_MSCHAPv2
 
-#include "wpa/wpa.h"
-#include "wpa/includes.h"
-#include "wpa/common.h"
+#include "rsn_supp/wpa.h"
+#include "utils/includes.h"
+#include "utils/common.h"
 #include "crypto/random.h"
 #include "crypto/ms_funcs.h"
-#include "wpa2/tls/tls.h"
-#include "wpa2/eap_peer/eap_i.h"
-#include "wpa2/eap_peer/eap_defs.h"
-#include "wpa2/eap_peer/eap_tls_common.h"
-#include "wpa2/eap_peer/eap_config.h"
-#include "wpa2/eap_peer/mschapv2.h"
-#include "wpa2/eap_peer/eap_methods.h"
+#include "tls/tls.h"
+#include "eap_peer/eap_i.h"
+#include "eap_peer/eap_defs.h"
+#include "eap_peer/eap_tls_common.h"
+#include "eap_peer/eap_config.h"
+#include "eap_peer/mschapv2.h"
+#include "eap_peer/eap_methods.h"
 
 #ifdef MEMLEAK_DEBUG
 static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;

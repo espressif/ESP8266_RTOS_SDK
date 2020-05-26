@@ -6,19 +6,19 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
+#include "utils/common.h"
 #include "crypto/md5.h"
 #include "crypto/sha1.h"
 #include "crypto/sha256.h"
 #include "crypto/random.h"
-#include "wpa2/tls/tls.h"
-#include "wpa2/tls/x509v3.h"
-#include "wpa2/tls/tlsv1_common.h"
-#include "wpa2/tls/tlsv1_record.h"
-#include "wpa2/tls/tlsv1_client.h"
-#include "wpa2/tls/tlsv1_client_i.h"
+#include "tls/tls.h"
+#include "tls/x509v3.h"
+#include "tls/tlsv1_common.h"
+#include "tls/tlsv1_record.h"
+#include "tls/tlsv1_client.h"
+#include "tls/tlsv1_client_i.h"
 
 #ifdef MEMLEAK_DEBUG
 static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;

@@ -4,10 +4,10 @@
 
 #ifdef EAP_MSCHAPv2
 
-#include "wpa/includes.h"
-#include "wpa/common.h"
+#include "utils/includes.h"
+#include "utils/common.h"
 #include "crypto/ms_funcs.h"
-#include "wpa2/eap_peer/mschapv2.h"
+#include "eap_peer/mschapv2.h"
 
 const u8* mschapv2_remove_domain(const u8* username, size_t* len)
 {

@@ -6,14 +6,14 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
-#include "wpa/common.h"
+#include "utils/includes.h"
+#include "utils/common.h"
 #include "crypto/sha1.h"
-#include "wpa2/tls/tls.h"
-#include "wpa2/eap_peer/eap_i.h"
-#include "wpa2/eap_peer/eap_tls_common.h"
-#include "wpa2/eap_peer/eap_config.h"
-#include "wpa2/eap_peer/eap_methods.h"
+#include "tls/tls.h"
+#include "eap_peer/eap_i.h"
+#include "eap_peer/eap_tls_common.h"
+#include "eap_peer/eap_config.h"
+#include "eap_peer/eap_methods.h"
 
 static struct wpabuf* eap_tls_msg_alloc(EapType type, size_t payload_len,
                                         u8 code, u8 identifier)

@@ -9,8 +9,8 @@
  */
 #include "sdkconfig.h"
 
-#include "crypto/includes.h"
-#include "crypto/common.h"
+#include "utils/includes.h"
+#include "utils/common.h"
 #include "crypto/crypto.h"
 #include "crypto/sha1_i.h"
 #include "crypto/md5_i.h"

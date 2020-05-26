@@ -8,11 +8,11 @@
 
 #ifdef EAP_PEAP
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
+#include "utils/common.h"
 #include "crypto/sha1.h"
-#include "wpa2/eap_peer/eap_peap_common.h"
+#include "eap_peer/eap_peap_common.h"
 
 int
 peap_prfplus(int version, const u8* key, size_t key_len,

@@ -9,8 +9,8 @@
 #ifndef EAP_H
 #define EAP_H
 
-#include "wpa/defs.h"
-#include "wpa2/eap_peer/eap_defs.h"
+#include "common/defs.h"
+#include "eap_peer/eap_defs.h"
 
 struct eap_sm;
 

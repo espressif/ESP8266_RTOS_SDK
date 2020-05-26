@@ -13,15 +13,15 @@
  */
 
 #include "lwip/mem.h"
-#include "crypto/includes.h"
-#include "crypto/common.h"
-#include "wpa/wpabuf.h"
-#include "wpa/wpa_debug.h"
-#include "wpa2/tls/bignum.h"
+#include "utils/includes.h"
+#include "utils/common.h"
+#include "utils/wpabuf.h"
+#include "utils/wpa_debug.h"
+#include "tls/bignum.h"
 
 #define CONFIG_INTERNAL_LIBTOMMATH
 #ifdef CONFIG_INTERNAL_LIBTOMMATH
-#include "wpa2/tls/libtommath.h"
+#include "tls/libtommath.h"
 #else /* CONFIG_INTERNAL_LIBTOMMATH */
 #include <tommath.h>
 #endif /* CONFIG_INTERNAL_LIBTOMMATH */

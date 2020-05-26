@@ -6,11 +6,11 @@
  * See README for more details.
  */
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
-#include "wpa2/eap_peer/eap_defs.h"
-#include "wpa2/eap_peer/eap_common.h"
+#include "utils/common.h"
+#include "eap_peer/eap_defs.h"
+#include "eap_peer/eap_common.h"
 
 /**
  * eap_hdr_len_valid - Validate EAP header length field

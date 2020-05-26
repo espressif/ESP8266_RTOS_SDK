@@ -9,14 +9,14 @@
  * integrated TLSv1 implementation.
  */
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
+#include "utils/common.h"
 #include "crypto/sha1.h"
 #include "crypto/md5.h"
-#include "wpa2/tls/tls.h"
-#include "wpa2/tls/tlsv1_client.h"
-#include "wpa2/tls/tlsv1_server.h"
+#include "tls/tls.h"
+#include "tls/tlsv1_client.h"
+#include "tls/tlsv1_server.h"
 
 #ifndef CONFIG_TLS_INTERNAL_CLIENT
 #define CONFIG_TLS_INTERNAL_CLIENT

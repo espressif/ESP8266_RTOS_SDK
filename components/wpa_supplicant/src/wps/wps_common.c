@@ -7,8 +7,8 @@
  */
 #include <string.h>
 
-#include "wpa/includes.h"
-#include "wpa/common.h"
+#include "utils/includes.h"
+#include "utils/common.h"
 
 #include "crypto/aes_wrap.h"
 #include "crypto/crypto.h"

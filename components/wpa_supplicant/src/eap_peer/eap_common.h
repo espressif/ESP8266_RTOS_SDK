@@ -9,7 +9,7 @@
 #ifndef EAP_COMMON_H
 #define EAP_COMMON_H
 
-#include "wpa/wpabuf.h"
+#include "utils/wpabuf.h"
 
 int eap_hdr_len_valid(const struct wpabuf *msg, size_t min_payload);
 const u8 * eap_hdr_validate(int vendor, EapType eap_type,

@@ -14,7 +14,7 @@
 
 #include "sdkconfig.h"
 
-#include "crypto/common.h"
+#include "utils/common.h"
 #include "crypto/aes_wrap.h"
 #include "crypto/sha256.h"
 #include "crypto/crypto.h"
@@ -25,11 +25,11 @@
 #include "wps/wps.h"
 #include "wps/wps_i.h"
 
-#include "wpa2/eap_peer/eap.h"
-#include "wpa2/tls/tls.h"
-#include "wpa2/eap_peer/eap_methods.h"
-#include "wpa2/eap_peer/eap_i.h"
-#include "wpa2/eap_peer/eap_common.h"
+#include "eap_peer/eap.h"
+#include "tls/tls.h"
+#include "eap_peer/eap_methods.h"
+#include "eap_peer/eap_i.h"
+#include "eap_peer/eap_common.h"
 #include "esp_wifi_crypto_types.h"
 
 #if CONFIG_SSL_USING_MBEDTLS

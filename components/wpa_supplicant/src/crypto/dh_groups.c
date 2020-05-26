@@ -12,15 +12,14 @@
  * See README and COPYING for more details.
  */
 
-#include "crypto/includes.h"
-#include "crypto/common.h"
-#include "crypto/crypto.h"
-#include "crypto/random.h"
-#include "crypto/dh_groups.h"
+#include "utils/includes.h"
 
-#include "wpa/wpabuf.h"
-#include "wpa/wpa_debug.h"
-
+#include "utils/common.h"
+#include "crypto.h"
+#include "random.h"
+#include "dh_groups.h"
+#include "utils/wpabuf.h"
+#include "utils/wpa_debug.h"
 #include "esp_wifi_crypto_types.h"
 
 extern wps_crypto_funcs_t wps_crypto_funcs;

@@ -7,17 +7,17 @@
  */
 #ifdef EAP_PEAP
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
+#include "utils/common.h"
 #include "crypto/sha1.h"
-#include "wpa2/tls/tls.h"
-#include "wpa2/eap_peer/eap_tlv_common.h"
-#include "wpa2/eap_peer/eap_peap_common.h"
-#include "wpa2/eap_peer/eap_i.h"
-#include "wpa2/eap_peer/eap_tls_common.h"
-#include "wpa2/eap_peer/eap_config.h"
-#include "wpa2/eap_peer/eap_methods.h"
+#include "tls/tls.h"
+#include "eap_peer/eap_tlv_common.h"
+#include "eap_peer/eap_peap_common.h"
+#include "eap_peer/eap_i.h"
+#include "eap_peer/eap_tls_common.h"
+#include "eap_peer/eap_config.h"
+#include "eap_peer/eap_methods.h"
 //#include "tncc.h"
 
 #ifdef MEMLEAK_DEBUG

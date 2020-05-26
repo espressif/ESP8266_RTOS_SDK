@@ -8,21 +8,21 @@
 
 #ifdef EAP_TTLS
 
-#include "wpa/includes.h"
+#include "utils/includes.h"
 
-#include "wpa/common.h"
+#include "utils/common.h"
 #include "crypto/ms_funcs.h"
 #include "crypto/sha1.h"
-#include "wpa2/tls/tls.h"
+#include "tls/tls.h"
 //#include "eap_common/chap.h"
-#include "wpa2/eap_peer/eap.h"
-#include "wpa2/eap_peer/eap_ttls.h"
-#include "wpa2/eap_peer/mschapv2.h"
-//#include "wpa2/eap_peer/chap.h"
-#include "wpa2/eap_peer/eap_i.h"
-#include "wpa2/eap_peer/eap_tls_common.h"
-#include "wpa2/eap_peer/eap_config.h"
-#include "wpa2/eap_peer/eap_methods.h"
+#include "eap_peer/eap.h"
+#include "eap_peer/eap_ttls.h"
+#include "eap_peer/mschapv2.h"
+//#include "eap_peer/chap.h"
+#include "eap_peer/eap_i.h"
+#include "eap_peer/eap_tls_common.h"
+#include "eap_peer/eap_config.h"
+#include "eap_peer/eap_methods.h"
 
 
 #define EAP_TTLS_VERSION 0

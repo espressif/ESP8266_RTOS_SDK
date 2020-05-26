@@ -7,22 +7,22 @@
  */
 #include <string.h>
 
-#include "wpa/includes.h"
-//#include "wpa/wpa.h"
-#include "wpa/common.h"
-#include "wpa/eapol_common.h"
-#include "wpa/wpa_debug.h"
-#include "wpa/ieee802_11_defs.h"
+#include "utils/includes.h"
+//#include "rsn_supp/wpa.h"
+#include "utils/common.h"
+#include "common/eapol_common.h"
+#include "utils/wpa_debug.h"
+#include "common/ieee802_11_defs.h"
 
 #include "crypto/dh_group5.h"
 
 #include "wps/wps_i.h"
 #include "wps/wps_dev_attr.h"
 
-//#include "wpa2/eap_peer/eap_defs.h"
-//#include "wpa2/eap_peer/eap_common.h"
-#include "eap/eap_defs.h"
-#include "eap/eap_common.h"
+//#include "eap_peer/eap_defs.h"
+//#include "eap_peer/eap_common.h"
+#include "eap_peer/eap_defs.h"
+#include "eap_peer/eap_common.h"
 
 /**
  * wps_process_msg - Process a WPS message

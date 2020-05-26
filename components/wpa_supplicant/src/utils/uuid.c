@@ -5,9 +5,9 @@
  * This software may be distributed under the terms of the BSD license.
  * See README for more details.
  */
-#include "wpa/includes.h"
-#include "wpa/common.h"
-#include "wps/utils/uuid.h"
+#include "utils/includes.h"
+#include "utils/common.h"
+#include "utils/uuid.h"
 
 int uuid_str2bin(const char* str, u8* bin)
 {
