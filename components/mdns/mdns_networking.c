@@ -4,7 +4,6 @@
  * 
  */
 #include <string.h>
-#include "mdns_private.h"
 #include "mdns_networking.h"
 #include "esp_log.h"
 
