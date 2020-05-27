@@ -2,7 +2,7 @@
 # Component Makefile
 #
 ifdef IS_BOOTLOADER_BUILD
-COMPONENT_OBJS := source/ets_printf.o
+COMPONENT_OBJS := source/ets_printf.o source/crc.o
 COMPONENT_SRCDIRS := source
 else
 COMPONENT_ADD_INCLUDEDIRS += include
@@ -20,6 +20,7 @@ LIBS += gcc hal core_dbg net80211_dbg \
 endif
 endif
 
+CFLAGS += -DUSING_IBUS_FASTER_GET
 #Linker scripts used to link the final application.
 #Warning: These linker scripts are only used when the normal app is compiled; the bootloader
 #specifies its own scripts.

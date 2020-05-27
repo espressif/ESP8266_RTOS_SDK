@@ -1,7 +1,6 @@
 idf_component_register(SRCS "esp_ota_ops.c" "esp_app_desc.c"
                     INCLUDE_DIRS "include"
-                    REQUIRES spi_flash partition_table bootloader_support
-                    PRIV_REQUIRES util)
+                    REQUIRES spi_flash partition_table bootloader_support)
 
 # esp_app_desc structure is added as an undefined symbol because otherwise the
 # linker will ignore this structure as it has no other files depending on it.

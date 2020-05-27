@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "nvs_page.hpp"
-#if defined(ESP_PLATFORM)
 #include <rom/crc.h>
-#else
-#include "crc.h"
-#endif
 #include <cstdio>
 #include <cstring>
 

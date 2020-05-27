@@ -27,7 +27,7 @@
 #include "esp_system.h"
 #include "esp_now.h"
 #include "rom/ets_sys.h"
-#include "crc.h"
+#include "rom/crc.h"
 #include "espnow_example.h"
 
 static const char *TAG = "espnow_example";

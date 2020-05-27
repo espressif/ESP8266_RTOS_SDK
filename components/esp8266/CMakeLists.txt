@@ -2,7 +2,7 @@ if(BOOTLOADER_BUILD)
     # For bootloader, all we need from esp8266 is headers
     set(COMPONENT_ADD_INCLUDEDIRS include)
     # set(COMPONENT_REQUIRES ${COMPONENTS})
-    set(COMPONENT_SRCS source/ets_printf.c)
+    set(COMPONENT_SRCS source/ets_printf.c source/crc.c)
     register_component(esp8266)
 
     # as cmake won't attach linker args to a header-only library, attach
@@ -29,6 +29,7 @@ else()
         "source/esp_wifi_os_adapter.c"
         "source/esp_wifi.c"
         "source/ets_printf.c"
+        "source/crc.c"
         "source/phy_init.c"
         "source/reset_reason.c"
         "source/startup.c"
@@ -52,7 +53,7 @@ else()
     set(include_dirs "include" "include/driver")
 
     set(requires "esp_common" "esp_event")
-    set(priv_requires "wpa_supplicant" "log" "spi_flash" "tcpip_adapter" "esp_ringbuf" "bootloader_support" "nvs_flash" "util")
+    set(priv_requires "wpa_supplicant" "log" "spi_flash" "tcpip_adapter" "esp_ringbuf" "bootloader_support" "nvs_flash")
     set(fragments linker.lf ld/esp8266_fragments.lf ld/esp8266_bss_fragments.lf)
 
     idf_component_register(SRCS "${srcs}"
@@ -63,7 +64,7 @@ else()
                     REQUIRED_IDF_TARGETS esp8266)
 
     target_link_libraries(${COMPONENT_LIB} PUBLIC "-L ${CMAKE_CURRENT_SOURCE_DIR}/lib" "-lstdc++")
-
+    target_compile_definitions(${COMPONENT_LIB} PUBLIC -DUSING_IBUS_FASTER_GET)
     if(NOT CONFIG_NO_BLOBS)
         set(blobs "gcc" "hal" "core" "net80211" "phy" "rtc" "clk" "pp" "smartconfig" "ssc" "wpa" "espnow" "wps" "wpa2")
         foreach(blob ${blobs})

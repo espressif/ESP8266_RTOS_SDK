@@ -31,7 +31,7 @@
 
 #include "esp_ota_ops.h"
 #include "sys/queue.h"
-#include "crc.h"
+#include "rom/crc.h"
 #include "esp_log.h"
 
 #ifdef CONFIG_IDF_TARGET_ESP8266

@@ -1,7 +1,7 @@
 
 set(COMPONENT_SRCDIRS "src/crypto" "src/fast_crypto" "src/wps" "src/wpa2/eap_peer" "src/wpa2/tls" "src/wpa2/utils" "port" "src")
 set(COMPONENT_ADD_INCLUDEDIRS "include" "port/include")
-set(COMPONENT_PRIV_REQUIRES "mbedtls" "freertos" "heap" "newlib" "util")
+set(COMPONENT_PRIV_REQUIRES "mbedtls" "freertos" "heap" "newlib")
 
 
 register_component()
