@@ -482,6 +482,12 @@ esp_err_t tcpip_adapter_down(tcpip_adapter_if_t tcpip_if)
             tcpip_adapter_reset_ip_info(tcpip_if);
         }
 
+#if TCPIP_ADAPTER_IPV6
+        for(int8_t i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
+            netif_ip6_addr_set(esp_netif[tcpip_if], i, IP6_ADDR_ANY6);
+            netif_ip6_addr_set_state(esp_netif[tcpip_if], i, IP6_ADDR_INVALID);
+        }
+#endif
         netif_set_addr(esp_netif[tcpip_if], IP4_ADDR_ANY4, IP4_ADDR_ANY4, IP4_ADDR_ANY4);
         netif_set_down(esp_netif[tcpip_if]);
         tcpip_adapter_start_ip_lost_timer(tcpip_if);
@@ -670,6 +676,28 @@ esp_err_t tcpip_adapter_get_ip6_linklocal(tcpip_adapter_if_t tcpip_if, ip6_addr_
         return ESP_FAIL;
     }
     return ESP_OK;
+}
+
+esp_err_t tcpip_adapter_get_ip6_global(tcpip_adapter_if_t tcpip_if, ip6_addr_t *if_ip6)
+{
+    struct netif *p_netif;
+    int i;
+
+    if (tcpip_if >= TCPIP_ADAPTER_IF_MAX || if_ip6 == NULL) {
+        return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
+    }
+
+    p_netif = esp_netif[tcpip_if];
+    if (p_netif != NULL && netif_is_up(p_netif)) {
+        for (i = 1; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
+            if (ip6_addr_ispreferred(netif_ip6_addr_state(p_netif, i))) {
+                memcpy(if_ip6, &p_netif->ip6_addr[i], sizeof(ip6_addr_t));
+                return ESP_OK;
+            }
+        }
+    }
+
+    return ESP_FAIL;
 }
 #endif
 
