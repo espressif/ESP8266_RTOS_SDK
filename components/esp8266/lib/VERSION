@@ -1,6 +1,6 @@
 gwen:
     core:       f459e31
-    net80211:   f459e31
+    net80211:   628ea3e
     pp:         f459e31
     espnow:     f459e31
     wps:        f459e31
