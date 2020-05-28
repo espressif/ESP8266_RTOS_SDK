@@ -25,9 +25,9 @@
 
 #ifndef CONFIG_ESP_AES
 
-#include "crypto/includes.h"
+#include "utils/includes.h"
 
-#include "crypto/common.h"
+#include "utils/common.h"
 #include "crypto/crypto.h"
 #include "crypto/aes_i.h"
 

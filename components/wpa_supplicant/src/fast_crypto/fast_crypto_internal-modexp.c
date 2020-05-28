@@ -14,9 +14,9 @@
 
 #include "sdkconfig.h"
 
-#include "crypto/includes.h"
+#include "utils/includes.h"
 
-#include "crypto/common.h"
+#include "utils/common.h"
 #include "crypto/crypto.h"
 
 #if CONFIG_SSL_USING_MBEDTLS

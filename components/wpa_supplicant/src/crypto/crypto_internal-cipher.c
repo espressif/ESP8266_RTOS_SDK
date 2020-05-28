@@ -6,10 +6,9 @@
  * See README for more details.
  */
 
-//#include "wpa/includes.h"
+//#include "utils/includes.h"
 
-//#include "wpa/common.h"
-#include "crypto/common.h"
+#include "utils/common.h"
 #include "crypto/crypto.h"
 #include "crypto/aes.h"
 #if defined(CONFIG_DES) || defined(CONFIG_DES3)

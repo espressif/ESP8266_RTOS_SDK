@@ -1,12 +1,12 @@
 
-set(COMPONENT_SRCDIRS "src/crypto" "src/fast_crypto" "src/wps" "src/wpa2/eap_peer" "src/wpa2/tls" "src/wpa2/utils" "port" "src")
-set(COMPONENT_ADD_INCLUDEDIRS "include" "port/include")
+set(COMPONENT_SRCDIRS "port" "port/esp_supplicant" "src/ap" "src/common" "src/crypto" "src/eap_peer" "src/fast_crypto" "src/rsn_supp" "src/tls" "src/utils" "src/wps")
+set(COMPONENT_ADD_INCLUDEDIRS "port" "port/include" "src")
 set(COMPONENT_PRIV_REQUIRES "mbedtls" "freertos" "heap" "newlib")
 
 
 register_component()
 
-target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-strict-aliasing)
+target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-strict-aliasing  -Wno-unused-value  -Wno-empty-body)
 target_compile_definitions(${COMPONENT_LIB} PRIVATE
     __ets__
     EMBEDDED_SUPP
@@ -22,4 +22,7 @@ target_compile_definitions(${COMPONENT_LIB} PRIVATE
     CONFIG_WPS_PIN
     USE_WPS_TASK
     ESP8266_WORKAROUND
+    CONFIG_ECC
+    CONFIG_IEEE80211W
+    CONFIG_WPA3_SAE
     )

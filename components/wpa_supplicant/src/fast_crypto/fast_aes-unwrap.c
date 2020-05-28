@@ -13,8 +13,8 @@
 // limitations under the License.
 #include "sdkconfig.h"
 
-#include "crypto/includes.h"
-#include "crypto/common.h"
+#include "utils/includes.h"
+#include "utils/common.h"
 
 #if CONFIG_SSL_USING_MBEDTLS
 #include "mbedtls/aes.h"

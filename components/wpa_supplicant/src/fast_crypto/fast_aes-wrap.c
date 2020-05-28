@@ -14,9 +14,9 @@
 
 #include "sdkconfig.h"
 
-#include "crypto/includes.h"
+#include "utils/includes.h"
 
-#include "crypto/common.h"
+#include "utils/common.h"
 #include "crypto/aes.h"
 #include "crypto/aes_wrap.h"
 
