@@ -1,7 +1,7 @@
 gwen:
     core:       f459e31
-    net80211:   93f97c5
-    pp:         f459e31
+    net80211:   1ce698f
+    pp:         1ce698f
     espnow:     f459e31
     wps:        f459e31
     wpa2:       f459e31
