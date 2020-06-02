@@ -27,10 +27,7 @@
 #include "crypto/crypto.h"
 #include "crypto/sha1.h"
 #include "crypto/aes_wrap.h"
-
-#ifdef EMBEDDED_SUPP
-
-#define LOCAL static
+#include "crypto/ccmp.h"
 
 /**
  * eapol_sm_notify_eap_success - Notification of external EAP success trigger
@@ -44,11 +41,14 @@
  * been completed successfully since WPA-PSK does not use EAP state machine.
  */
 
+#define WPA_4_4_HANDSHAKE_BIT   (1<<6)  //(1<<13)
+#define WPA_GROUP_HANDSHAKE_BIT (1<<7)  //(1<<14)
   struct wpa_sm gWpaSm;
 /* fix buf for tx for now */
 #define WPA_TX_MSG_BUFF_MAXLEN 200
 
 #define ASSOC_IE_LEN 24 + 2 + PMKID_LEN + RSN_SELECTOR_LEN
+#define MAX_EAPOL_RETRIES 3
 u8 assoc_ie_buf[ASSOC_IE_LEN+2]; 
 
 void set_assoc_ie(u8 * assoc_buf);
@@ -77,6 +77,35 @@ static inline void   wpa_sm_cancel_auth_timeout(struct wpa_sm *sm)
 void   eapol_sm_notify_eap_success(Boolean success)
 {
 
+}
+
+wifi_cipher_type_t cipher_type_map_supp_to_public(uint32_t wpa_cipher)
+{
+    switch (wpa_cipher) {
+    case WPA_CIPHER_NONE:
+        return WIFI_CIPHER_TYPE_NONE;
+
+    case WPA_CIPHER_WEP40:
+        return WIFI_CIPHER_TYPE_WEP40;
+
+    case WPA_CIPHER_WEP104:
+        return WIFI_CIPHER_TYPE_WEP104;
+
+    case WPA_CIPHER_TKIP:
+        return WIFI_CIPHER_TYPE_TKIP;
+
+    case WPA_CIPHER_CCMP:
+        return WIFI_CIPHER_TYPE_CCMP;
+
+    case WPA_CIPHER_CCMP|WPA_CIPHER_TKIP:
+        return WIFI_CIPHER_TYPE_TKIP_CCMP;
+
+    case WPA_CIPHER_AES_128_CMAC:
+        return WIFI_CIPHER_TYPE_AES_CMAC128;
+
+    default:
+        return WIFI_CIPHER_TYPE_UNKNOWN;
+    }
 }
 
 uint32_t cipher_type_map_public_to_supp(wifi_cipher_type_t cipher)
@@ -137,31 +166,14 @@ static inline int   wpa_sm_get_bssid(struct wpa_sm *sm, u8 *bssid)
 static inline int   wpa_sm_ether_send( struct wpa_sm *sm, const u8 *dest, u16 proto,
         const u8 *data, size_t data_len)
 {
-    char* msg;
-    size_t msg_len;
-    struct l2_ethhdr eth;
+    void *buffer = (void *)(data - sizeof(struct l2_ethhdr));
+    struct l2_ethhdr *eth = (struct l2_ethhdr *)buffer;
 
-    os_memset(&eth, 0, sizeof(eth));
-    os_memcpy(eth.h_dest, dest, ETH_ALEN);
-    os_memcpy(eth.h_source, sm->own_addr, ETH_ALEN);
-    eth.h_proto = host_to_be16(proto);
+    memcpy(eth->h_dest, dest, ETH_ALEN);
+    memcpy(eth->h_source, sm->own_addr, ETH_ALEN);
+    eth->h_proto = host_to_be16(proto);
+    sm->sendto(buffer, sizeof(struct l2_ethhdr) + data_len);
 
-    msg_len = sizeof(eth) + data_len;
-
-    //replaced by xxx to remove malloc
-    msg = (char*)(sm->wpadata);
-    sm->wpadatalen = msg_len;
-//    msg = (char *)os_zalloc(msg_len);
-//    sm->msg_len = msg_len;
-
-    if (msg == NULL) {
-        return -1;
-    }
-
-    os_memcpy(msg, &eth, sizeof(eth));
-    os_memcpy(msg + sizeof(eth), data, data_len);
-
-    sm->sendto(sm->wpadata, sm->wpadatalen);
     return 0;
 }
 
@@ -235,7 +247,7 @@ void   wpa_sm_key_request(struct wpa_sm *sm, int error, int pairwise)
     else if (sm->pairwise_cipher == WPA_CIPHER_CCMP)
         ver = WPA_KEY_INFO_TYPE_HMAC_SHA1_AES;
     else if (sm->key_mgmt == WPA_KEY_MGMT_SAE)
-	ver = WPA_KEY_INFO_TYPE_AKM_DEFINED;
+	ver = 0;
     else
         ver = WPA_KEY_INFO_TYPE_HMAC_MD5_RC4;
 
@@ -277,6 +289,7 @@ void   wpa_sm_key_request(struct wpa_sm *sm, int error, int pairwise)
     wpa_eapol_key_send(sm, sm->ptk.kck, ver, bssid, ETH_P_EAPOL,
                rbuf, rlen, key_info & WPA_KEY_INFO_MIC ?
                reply->key_mic : NULL);
+    wpa_sm_free_eapol(rbuf);
 }
 /*
 int   wpa_supplicant_get_pmk(struct wpa_sm *sm)
@@ -517,6 +530,7 @@ int   wpa_supplicant_send_2_of_4(struct wpa_sm *sm, const unsigned char *dst,
     
     wpa_eapol_key_send(sm, ptk->kck, ver, dst, ETH_P_EAPOL,
                rbuf, rlen, reply->key_mic);
+    wpa_sm_free_eapol(rbuf);
 
     return 0;
 }
@@ -980,7 +994,7 @@ int   ieee80211w_set_keys(struct wpa_sm *sm,
 {
 #ifdef CONFIG_IEEE80211W
 	if (sm->mgmt_group_cipher != WPA_CIPHER_AES_128_CMAC) {
-		return 0;
+		return -1;
 	}
 
 	if (ie->igtk) {
@@ -1111,8 +1125,8 @@ int   ieee80211w_set_keys(struct wpa_sm *sm,
     if (rbuf == NULL)
         return -1;
 
-    // indicate this is 4_4 phsk pbuf
-    sm->flags |= 0x40;
+    sm->txcb_flags |= WPA_4_4_HANDSHAKE_BIT;
+    wpa_printf(MSG_DEBUG, "tx 4/4 txcb_flags=%d\n", sm->txcb_flags);
 
     reply->type = sm->proto == WPA_PROTO_RSN ?
         EAPOL_KEY_TYPE_RSN : EAPOL_KEY_TYPE_WPA;
@@ -1133,6 +1147,7 @@ int   ieee80211w_set_keys(struct wpa_sm *sm,
     wpa_printf(MSG_DEBUG, "WPA Send EAPOL-Key 4/4\n");
     wpa_eapol_key_send(sm, ptk->kck, ver, dst, ETH_P_EAPOL,
                rbuf, rlen, reply->key_mic);
+    wpa_sm_free_eapol(rbuf);
 
     return 0;
 }
@@ -1236,7 +1251,7 @@ int   ieee80211w_set_keys(struct wpa_sm *sm,
         }
     }
     
-    if (ieee80211w_set_keys(sm, &ie) < 0) {
+    if (sm->pmf_cfg.capable && ieee80211w_set_keys(sm, &ie) < 0) {
         #ifdef DEBUG_PRINT    
         wpa_printf(MSG_DEBUG, "RSN: Failed to configure IGTK");
         #endif    
@@ -1457,8 +1472,8 @@ failed:
     if (rbuf == NULL)
         return -1;
 
-    // indicate this is 2_2 phsk pbuf
-    sm->flags |= 0x80;
+    sm->txcb_flags |= WPA_GROUP_HANDSHAKE_BIT;
+    wpa_printf(MSG_DEBUG, "2/2 txcb_flags=%d\n", sm->txcb_flags);
 
     reply->type = sm->proto == WPA_PROTO_RSN ?
         EAPOL_KEY_TYPE_RSN : EAPOL_KEY_TYPE_WPA;
@@ -1478,6 +1493,7 @@ failed:
 
     wpa_eapol_key_send(sm, sm->ptk.kck, ver, sm->bssid, ETH_P_EAPOL,
                rbuf, rlen, reply->key_mic);
+    wpa_sm_free_eapol(rbuf);
 
     return 0;
 }
@@ -1839,7 +1855,8 @@ int   wpa_sm_rx_eapol(u8 *src_addr, u8 *buf, u32 len)
 #endif
 
     if (sm->pairwise_cipher == WPA_CIPHER_CCMP &&
-            ver != WPA_KEY_INFO_TYPE_HMAC_SHA1_AES) {
+        ver != WPA_KEY_INFO_TYPE_HMAC_SHA1_AES &&
+        sm->key_mgmt != WPA_KEY_MGMT_SAE) {
 #ifdef DEBUG_PRINT    
            wpa_printf(MSG_DEBUG, "WPA: CCMP is used, but EAPOL-Key "
                "descriptor version (%d) is not 2.", ver);
@@ -1922,6 +1939,14 @@ int   wpa_sm_rx_eapol(u8 *src_addr, u8 *buf, u32 len)
             wpa_supplicant_process_3_of_4(sm, key, ver);
         } else {
             /* 1/4 4-Way Handshake */
+            sm->eapol1_count++;
+            if (sm->eapol1_count > MAX_EAPOL_RETRIES) {
+#ifdef DEBUG_PRINT
+                wpa_printf(MSG_INFO, "EAPOL1 received for %d times, sending deauth", sm->eapol1_count);
+#endif
+                // esp_wifi_internal_issue_disconnect(WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT);
+                goto out;
+            }
             wpa_supplicant_process_1_of_4(sm, src_addr, key,
                               ver);
         }
@@ -1957,9 +1982,42 @@ void wpa_sm_set_state(enum wpa_states state)
 {
        struct wpa_sm *sm = &gWpaSm;
     if(WPA_MIC_FAILURE==WPA_SM_STATE(sm))
-        os_timer_disarm(&(sm->cm_timer));
+        ets_timer_disarm(&(sm->cm_timer));
     sm->wpa_state= state;
 }
+
+
+/**
+ * wpa_sm_set_pmk - Set PMK
+ * @sm: Pointer to WPA state machine data from wpa_sm_init()
+ * @pmk: The new PMK
+ * @pmk_len: The length of the new PMK in bytes
+ * @bssid: AA to add into PMKSA cache or %NULL to not cache the PMK
+ *
+ * Configure the PMK for WPA state machine.
+ */
+void wpa_sm_set_pmk(struct wpa_sm *sm, const u8 *pmk, size_t pmk_len,
+                    const u8 *pmkid, const u8 *bssid)
+{
+	if (sm == NULL)
+		return;
+
+	sm->pmk_len = pmk_len;
+	os_memcpy(sm->pmk, pmk, pmk_len);
+
+#ifdef CONFIG_IEEE80211R
+	/* Set XXKey to be PSK for FT key derivation */
+	sm->xxkey_len = pmk_len;
+	os_memcpy(sm->xxkey, pmk, pmk_len);
+#endif /* CONFIG_IEEE80211R */
+
+	if (bssid) {
+		pmksa_cache_add(sm->pmksa, pmk, pmk_len, pmkid, NULL, 0,
+                        bssid, sm->own_addr,
+                        sm->network_ctx, sm->key_mgmt);
+	}
+}
+
 
 /**
  * wpa_sm_set_pmk_from_pmksa - Set PMK based on the current PMKSA
@@ -1982,7 +2040,11 @@ void wpa_sm_set_pmk_from_pmksa(struct wpa_sm *sm)
 	}
 }
 
-void ICACHE_FLASH_ATTR wpa_register(char* payload, WPA_SEND_FUNC snd_func,
+
+
+
+#ifdef ESP_SUPPLICANT
+void wpa_register(char* payload, WPA_SEND_FUNC snd_func,
                                     WPA_SET_ASSOC_IE set_assoc_ie_func, WPA_INSTALL_KEY ppinstallkey, WPA_GET_KEY ppgetkey, WPA_DEAUTH_FUNC wpa_deauth,
                                     WPA_NEG_COMPLETE wpa_neg_complete)
 {
@@ -1997,7 +2059,6 @@ void ICACHE_FLASH_ATTR wpa_register(char* payload, WPA_SEND_FUNC snd_func,
     sm->wpa_neg_complete = wpa_neg_complete;
     sm->key_entry_valid = 0;
     sm->key_install = false;
-    sm->flags = 0;
     wpa_sm_set_state(WPA_INACTIVE);
     
     sm->pmksa = pmksa_cache_init(wpa_sm_pmksa_free_cb, sm, sm);
@@ -2017,6 +2078,7 @@ void wpa_sm_deinit(void)
     struct wpa_sm *sm = &gWpaSm;
     pmksa_cache_deinit(sm->pmksa);
 }
+
 
 void wpa_set_profile(u32 wpa_proto, u8 auth_mode)
 {
@@ -2070,6 +2132,7 @@ int wpa_set_bss(char *macddr, char * bssid, u8 pairwise_cipher, u8 group_cipher,
         wpa_sm_set_pmk_from_pmksa(sm);
     }
 
+    sm->eapol1_count = 0;
 #ifdef CONFIG_IEEE80211W
     if (esp_wifi_sta_pmf_enabled()) {
         wifi_config_t wifi_cfg;
@@ -2096,17 +2159,15 @@ wpa_set_passphrase(char * passphrase, u8 *ssid, size_t ssid_len)
 {
     struct wifi_ssid *sta_ssid = esp_wifi_sta_get_prof_ssid_internal();
     struct wpa_sm *sm = &gWpaSm;
-    u8 phlen = 0;
-
+   
     if (passphrase == NULL) return;
-
-    phlen = os_strlen(passphrase);
-
+    
     /*
      *  Here only handle passphrase string.  Need extra step to handle 32B, 64Hex raw
      *    PMK.
      */
-    WPA_ASSERT(phlen >= 6 && phlen < 64);
+    if (sm->key_mgmt == WPA_KEY_MGMT_SAE)
+        return;
 
     /* This is really SLOW, so just re cacl while reset param */
     if (esp_wifi_sta_get_reset_param_internal() != 0) {
@@ -2124,9 +2185,9 @@ wpa_set_passphrase(char * passphrase, u8 *ssid, size_t ssid_len)
     if (sm->key_mgmt == WPA_KEY_MGMT_IEEE8021X) {
     /* TODO nothing */
     } else {
-        memcpy(sm->pmk, esp_wifi_sta_get_prof_pmk_internal(), PMK_LEN);
+        memcpy(sm->pmk, esp_wifi_sta_get_ap_info_prof_pmk_internal(), PMK_LEN);
+        sm->pmk_len = PMK_LEN;
     }
-    sm->pmk_len = PMK_LEN;
 }
 
   void  
@@ -2183,6 +2244,7 @@ void wpa_supplicant_clr_countermeasures(u16 *pisunicast)
        struct wpa_sm *sm = &gWpaSm;
        (sm->install_ptk).mic_errors_seen=0;
     (sm->install_gtk).mic_errors_seen=0;
+    ets_timer_done(&(sm->cm_timer));
     wpa_printf(MSG_DEBUG, "WPA: TKIP countermeasures clean\n");
 }
 
@@ -2193,6 +2255,7 @@ void wpa_supplicant_stop_countermeasures(u16 *pisunicast)
 {
        struct wpa_sm *sm = &gWpaSm;
 
+       ets_timer_done(&(sm->cm_timer));
     if (sm->countermeasures) {
         sm->countermeasures = 0;
               wpa_supplicant_clr_countermeasures(NULL);
@@ -2203,19 +2266,14 @@ void wpa_supplicant_stop_countermeasures(u16 *pisunicast)
        wpa_sm_set_state(WPA_DISCONNECTED);
 }
 
-void ICACHE_FLASH_ATTR
-wpa_michael_mic_failure(u16 isunicast)
+int wpa_michael_mic_failure(u16 isunicast)
 {
-    struct wpa_sm* sm = &gWpaSm;
-    s32* pmic_errors_seen = (isunicast) ? &((sm->install_ptk).mic_errors_seen) : &((sm->install_gtk).mic_errors_seen);
-
-    wpa_printf(MSG_DEBUG, "\nTKIP MIC failure occur");
-
-    if (sm->wpa_state == WPA_GROUP_HANDSHAKE) {
-        return;
-    }
-
-    /*both unicast and multicast mic_errors_seen need statistics*/
+       struct wpa_sm *sm = &gWpaSm;
+       int32_t *pmic_errors_seen=(isunicast)? &((sm->install_ptk).mic_errors_seen) : &((sm->install_gtk).mic_errors_seen);
+    
+    wpa_printf(MSG_DEBUG, "\nTKIP MIC failure occur\n");
+    
+       /*both unicast and multicast mic_errors_seen need statistics*/
     if ((sm->install_ptk).mic_errors_seen + (sm->install_gtk).mic_errors_seen) {
         /* Send the new MIC error report immediately since we are going
          * to start countermeasures and AP better do the same.
@@ -2231,15 +2289,16 @@ wpa_michael_mic_failure(u16 isunicast)
          * Need to wait for completion of request frame. We do not get
          * any callback for the message completion, so just wait a
          * short while and hope for the best. */
-        os_delay_us(10000);
+         ets_delay_us(10000);
 
-        /*deauthenticate AP*/
-
-        /*stop monitor next mic_failure timer,disconnect for 60sec, then stop contermeasures*/
-        os_timer_disarm(&(sm->cm_timer));
-        os_timer_setfn(&(sm->cm_timer), (os_timer_func_t*)wpa_supplicant_stop_countermeasures, NULL);
-        os_timer_arm(&(sm->cm_timer), 60 * 1000, false);
-
+        /*deauthenticate AP*/ 
+        
+        /*stop monitor next mic_failure timer,disconnect for 60sec, then stop contermeasures*/ 
+        ets_timer_disarm(&(sm->cm_timer));
+        ets_timer_done(&(sm->cm_timer));
+        ets_timer_setfn(&(sm->cm_timer), (ETSTimerFunc *)wpa_supplicant_stop_countermeasures, NULL);
+        ets_timer_arm(&(sm->cm_timer), 60*1000, false);
+        
         /* TODO: mark the AP rejected for 60 second. STA is
          * allowed to associate with another AP.. */
     } else {
@@ -2247,10 +2306,13 @@ wpa_michael_mic_failure(u16 isunicast)
         wpa_sm_set_state(WPA_MIC_FAILURE);
         wpa_sm_key_request(sm, 1, 0);
         /*start 60sec counter to monitor whether next mic_failure occur in this period, or clear mic_errors_seen*/
-        os_timer_disarm(&(sm->cm_timer));
-        os_timer_setfn(&(sm->cm_timer), (os_timer_func_t*)wpa_supplicant_clr_countermeasures, NULL);
-        os_timer_arm(&(sm->cm_timer), 60 * 1000, false);
+        ets_timer_disarm(&(sm->cm_timer));
+        ets_timer_done(&(sm->cm_timer));
+        ets_timer_setfn(&(sm->cm_timer), (ETSTimerFunc *)wpa_supplicant_clr_countermeasures, NULL);
+        ets_timer_arm(&(sm->cm_timer), 60*1000, false);
     }
+
+    return 0;
 }
 
 /*
@@ -2270,15 +2332,19 @@ void eapol_txcb(void *eb)
         case WPA_FIRST_HALF_4WAY_HANDSHAKE: 
             break;
         case WPA_LAST_HALF_4WAY_HANDSHAKE:
-            if ((sm->flags & 0x40) != 0) {
+            if (sm->txcb_flags & WPA_4_4_HANDSHAKE_BIT) {
+                sm->txcb_flags &= ~WPA_4_4_HANDSHAKE_BIT;
                 isdeauth = wpa_supplicant_send_4_of_4_txcallback(sm);
-                sm->flags &= (~0x40);
+            } else {
+                wpa_printf(MSG_DEBUG, "4/4 txcb, flags=%d\n", sm->txcb_flags);
             }
             break;
         case WPA_GROUP_HANDSHAKE:
-            if ((sm->flags & 0x80) != 0) {
+            if (sm->txcb_flags & WPA_GROUP_HANDSHAKE_BIT) {
+                sm->txcb_flags &= ~WPA_GROUP_HANDSHAKE_BIT;
                 isdeauth = wpa_supplicant_send_2_of_2_txcallback(sm);
-                sm->flags &= (~0x80);
+            } else {
+                wpa_printf(MSG_DEBUG, "2/2 txcb, flags=%d\n", sm->txcb_flags);
             }
             break;
         case WPA_TKIP_COUNTERMEASURES: isdeauth=WLAN_REASON_MICHAEL_MIC_FAILURE;
@@ -2291,10 +2357,28 @@ void eapol_txcb(void *eb)
     }
 }
 
+bool wpa_sta_in_4way_handshake(void)
+{
+    struct wpa_sm *sm = &gWpaSm;
+    if ( WPA_SM_STATE(sm) == WPA_MIC_FAILURE || WPA_SM_STATE(sm) == WPA_FIRST_HALF_4WAY_HANDSHAKE
+        || WPA_SM_STATE(sm) == WPA_LAST_HALF_4WAY_HANDSHAKE) {
+    	return true;
+    }
+    return false;
+}
+
 bool wpa_sta_is_cur_pmksa_set(void) {
     struct wpa_sm *sm = &gWpaSm;
     return (pmksa_cache_get_current(sm) != NULL);
 }
 
-#endif // EMBEDDED_SUPP
+void wpa_sta_clear_curr_pmksa(void) {
+    struct wpa_sm *sm = &gWpaSm;
+
+    if (sm->pmksa)
+        pmksa_cache_flush(sm->pmksa, NULL, sm->pmk, sm->pmk_len);
+    pmksa_cache_clear_current(sm);
+}
+
+#endif // ESP_SUPPLICANT
 

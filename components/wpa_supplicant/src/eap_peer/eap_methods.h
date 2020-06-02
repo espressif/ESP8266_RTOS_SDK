@@ -27,7 +27,6 @@ int eap_peer_method_register(struct eap_method *method);
 
 void eap_peer_unregister_methods(void);
 
-//int eap_peer_md5_register(void);
 int eap_peer_tls_register(void);
 int eap_peer_peap_register(void);
 int eap_peer_ttls_register(void);

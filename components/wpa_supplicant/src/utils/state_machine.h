@@ -30,7 +30,7 @@
  * entered by calling SM_ENTER or SM_ENTER_GLOBAL.
  */
 #define SM_STATE(machine, state) \
-static void ICACHE_FLASH_ATTR sm_ ## machine ## _ ## state ## _Enter(STATE_MACHINE_DATA *sm, \
+static void sm_ ## machine ## _ ## state ## _Enter(STATE_MACHINE_DATA *sm, \
 	int global)
 
 /**
@@ -124,7 +124,7 @@ sm_ ## machine ## _ ## state ## _Enter(sm, 1)
  * SM_ENTER and SM_ENTER_GLOBAL macros to enter new state.
  */
 #define SM_STEP(machine) \
-static void ICACHE_FLASH_ATTR sm_ ## machine ## _Step(STATE_MACHINE_DATA *sm)
+static void sm_ ## machine ## _Step(STATE_MACHINE_DATA *sm)
 
 /**
  * SM_STEP_RUN - Call the state machine step function

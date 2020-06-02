@@ -28,4 +28,6 @@ void wpa_sm_disassociate(struct wpa_sm *sm, int reason_code);
 
 int wpa_sm_get_beacon_ie(struct wpa_sm *sm);
 
+void wpa_sm_free_eapol(u8 *buffer);
+
 #endif /* WPAS_GLUE_H */

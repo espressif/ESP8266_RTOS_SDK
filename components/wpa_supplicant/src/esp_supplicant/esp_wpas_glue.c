@@ -12,29 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifdef EMBEDDED_SUPP
+#ifdef ESP_SUPPLICANT
 
 #include "utils/includes.h"
 #include "utils/common.h"
 #include "common/eapol_common.h"
 #include "rsn_supp/wpa.h"
+#include "rsn_supp/pmksa_cache.h"
 #define EP_OFFSET 36
 
 #define wpa_malloc_dram(s) heap_caps_malloc(s, MALLOC_CAP_8BIT)
 #define wpa_calloc_dram(n, s) heap_caps_calloc(n, s, MALLOC_CAP_8BIT)
 
-static u8* wpa_alloc_eapol(struct wpa_sm *sm, u8 type,
+u8   *wpa_sm_alloc_eapol(struct wpa_sm *sm, u8 type,
                          const void *data, u16 data_len,
                          size_t *msg_len, void **data_pos)
 {
-    struct ieee802_1x_hdr* hdr;
+    void *buffer;
+    struct ieee802_1x_hdr *hdr;
 
-    *msg_len = sizeof(*hdr) + data_len;
-    hdr = (struct ieee802_1x_hdr*)((int)sm->wpadata + sizeof(struct l2_ethhdr)); //keep head byte remain for filling later
+    *msg_len = sizeof(struct ieee802_1x_hdr) + data_len;
 
-    if (hdr == NULL) {
+    buffer = wpa_malloc_dram(*msg_len + sizeof(struct l2_ethhdr) + EP_OFFSET);
+
+    if (buffer == NULL) {
         return NULL;
     }
+
+    buffer += EP_OFFSET;
+
+    /* XXX: reserve l2_ethhdr is enough */
+    hdr = (struct ieee802_1x_hdr *)((char *)buffer + sizeof(struct l2_ethhdr));
 
     hdr->version = sm->eapol_version;
     hdr->type = type;
@@ -53,17 +61,10 @@ static u8* wpa_alloc_eapol(struct wpa_sm *sm, u8 type,
     return (u8 *) hdr;
 }
 
-
-u8* ICACHE_FLASH_ATTR wpa_sm_alloc_eapol(struct wpa_sm* sm, u8 type,
-        const void* data, u16 data_len,
-        size_t* msg_len, void** data_pos)
+void  wpa_sm_free_eapol(u8 *buffer)
 {
-    sm->wpadata = wpa_malloc_dram(256 + EP_OFFSET);
-    sm->wpadata += EP_OFFSET;
-    return wpa_alloc_eapol(sm, type, data, data_len, msg_len, data_pos);
-
-
-    return NULL;
+    // buffer = buffer - sizeof(struct l2_ethhdr) - EP_OFFSET;
+    // os_free(buffer);
 }
 
 void  wpa_sm_deauthenticate(struct wpa_sm *sm, u8 reason_code)
@@ -71,6 +72,7 @@ void  wpa_sm_deauthenticate(struct wpa_sm *sm, u8 reason_code)
 
     /*only need send deauth frame when associated*/
     if (WPA_SM_STATE(sm) >= WPA_ASSOCIATED) {
+        pmksa_cache_clear_current(sm);
         sm->wpa_deauthenticate(reason_code);
     }
 }

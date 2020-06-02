@@ -11,7 +11,7 @@
  *
  * See README and COPYING for more details.
  */
-#if 1//def EMBEDDED_SUPP
+ #ifdef ESP_SUPPLICANT
 
 #include "utils/includes.h"
 
@@ -403,5 +403,5 @@ int  wpa_supplicant_parse_ies(const u8 *buf, size_t len,
 }
 
 
-#endif // EMBEDDED_SUPP
+#endif // ESP_SUPPLICANT
 

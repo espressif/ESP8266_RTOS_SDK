@@ -9,9 +9,16 @@
 #ifndef WPS_H
 #define WPS_H
 
-#include "wps/wps_defs.h"
+#if CONFIG_IDF_TARGET_ESP32
+#include "esp32/rom/ets_sys.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
+#elif CONFIG_IDF_TARGET_ESP8266
+#include "rom/ets_sys.h"
+
+#endif
+#include "wps_defs.h"
 #include "esp_wifi_types.h"
-#include "esp_system.h"
 
 /**
  * enum wsc_op_code - EAP-WSC OP-Code values
@@ -27,7 +34,6 @@ enum wsc_op_code {
 };
 
 struct wps_registrar;
-//struct upnp_wps_device_sm;
 struct wps_er;
 struct wps_parse_attr;
 
@@ -35,7 +41,7 @@ struct wps_parse_attr;
  * struct wps_credential - WPS Credential
  * @ssid: SSID
  * @ssid_len: Length of SSID
- * @auth_type: Authentication Type (WPS_AUTH_OPEN, .. flags)
+ * @auth_type: Authentication Type (WPS_WIFI_AUTH_OPEN, .. flags)
  * @encr_type: Encryption Type (WPS_ENCR_NONE, .. flags)
  * @key_idx: Key index
  * @key: Key
@@ -192,10 +198,8 @@ struct discard_ap_list_t{
 	u8 bssid[6];
 };
 
-//struct wps_data * wps_init(const struct wps_config *cfg);
 struct wps_data * wps_init(void);
 
-//void wps_deinit(struct wps_data *data);
 void wps_deinit(void);
 
 /**
@@ -232,8 +236,8 @@ enum wps_process_res wps_process_msg(struct wps_data *wps,
 
 struct wpabuf * wps_get_msg(struct wps_data *wps, enum wsc_op_code *op_code);
 
-int wps_is_selected_pbc_registrar(const struct wpabuf *msg, uint8_t *bssid);
-int wps_is_selected_pin_registrar(const struct wpabuf *msg, uint8_t *bssid);
+int wps_is_selected_pbc_registrar(const struct wpabuf *msg, u8 *bssid);
+int wps_is_selected_pin_registrar(const struct wpabuf *msg, u8 *bssid);
 int wps_ap_priority_compar(const struct wpabuf *wps_a,
 			   const struct wpabuf *wps_b);
 int wps_is_addr_authorized(const struct wpabuf *msg, const u8 *addr,
@@ -747,10 +751,7 @@ struct wps_context {
 	 */
 	void *cb_ctx;
 
-	//struct upnp_wps_device_sm *wps_upnp;
-
 	/* Pending messages from UPnP PutWLANResponse */
-	//struct upnp_pending_message *upnp_msgs;
 #ifdef CONFIG_WPS_NFC
 
 	u16 ap_nfc_dev_pw_id;
@@ -798,11 +799,11 @@ int wps_registrar_add_nfc_password_token(struct wps_registrar *reg,
 int wps_build_credential_wrap(struct wpabuf *msg,
 			      const struct wps_credential *cred);
 #ifdef CONFIG_WPS_PIN
-
 unsigned int wps_pin_checksum(unsigned int pin);
 unsigned int wps_pin_valid(unsigned int pin);
 int wps_pin_str_valid(const char *pin);
 #endif
+
 unsigned int wps_generate_pin(void);
 
 #ifdef CONFIG_WPS_OOB
@@ -1008,10 +1009,19 @@ enum wps_cb_status {
 
 typedef void (*wps_st_cb_t)(int status);
 
-#if 1//def USE_WPS_TASK
-#define SIG_WPS_START	0
-#define	SIG_WPS_RX	1
-#define	SIG_WPS_NUM	2
+#ifdef USE_WPS_TASK
+enum wps_sig_type {
+    SIG_WPS_ENABLE = 1,         //1
+    SIG_WPS_DISABLE,            //2
+    SIG_WPS_START,              //3
+    SIG_WPS_RX,                 //4
+    SIG_WPS_TIMER_TIMEOUT,      //5
+    SIG_WPS_TIMER_MSG_TIMEOUT,  //6
+    SIG_WPS_TIMER_SUCCESS_CB,   //7
+    SIG_WPS_TIMER_SCAN,         //8
+    SIG_WPS_TIMER_EAPOL_START,  //9
+    SIG_WPS_NUM,                //10
+};
 #endif
 
 #define WPS_EAP_EXT_VENDOR_TYPE "WFA-SimpleConfig-Enrollee-1-0"
@@ -1031,19 +1041,17 @@ struct wps_sm {
     u8 eapol_version;
     char key[64];
     u8 key_len;
-    //uint8_t *outbuf;
-    //uint16_t outbuflen;
-    os_timer_t wps_timeout_timer;
-    os_timer_t wps_msg_timeout_timer;
-    os_timer_t wps_scan_timer;
-    os_timer_t wps_success_cb_timer;
-    os_timer_t wps_eapol_start_timer;
+    ETSTimer wps_timeout_timer;
+    ETSTimer wps_msg_timeout_timer;
+    ETSTimer wps_scan_timer;
+    ETSTimer wps_success_cb_timer;
+    ETSTimer wps_eapol_start_timer;
     wps_st_cb_t st_cb;
     u8 current_identifier;
     bool is_wps_scan;
     u8 channel;
     u8 scan_cnt;
-#if 1//def USE_WPS_TASK
+#ifdef USE_WPS_TASK
     u8 wps_sig_cnt[SIG_WPS_NUM];
 #endif
     u8 discover_ssid_cnt;
@@ -1053,11 +1061,13 @@ struct wps_sm {
     wifi_sta_config_t config;
 };
 
+#define    WIFI_CAPINFO_PRIVACY        0x0010
+
 struct wps_sm *wps_sm_get(void);
 int wps_ssid_save(u8 *ssid, u8 ssid_len);
 int wps_key_save(char *key, u8 key_len);
 int wps_station_wps_register_cb(wps_st_cb_t cb);
-int wps_station_wps_unregister_cb(void); 
+int wps_station_wps_unregister_cb(void);
 int wps_start_pending(void);
 int wps_sm_rx_eapol(u8 *src_addr, u8 *buf, u32 len);
 

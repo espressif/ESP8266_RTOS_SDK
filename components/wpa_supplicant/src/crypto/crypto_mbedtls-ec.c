@@ -21,7 +21,7 @@
 #include "utils/common.h"
 #include "crypto.h"
 #include "sha256.h"
-#include "crypto/random.h"
+#include "random.h"
 
 #include "mbedtls/ecp.h"
 #include "mbedtls/entropy.h"

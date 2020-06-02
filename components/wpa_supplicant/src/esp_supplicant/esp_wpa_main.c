@@ -64,7 +64,7 @@ int ieee80211_output_pbuf(esp_aio_t *aio);
 /* fix buf for tx for now */
 #define WPA_TX_MSG_BUFF_MAXLEN 200
 
-LOCAL int ICACHE_FLASH_ATTR wpa_send_cb(esp_aio_t* aio)
+LOCAL int wpa_send_cb(esp_aio_t* aio)
 {
     char* pb = (char*)aio->arg;
 
@@ -138,7 +138,7 @@ void  wpa_neg_complete(void)
     esp_wifi_auth_done_internal();
 }
 
-void ICACHE_FLASH_ATTR wpa_sta_init()
+void wpa_sta_init()
 {
     wpa_register(NULL, wpa_sendto_wrapper,
                  wpa_config_assoc_ie, wpa_install_key, wpa_get_key, wpa_deauthenticate, wpa_neg_complete);

@@ -103,17 +103,6 @@ int sha256_vector(size_t num_elem, const u8 *addr[], const size_t *len,
 		  u8 *mac);
 
 /**
- * fast_sha256_vector - fast SHA256 hash for data vector
- * @num_elem: Number of elements in the data vector
- * @addr: Pointers to the data areas
- * @len: Lengths of the data blocks
- * @mac: Buffer for the hash
- * Returns: 0 on success, -1 on failure
- */
-int fast_sha256_vector(size_t num_elem, const uint8_t *addr[], const size_t *len,
-		       uint8_t *mac);
-
-/**
  * des_encrypt - Encrypt one block with DES
  * @clear: 8 octets (in)
  * @key: 7 octets (in) (no parity bits included)
@@ -190,21 +179,6 @@ struct crypto_hash * crypto_hash_init(enum crypto_hash_alg alg, const u8 *key,
 				      size_t key_len);
 
 /**
- * fast_crypto_hash_init - Initialize hash/HMAC function
- * @alg: Hash algorithm
- * @key: Key for keyed hash (e.g., HMAC) or %NULL if not needed
- * @key_len: Length of the key in bytes
- * Returns: Pointer to hash context to use with other hash functions or %NULL
- * on failure
- *
- * This function is only used with internal TLSv1 implementation
- * (CONFIG_TLS=internal). If that is not used, the crypto wrapper does not need
- * to implement this.
- */
-struct crypto_hash * fast_crypto_hash_init(enum crypto_hash_alg alg, const uint8_t *key,
-				                size_t key_len);
-
-/**
  * crypto_hash_update - Add data to hash calculation
  * @ctx: Context pointer from crypto_hash_init()
  * @data: Data buffer to add
@@ -215,18 +189,6 @@ struct crypto_hash * fast_crypto_hash_init(enum crypto_hash_alg alg, const uint8
  * to implement this.
  */
 void crypto_hash_update(struct crypto_hash *ctx, const u8 *data, size_t len);
-
-/**
- * fast_crypto_hash_update - Add data to hash calculation
- * @ctx: Context pointer from crypto_hash_init()
- * @data: Data buffer to add
- * @len: Length of the buffer
- *
- * This function is only used with internal TLSv1 implementation
- * (CONFIG_TLS=internal). If that is not used, the crypto wrapper does not need
- * to implement this.
- */
-void fast_crypto_hash_update(struct crypto_hash *ctx, const uint8_t *data, size_t len);
 
 /**
  * crypto_hash_finish - Complete hash calculation
@@ -246,26 +208,6 @@ void fast_crypto_hash_update(struct crypto_hash *ctx, const uint8_t *data, size_
  * to implement this.
  */
 int crypto_hash_finish(struct crypto_hash *ctx, u8 *hash, size_t *len);
-
-/**
- * fast_crypto_hash_finish - Complete hash calculation
- * @ctx: Context pointer from crypto_hash_init()
- * @hash: Buffer for hash value or %NULL if caller is just freeing the hash
- * context
- * @len: Pointer to length of the buffer or %NULL if caller is just freeing the
- * hash context; on return, this is set to the actual length of the hash value
- * Returns: 0 on success, -1 if buffer is too small (len set to needed length),
- * or -2 on other failures (including failed crypto_hash_update() operations)
- *
- * This function calculates the hash value and frees the context buffer that
- * was used for hash calculation.
- *
- * This function is only used with internal TLSv1 implementation
- * (CONFIG_TLS=internal). If that is not used, the crypto wrapper does not need
- * to implement this.
- */
-int fast_crypto_hash_finish(struct crypto_hash *ctx, uint8_t *hash, size_t *len);
-
 
 enum crypto_cipher_alg {
 	CRYPTO_CIPHER_NULL = 0, CRYPTO_CIPHER_ALG_AES, CRYPTO_CIPHER_ALG_3DES,
@@ -292,22 +234,6 @@ struct crypto_cipher * crypto_cipher_init(enum crypto_cipher_alg alg,
 					  size_t key_len);
 
 /**
- * fast_crypto_cipher_init - Initialize block/stream cipher function
- * @alg: Cipher algorithm
- * @iv: Initialization vector for block ciphers or %NULL for stream ciphers
- * @key: Cipher key
- * @key_len: Length of key in bytes
- * Returns: Pointer to cipher context to use with other cipher functions or
- * %NULL on failure
- *
- * This function is only used with internal TLSv1 implementation
- * (CONFIG_TLS=internal). If that is not used, the crypto wrapper does not need
- * to implement this.
- */
-struct crypto_cipher * fast_crypto_cipher_init(enum crypto_cipher_alg alg,
-					            const uint8_t *iv, const uint8_t *key,
-					            size_t key_len);
-/**
  * crypto_cipher_encrypt - Cipher encrypt
  * @ctx: Context pointer from crypto_cipher_init()
  * @plain: Plaintext to cipher
@@ -321,21 +247,6 @@ struct crypto_cipher * fast_crypto_cipher_init(enum crypto_cipher_alg alg,
  */
 int __must_check crypto_cipher_encrypt(struct crypto_cipher *ctx,
 				       const u8 *plain, u8 *crypt, size_t len);
-
-/**
- * fast_crypto_cipher_encrypt - Cipher encrypt
- * @ctx: Context pointer from crypto_cipher_init()
- * @plain: Plaintext to cipher
- * @crypt: Resulting ciphertext
- * @len: Length of the plaintext
- * Returns: 0 on success, -1 on failure
- *
- * This function is only used with internal TLSv1 implementation
- * (CONFIG_TLS=internal). If that is not used, the crypto wrapper does not need
- * to implement this.
- */
-int __must_check fast_crypto_cipher_encrypt(struct crypto_cipher *ctx,
-				            const uint8_t *plain, uint8_t *crypt, size_t len);
 
 /**
  * crypto_cipher_decrypt - Cipher decrypt
@@ -353,21 +264,6 @@ int __must_check crypto_cipher_decrypt(struct crypto_cipher *ctx,
 				       const u8 *crypt, u8 *plain, size_t len);
 
 /**
- * fast_crypto_cipher_decrypt - Cipher decrypt
- * @ctx: Context pointer from crypto_cipher_init()
- * @crypt: Ciphertext to decrypt
- * @plain: Resulting plaintext
- * @len: Length of the cipher text
- * Returns: 0 on success, -1 on failure
- *
- * This function is only used with internal TLSv1 implementation
- * (CONFIG_TLS=internal). If that is not used, the crypto wrapper does not need
- * to implement this.
- */
-int __must_check fast_crypto_cipher_decrypt(struct crypto_cipher *ctx,
-				            const uint8_t *crypt, uint8_t *plain, size_t len);
-
-/**
  * crypto_cipher_decrypt - Free cipher context
  * @ctx: Context pointer from crypto_cipher_init()
  *
@@ -376,16 +272,6 @@ int __must_check fast_crypto_cipher_decrypt(struct crypto_cipher *ctx,
  * to implement this.
  */
 void crypto_cipher_deinit(struct crypto_cipher *ctx);
-
-/**
- * fast_crypto_cipher_decrypt - Free cipher context
- * @ctx: Context pointer from crypto_cipher_init()
- *
- * This function is only used with internal TLSv1 implementation
- * (CONFIG_TLS=internal). If that is not used, the crypto wrapper does not need
- * to implement this.
- */
-void fast_crypto_cipher_deinit(struct crypto_cipher *ctx);
 
 struct crypto_public_key;
 struct crypto_private_key;
@@ -564,31 +450,6 @@ int __must_check crypto_mod_exp(const u8 *base, size_t base_len,
 				const u8 *power, size_t power_len,
 				const u8 *modulus, size_t modulus_len,
 				u8 *result, size_t *result_len);
-
-/**
- * fast_crypto_mod_exp - Modular exponentiation of large integers
- * @base: Base integer (big endian byte array)
- * @base_len: Length of base integer in bytes
- * @power: Power integer (big endian byte array)
- * @power_len: Length of power integer in bytes
- * @modulus: Modulus integer (big endian byte array)
- * @modulus_len: Length of modulus integer in bytes
- * @result: Buffer for the result
- * @result_len: Result length (max buffer size on input, real len on output)
- * Returns: 0 on success, -1 on failure
- *
- * This function calculates result = base ^ power mod modulus. modules_len is
- * used as the maximum size of modulus buffer. It is set to the used size on
- * success.
- *
- * This function is only used with internal TLSv1 implementation
- * (CONFIG_TLS=internal). If that is not used, the crypto wrapper does not need
- * to implement this.
- */
-int __must_check fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
-				     const uint8_t *power, size_t power_len,
-				     const uint8_t *modulus, size_t modulus_len,
-				     uint8_t *result, size_t *result_len);
 
 /**
  * rc4_skip - XOR RC4 stream to given data with skip-stream-start
@@ -960,5 +821,217 @@ int crypto_ec_point_cmp(const struct crypto_ec *e,
         const struct crypto_ec_point *a,
         const struct crypto_ec_point *b);
 
+/**
+ * crypto_ec_get_publickey_buf - Write EC public key to buffer
+ * @key: crypto key
+ * @key_buf: key buffer
+ * @len: length of buffer
+ * Returns: 0 on success, non-zero otherwise
+ */
+int crypto_ec_get_publickey_buf(struct crypto_key *key, u8 *key_buf, int len);
 
+/**
+ * crypto_ec_get_group_from_key - Write EC group from key
+ * @key: crypto key
+ * Returns: EC group
+ */
+struct crypto_ec_group *crypto_ec_get_group_from_key(struct crypto_key *key);
+
+/**
+ * crypto_ec_get_private_key - Get EC private key (in bignum format)
+ * @key: crypto key
+ * Returns: Private key
+ */
+struct crypto_bignum *crypto_ec_get_private_key(struct crypto_key *key);
+
+/**
+ * crypto_ec_get_key - Read key from character stream
+ * @privkey: Private key
+ * @privkey_len: private key len
+ * Returns: Crypto key
+ */
+struct crypto_key *crypto_ec_get_key(const u8 *privkey, size_t privkey_len);
+
+/**
+ * crypto_ec_get_mbedtls_to_nist_group_id - get nist group from mbedtls internal group
+ * @id: mbedtls group
+ * Returns: NIST group
+ */
+unsigned int crypto_ec_get_mbedtls_to_nist_group_id(int id);
+
+/**
+ * crypto_ec_get_curve_id - get curve id from ec group
+ * @group: EC group
+ * Returns: curve ID
+ */
+int crypto_ec_get_curve_id(const struct crypto_ec_group *group);
+
+/**
+ * crypto_ecdh: crypto ecdh
+ * @key_own: own key
+ * @key_peer: peer key
+ * @secret: secret
+ * @secret_len: secret len
+ * Returns: 0 if success else negative value
+ */
+int crypto_ecdh(struct crypto_key *key_own, struct crypto_key *key_peer,
+		    u8 *secret, size_t *secret_len);
+
+/**
+ * crypto_ecdsa_get_sign: get crypto ecdsa signed hash
+ * @hash: signed hash
+ * @r: ecdsa r
+ * @s: ecdsa s
+ * @csign: csign
+ * @hash_len: length of hash
+ * Return: 0 if success else negative value
+ */
+int crypto_ecdsa_get_sign(unsigned char *hash,
+		const struct crypto_bignum *r, const struct crypto_bignum *s,
+		struct crypto_key *csign, int hash_len);
+
+/**
+ * crypto_edcsa_sign_verify: verify crypto ecdsa signed hash
+ * @hash: signed hash
+ * @r: ecdsa r
+ * @s: ecdsa s
+ * @csign: csign
+ * @hlen: length of hash
+ * Return: 0 if success else negative value
+ */
+int crypto_edcsa_sign_verify(const unsigned char *hash, const struct crypto_bignum *r,
+			const struct crypto_bignum *s, struct crypto_key *csign, int hlen);
+
+/**
+ * crypto_ec_parse_subpub_key: get EC key context from sub public key
+ * @p: data
+ * @len: data len
+ * Return: crypto_key
+ */
+struct crypto_key *crypto_ec_parse_subpub_key(const unsigned char *p, size_t len);
+
+/**
+ * crypto_is_ec_key: check whether a key is EC key or not
+ * @key: crypto key
+ * Return: true if key else false
+ */
+int crypto_is_ec_key(struct crypto_key *key);
+
+/**
+ * crypto_ec_gen_keypair: generate crypto ec keypair
+ * @ike_group: grpup
+ * Return: crypto key
+ */
+struct crypto_key * crypto_ec_gen_keypair(u16 ike_group);
+
+/**
+ * crypto_ec_write_pub_key: return public key in charater buffer
+ * @key: crypto key
+ * @der_len: buffer len
+ * Return: public key buffer
+ */
+int crypto_ec_write_pub_key(struct crypto_key *key, unsigned char **key_buf);
+
+/**
+ * crypto_ec_set_pubkey_point: set bignum point on ec curve
+ * @group: ec group
+ * @buf: x,y coordinate
+ * @len: length of x and y coordiate
+ * Return : crypto key
+ */
+struct crypto_key * crypto_ec_set_pubkey_point(const struct crypto_ec_group *group,
+					     const u8 *buf, size_t len);
+/**
+ * crypto_ec_free_key: free crypto key
+ * Return : None
+ */
+void crypto_ec_free_key(struct crypto_key *key);
+/**
+ * crypto_debug_print_ec_key: print ec key
+ * @title: title
+ * @key: crypto key
+ * Return: None
+ */
+void crypto_debug_print_ec_key(const char *title, struct crypto_key *key);
+
+/**
+ * crypto_ec_get_public_key: Public key from crypto key
+ * @key: crypto key
+ * Return : Public key
+ */
+struct crypto_ec_point *crypto_ec_get_public_key(struct crypto_key *key);
+
+/**
+ * crypto_get_order: free crypto key
+ * Return : None
+ */
+int crypto_get_order(struct crypto_ec_group *group, struct crypto_bignum *x);
+
+/**
+ * crypto_bignum_addmod: a = (b + c) mod d
+ * Return : 0 in success
+ */
+int crypto_bignum_addmod(struct crypto_bignum *a,
+                      struct crypto_bignum *b,
+                      struct crypto_bignum *c,
+                      struct crypto_bignum *d);
+
+/**
+ * crypto_ec_get_affine_coordinates : get affine corrdinate of ec curve
+ * @e: ec curve
+ * @pt: point
+ * @x: x coordinate
+ * @y: y coordinate
+ * Return : 0 if success
+ */
+int crypto_ec_get_affine_coordinates(struct crypto_ec *e, struct crypto_ec_point *pt,
+        struct crypto_bignum *x, struct crypto_bignum *y);
+
+/**
+ * crypto_ec_get_group_byname: get ec curve group by name
+ * @name: ec curve name
+ * Return : EC group
+ */
+struct crypto_ec_group *crypto_ec_get_group_byname(const char *name);
+
+/**
+ * crypto_key_compare: check whether two keys belong to same
+ * Return : 1 if yes else 0
+ */
+int crypto_key_compare(struct crypto_key *key1, struct crypto_key *key2);
+
+/*
+ * crypto_write_pubkey_der: get public key in der format
+ * @csign: key
+ * @key_buf: key buffer in charater format
+ * Return : len of char buffer if success
+ */
+int crypto_write_pubkey_der(struct crypto_key *csign, unsigned char **key_buf);
+
+/**
+ * crypto_free_buffer: free buffer allocated by crypto API
+ * @buf: buffer pointer
+ * Return : None
+ */
+void crypto_free_buffer(unsigned char *buf);
+
+/**
+ * @crypto_ec_get_priv_key_der: get private key in der format
+ * @key: key structure
+ * @key_data: key data in charater buffer
+ * @key_len = key lenght of charater buffer
+ * Return : 0 if success
+ */
+int crypto_ec_get_priv_key_der(struct crypto_key *key, unsigned char **key_data, int *key_len);
+
+/**
+ * crypto_bignum_to_string: get big number in ascii format
+ * @a: big number
+ * @buf: buffer in which number will written to
+ * @buflen: buffer length
+ * @padlen: padding length
+ * Return : 0 if success
+ */
+int crypto_bignum_to_string(const struct crypto_bignum *a,
+                         u8 *buf, size_t buflen, size_t padlen);
 #endif /* CRYPTO_H */

@@ -22,8 +22,6 @@
 #include "utils/wpa_debug.h"
 #include "esp_wifi_crypto_types.h"
 
-extern wps_crypto_funcs_t wps_crypto_funcs;
-
 #ifdef ALL_DH_GROUPS
 
 /* RFC 4306, B.1. Group 1 - 768 Bit MODP
@@ -1242,7 +1240,7 @@ dh_init(const struct dh_group *dh, struct wpabuf **priv)
 		return NULL;
 	}
 
-	if (wps_crypto_funcs.crypto_mod_exp && wps_crypto_funcs.crypto_mod_exp(dh->generator, dh->generator_len,
+	if (crypto_mod_exp(dh->generator, dh->generator_len,
 						wpabuf_head(*priv), wpabuf_len(*priv),
 						dh->prime, dh->prime_len, wpabuf_mhead(pv),
 						&pv_len)) {
@@ -1280,7 +1278,7 @@ dh_derive_shared(const struct wpabuf *peer_public,
 	if (shared == NULL)
 		return NULL;
 
-	if (wps_crypto_funcs.crypto_mod_exp && wps_crypto_funcs.crypto_mod_exp(wpabuf_head(peer_public), wpabuf_len(peer_public),
+	if (crypto_mod_exp(wpabuf_head(peer_public), wpabuf_len(peer_public),
 						wpabuf_head(own_private), wpabuf_len(own_private),
 						dh->prime, dh->prime_len,
 						wpabuf_mhead(shared), &shared_len)) {

@@ -16,8 +16,8 @@
 #include "os.h"
 #include "stdarg.h"
 
-#ifdef MEMLEAK_DEBUG
-static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
+#if CONFIG_LTM_FAST
+#define LTM_FAST
 #endif
 
 #ifndef CHAR_BIT
