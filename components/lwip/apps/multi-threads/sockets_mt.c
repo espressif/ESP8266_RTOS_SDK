@@ -494,14 +494,24 @@ static void lwip_sync_mt(int s, int how)
             extern void sys_arch_msleep(int ms);
 
             if (!_sock_get_select(s, SOCK_MT_SELECT_RECV | SOCK_MT_SELECT_SEND)) {
+                SOCK_MT_DEBUG(1, "lock state=%d how=%d\n", lock, how);
+
                 switch (lock) {
                     case SOCK_MT_LOCK_SEND:
-                        lwip_sync_state_mt(s);
-                        need_wait = 1;
+                        if (how == SHUT_WR || how == SHUT_RDWR) {
+                            lwip_sync_state_mt(s);
+                            need_wait = 1;
+                        } else {
+                            lock = _sock_next_lock(lock);
+                        }
                         break;
                     case SOCK_MT_LOCK_RECV:
-                        lwip_sync_recv_mt(s);
-                        need_wait = 1;
+                        if (how == SHUT_RD || how == SHUT_RDWR) {
+                            lwip_sync_recv_mt(s);
+                            need_wait = 1;
+                        } else {
+                            lock = _sock_next_lock(lock);
+                        }
                         break;
                     default :
                         break;
@@ -769,7 +779,24 @@ int lwip_fcntl(int s, int cmd, int val)
 
 int lwip_shutdown(int s, int how)
 {
-    return lwip_shutdown_esp(s, how);
+    int ret;
+    SYS_ARCH_DECL_PROTECT(lev);
+
+    if (tryget_socket(s) == NULL)
+        return -1;
+
+    SYS_ARCH_PROTECT(lev);
+    if (!_sock_is_opened(s)) {
+        SYS_ARCH_UNPROTECT(lev);
+        return -1;
+    }
+    SYS_ARCH_UNPROTECT(lev);
+
+    lwip_sync_mt(s, how);
+
+    ret = lwip_shutdown_esp(s, how);
+
+    return ret;
 }
 
 int lwip_close(int s)
