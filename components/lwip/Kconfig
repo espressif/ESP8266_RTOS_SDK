@@ -26,6 +26,12 @@ config LWIP_GLOBAL_DATA_LINK_IRAM
     help
         Link LWIP global data(.bss .data COMMON) from DRAM to IRAM.
 
+config ESP_LWIP_RECV_REST_DATA
+    bool "Receive rest data although TCP aborts"
+    default n
+    help
+        Receive rest data although TCP aborts.
+
 config TCPIP_RECVMBOX_SIZE
     int "TCPIP task receive mail box size"
     default 32

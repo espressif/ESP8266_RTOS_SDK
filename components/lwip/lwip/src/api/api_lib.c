@@ -500,6 +500,9 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
 #endif /* LWIP_TCP */
   LWIP_ERROR("netconn_recv: invalid recvmbox", sys_mbox_valid(&conn->recvmbox), return ERR_CONN;);
 
+#if ESP_LWIP_RECV_REST_DATA
+  if (!sys_mbox_valid(&conn->recvmbox)) {
+#endif
   if (ERR_IS_FATAL(conn->last_err)) {
     /* don't recv on fatal errors: this might block the application task
        waiting on recvmbox forever! */
@@ -507,6 +510,9 @@ netconn_recv_data(struct netconn *conn, void **new_buf)
        before the fatal error occurred - is that a problem? */
     return conn->last_err;
   }
+#if ESP_LWIP_RECV_REST_DATA
+  }
+#endif
 #if LWIP_TCP
 #if (LWIP_UDP || LWIP_RAW)
   if (NETCONNTYPE_GROUP(conn->type) == NETCONN_TCP)
