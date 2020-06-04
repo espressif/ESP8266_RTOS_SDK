@@ -613,6 +613,17 @@ esp_err_t bootloader_init()
 
 static esp_err_t bootloader_main()
 {
+#ifdef CONFIG_BOOTLOADER_DISABLE_JTAG_IO
+    /* Set GPIO 12-15 to be normal GPIO  */
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_GPIO12);
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13);
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14);
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDO_U, FUNC_GPIO15);
+
+    /* Set GPIO 12-15 to be input mode  */
+    GPIO_REG_WRITE(GPIO_ENABLE_W1TC_ADDRESS, BIT12 | BIT13 | BIT14 | BIT15);
+#endif
+
     uart_console_configure();
 
     esp_image_header_t fhdr;
