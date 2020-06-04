@@ -27,3 +27,14 @@ You need to disable the sniffer/promiscuous mode at first, then read/write/erase
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ESP8285 or ESP8266 + 1MB flash can use "Copy OTA Mode" for OTA, more details are in the `examples/system/ota <https://github.com/espressif/ESP8266_RTOS_SDK/tree/master/examples/system/ota/>`_.
+
+4. JTAG I/O
+^^^^^^^^^^^
+
+In some cases, if enable JTAG I/O (default options), it will cost some more current so that the hardware will cost more power.
+So if users don't use Jtag or these GPIOs directly and want to save more power, please enable this option in the menuconfig:
+
+::
+
+    "Bootloader config  --->
+        [ ] Bootloader disable JTAG I/O"
