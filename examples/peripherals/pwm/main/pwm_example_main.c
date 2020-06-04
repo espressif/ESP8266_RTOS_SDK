@@ -49,14 +49,13 @@ uint32_t duties[4] = {
 };
 
 // phase table, delay = (phase[x]/360)*PERIOD
-int16_t phase[4] = {
-    0, 0, 90, -90,
+float phase[4] = {
+    0, 0, 90.0, -90.0,
 };
 
 void app_main()
 {
     pwm_init(PWM_PERIOD, duties, 4, pin_num);
-    pwm_set_channel_invert(0x1 << 0);
     pwm_set_phases(phase);
     pwm_start();
     int16_t count = 0;

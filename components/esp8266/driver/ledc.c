@@ -51,7 +51,7 @@ typedef struct {
     uint32_t step_01duty; // 0.1 of the duty value
     uint32_t step_001duty; // 0.01 of the duty value
     uint32_t gpio_num;//gpio pins
-    int16_t phase; //init phase
+    float phase; //init phase
     int fade_time; // Time to duty by fade  
 } ledc_obj_t;
 
@@ -277,7 +277,7 @@ static void ledc_task(void* pvParameters)
 
 esp_err_t ledc_fade_func_install(int intr_alloc_flags)
 {
-    int16_t ledc_phase[LEDC_CHANNEL_MAX] = {0};
+    float ledc_phase[LEDC_CHANNEL_MAX] = {0};
     uint32_t ledc_duty[LEDC_CHANNEL_MAX] = {0};
     uint32_t ledc_gpio_num[LEDC_CHANNEL_MAX] = {0};
     

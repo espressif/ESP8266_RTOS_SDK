@@ -59,7 +59,7 @@ static const char *TAG = "pwm";
 
 typedef struct {
     uint32_t duty;  /*!< pwm duty for each channel */
-    int16_t phase;  /*!< pwm phase for each channel */
+    float phase;  /*!< pwm phase for each channel */
     uint8_t io_num; /*!< pwm io_num for each channel */
 } pwm_info_t;
 
@@ -113,13 +113,13 @@ static void pwm_phase_init(void)
 
     for (i = 0; i < pwm_obj->channel_num; i++) {
         if (-180 < pwm_obj->pwm_info[i].phase && pwm_obj->pwm_info[i].phase < 0) {
-            time_delay = 0 - ((0 - pwm_obj->pwm_info[i].phase) * pwm_obj->depth / 360);
+            time_delay = (int32_t)(0 - ((0 - pwm_obj->pwm_info[i].phase) * pwm_obj->depth / 360.0));
         } else if (pwm_obj->pwm_info[i].phase == 0) {
             continue;
-        } else if (180 > pwm_obj->pwm_info[i].phase && pwm_obj->pwm_info[i].phase > 0) {
-            time_delay = pwm_obj->pwm_info[i].phase * pwm_obj->depth / 360;
+        } else if (180 >= pwm_obj->pwm_info[i].phase && pwm_obj->pwm_info[i].phase > 0) {
+            time_delay = (int32_t)(pwm_obj->pwm_info[i].phase * pwm_obj->depth / 360.0);
         } else {
-            ESP_LOGE(TAG, "channel[%d]  phase error %d, valid ramge from (-180,180)\n", i, pwm_obj->pwm_info[i].phase);
+            ESP_LOGE(TAG, "channel[%d]  phase error %f, valid ramge from (-180,180]\n", i, pwm_obj->pwm_info[i].phase);
             continue;
         }
 
@@ -224,7 +224,7 @@ esp_err_t pwm_set_period_duties(uint32_t period, uint32_t *duties)
     return ESP_OK;
 }
 
-esp_err_t pwm_set_phase(uint8_t channel_num, int16_t phase)
+esp_err_t pwm_set_phase(uint8_t channel_num, float phase)
 {
     PWM_CHECK(channel_num < pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
 
@@ -233,7 +233,7 @@ esp_err_t pwm_set_phase(uint8_t channel_num, int16_t phase)
     return ESP_OK;
 }
 
-esp_err_t pwm_set_phases(int16_t *phases)
+esp_err_t pwm_set_phases(float *phases)
 {
     uint8_t i;
     PWM_CHECK(NULL != phases, "Pointer is empty", ESP_ERR_INVALID_ARG);
@@ -246,7 +246,7 @@ esp_err_t pwm_set_phases(int16_t *phases)
     return ESP_OK;
 }
 
-esp_err_t pwm_get_phase(uint8_t channel_num, uint16_t *phase_p)
+esp_err_t pwm_get_phase(uint8_t channel_num, float *phase_p)
 {
     PWM_CHECK(channel_num < pwm_obj->channel_num, "Channel num error", ESP_ERR_INVALID_ARG);
     PWM_CHECK(NULL != phase_p, "Pointer is empty", ESP_ERR_INVALID_ARG);
@@ -310,6 +310,7 @@ static void IRAM_ATTR pwm_timer_intr_handler(void)
         pwm_obj->this_target = AHEAD_TICKS1 + AHEAD_TICKS3;
     }
 
+    REG_WRITE(WDEVTSF0TIMER_ENA, 0);
     REG_WRITE(WDEVTSFSW0_LO, 0);
     //WARNING, pwm_obj->this_target - AHEAD_TICKS1 should be bigger than 2
     REG_WRITE(WDEVTSF0_TIMER_LO, pwm_obj->this_target - AHEAD_TICKS1);
