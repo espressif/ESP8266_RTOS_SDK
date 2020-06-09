@@ -165,6 +165,11 @@ esp_err_t esp_phy_rf_deinit(phy_rf_module_t module);
  */
 void esp_phy_load_cal_and_init(phy_rf_module_t module);
 
+/**
+ * @brief Initializing system hardware clock.
+ */
+void esp_phy_init_clk(void);
+
 #ifdef __cplusplus
 }
 #endif

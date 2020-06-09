@@ -89,6 +89,8 @@ static void user_init_entry(void *param)
 
     esp_wifi_set_rx_pbuf_mem_type(WIFI_RX_PBUF_DRAM);
 
+    esp_phy_init_clk();
+
 #if CONFIG_RESET_REASON
     esp_reset_reason_init();
 #endif
