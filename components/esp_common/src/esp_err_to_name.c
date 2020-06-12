@@ -26,7 +26,7 @@
 #include "esp_wifi.h"
 #endif
 #if __has_include("esp_wps.h")
-#include "esp_wps.h"
+#include "esp_supplicant/esp_wps.h"
 #endif
 #if __has_include("nvs.h")
 #include "nvs.h"
@@ -234,7 +234,7 @@ static const esp_err_msg_t esp_err_msg_table[] = {
 #   ifdef      ESP_ERR_WIFI_FPM_MODE
     ERR_TBL_IT(ESP_ERR_WIFI_FPM_MODE),                      /* 12307 0x3013 Have not enable fpm mode */
 #   endif
-    // components/esp8266/include/esp_wps.h
+    // components/wpa_supplicant/include/esp_supplicant/esp_wps.h
 #   ifdef      ESP_ERR_WIFI_REGISTRAR
     ERR_TBL_IT(ESP_ERR_WIFI_REGISTRAR),                     /* 12339 0x3033 WPS registrar is not supported */
 #   endif
