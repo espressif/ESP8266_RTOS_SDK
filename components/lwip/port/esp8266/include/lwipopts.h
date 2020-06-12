@@ -2243,4 +2243,5 @@ size_t memp_malloc_get_size(size_t type);
 
 #define ESP_PING                        1
 
+#define ESP_DHCP_OPTION                 CONFIG_LWIP_ESP_DHCP_OPTION
 #endif /* __LWIP_HDR_LWIPOPTS_H__ */
