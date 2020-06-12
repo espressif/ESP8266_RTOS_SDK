@@ -55,7 +55,7 @@ static const char *TAG = "pwm";
 #define AHEAD_TICKS3 2
 #define MAX_TICKS    10000000ul
 
-#define PWM_VERSION          "PWM v3.2"
+#define PWM_VERSION          "PWM v3.4"
 
 typedef struct {
     uint32_t duty;  /*!< pwm duty for each channel */
@@ -259,9 +259,7 @@ esp_err_t pwm_get_phase(uint8_t channel_num, float *phase_p)
 static void pwm_timer_enable(uint8_t enable)
 {
     if (0 == enable) {
-        ENTER_CRITICAL();
         REG_WRITE(WDEVTSF0TIMER_ENA, REG_READ(WDEVTSF0TIMER_ENA) & (~WDEV_TSF0TIMER_ENA));
-        EXIT_CRITICAL();
     } else {
         REG_WRITE(WDEVTSF0TIMER_ENA, WDEV_TSF0TIMER_ENA);
     }
@@ -310,15 +308,20 @@ static void IRAM_ATTR pwm_timer_intr_handler(void)
         pwm_obj->this_target = AHEAD_TICKS1 + AHEAD_TICKS3;
     }
 
-    REG_WRITE(WDEVTSF0TIMER_ENA, 0);
+    REG_WRITE(WDEVSLEEP0_CONF, REG_READ(WDEVSLEEP0_CONF)  & (~WDEV_TSFUP0_ENA));
+    REG_WRITE(WDEVTSF0TIMER_ENA, REG_READ(WDEVTSF0TIMER_ENA) & (~WDEV_TSF0TIMER_ENA));
     REG_WRITE(WDEVTSFSW0_LO, 0);
     //WARNING, pwm_obj->this_target - AHEAD_TICKS1 should be bigger than 2
     REG_WRITE(WDEVTSF0_TIMER_LO, pwm_obj->this_target - AHEAD_TICKS1);
     REG_WRITE(WDEVTSF0TIMER_ENA, WDEV_TSF0TIMER_ENA);
+    REG_WRITE(WDEVSLEEP0_CONF, REG_READ(WDEVSLEEP0_CONF) | WDEV_TSFUP0_ENA);
 }
 
 static void pwm_timer_start(uint32_t period)
 {
+    ENTER_CRITICAL();
+    REG_WRITE(WDEVSLEEP0_CONF, REG_READ(WDEVSLEEP0_CONF)  & (~WDEV_TSFUP0_ENA));
+    REG_WRITE(WDEVTSF0TIMER_ENA, REG_READ(WDEVTSF0TIMER_ENA) & (~WDEV_TSF0TIMER_ENA));
     // suspend all task to void timer interrupt missed
     // TODO, do we need lock interrupt here, I think interrupt context will not take 1ms long
     // time low field to 0
@@ -335,8 +338,11 @@ static void pwm_timer_start(uint32_t period)
     pwm_obj->this_target = US_TO_TICKS(period);
     // WARNING: pwm_obj->this_target should bigger than AHEAD_TICKS1
     REG_WRITE(WDEVTSF0_TIMER_LO, pwm_obj->this_target - AHEAD_TICKS1);
-    // enable timer
+    REG_WRITE(WDEVTSF0TIMER_ENA, WDEV_TSF0TIMER_ENA);
+    REG_WRITE(WDEVSLEEP0_CONF, REG_READ(WDEVSLEEP0_CONF) | WDEV_TSFUP0_ENA);
+    //enable timer
     pwm_timer_enable(1);
+    EXIT_CRITICAL();
 }
 
 static void pwm_timer_register(void (*handle)(void))
@@ -574,7 +580,9 @@ esp_err_t pwm_stop(uint32_t stop_level_mask)
 {
     int16_t i = 0;
 
+    ENTER_CRITICAL();
     pwm_timer_enable(0);
+    EXIT_CRITICAL();
     uint32_t level_set = REG_READ(PERIPHS_GPIO_BASEADDR + GPIO_OUT_ADDRESS);
 
     for (i = 0; i < pwm_obj->channel_num; i++) {
