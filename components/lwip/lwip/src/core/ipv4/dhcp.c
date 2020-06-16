@@ -209,6 +209,12 @@ static void dhcp_option_hostname(struct dhcp *dhcp, struct netif *netif);
 /* always add the DHCP options trailer to end and pad */
 static void dhcp_option_trailer(struct dhcp *dhcp);
 
+#if ESP_DHCP_OPTION
+/* set dhcp option61 */
+static void dhcp_option_clientid(struct dhcp *dhcp, struct netif *netif);
+/* set dhcp option60 */
+static void dhcp_option_vendor(struct dhcp *dhcp, struct netif *netif);
+#endif
 /** Ensure DHCP PCB is allocated and bound */
 static err_t
 dhcp_inc_pcb_refcount(void)
@@ -362,6 +368,10 @@ dhcp_select(struct netif *netif)
   /* create and initialize the DHCP message header */
   result = dhcp_create_msg(netif, dhcp, DHCP_REQUEST);
   if (result == ERR_OK) {
+#if ESP_DHCP_OPTION
+    dhcp_option_clientid(dhcp, netif);
+    dhcp_option_vendor(dhcp, netif);
+#endif
     dhcp_option(dhcp, DHCP_OPTION_MAX_MSG_SIZE, DHCP_OPTION_MAX_MSG_SIZE_LEN);
     dhcp_option_short(dhcp, DHCP_MAX_MSG_LEN(netif));
 
@@ -978,6 +988,10 @@ dhcp_discover(struct netif *netif)
   if (result == ERR_OK) {
     LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_discover: making request\n"));
 
+#if ESP_DHCP_OPTION
+    dhcp_option_clientid(dhcp, netif);
+    dhcp_option_vendor(dhcp, netif);
+#endif
     dhcp_option(dhcp, DHCP_OPTION_MAX_MSG_SIZE, DHCP_OPTION_MAX_MSG_SIZE_LEN);
     dhcp_option_short(dhcp, DHCP_MAX_MSG_LEN(netif));
 
@@ -985,6 +999,11 @@ dhcp_discover(struct netif *netif)
     for (i = 0; i < LWIP_ARRAYSIZE(dhcp_discover_request_options); i++) {
       dhcp_option_byte(dhcp, dhcp_discover_request_options[i]);
     }
+
+#if LWIP_NETIF_HOSTNAME
+    dhcp_option_hostname(dhcp, netif);
+#endif /* LWIP_NETIF_HOSTNAME */
+
     dhcp_option_trailer(dhcp);
 
     LWIP_DEBUGF(DHCP_DEBUG | LWIP_DBG_TRACE, ("dhcp_discover: realloc()ing\n"));
@@ -1142,6 +1161,10 @@ dhcp_renew(struct netif *netif)
   /* create and initialize the DHCP message header */
   result = dhcp_create_msg(netif, dhcp, DHCP_REQUEST);
   if (result == ERR_OK) {
+#if ESP_DHCP_OPTION
+    dhcp_option_clientid(dhcp, netif);
+    dhcp_option_vendor(dhcp, netif);
+#endif
     dhcp_option(dhcp, DHCP_OPTION_MAX_MSG_SIZE, DHCP_OPTION_MAX_MSG_SIZE_LEN);
     dhcp_option_short(dhcp, DHCP_MAX_MSG_LEN(netif));
 
@@ -1194,6 +1217,10 @@ dhcp_rebind(struct netif *netif)
   /* create and initialize the DHCP message header */
   result = dhcp_create_msg(netif, dhcp, DHCP_REQUEST);
   if (result == ERR_OK) {
+#if ESP_DHCP_OPTION
+    dhcp_option_clientid(dhcp, netif);
+    dhcp_option_vendor(dhcp, netif);
+#endif
     dhcp_option(dhcp, DHCP_OPTION_MAX_MSG_SIZE, DHCP_OPTION_MAX_MSG_SIZE_LEN);
     dhcp_option_short(dhcp, DHCP_MAX_MSG_LEN(netif));
 
@@ -1244,6 +1271,10 @@ dhcp_reboot(struct netif *netif)
   /* create and initialize the DHCP message header */
   result = dhcp_create_msg(netif, dhcp, DHCP_REQUEST);
   if (result == ERR_OK) {
+#if ESP_DHCP_OPTION
+    dhcp_option_clientid(dhcp, netif);
+    dhcp_option_vendor(dhcp, netif);
+#endif
     dhcp_option(dhcp, DHCP_OPTION_MAX_MSG_SIZE, DHCP_OPTION_MAX_MSG_SIZE_LEN);
     dhcp_option_short(dhcp, DHCP_MAX_MSG_LEN_MIN_REQUIRED);
 
@@ -1254,6 +1285,10 @@ dhcp_reboot(struct netif *netif)
     for (i = 0; i < LWIP_ARRAYSIZE(dhcp_discover_request_options); i++) {
       dhcp_option_byte(dhcp, dhcp_discover_request_options[i]);
     }
+
+#if LWIP_NETIF_HOSTNAME
+    dhcp_option_hostname(dhcp, netif);
+#endif /* LWIP_NETIF_HOSTNAME */
 
     dhcp_option_trailer(dhcp);
 
@@ -1451,6 +1486,76 @@ dhcp_option_hostname(struct dhcp *dhcp, struct netif *netif)
   }
 }
 #endif /* LWIP_NETIF_HOSTNAME */
+
+#if ESP_DHCP_OPTION
+static void dhcp_option_clientid(struct dhcp *dhcp, struct netif *netif)
+{
+  if (netif) {
+    u8_t id_len = NETIF_MAX_HWADDR_LEN + 1;
+    dhcp_option(dhcp, DHCP_OPTION_CLIENT_ID, id_len);
+    dhcp_option_byte(dhcp, DHCP_HTYPE_ETH);
+    for (u8_t i = 0; i < NETIF_MAX_HWADDR_LEN; i++) {
+      dhcp_option_byte(dhcp, netif->hwaddr[i]);
+    }
+  }
+}
+
+static u8_t vendor_class_len = 0;
+static char *vendor_class_buf = NULL;
+err_t dhcp_set_vendor_class_identifier(u8_t len, char *str)
+{
+  if (len == 0 || str == NULL) {
+    return ERR_ARG;
+  }
+
+  if (vendor_class_buf) {
+    mem_free(vendor_class_buf);
+    vendor_class_buf = NULL;
+  }
+
+  vendor_class_buf = (char *)mem_malloc(len + 1);
+
+  if (vendor_class_buf == NULL) {
+    return ERR_MEM;
+  }
+
+  vendor_class_len = len;
+  memcpy(vendor_class_buf, str, len);
+  return ERR_OK;
+}
+
+static void dhcp_option_vendor(struct dhcp *dhcp, struct netif *netif)
+{
+  const char *p = NULL;
+  u8_t len = 0;
+  /* Shrink len to available bytes (need 2 bytes for OPTION_HOSTNAME
+    and 1 byte for trailer) */
+  size_t available = DHCP_OPTIONS_LEN - dhcp->options_out_len - 3;
+  if (vendor_class_buf && vendor_class_len) {
+    p = vendor_class_buf;
+    LWIP_ASSERT("DHCP: vendor_class_len is too long!", vendor_class_len <= available);
+    len = vendor_class_len;
+  } else { //use hostname as vendor
+#if LWIP_NETIF_HOSTNAME
+    if (netif->hostname != NULL) {
+      size_t namelen = strlen(netif->hostname);
+      if ((namelen > 0) && (namelen < 0xFF)) {
+        p = netif->hostname;
+        LWIP_ASSERT("DHCP: hostname is too long!", namelen <= available);
+        len = (u8_t) namelen;
+      }
+    }
+#endif
+  }
+
+  if (p) {
+    dhcp_option(dhcp, DHCP_OPTION_US, (u8_t)len);
+    while (len--) {
+      dhcp_option_byte(dhcp, *p++);
+    }
+  }
+}
+#endif
 
 /**
  * Extract the DHCP message and the DHCP options.
