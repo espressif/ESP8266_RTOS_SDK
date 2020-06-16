@@ -205,7 +205,7 @@ static esp_err_t load_partitions()
 #endif
 
         // it->label may not be zero-terminated
-        strncpy(item->info.label, (const char*) it->label, sizeof(it->label));
+        strncpy(item->info.label, (const char*) it->label, sizeof(item->info.label));
         item->info.label[sizeof(it->label)] = 0;
         // add it to the list
         if (last == NULL) {

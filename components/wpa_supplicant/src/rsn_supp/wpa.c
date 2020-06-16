@@ -2004,9 +2004,7 @@ void ICACHE_FLASH_ATTR wpa_register(char* payload, WPA_SEND_FUNC snd_func,
     if (sm->pmksa == NULL) {
         wpa_printf(MSG_ERROR,
                 "RSN: PMKSA cache initialization failed");
-        return false;
     }
-    return true;
 }
 
 void wpa_set_profile(u32 wpa_proto, u8 auth_mode)
