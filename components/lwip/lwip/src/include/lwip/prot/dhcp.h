@@ -175,6 +175,9 @@ typedef enum {
 #define DHCP_OVERLOAD_SNAME         2
 #define DHCP_OVERLOAD_SNAME_FILE    3
 
+#if ESP_DHCP_OPTION
+err_t dhcp_set_vendor_class_identifier(u8_t len, char *str);
+#endif
 
 #ifdef __cplusplus
 }

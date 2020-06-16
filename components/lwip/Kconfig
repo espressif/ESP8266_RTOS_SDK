@@ -260,6 +260,12 @@ config LWIP_DHCP_DISCOVER_RETRANSMISSION_INTERVAL
     help
         Set time interval of retransmissions of DHCP discover.
 
+config LWIP_ESP_DHCP_OPTION
+    bool "Enable DHCP option60 and option61 in discovery and request state"
+    default n
+    help
+        Maybe some routers need add those option to get IP address.
+        Enable this config to add option60 and option61 in discovery and request state
 endmenu #DHCP
 
 menuconfig LWIP_AUTOIP
