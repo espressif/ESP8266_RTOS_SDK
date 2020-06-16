@@ -14,9 +14,10 @@ typedef struct outbox_item {
     int len;
     int msg_id;
     int msg_type;
+    int msg_qos;
     int tick;
     int retry_count;
-    bool pending;
+    pending_state_t pending;
     STAILQ_ENTRY(outbox_item) next;
 } outbox_item_t;
 
@@ -31,22 +32,27 @@ outbox_handle_t outbox_init()
     return outbox;
 }
 
-outbox_item_handle_t outbox_enqueue(outbox_handle_t outbox, uint8_t *data, int len, int msg_id, int msg_type, int tick)
+outbox_item_handle_t outbox_enqueue(outbox_handle_t outbox, outbox_message_handle_t message, int tick)
 {
     outbox_item_handle_t item = calloc(1, sizeof(outbox_item_t));
     ESP_MEM_CHECK(TAG, item, return NULL);
-    item->msg_id = msg_id;
-    item->msg_type = msg_type;
+    item->msg_id = message->msg_id;
+    item->msg_type = message->msg_type;
+    item->msg_qos = message->msg_qos;
     item->tick = tick;
-    item->len = len;
-    item->buffer = malloc(len);
+    item->len =  message->len;
+    item->pending = QUEUED;
+    item->buffer = malloc(message->len + message->remaining_len);
     ESP_MEM_CHECK(TAG, item->buffer, {
         free(item);
         return NULL;
     });
-    memcpy(item->buffer, data, len);
+    memcpy(item->buffer, message->data, message->len);
+    if (message->remaining_data) {
+        memcpy(item->buffer+message->len, message->remaining_data, message->remaining_len);
+    }
     STAILQ_INSERT_TAIL(outbox, item, next);
-    ESP_LOGD(TAG, "ENQUEUE msgid=%d, msg_type=%d, len=%d, size=%d", msg_id, msg_type, len, outbox_get_size(outbox));
+    ESP_LOGD(TAG, "ENQUEUE msgid=%d, msg_type=%d, len=%d, size=%d", message->msg_id, message->msg_type, message->len + message->remaining_len, outbox_get_size(outbox));
     return item;
 }
 
@@ -61,21 +67,34 @@ outbox_item_handle_t outbox_get(outbox_handle_t outbox, int msg_id)
     return NULL;
 }
 
-outbox_item_handle_t outbox_dequeue(outbox_handle_t outbox)
+outbox_item_handle_t outbox_dequeue(outbox_handle_t outbox, pending_state_t pending)
 {
     outbox_item_handle_t item;
     STAILQ_FOREACH(item, outbox, next) {
-        if (!item->pending) {
+        if (item->pending == pending) {
             return item;
         }
     }
     return NULL;
 }
+
+uint8_t* outbox_item_get_data(outbox_item_handle_t item,  size_t *len, uint16_t *msg_id, int *msg_type, int *qos)
+{
+    if (item) {
+        *len = item->len;
+        *msg_id = item->msg_id;
+        *msg_type = item->msg_type;
+        *qos = item->msg_qos;
+        return (uint8_t*)item->buffer;
+    }
+    return NULL;
+}
+
 esp_err_t outbox_delete(outbox_handle_t outbox, int msg_id, int msg_type)
 {
     outbox_item_handle_t item, tmp;
     STAILQ_FOREACH_SAFE(item, outbox, next, tmp) {
-        if (item->msg_id == msg_id && item->msg_type == msg_type) {
+        if (item->msg_id == msg_id && (0xFF&(item->msg_type)) == msg_type) {
             STAILQ_REMOVE(outbox, item, outbox_item, next);
             free(item->buffer);
             free(item);
@@ -99,11 +118,11 @@ esp_err_t outbox_delete_msgid(outbox_handle_t outbox, int msg_id)
     }
     return ESP_OK;
 }
-esp_err_t outbox_set_pending(outbox_handle_t outbox, int msg_id)
+esp_err_t outbox_set_pending(outbox_handle_t outbox, int msg_id, pending_state_t pending)
 {
     outbox_item_handle_t item = outbox_get(outbox, msg_id);
     if (item) {
-        item->pending = true;
+        item->pending = pending;
         return ESP_OK;
     }
     return ESP_FAIL;
@@ -150,7 +169,7 @@ int outbox_get_size(outbox_handle_t outbox)
 esp_err_t outbox_cleanup(outbox_handle_t outbox, int max_size)
 {
     while(outbox_get_size(outbox) > max_size) {
-        outbox_item_handle_t item = outbox_dequeue(outbox);
+        outbox_item_handle_t item = outbox_dequeue(outbox, CONFIRMED);
         if (item == NULL) {
             return ESP_FAIL;
         }

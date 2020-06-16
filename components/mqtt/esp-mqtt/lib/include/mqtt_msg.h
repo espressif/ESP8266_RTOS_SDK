@@ -72,7 +72,8 @@ typedef struct mqtt_message
 {
     uint8_t* data;
     uint32_t length;
-
+    uint32_t fragmented_msg_total_length;       /*!< total len of fragmented messages (zero for all other messages) */
+    uint32_t fragmented_msg_data_offset;        /*!< data offset of fragmented messages (zero for all other messages) */
 } mqtt_message_t;
 
 typedef struct mqtt_connection
@@ -105,6 +106,7 @@ static inline int mqtt_get_type(uint8_t* buffer) { return (buffer[0] & 0xf0) >> 
 static inline int mqtt_get_connect_session_present(uint8_t* buffer) { return buffer[2] & 0x01; }
 static inline int mqtt_get_connect_return_code(uint8_t* buffer) { return buffer[3]; }
 static inline int mqtt_get_dup(uint8_t* buffer) { return (buffer[0] & 0x08) >> 3; }
+static inline void mqtt_set_dup(uint8_t* buffer) { buffer[0] |= 0x08; }
 static inline int mqtt_get_qos(uint8_t* buffer) { return (buffer[0] & 0x06) >> 1; }
 static inline int mqtt_get_retain(uint8_t* buffer) { return (buffer[0] & 0x01); }
 
