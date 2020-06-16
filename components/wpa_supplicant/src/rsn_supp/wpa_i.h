@@ -163,6 +163,8 @@ void wpa_register(char * payload, WPA_SEND_FUNC snd_func, \
 
 void eapol_txcb(void *eb);
 
+void wpa_sm_deinit(void);
+
 void wpa_set_profile(u32 wpa_proto, u8 auth_mode);
 
 int wpa_set_bss(char *macddr, char * bssid, u8 pairwise_cipher, u8 group_cipher, char *passphrase, u8 *ssid, size_t ssid_len);

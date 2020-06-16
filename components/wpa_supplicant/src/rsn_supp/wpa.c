@@ -2009,6 +2009,15 @@ void ICACHE_FLASH_ATTR wpa_register(char* payload, WPA_SEND_FUNC snd_func,
     return true;
 }
 
+/** 
+ *  * wpa_sm_deinit - Deinitialize WPA state machine
+ *    */ 
+void wpa_sm_deinit(void)
+{
+    struct wpa_sm *sm = &gWpaSm;
+    pmksa_cache_deinit(sm->pmksa);
+}
+
 void wpa_set_profile(u32 wpa_proto, u8 auth_mode)
 {
     struct wpa_sm *sm = &gWpaSm;
