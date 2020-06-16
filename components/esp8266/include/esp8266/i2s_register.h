@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _SLC_REGISTER_H_
-#define _SLC_REGISTER_H_
+#ifndef _I2S_REGISTER_H_
+#define _I2S_REGISTER_H_
 
 #include "eagle_soc.h"
 
