@@ -223,6 +223,12 @@ config LWIP_DHCPS_MAX_STATION_NUM
         After this number is exceeded, DHCP server removes of the oldest device
         from it's address pool, without notification.
 
+config LWIP_ESP_DHCP_OPTION
+    bool "Enable DHCP option60 and option61 in discovery and request state"
+    default n
+    help
+        Maybe some routers need add those option to get IP address.
+        Enable this config to add option60 and option61 in discovery and request state
 endmenu #DHCP
 
 menuconfig LWIP_AUTOIP
