@@ -2226,4 +2226,5 @@ void *memp_malloc_ll(size_t type);
 #endif
 #endif
 
+#define ESP_DHCP_OPTION                 CONFIG_LWIP_ESP_DHCP_OPTION
 #endif /* __LWIP_HDR_LWIPOPTS_H__ */
