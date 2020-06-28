@@ -1,8 +1,8 @@
 gwen:
     core:       fd9bdea
-    net80211:   dcfa947
+    net80211:   84c16b2
     pp:         fd9bdea
-    wpa:        fd9bdea
+    wpa:        84c16b2
     espnow:     fd9bdea
     wps:        fd9bdea
 
