@@ -267,24 +267,36 @@ void esp_dport_close_nmi(void)
 void IRAM_ATTR vPortETSIntrLock(void)
 {
     if (NMIIrqIsOn == 0) {
+        uint32_t regval = REG_READ(NMI_INT_ENABLE_REG);
+
+        REG_WRITE(NMI_INT_ENABLE_REG, 0);
+
         vPortEnterCritical();
         if (!ESP_NMI_IS_CLOSED()) {
             do {
                 REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);
             } while(REG_READ(INT_ENA_WDEV) != WDEV_TSF0_REACH_INT);
         }
+
+        REG_WRITE(NMI_INT_ENABLE_REG, regval);
     }
 }
 
 void IRAM_ATTR vPortETSIntrUnlock(void)
 {
     if (NMIIrqIsOn == 0) {
+        uint32_t regval = REG_READ(NMI_INT_ENABLE_REG);
+
+        REG_WRITE(NMI_INT_ENABLE_REG, 0);
+
         if (!ESP_NMI_IS_CLOSED()) {
             extern uint32_t WDEV_INTEREST_EVENT;
 
             REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);
         }
         vPortExitCritical();
+
+        REG_WRITE(NMI_INT_ENABLE_REG, regval);
     }
 }
 
