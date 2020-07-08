@@ -131,6 +131,7 @@
 //}}
 
 //Interrupt remap control registers define{{
+#define NMI_INT_ENABLE_REG          (PERIPHS_DPORT_BASEADDR)
 #define EDGE_INT_ENABLE_REG         (PERIPHS_DPORT_BASEADDR + 0x04)
 #define WDT_EDGE_INT_ENABLE()       SET_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT0)
 #define TM1_EDGE_INT_ENABLE()       SET_PERI_REG_MASK(EDGE_INT_ENABLE_REG, BIT1)
