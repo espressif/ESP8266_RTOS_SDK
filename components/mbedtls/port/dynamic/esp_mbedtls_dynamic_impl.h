@@ -33,9 +33,6 @@
  \
     if ((_ret = _fn) != 0) { \
         ESP_LOGV(TAG, "\"%s\" result is -0x%x", # _fn, -_ret); \
-        if (_ret == MBEDTLS_ERR_SSL_CONN_EOF) {\
-            return 0; \
-        } \
         TRACE_CHECK(_fn, "fail"); \
         return _ret; \
     } \
