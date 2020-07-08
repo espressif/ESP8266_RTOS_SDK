@@ -86,6 +86,15 @@ void wifi_init_sta(void)
             .password = EXAMPLE_ESP_WIFI_PASS
         },
     };
+
+    /* Setting a password implies station will connect to all security modes including WEP/WPA.
+        * However these modes are deprecated and not advisable to be used. Incase your Access point
+        * doesn't support WPA2, these mode can be enabled by commenting below line */
+
+    if (strlen((char *)wifi_config.sta.password)) {
+        wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    }
+
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
     ESP_ERROR_CHECK(esp_wifi_start() );
