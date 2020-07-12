@@ -161,12 +161,15 @@ config ESPTOOLPY_BEFORE_RESET
     bool "Reset to bootloader"
 config ESPTOOLPY_BEFORE_NORESET
     bool "No reset"
+config ESPTOOLPY_BEFORE_NORESETRTS
+    bool "No reset RTS"
 endchoice
 
 config ESPTOOLPY_BEFORE
     string
     default "default_reset" if ESPTOOLPY_BEFORE_RESET
     default "no_reset" if ESPTOOLPY_BEFORE_NORESET
+    default "no_reset_rts" if ESPTOOLPY_BEFORE_NORESETRTS
 
 choice ESPTOOLPY_AFTER
     prompt "After flashing"
