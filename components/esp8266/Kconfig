@@ -2,7 +2,7 @@ menu "ESP8266-specific"
 
 choice ESP8266_DEFAULT_CPU_FREQ_MHZ
     prompt "CPU frequency"
-    default ESP8266_DEFAULT_CPU_FREQ_80
+    default ESP8266_DEFAULT_CPU_FREQ_160
     help
         CPU frequency to be set on application startup.
 
