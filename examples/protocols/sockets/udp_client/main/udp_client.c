@@ -57,6 +57,7 @@ static void udp_client_task(void *pvParameters)
         inet6_aton(HOST_IP_ADDR, &destAddr.sin6_addr);
         destAddr.sin6_family = AF_INET6;
         destAddr.sin6_port = htons(PORT);
+        destAddr.sin6_scope_id = tcpip_adapter_get_netif_index(TCPIP_ADAPTER_IF_STA);
         addr_family = AF_INET6;
         ip_protocol = IPPROTO_IPV6;
         inet6_ntoa_r(destAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);

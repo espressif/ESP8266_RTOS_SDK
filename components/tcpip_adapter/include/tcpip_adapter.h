@@ -168,6 +168,7 @@ typedef enum{
 } tcpip_adapter_option_mode_t;
 
 typedef enum{
+    TCPIP_ADAPTER_SUBNET_MASK                   = 1,    /**< network mask */
     TCPIP_ADAPTER_DOMAIN_NAME_SERVER            = 6,    /**< domain name server */
     TCPIP_ADAPTER_ROUTER_SOLICITATION_ADDRESS   = 32,   /**< solicitation router address */
     TCPIP_ADAPTER_REQUESTED_IP_ADDRESS          = 50,   /**< request IP address pool */

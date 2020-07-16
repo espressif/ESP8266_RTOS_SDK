@@ -1,4 +1,5 @@
-// Copyright 2015-2019 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2020 Francesco Giancane <francesco.giancane@accenture.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef _NETINET_TCP_H 
+#define _NETINET_TCP_H 
 
-#ifndef _NETTEST_LWIP_IF_H_
-#define _NETTEST_LWIP_IF_H_
+#include "lwip/tcp.h"
 
-#include "lwip/err.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-err_t nettestif_init(struct netif *netif);
-
-void nettestif_input(void *buffer, u16_t len);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /*  _NETTEST_LWIP_IF_H_ */
+#endif /* _NETINET_TCP_H  */
