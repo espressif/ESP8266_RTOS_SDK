@@ -1,7 +1,7 @@
 gwen:
     core:       dd5b2b4
-    net80211:   dd5b2b4
-    pp:         dd5b2b4
+    net80211:   f0e36a6
+    pp:         f0e36a6
     wpa:        dd5b2b4
     espnow:     dd5b2b4
     wps:        dd5b2b4
