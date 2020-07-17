@@ -2383,6 +2383,16 @@ typedef struct xTASK_SNAPSHOT
  */
 UBaseType_t uxTaskGetSnapshotAll( TaskSnapshot_t * const pxTaskSnapshotArray, const UBaseType_t uxArraySize, UBaseType_t * const pxTcbSz );
 
+/**
+ * @brief Modify task stack size dynamically.
+ *
+ * @param xTask task handle which created by xTaskCreate.
+ * @param newStackDepth task' new stack size.
+ *
+ * @return pdPASS if success or others if failed
+ */
+BaseType_t vTaskModifyStackDepth(TaskHandle_t xTask, const configSTACK_DEPTH_TYPE newStackDepth);
+
 #ifdef __cplusplus
 }
 #endif

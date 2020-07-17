@@ -146,6 +146,16 @@ void vPortEndScheduler( void ) PRIVILEGED_FUNCTION;
  */
 int xPortInIsrContext(void);
 
+/**
+ * @brief Copy thread context from old thread stack to new thread stack and
+ *        then reset the SP. 
+ * 
+ * @param newStackTop new thread stack pointer
+ * @param oldStackTop old thread stack pointer
+ * @param stackSize   stack size
+ */
+void vPortInitContextFromOldStack(StackType_t *newStackTop, StackType_t *oldStackTop, UBaseType_t stackSize);
+
 #ifdef __cplusplus
 }
 #endif
