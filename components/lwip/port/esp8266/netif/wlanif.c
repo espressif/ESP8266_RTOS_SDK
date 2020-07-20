@@ -319,12 +319,17 @@ static void low_level_init(struct netif* netif)
     /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
     netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
 
+#if ESP_LWIP
 #if LWIP_IGMP
     netif->flags |= NETIF_FLAG_IGMP;
 #endif
-#if LWIP_IPV6_AUTOCONFIG
-    netif->ip6_autoconfig_enabled = 1;
-#endif /* LWIP_IPV6_AUTOCONFIG */
+#endif
+
+#if ESP_IPV6
+#if LWIP_IPV6 && LWIP_IPV6_MLD
+  netif->flags |= NETIF_FLAG_MLD6;
+#endif
+#endif
     /* Do whatever else is needed to initialize interface. */
 }
 
@@ -593,7 +598,9 @@ int8_t ethernetif_init(struct netif* netif)
   /* Initialize interface hostname */
 
 #if ESP_LWIP
-  netif->hostname = CONFIG_LWIP_LOCAL_HOSTNAME;
+  if (tcpip_adapter_get_hostname(tcpip_adapter_get_esp_if(netif), &netif->hostname) != ESP_OK) {
+    netif->hostname = CONFIG_LWIP_LOCAL_HOSTNAME;
+  }
 #else
   netif->hostname = "lwip";
 #endif

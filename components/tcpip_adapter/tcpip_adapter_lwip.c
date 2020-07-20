@@ -719,6 +719,7 @@ esp_err_t tcpip_adapter_dhcps_option(tcpip_adapter_option_mode_t opt_op, tcpip_a
             *(uint32_t *)opt_val = *(uint32_t *)opt_info;
             break;
         }
+        case SUBNET_MASK:
         case REQUESTED_IP_ADDRESS: {
             memcpy(opt_val, opt_info, opt_len);
             break;
@@ -754,6 +755,10 @@ esp_err_t tcpip_adapter_dhcps_option(tcpip_adapter_option_mode_t opt_op, tcpip_a
             } else {
                 *(uint32_t *)opt_info = DHCPS_LEASE_TIME_DEF;
             }
+            break;
+        }
+        case SUBNET_MASK: {
+            memcpy(opt_info, opt_val, opt_len);
             break;
         }
         case REQUESTED_IP_ADDRESS: {
@@ -1226,11 +1231,11 @@ esp_err_t tcpip_adapter_get_hostname(tcpip_adapter_if_t tcpip_if, const char **h
     }
 
     p_netif = esp_netif[tcpip_if];
-    if (p_netif != NULL) {
+    if (p_netif != NULL && p_netif->hostname != NULL) {
         *hostname = p_netif->hostname;
         return ESP_OK;
     } else {
-        return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
+        return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;
     }
 #else
     return ESP_ERR_TCPIP_ADAPTER_IF_NOT_READY;

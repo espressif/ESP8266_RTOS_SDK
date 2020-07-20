@@ -47,6 +47,7 @@ set(srcs
     "lwip/src/core/ipv4/icmp.c"
     "lwip/src/core/ipv4/igmp.c"
     "lwip/src/core/ipv4/ip4.c"
+    "lwip/src/core/ipv4/ip4_napt.c"
     "lwip/src/core/ipv4/ip4_addr.c"
     "lwip/src/core/ipv4/ip4_frag.c"
     "lwip/src/core/ipv6/dhcp6.c"
@@ -92,10 +93,6 @@ set(srcs
     "port/${target}/netif/dhcp_state.c"
     "port/${target}/netif/wlanif.c")
 
-if(CONFIG_IDF_TARGET_ESP32)
-    list(APPEND srcs
-        "port/${target}/netif/nettestif.c")
-endif()
 
 if(CONFIG_LWIP_PPP_SUPPORT)
     list(APPEND srcs

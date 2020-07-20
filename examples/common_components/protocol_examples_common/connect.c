@@ -27,6 +27,11 @@
 
 #ifdef CONFIG_EXAMPLE_CONNECT_IPV6
 #define CONNECTED_BITS (GOT_IPV4_BIT | GOT_IPV6_BIT)
+#if defined(CONFIG_EXAMPLE_CONNECT_IPV6_PREF_LOCAL_LINK)
+#define EXAMPLE_CONNECT_PREFERRED_IPV6_TYPE 0
+#elif defined(CONFIG_EXAMPLE_CONNECT_IPV6_PREF_GLOBAL)
+#define EXAMPLE_CONNECT_PREFERRED_IPV6_TYPE 1
+#endif
 #else
 #define CONNECTED_BITS (GOT_IPV4_BIT)
 #endif
@@ -78,7 +83,13 @@ static void on_got_ipv6(void *arg, esp_event_base_t event_base,
 {
     ip_event_got_ip6_t *event = (ip_event_got_ip6_t *)event_data;
     memcpy(&s_ipv6_addr, &event->ip6_info.ip, sizeof(s_ipv6_addr));
-    xEventGroupSetBits(s_connect_event_group, GOT_IPV6_BIT);
+    if (EXAMPLE_CONNECT_PREFERRED_IPV6_TYPE) {
+        if (ip6_addr_isglobal(&s_ipv6_addr)) {
+            xEventGroupSetBits(s_connect_event_group, GOT_IPV6_BIT);
+        }
+    } else {
+        xEventGroupSetBits(s_connect_event_group, GOT_IPV6_BIT);
+    }
 }
 
 #endif // CONFIG_EXAMPLE_CONNECT_IPV6
