@@ -392,7 +392,7 @@ menu "LWIP"
 
         config LWIP_TCP_SND_BUF_DEFAULT
             int "Default send buffer size"
-            default 5744  # 4 * default MSS
+            default 2880  # 2 * default MSS
             range 2440 65535 if !LWIP_WND_SCALE
             range 2440 1024000 if LWIP_WND_SCALE
             help
@@ -402,14 +402,14 @@ menu "LWIP"
                 with lwip_setsockopt(s, TCP_SNDBUF, ...).
 
                 This value must be at least 2x the MSS size, and the default
-                is 4x the default MSS size.
+                is 2x the default MSS size.
 
                 Setting a smaller default SNDBUF size can save some RAM, but
                 will decrease performance.
 
         config LWIP_TCP_WND_DEFAULT
             int "Default receive window size"
-            default 5744 # 4 * default MSS
+            default 5760 # 4 * default MSS
             range 2440 65535 if !LWIP_WND_SCALE
             range 2440 1024000 if LWIP_WND_SCALE
             help
@@ -429,8 +429,8 @@ menu "LWIP"
             help
                 Set TCP receive mail box size. Generally bigger value means higher throughput
                 but more memory. The recommended value is: LWIP_TCP_WND_DEFAULT/TCP_MSS + 2, e.g. if
-                LWIP_TCP_WND_DEFAULT=14360, TCP_MSS=1436, then the recommended receive mail box size is
-                (14360/1436 + 2) = 12.
+                LWIP_TCP_WND_DEFAULT=14440, TCP_MSS=1440, then the recommended receive mail box size is
+                (14440/1440 + 2) = 12.
 
                 TCP receive mail box is a per socket mail box, when the application receives packets
                 from TCP socket, LWIP core firstly posts the packets to TCP receive mail box and the
