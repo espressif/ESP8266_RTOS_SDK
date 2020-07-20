@@ -191,6 +191,42 @@ void esp_wifi_set_pm_recv_multi_data(bool enable);
   */
 bool esp_wifi_get_pm_recv_multi_data(void);
 
+/**
+  * @brief     Set max beacon early time.
+  *
+  * @param     max_bcn_early_ms  max beacon early time(2~15ms), default 4ms.
+  */
+void esp_wifi_set_pm_max_bcn_early(uint8_t max_bcn_early_ms);
+
+/**
+  * @brief     get max beacon early time.
+  */
+uint8_t esp_wifi_get_pm_max_bcn_early(void);
+
+/**
+  * @brief     Set max beacon timeout time.
+  *
+  * @param     max_bcn_early_ms  max beacon timeout time(12~32ms), default 24ms.
+  */
+void esp_wifi_set_pm_max_bcn_timeout(uint8_t max_bcn_timeout_ms);
+
+/**
+  * @brief     get max beacon timeout time.
+  */
+uint8_t esp_wifi_get_pm_max_bcn_timeout(void);
+
+/**
+  * @brief     Set max wait tx rx time.
+  *
+  * @param     max_bcn_early_ms  max wait tx rx time(10~2000ms), default 20ms.
+  */
+void esp_wifi_set_pm_wait_tx_rx_time(uint32_t wait_tx_rx_time_ms);
+
+/**
+  * @brief     get max wait tx rx time.
+  */
+uint32_t esp_wifi_get_pm_wait_tx_rx_time();
+
 #ifdef __cplusplus
 }
 #endif

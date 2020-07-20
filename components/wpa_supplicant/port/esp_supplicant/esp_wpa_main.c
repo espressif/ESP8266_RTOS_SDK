@@ -144,6 +144,11 @@ void ICACHE_FLASH_ATTR wpa_sta_init()
                  wpa_config_assoc_ie, wpa_install_key, wpa_get_key, wpa_deauthenticate, wpa_neg_complete);
 }
 
+void wpa_sta_deinit(void)
+{
+    wpa_sm_deinit();
+}
+
 void  wpa_sta_connect(uint8_t *bssid)
 {
     wpa_config_profile();

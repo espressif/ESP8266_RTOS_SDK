@@ -146,7 +146,7 @@ static inline uint32_t sleep_rtc_ticks(pm_soc_clk_t *clk)
 
 static inline void update_soc_clk(pm_soc_clk_t *clk)
 {
-    extern uint32_t WdevTimOffSet;
+    extern uint64_t WdevTimOffSet;
 
     uint32_t slept_us;
 

@@ -394,3 +394,31 @@ int phy_printf(const char *fmt, ...)
 {
     return 0;
 }
+
+void esp_phy_init_clk(void)
+{
+    uint8_t buf[128];
+    const esp_phy_init_data_t *init_data;
+#ifdef CONFIG_CONSOLE_UART_BAUDRATE
+    const uint32_t uart_baudrate = CONFIG_CONSOLE_UART_BAUDRATE;
+#else
+    const uint32_t uart_baudrate = 74880; // ROM default baudrate
+#endif
+
+    init_data = esp_phy_get_init_data();
+    if (init_data == NULL) {
+        ESP_LOGE(TAG, "failed to obtain PHY init data");
+        abort();
+    }
+    memcpy(buf, init_data->params, 128);
+
+    uart_tx_wait_idle(0);
+    uart_div_modify(0, UART_CLK_FREQ / uart_baudrate);
+
+    uart_tx_wait_idle(1);
+    uart_div_modify(1, UART_CLK_FREQ / uart_baudrate);
+
+    rtc_init_clk(buf);
+
+    esp_phy_release_init_data(init_data);
+}
