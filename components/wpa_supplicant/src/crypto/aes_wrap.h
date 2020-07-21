@@ -24,12 +24,19 @@
 
 int __must_check aes_wrap(const u8 *kek, int n, const u8 *plain, u8 *cipher);
 int __must_check aes_unwrap(const u8 *kek, int n, const u8 *cipher, u8 *plain);
+int __must_check omac1_aes_vector(const u8 *key, size_t key_len,
+                                  size_t num_elem, const u8 *addr[],
+                                  const size_t *len, u8 *mac);
 int __must_check omac1_aes_128_vector(const u8 *key, size_t num_elem,
 				      const u8 *addr[], const size_t *len,
 				      u8 *mac);
 int __must_check omac1_aes_128(const u8 *key, const u8 *data, size_t data_len,
 			       u8 *mac);
+int __must_check omac1_aes_256(const u8 *key, const u8 *data, size_t data_len,
+                               u8 *mac);
 int __must_check aes_128_encrypt_block(const u8 *key, const u8 *in, u8 *out);
+int __must_check aes_ctr_encrypt(const u8 *key, size_t key_len, const u8 *nonce,
+                 u8 *data, size_t data_len);
 int __must_check aes_128_ctr_encrypt(const u8 *key, const u8 *nonce,
 				     u8 *data, size_t data_len);
 int __must_check aes_128_eax_encrypt(const u8 *key,
@@ -44,11 +51,4 @@ int __must_check aes_128_cbc_encrypt(const u8 *key, const u8 *iv, u8 *data,
 				     size_t data_len);
 int __must_check aes_128_cbc_decrypt(const u8 *key, const u8 *iv, u8 *data,
 				     size_t data_len);
-int __must_check fast_aes_wrap(const uint8_t *kek, int n, const uint8_t *plain, uint8_t *cipher);
-int __must_check fast_aes_unwrap(const uint8_t *kek, int n, const uint8_t *cipher, uint8_t *plain);
-int __must_check fast_aes_128_cbc_encrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data,
-				          size_t data_len);
-int __must_check fast_aes_128_cbc_decrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data,
-				          size_t data_len);
-
 #endif /* AES_WRAP_H */
