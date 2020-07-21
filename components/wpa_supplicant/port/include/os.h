@@ -22,6 +22,10 @@
 // #include "esp32/rom/ets_sys.h"
 #include "esp_libc.h"
 
+#if CONFIG_LTM_FAST
+#define LTM_FAST
+#endif
+
 typedef time_t os_time_t;
 
 /**

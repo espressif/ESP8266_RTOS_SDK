@@ -16,10 +16,6 @@
 #include "os.h"
 #include "stdarg.h"
 
-#if CONFIG_LTM_FAST
-#define LTM_FAST
-#endif
-
 #ifndef CHAR_BIT
 #define CHAR_BIT 8
 #endif
