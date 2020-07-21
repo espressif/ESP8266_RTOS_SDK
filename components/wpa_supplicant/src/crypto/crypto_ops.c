@@ -55,7 +55,9 @@ const wpa_crypto_funcs_t g_wifi_default_wpa_crypto_funcs = {
     .ccmp_encrypt = (esp_ccmp_encrypt_t)ccmp_encrypt
 };
 
+#if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2)
 const mesh_crypto_funcs_t g_wifi_default_mesh_crypto_funcs = {
     .aes_128_encrypt = (esp_aes_128_encrypt_t)aes_128_cbc_encrypt,
     .aes_128_decrypt = (esp_aes_128_decrypt_t)aes_128_cbc_decrypt,
 };
+#endif
