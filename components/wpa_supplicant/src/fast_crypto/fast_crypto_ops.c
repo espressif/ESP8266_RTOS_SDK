@@ -32,6 +32,47 @@
 #include "eap_peer/eap_common.h"
 #include "esp_wifi_crypto_types.h"
 
+int fast_sha256_vector(size_t num_elem, const uint8_t *addr[], const size_t *len,
+		       uint8_t *mac);
+int __must_check fast_aes_wrap(const uint8_t *kek, int n, const uint8_t *plain, uint8_t *cipher);
+int __must_check fast_aes_unwrap(const uint8_t *kek, int n, const uint8_t *cipher, uint8_t *plain);
+int __must_check fast_aes_128_cbc_encrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data,
+				          size_t data_len);
+int __must_check fast_aes_128_cbc_decrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data,
+				          size_t data_len);
+void fast_hmac_sha256_vector(const uint8_t *key, size_t key_len, size_t num_elem,
+		             const uint8_t *addr[], const size_t *len, uint8_t *mac);
+void fast_hmac_sha256(const uint8_t *key, size_t key_len, const uint8_t *data,
+		      size_t data_len, uint8_t *mac);
+void fast_sha256_prf(const uint8_t *key, size_t key_len, const char *label,
+	             const uint8_t *data, size_t data_len, uint8_t *buf, size_t buf_len);
+int __must_check fast_aes_wrap(const uint8_t *kek, int n, const uint8_t *plain, uint8_t *cipher);
+int __must_check fast_aes_unwrap(const uint8_t *kek, int n, const uint8_t *cipher, uint8_t *plain);
+int __must_check fast_aes_128_cbc_encrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data,
+				          size_t data_len);
+int __must_check fast_aes_128_cbc_decrypt(const uint8_t *key, const uint8_t *iv, uint8_t *data,
+				          size_t data_len);
+int __must_check crypto_mod_exp(const u8 *base, size_t base_len,
+				const u8 *power, size_t power_len,
+				const u8 *modulus, size_t modulus_len,
+				u8 *result, size_t *result_len);
+void fast_crypto_hash_update(struct crypto_hash *ctx, const uint8_t *data, size_t len);
+int fast_crypto_hash_finish(struct crypto_hash *ctx, uint8_t *hash, size_t *len);
+struct crypto_cipher * fast_crypto_cipher_init(enum crypto_cipher_alg alg,
+					            const uint8_t *iv, const uint8_t *key,
+					            size_t key_len);
+int __must_check fast_crypto_cipher_decrypt(struct crypto_cipher *ctx,
+				            const uint8_t *crypt, uint8_t *plain, size_t len);
+void fast_crypto_cipher_deinit(struct crypto_cipher *ctx);
+int __must_check fast_crypto_mod_exp(const uint8_t *base, size_t base_len,
+				     const uint8_t *power, size_t power_len,
+				     const uint8_t *modulus, size_t modulus_len,
+				     uint8_t *result, size_t *result_len);
+struct crypto_hash * fast_crypto_hash_init(enum crypto_hash_alg alg, const uint8_t *key,
+				                size_t key_len);
+int __must_check fast_crypto_cipher_encrypt(struct crypto_cipher *ctx,
+				            const uint8_t *plain, uint8_t *crypt, size_t len);
+
 #if CONFIG_SSL_USING_MBEDTLS
 /* 
  * The parameters is used to set the cyrpto callback function for station connect when in security mode,

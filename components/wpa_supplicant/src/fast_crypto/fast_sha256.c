@@ -21,6 +21,9 @@
 #include "crypto/sha256.h"
 #include "crypto/crypto.h"
 
+int fast_sha256_vector(size_t num_elem, const uint8_t *addr[], const size_t *len,
+		       uint8_t *mac);
+
 #if CONFIG_SSL_USING_MBEDTLS
 /**
  * fast_hmac_sha256_vector - HMAC-SHA256 over data vector (RFC 2104)
