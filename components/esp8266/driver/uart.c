@@ -667,16 +667,12 @@ static void uart_rx_intr_handler_default(void *param)
             notify = UART_SELECT_ERROR_NOTIF;
         }
 
-#ifdef CONFIG_USING_ESP_VFS
         if (uart_event.type != UART_EVENT_MAX && p_uart->uart_select_notif_callback) {
             p_uart->uart_select_notif_callback(uart_num, notify, &task_woken);
             if (task_woken == pdTRUE) {
                 portYIELD_FROM_ISR();
             }
         }
-#else
-        (void)notify;
-#endif
 
         if (uart_event.type != UART_EVENT_MAX && p_uart->xQueueUart) {
             if (pdFALSE == xQueueSendFromISR(p_uart->xQueueUart, (void *)&uart_event, &task_woken)) {
@@ -1093,4 +1089,9 @@ esp_err_t uart_set_rx_timeout(uart_port_t uart_num, const uint8_t tout_thresh)
 
     UART_EXIT_CRITICAL();
     return ESP_OK;
+}
+
+bool uart_is_driver_installed(uart_port_t uart_num)
+{
+    return uart_num < UART_NUM_MAX && (p_uart_obj[uart_num] != NULL);
 }

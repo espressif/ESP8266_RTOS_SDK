@@ -20,6 +20,7 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/queue.h"
@@ -552,6 +553,17 @@ esp_err_t uart_get_buffered_data_len(uart_port_t uart_num, size_t *size);
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t uart_set_rx_timeout(uart_port_t uart_num, const uint8_t tout_thresh);
+
+/**
+ * @brief Checks whether the driver is installed or not
+ *
+ * @param uart_num UART port number, the max port number is (UART_NUM_MAX -1).
+ *
+ * @return
+ *     - true  driver is installed
+ *     - false driver is not installed
+ */
+bool uart_is_driver_installed(uart_port_t uart_num);
 
 #ifdef __cplusplus
 }
