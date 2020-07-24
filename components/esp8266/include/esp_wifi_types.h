@@ -156,6 +156,7 @@ typedef struct {
     uint8_t primary;                      /**< channel of AP */
     wifi_second_chan_t second;            /**< secondary channel of AP */
     int8_t  rssi;                         /**< signal strength of AP */
+    int16_t freq_offset;                  /**< frequency offset of AP */
     wifi_auth_mode_t authmode;            /**< authmode of AP */
     wifi_cipher_type_t pairwise_cipher;   /**< pairwise cipher of AP */
     wifi_cipher_type_t group_cipher;      /**< group cipher of AP */
