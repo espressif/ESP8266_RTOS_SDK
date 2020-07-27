@@ -1,7 +1,7 @@
 gwen:
     core:       3c69aa1
-    net80211:   a8994bb
-    pp:         a8994bb
+    net80211:   a2886c1
+    pp:         a2886c1
     espnow:     3c69aa1
     wps:        3c69aa1
     wpa2:       3c69aa1
