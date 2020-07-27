@@ -317,9 +317,17 @@ int esp_mbedtls_add_rx_buffer(mbedtls_ssl_context *ssl)
     ESP_LOGV(TAG, "--> add rx");
 
     if (ssl->in_buf) {
-        ESP_LOGV(TAG, "in buffer is not empty");
-        ret = 0;
-        goto exit;
+        if (ssl->in_iv) {
+            ESP_LOGV(TAG, "in buffer is not empty");
+            ret = 0;
+            goto exit;
+        } else {
+            memcpy(cache_buf, ssl->in_buf, 16);
+
+            mbedtls_free(ssl->in_buf);
+            init_rx_buffer(ssl, NULL);
+            cached = 1;
+        }
     }
 
     ssl->in_hdr = msg_head;
@@ -355,12 +363,6 @@ int esp_mbedtls_add_rx_buffer(mbedtls_ssl_context *ssl)
 
     ESP_LOGV(TAG, "add in buffer %d bytes @ %p", buffer_len, buf);
 
-    if (ssl->in_ctr) {
-        memcpy(cache_buf, ssl->in_ctr, 16);
-        mbedtls_free(ssl->in_ctr);
-        cached = 1;
-    }
-
     init_rx_buffer(ssl, buf);
 
     if (cached) {
@@ -389,7 +391,8 @@ int esp_mbedtls_free_rx_buffer(mbedtls_ssl_context *ssl)
     /**
      * When have read multi messages once, can't free the input buffer directly.
      */
-    if (!ssl->in_buf || (ssl->in_hslen && (ssl->in_hslen < ssl->in_msglen))) {
+    if (!ssl->in_buf || (ssl->in_hslen && (ssl->in_hslen < ssl->in_msglen)) ||
+        (ssl->in_buf && !ssl->in_iv)) {
         ret = 0;
         goto exit;
     }
@@ -418,7 +421,8 @@ int esp_mbedtls_free_rx_buffer(mbedtls_ssl_context *ssl)
     }
 
     memcpy(pdata, buf, 16);
-    ssl->in_ctr = pdata;
+    init_rx_buffer(ssl, pdata);
+    ssl->in_iv = NULL;
 
 exit:
     ESP_LOGV(TAG, "<-- free rx");
