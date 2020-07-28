@@ -60,6 +60,15 @@ set(srcs "port/os_xtensa.c"
     "src/esp_supplicant/esp_wpa_main.c"
     "src/esp_supplicant/esp_wpas_glue.c"
     "src/esp_supplicant/esp_wpa3.c"
+    "src/fast_crypto/fast_aes-cbc.c"
+    "src/fast_crypto/fast_aes-unwrap.c"
+    "src/fast_crypto/fast_aes-wrap.c"
+    "src/fast_crypto/fast_crypto_internal.c"
+    "src/fast_crypto/fast_crypto_internal-cipher.c"
+    "src/fast_crypto/fast_crypto_internal-modexp.c"
+    "src/fast_crypto/fast_crypto_ops.c"
+    "src/fast_crypto/fast_sha256.c"
+    "src/fast_crypto/fast_sha256-internal.c"
     "src/rsn_supp/pmksa_cache.c"
     "src/rsn_supp/wpa.c"
     "src/rsn_supp/wpa_ie.c"
@@ -104,7 +113,7 @@ else()
     )
 endif()
 
-idf_component_register(SRCS "${srcs}"
+idf_component_register(SRCS "${srcs}" "${tls_src}"
                     INCLUDE_DIRS include port/include include/esp_supplicant
                     PRIV_INCLUDE_DIRS src
                     PRIV_REQUIRES mbedtls freertos heap newlib)
@@ -128,6 +137,6 @@ target_compile_definitions(${COMPONENT_LIB} PRIVATE
     CONFIG_ECC
     CONFIG_IEEE80211W
     CONFIG_WPA3_SAE
-    CONFIG_SHA256
+    #CONFIG_SHA256
     CONFIG_DPP
     )
