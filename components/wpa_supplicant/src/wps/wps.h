@@ -1009,19 +1009,10 @@ enum wps_cb_status {
 
 typedef void (*wps_st_cb_t)(int status);
 
-#ifdef USE_WPS_TASK
-enum wps_sig_type {
-    SIG_WPS_ENABLE = 1,         //1
-    SIG_WPS_DISABLE,            //2
-    SIG_WPS_START,              //3
-    SIG_WPS_RX,                 //4
-    SIG_WPS_TIMER_TIMEOUT,      //5
-    SIG_WPS_TIMER_MSG_TIMEOUT,  //6
-    SIG_WPS_TIMER_SUCCESS_CB,   //7
-    SIG_WPS_TIMER_SCAN,         //8
-    SIG_WPS_TIMER_EAPOL_START,  //9
-    SIG_WPS_NUM,                //10
-};
+#if 1//def USE_WPS_TASK
+#define SIG_WPS_START	0
+#define	SIG_WPS_RX	1
+#define	SIG_WPS_NUM	2
 #endif
 
 #define WPS_EAP_EXT_VENDOR_TYPE "WFA-SimpleConfig-Enrollee-1-0"

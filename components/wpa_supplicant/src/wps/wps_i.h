@@ -125,6 +125,40 @@ struct wps_data {
 #endif
 };
 
+#if 0
+typedef enum wps_type {
+	WPS_TYPE_DISABLE = 0,
+	WPS_TYPE_E_PBC,
+	WPS_TYPE_E_PIN,
+	WPS_TYPE_E_DISPLAY,
+	WPS_TYPE_E_MAX,
+	WPS_TYPE_R_PBC,
+	WPS_TYPE_R_PIN,
+	WPS_TYPE_R_DISPLAY,
+	WPS_TYPE_R_MAX,
+	WPS_TYPE_ALL_MAX,
+} WPS_TYPE_t;
+
+#define WPS_MAX_MANUFACTURER_LEN 65
+#define WPS_MAX_MODEL_NUMBER_LEN 33
+#define WPS_MAX_MODEL_NAME_LEN   33
+#define WPS_MAX_DEV_NAME_LEN     33
+typedef struct {
+    char manufacturer[WPS_MAX_MANUFACTURER_LEN];
+    char model_number[WPS_MAX_MODEL_NUMBER_LEN];
+    char model_name[WPS_MAX_MODEL_NAME_LEN];
+    char device_name[WPS_MAX_DEV_NAME_LEN];
+} esp_factory_information_t;
+
+typedef struct {
+	WPS_TYPE_t wps_type;
+	const wps_crypto_funcs_t *crypto_funcs;
+	esp_factory_information_t factory_info;
+}esp_wps_config_t;
+
+wps_crypto_funcs_t wps_crypto_funcs;
+#endif
+
 /* wps_common.c */
 void wps_kdf(const u8 *key, const u8 *label_prefix, size_t label_prefix_len,
 	     const char *label, u8 *res, size_t res_len);
