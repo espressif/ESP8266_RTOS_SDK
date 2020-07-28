@@ -4,7 +4,7 @@ gwen:
     pp:         f0e36a6
     wpa:        dd5b2b4
     espnow:     dd5b2b4
-    wps:        dd5b2b4
+    wps:        921fc88
     wpa2:       dd5b2b4
 
     smartconfig:  2.8.2
