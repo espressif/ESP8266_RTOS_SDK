@@ -48,8 +48,6 @@
 #include "sdkconfig.h"
 #include "mb.h"
 #include "mbport.h"
-#include "driver/timer.h"
-#include "port_serial_slave.h"
 #include "sdkconfig.h"
 
 #if CONFIG_FMB_TIMER_PORT_ENABLED

@@ -18,7 +18,6 @@
 
 #include <stdint.h>                 // for standard int types definition
 #include <stddef.h>                 // for NULL and std defines
-#include "soc/soc.h"                // for BITN definitions
 #include "esp_modbus_common.h"      // for common types
 
 #ifdef __cplusplus

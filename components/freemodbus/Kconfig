@@ -35,18 +35,6 @@ menu "Modbus configuration"
                 Once expired the current connection with the client will be closed
                 and Modbus slave will be waiting for new connection to accept.
 
-    config FMB_COMM_MODE_RTU_EN
-        bool "Enable Modbus stack support for RTU mode"
-        default y
-        help
-                Enable RTU Modbus communication mode option for Modbus serial stack.
-
-    config FMB_COMM_MODE_ASCII_EN
-        bool "Enable Modbus stack support for ASCII mode"
-        default y
-        help
-                Enable ASCII Modbus communication mode option for Modbus serial stack.
-
     config FMB_MASTER_TIMEOUT_MS_RESPOND
         int "Slave respond timeout (Milliseconds)"
         default 150
@@ -87,23 +75,6 @@ menu "Modbus configuration"
                 Modbus serial task RX and TX buffer size for UART driver initialization.
                 This buffer is used for modbus frame transfer. The Modbus protocol maximum
                 frame size is 256 bytes. Bigger size can be used for non standard implementations.
-
-    config FMB_SERIAL_ASCII_BITS_PER_SYMB
-        int "Number of data bits per ASCII character"
-        default 8
-        range 7 8
-        depends on FMB_COMM_MODE_ASCII_EN
-        help
-                This option defines the number of data bits per ASCII character.
-
-    config FMB_SERIAL_ASCII_TIMEOUT_RESPOND_MS
-        int "Response timeout for ASCII communication mode (ms)"
-        default 1000
-        range 300 2000
-        depends on FMB_COMM_MODE_ASCII_EN
-        help
-                This option defines response timeout of slave in milliseconds for ASCII communication mode.
-                Thus the timeout will expire and allow the master program to handle the error.
 
     config FMB_PORT_TASK_PRIO
         int "Modbus port task priority"
@@ -162,13 +133,6 @@ menu "Modbus configuration"
         help
                 Modbus stack event queue timeout in milliseconds. This may help to optimize
                 Modbus stack event processing time.
-
-    config FMB_TIMER_PORT_ENABLED
-        bool "Modbus slave stack use timer for 3.5T symbol time measurement"
-        default y
-        help
-                If this option is set the Modbus stack uses timer for T3.5 time measurement.
-                Else the internal UART TOUT timeout is used for 3.5T symbol time measurement.
 
     config FMB_TIMER_GROUP
         int "Modbus Timer group number"

@@ -20,7 +20,9 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
+#ifdef CONFIG_MB_MDNS_IP_RESOLVER
 #include "mdns.h"
+#endif
 #include "protocol_examples_common.h"
 
 #include "modbus_params.h"  // for modbus parameters structures
@@ -264,11 +266,11 @@ static char* master_get_slave_ip_str(mdns_ip_addr_t* address, mb_tcp_addr_type_t
     char* slave_ip_str = NULL;
 
     while (a) {
-        if ((a->addr.type == ESP_IPADDR_TYPE_V6) && (addr_type == MB_IPV6)) {
+        if ((a->addr.type == IPADDR_TYPE_V6) && (addr_type == MB_IPV6)) {
             if (-1 == asprintf(&slave_ip_str, IPV6STR, IPV62STR(a->addr.u_addr.ip6))) {
                 abort();
             }
-        } else if ((a->addr.type == ESP_IPADDR_TYPE_V4) && (addr_type == MB_IPV4)) {
+        } else if ((a->addr.type == IPADDR_TYPE_V4) && (addr_type == MB_IPV4)) {
             if (-1 == asprintf(&slave_ip_str, IPSTR, IP2STR(&(a->addr.u_addr.ip4)))) {
                 abort();
             }
@@ -450,7 +452,6 @@ static void master_operation_func(void *arg)
                 err = mbc_master_get_parameter(cid, (char*)param_descriptor->param_key, 
                                                     (uint8_t*)&value, &type);
                 if (err == ESP_OK) {
-                    *(float*)temp_data_ptr = value;
                     if ((param_descriptor->mb_param_type == MB_PARAM_HOLDING) ||
                         (param_descriptor->mb_param_type == MB_PARAM_INPUT)) {
                         ESP_LOGI(MASTER_TAG, "Characteristic #%d %s (%s) value = %f (0x%x) read successful.",
@@ -458,21 +459,21 @@ static void master_operation_func(void *arg)
                                         (char*)param_descriptor->param_key, 
                                         (char*)param_descriptor->param_units,
                                         value, 
-                                        *(uint32_t*)temp_data_ptr);
+                                        *(uint32_t*)&value);
                         if (((value > param_descriptor->param_opts.max) ||
                             (value < param_descriptor->param_opts.min))) {
                                 alarm_state = true;
                                 break;
                         }
                     } else {
-                        uint16_t state = *(uint16_t*)temp_data_ptr;
+                        uint16_t state = *(uint16_t*)&value;
                         const char* rw_str = (state & param_descriptor->param_opts.opt1) ? "ON" : "OFF";
                         ESP_LOGI(MASTER_TAG, "Characteristic #%d %s (%s) value = %s (0x%x) read successful.",
                                         param_descriptor->cid,
                                         (char*)param_descriptor->param_key, 
                                         (char*)param_descriptor->param_units,
                                         (const char*)rw_str,
-                                        *(uint16_t*)temp_data_ptr);
+                                        *(uint16_t*)&value);
                         if (state & param_descriptor->param_opts.opt1) {
                             alarm_state = true;
                             break;
@@ -507,7 +508,7 @@ static void master_operation_func(void *arg)
 static esp_err_t master_init(void)
 {
     esp_err_t result = nvs_flash_init();
-    if (result == ESP_ERR_NVS_NO_FREE_PAGES || result == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    if (result == ESP_ERR_NVS_NO_FREE_PAGES) {
       ESP_ERROR_CHECK(nvs_flash_erase());
       result = nvs_flash_init();
     }
@@ -536,7 +537,9 @@ static esp_err_t master_init(void)
 #endif
     comm_info.ip_mode = MB_MODE_TCP;
     comm_info.ip_addr = (void*)slave_ip_address_table;
-    comm_info.ip_netif_ptr = (void*)get_example_netif();
+    void * nif = NULL;
+    ESP_ERROR_CHECK(tcpip_adapter_get_netif(TCPIP_ADAPTER_IF_STA, &nif));
+    comm_info.ip_netif_ptr = nif;
 
 #if CONFIG_MB_MDNS_IP_RESOLVER
     int res = 0;

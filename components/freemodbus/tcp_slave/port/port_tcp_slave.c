@@ -40,12 +40,11 @@
 #include "esp_err.h"
 #include "sys/time.h"
 #include "esp_netif.h"
-
+#include "esp_timer.h"
 /* ----------------------- lwIP includes ------------------------------------*/
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
-#include "net/if.h"
 
 /* ----------------------- Modbus includes ----------------------------------*/
 #include "mb.h"
@@ -59,6 +58,9 @@
 #define MB_TCP_DISCONNECT_TIMEOUT       ( CONFIG_FMB_TCP_CONNECTION_TOUT_SEC * 1000000 ) // disconnect timeout in uS
 #define MB_TCP_RESP_TIMEOUT_MS          ( MB_MASTER_TIMEOUT_MS_RESPOND - 2 ) // slave response time limit
 #define MB_TCP_SLAVE_PORT_TAG           "MB_TCP_SLAVE_PORT"
+#ifndef SOMAXCONN
+#define	SOMAXCONN       128
+#endif
 #define MB_TCP_NET_LISTEN_BACKLOG       ( SOMAXCONN )
 
 /* ----------------------- Prototypes ---------------------------------------*/
@@ -183,12 +185,16 @@ static int xMBTCPPortAcceptConnection(int xListenSockId, char** pcIPAddr)
     MB_PORT_CHECK((xListenSockId > 0), -1, "Incorrect listen socket ID.");
 
     // Address structure large enough for both IPv4 or IPv6 address
+#if LWIP_IPV6
     struct sockaddr_in6 xSrcAddr;
-
+    socklen_t xSize = sizeof(struct sockaddr_in6);
+#else
+    struct sockaddr_in xSrcAddr;
+    socklen_t xSize = sizeof(struct sockaddr_in);
+#endif
     CHAR cAddrStr[128];
     int xSockId = -1;
     CHAR* pcStr = NULL;
-    socklen_t xSize = sizeof(struct sockaddr_in6);
 
     // Accept new socket connection if not active
     xSockId = accept(xListenSockId, (struct sockaddr *)&xSrcAddr, &xSize);
@@ -197,11 +203,15 @@ static int xMBTCPPortAcceptConnection(int xListenSockId, char** pcIPAddr)
         close(xSockId);
     } else {
         // Get the sender's ip address as string
+#if LWIP_IPV6
         if (xSrcAddr.sin6_family == PF_INET) {
             inet_ntoa_r(((struct sockaddr_in *)&xSrcAddr)->sin_addr.s_addr, cAddrStr, sizeof(cAddrStr) - 1);
         } else if (xSrcAddr.sin6_family == PF_INET6) {
             inet6_ntoa_r(xSrcAddr.sin6_addr, cAddrStr, sizeof(cAddrStr) - 1);
         }
+#else
+        inet_ntoa_r(((struct sockaddr_in *)&xSrcAddr)->sin_addr.s_addr, cAddrStr, sizeof(cAddrStr) - 1);
+#endif
         ESP_LOGI(MB_TCP_SLAVE_PORT_TAG, "Socket (#%d), accept client connection from address: %s", xSockId, cAddrStr);
         pcStr = calloc(1, strlen(cAddrStr) + 1);
         if (pcStr && pcIPAddr) {

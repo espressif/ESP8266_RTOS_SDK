@@ -27,7 +27,7 @@
 #include "mbc_slave.h"              // for private slave interface types
 #include "mbc_tcp_slave.h"          // for tcp slave mb controller defines
 #include "port_tcp_slave.h"         // for tcp slave port defines
-
+#include "esp_timer.h"
 // Shared pointer to interface structure
 static mb_slave_interface_t* mbs_interface_ptr = NULL;
 

@@ -15,7 +15,7 @@
 
 #ifndef _MB_IFACE_COMMON_H
 #define _MB_IFACE_COMMON_H
-
+#include "freertos/FreeRTOS.h"
 #include "driver/uart.h"                    // for UART types
 
 #ifdef __cplusplus

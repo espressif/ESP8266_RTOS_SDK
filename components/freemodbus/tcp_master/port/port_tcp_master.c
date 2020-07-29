@@ -38,7 +38,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "esp_err.h"
-
+#include "esp_timer.h"
 /* ----------------------- lwIP includes ------------------------------------*/
 #include "lwip/err.h"
 #include "lwip/sockets.h"
@@ -432,11 +432,14 @@ static BOOL xMBTCPPortMasterCheckHost(const CHAR* pcHostStr, ip_addr_t* pxHostAd
         struct in_addr addr4 = ((struct sockaddr_in *) (pxAddrList->ai_addr))->sin_addr;
         inet_addr_to_ip4addr(ip_2_ip4(&xTargetAddr), &addr4);
         pcStr = ip4addr_ntoa_r(ip_2_ip4(&xTargetAddr), cStr, sizeof(cStr));
-    } else {
+    }
+#if LWIP_IPV6
+    else {
         struct in6_addr addr6 = ((struct sockaddr_in6 *) (pxAddrList->ai_addr))->sin6_addr;
         inet6_addr_to_ip6addr(ip_2_ip6(&xTargetAddr), &addr6);
         pcStr = ip6addr_ntoa_r(ip_2_ip6(&xTargetAddr), cStr, sizeof(cStr));
     }
+#endif
     if (pxHostAddr) {
         *pxHostAddr = xTargetAddr;
     }
@@ -496,15 +499,17 @@ static err_t xMBTCPPortMasterConnect(MbSlaveInfo_t* pxInfo)
             struct in_addr addr4 = ((struct sockaddr_in *) (pxCurAddr->ai_addr))->sin_addr;
             inet_addr_to_ip4addr(ip_2_ip4(&xTargetAddr), &addr4);
             pcStr = ip4addr_ntoa_r(ip_2_ip4(&xTargetAddr), cStr, sizeof(cStr));
-        } else if (pxCurAddr->ai_family == AF_INET6) {
+        }
+#if LWIP_IPV6
+        else if (pxCurAddr->ai_family == AF_INET6) {
             struct in6_addr addr6 = ((struct sockaddr_in6 *) (pxCurAddr->ai_addr))->sin6_addr;
             inet6_addr_to_ip6addr(ip_2_ip6(&xTargetAddr), &addr6);
             pcStr = ip6addr_ntoa_r(ip_2_ip6(&xTargetAddr), cStr, sizeof(cStr));
             // Set scope id to fix routing issues with local address
             ((struct sockaddr_in6 *) (pxCurAddr->ai_addr))->sin6_scope_id =
-                                esp_netif_get_netif_impl_index(xMbPortConfig.pvNetIface);
+                                tcpip_adapter_get_netif_index(TCPIP_ADAPTER_IF_STA);
         }
-
+#endif
         if (pxInfo->xSockId <= 0) {
             pxInfo->xSockId = socket(pxCurAddr->ai_family, pxCurAddr->ai_socktype, pxCurAddr->ai_protocol);
             if (pxInfo->xSockId < 0) {

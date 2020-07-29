@@ -14,7 +14,7 @@
  */
 #ifndef _MB_CONTROLLER_SLAVE_H
 #define _MB_CONTROLLER_SLAVE_H
-
+#include "freertos/FreeRTOS.h"
 #include "driver/uart.h"    // for uart defines
 #include "errno.h"          // for errno
 #include "esp_log.h"        // for log write

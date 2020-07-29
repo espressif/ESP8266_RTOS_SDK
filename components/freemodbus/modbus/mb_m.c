@@ -351,7 +351,6 @@ eMBMasterPoll( void )
             if ( ( eStatus == MB_ENOERR ) && ( ( ucRcvAddress == ucMBMasterGetDestAddress() ) 
                                           || ( ucRcvAddress == MB_TCP_PSEUDO_ADDRESS ) ) )
             {
-                ( void ) xMBMasterPortEventPost( EV_MASTER_EXECUTE );
                 ESP_LOGD(MB_PORT_TAG, "%s: Packet data received successfully (%u).", __func__, eStatus);
                 ESP_LOG_BUFFER_HEX_LEVEL("POLL receive buffer", (void*)ucMBFrame, (uint16_t)usLength, ESP_LOG_DEBUG);
                 ( void ) xMBMasterPortEventPost( EV_MASTER_EXECUTE );

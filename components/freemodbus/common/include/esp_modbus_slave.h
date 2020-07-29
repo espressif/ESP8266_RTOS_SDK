@@ -19,7 +19,6 @@
 // Public interface header for slave
 #include <stdint.h>                 // for standard int types definition
 #include <stddef.h>                 // for NULL and std defines
-#include "soc/soc.h"                // for BITN definitions
 #include "freertos/FreeRTOS.h"      // for task creation and queues access
 #include "freertos/event_groups.h"  // for event groups
 #include "esp_modbus_common.h"      // for common types

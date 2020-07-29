@@ -11,6 +11,7 @@ menu "Modbus Example Configuration"
     config MB_MDNS_IP_RESOLVER
         bool "Resolve slave addresses using mDNS service"
         default y
+        select ENABLE_MDNS
         help
             This option allows to use mDNS service to resolve IP addresses of the Modbus slaves.
             If the option is disabled the ip addresses of slaves are defined in static table.

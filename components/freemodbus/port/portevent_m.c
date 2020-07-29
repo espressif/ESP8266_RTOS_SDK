@@ -44,7 +44,7 @@
 #include "port.h"
 #include "mbport.h"
 #include "freertos/semphr.h"
-#include "port_serial_master.h"
+
 
 #if MB_MASTER_RTU_ENABLED || MB_MASTER_ASCII_ENABLED || MB_MASTER_TCP_ENABLED
 /* ----------------------- Defines ------------------------------------------*/

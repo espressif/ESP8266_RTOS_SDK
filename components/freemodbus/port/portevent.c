@@ -52,7 +52,6 @@
 #include "mbport.h"
 #include "port.h"
 #include "sdkconfig.h"
-#include "port_serial_slave.h"
 /* ----------------------- Variables ----------------------------------------*/
 static xQueueHandle xQueueHdl;
 

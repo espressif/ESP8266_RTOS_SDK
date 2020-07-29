@@ -14,8 +14,9 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
-
+#ifdef CONFIG_MB_MDNS_IP_RESOLVER
 #include "mdns.h"
+#endif
 #include "esp_netif.h"
 #include "protocol_examples_common.h"
 
@@ -31,7 +32,7 @@
 #define MB_REG_HOLDING_START                (0x0000)
 #define MB_REG_COILS_START                  (0x0000)
 
-#define MB_PAR_INFO_GET_TOUT                (10) // Timeout for get parameter info
+#define MB_PAR_INFO_GET_TOUT                (50) // Timeout for get parameter info
 #define MB_CHAN_DATA_MAX_VAL                (10)
 #define MB_CHAN_DATA_OFFSET                 (1.1f)
 
@@ -44,8 +45,6 @@
 #define MB_READ_WRITE_MASK                  (MB_READ_MASK | MB_WRITE_MASK)
 
 #define SLAVE_TAG "SLAVE_TEST"
-
-static portMUX_TYPE param_lock = portMUX_INITIALIZER_UNLOCKED;
 
 #if CONFIG_MB_MDNS_IP_RESOLVER
 
@@ -143,7 +142,7 @@ static void setup_reg_data(void)
 void app_main(void)
 {
     esp_err_t result = nvs_flash_init();
-    if (result == ESP_ERR_NVS_NO_FREE_PAGES || result == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    if (result == ESP_ERR_NVS_NO_FREE_PAGES) {
       ESP_ERROR_CHECK(nvs_flash_erase());
       result = nvs_flash_init();
     }
@@ -181,8 +180,10 @@ void app_main(void)
 #endif
     comm_info.ip_mode = MB_MODE_TCP;
     comm_info.ip_addr = NULL;
-    comm_info.ip_netif_ptr = (void*)get_example_netif();
-    // Setup communication parameters and start stack
+    void * nif = NULL;
+    ESP_ERROR_CHECK(tcpip_adapter_get_netif(TCPIP_ADAPTER_IF_STA, &nif));
+    comm_info.ip_netif_ptr = nif;
+     // Setup communication parameters and start stack
     ESP_ERROR_CHECK(mbc_slave_setup((void*)&comm_info));
 
     // The code below initializes Modbus register area descriptors
@@ -244,12 +245,12 @@ void app_main(void)
                     (uint32_t)reg_info.size);
             if (reg_info.address == (uint8_t*)&holding_reg_params.holding_data0)
             {
-                portENTER_CRITICAL(&param_lock);
+                portENTER_CRITICAL();
                 holding_reg_params.holding_data0 += MB_CHAN_DATA_OFFSET;
                 if (holding_reg_params.holding_data0 >= (MB_CHAN_DATA_MAX_VAL - MB_CHAN_DATA_OFFSET)) {
                     coil_reg_params.coils_port1 = 0xFF;
                 }
-                portEXIT_CRITICAL(&param_lock);
+                portEXIT_CRITICAL();
             }
         } else if (event & MB_EVENT_INPUT_REG_RD) {
             ESP_ERROR_CHECK(mbc_slave_get_param_info(&reg_info, MB_PAR_INFO_GET_TOUT));

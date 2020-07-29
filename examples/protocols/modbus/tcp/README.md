@@ -18,7 +18,7 @@ See README.md for each individual project for more information.
 
 ### Hardware Required
 
-This example can be run on any commonly available ESP32(-S2) development board.
+This example can be run on any commonly available ESP8266 development board.
 The master and slave boards should be connected to the same network (see the README.md file in example folder) and slave address `CONFIG_MB_SLAVE_ADDR` be defined for slave board(s). 
 See the connection schematic in README.md files of each example.
 
