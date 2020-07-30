@@ -177,7 +177,7 @@ void call_start_cpu(size_t start_addr)
     esp_newlib_init();
 #endif
 
-    assert(xTaskCreate(user_init_entry, "uiT", ESP_TASK_MAIN_STACK, NULL, configMAX_PRIORITIES, NULL) == pdPASS);
+    assert(xTaskCreate(user_init_entry, "uiT", ESP_TASK_MAIN_STACK, NULL, ESP_TASK_MAIN_PRIO, NULL) == pdPASS);
 
     vTaskStartScheduler();
 }
