@@ -201,6 +201,21 @@ typedef enum {
 } wifi_ps_type_t;
 
 /**
+ * @brief Wi-Fi Power management config for ESP8266
+ *
+ * Pass a pointer to this structure as an argument to esp_wifi_set_pm_config function.
+ */
+typedef struct {
+    uint8_t max_bcn_early_ms;    /**< max beacon early time(2~15ms), default 4ms. */
+    uint8_t max_bcn_timeout_ms;  /**< max beacon timeout time(12~32ms), default 24ms. */
+    uint8_t wait_time;           /**< wait time before close RF (10~100ms), default 20ms. */
+    uint8_t wait_tx_cnt;         /**< wait cnt after tx packet done(1~20), default 2, real time = wait_tx_cnt * wait_time. */
+    uint8_t wait_rx_bdata_cnt;   /**< wait cnt after rx broadcast packet(1~100), default 2, real time = wait_tx_cnt * wait_time. */
+    uint8_t wait_rx_udata_cnt;   /**< wait cnt after rx unicast packet(1~100), default 4, real time = wait_tx_cnt * wait_time. */
+    bool recv_bdata;             /**< Receive broadcast/multicast packet or not when WiFi in power save. default true(receive broadcast/multicast packet)*/
+} esp_pm_config_t;
+
+/**
  * @brief Power management config for ESP8266
  *
  * Pass a pointer to this structure as an argument to esp_pm_configure function.

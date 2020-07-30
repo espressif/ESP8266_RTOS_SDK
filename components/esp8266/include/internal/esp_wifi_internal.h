@@ -176,56 +176,18 @@ esp_err_t esp_wifi_internal_set_log_mod(uint32_t submodule);
 esp_err_t esp_wifi_internal_get_log(wifi_log_level_t *log_level, uint32_t *log_mod);
 
 /**
-  * @brief     Receive broadcast/multicast packet or not when WiFi in power save.
-  *
-  * @param     enable  receive broadcast/multicast packet when set to true.
+  * @brief     get wifi power management config.
+  * 
+  * @param     ps_config    power management config
   */
-void esp_wifi_set_pm_recv_multi_data(bool enable);
+void esp_wifi_set_pm_config(esp_pm_config_t *pm_config);
 
 /**
-  * @brief     Receive broadcast/multicast packet or not when WiFi in power save
-  *
-  * @return
-  *    - true: receive broadcast/multicast packet or not when WiFi in power save
-  *    - false: drop broadcast/multicast packet or not when WiFi in power save
+  * @brief     set wifi power management config.
+  * 
+  * @param     ps_config    power management config
   */
-bool esp_wifi_get_pm_recv_multi_data(void);
-
-/**
-  * @brief     Set max beacon early time.
-  *
-  * @param     max_bcn_early_ms  max beacon early time(2~15ms), default 4ms.
-  */
-void esp_wifi_set_pm_max_bcn_early(uint8_t max_bcn_early_ms);
-
-/**
-  * @brief     get max beacon early time.
-  */
-uint8_t esp_wifi_get_pm_max_bcn_early(void);
-
-/**
-  * @brief     Set max beacon timeout time.
-  *
-  * @param     max_bcn_early_ms  max beacon timeout time(12~32ms), default 24ms.
-  */
-void esp_wifi_set_pm_max_bcn_timeout(uint8_t max_bcn_timeout_ms);
-
-/**
-  * @brief     get max beacon timeout time.
-  */
-uint8_t esp_wifi_get_pm_max_bcn_timeout(void);
-
-/**
-  * @brief     Set max wait tx rx time.
-  *
-  * @param     max_bcn_early_ms  max wait tx rx time(10~2000ms), default 20ms.
-  */
-void esp_wifi_set_pm_wait_tx_rx_time(uint32_t wait_tx_rx_time_ms);
-
-/**
-  * @brief     get max wait tx rx time.
-  */
-uint32_t esp_wifi_get_pm_wait_tx_rx_time();
+void esp_wifi_get_pm_config(esp_pm_config_t *pm_config);
 
 #ifdef __cplusplus
 }
