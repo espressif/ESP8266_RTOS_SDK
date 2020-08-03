@@ -1,10 +1,10 @@
 gwen:
-    core:       3c69aa1
-    net80211:   a2886c1
-    pp:         a2886c1
-    espnow:     3c69aa1
-    wps:        3c69aa1
-    wpa2:       3c69aa1
+    core:       eecf230
+    net80211:   eecf230
+    pp:         eecf230
+    espnow:     eecf230
+    wps:        eecf230
+    wpa2:       eecf230
 
     smartconfig:  2.8.2
     phy:          1163.0
