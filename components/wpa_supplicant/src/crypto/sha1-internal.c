@@ -332,7 +332,9 @@ void
 SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 {
 	u32 i;
+#if CONFIG_IDF_TARGET_ESP8266
 	unsigned long index;
+#endif
 	unsigned char finalcount[8];
 
 	for (i = 0; i < 8; i++) {
@@ -340,13 +342,19 @@ SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 			((context->count[(i >= 4 ? 0 : 1)] >>
 			  ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
 	}
-
+#if CONFIG_IDF_TARGET_ESP8266
 	index = 0x80;
 	SHA1Update(context, (unsigned char *)&index, 1);
-
+#else
+	SHA1Update(context, (unsigned char *) "\200", 1);
+#endif
 	while ((context->count[0] & 504) != 448) {
+#if CONFIG_IDF_TARGET_ESP8266
 		index = 0;
 		SHA1Update(context, (unsigned char *)&index, 1);
+#else
+		SHA1Update(context, (unsigned char *) "\0", 1);
+#endif
 	}
 	SHA1Update(context, finalcount, 8);  /* Should cause a SHA1Transform()
 					      */
