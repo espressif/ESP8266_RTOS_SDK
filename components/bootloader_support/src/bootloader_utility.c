@@ -493,6 +493,7 @@ static void set_cache_and_start_app(
 #include "esp_log.h"
 
 #include "esp_flash_partitions.h"
+#include "esp_fast_boot.h"
 #include "internal/esp_system_internal.h"
 
 static const char* TAG = "boot";
@@ -743,6 +744,16 @@ static bool try_load_partition(const esp_partition_pos_t *partition, esp_image_m
 
 #define TRY_LOG_FORMAT "Trying partition index %d offs 0x%x size 0x%x"
 
+static void bootloader_utility_start_image(uint32_t image_start, uint32_t image_size, uint32_t entry_addr)
+{
+    void (*user_start)(size_t start_addr);
+
+    bootloader_mmap(image_start, image_size);
+
+    user_start = (void *)entry_addr;
+    user_start(image_start);
+}
+
 bool bootloader_utility_load_boot_image(const bootloader_state_t *bs, int start_index, esp_image_metadata_t *result)
 {
     int index = start_index;
@@ -793,8 +804,6 @@ bool bootloader_utility_load_boot_image(const bootloader_state_t *bs, int start_
 
 void bootloader_utility_load_image(const esp_image_metadata_t* image_data)
 {
-    void (*user_start)(size_t start_addr);
-
 #if defined(CONFIG_SECURE_BOOT_ENABLED) || defined(CONFIG_FLASH_ENCRYPTION_ENABLED)
     esp_err_t err;
 #endif
@@ -838,11 +847,18 @@ void bootloader_utility_load_image(const esp_image_metadata_t* image_data)
     copy loaded segments to RAM, set up caches for mapped segments, and start application
     unpack_load_app(image_data);
 #else
-    bootloader_mmap(image_data->start_addr, image_data->image_len);
-
-    user_start = (void *)image_data->image.entry_addr;
-    user_start(image_data->start_addr);
+    bootloader_utility_start_image(image_data->start_addr, image_data->image_len, image_data->image.entry_addr);
 #endif /* BOOTLOADER_UNPACK_APP */
 }
 
+void bootloader_utility_fast_boot_image(void)
+{
+    uint32_t image_start, image_size, image_entry;
+
+    if (!esp_fast_boot_get_info(&image_start, &image_size, &image_entry)) {
+        bootloader_utility_start_image(image_start, image_size, image_entry);
+    }
+
+    ESP_LOGD(TAG, "fast boot image fail");
+}
 #endif

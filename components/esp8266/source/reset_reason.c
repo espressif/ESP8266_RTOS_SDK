@@ -41,7 +41,7 @@ static inline void esp_reset_reason_clear_hint()
 
 static inline uint32_t esp_reset_reason_get_hint(uint32_t hw_reset)
 {
-    if (hw_reset == POWERON_RESET && rtc_sys_info.hint != ESP_RST_SW)
+    if (hw_reset == POWERON_RESET && ((rtc_sys_info.hint != ESP_RST_SW) && (rtc_sys_info.hint != ESP_RST_FAST_SW)))
         rtc_sys_info.hint = 0;
 
     return rtc_sys_info.hint;
@@ -63,7 +63,8 @@ static inline uint32_t get_reset_reason(uint32_t rtc_reset_reason, uint32_t rese
 {
     switch (rtc_reset_reason) {
         case POWERON_RESET:
-            if (reset_reason_hint == ESP_RST_SW)
+            if (reset_reason_hint == ESP_RST_SW ||
+                reset_reason_hint == ESP_RST_FAST_SW)
                 return reset_reason_hint;
             return ESP_RST_POWERON;
         case EXT_RESET:
@@ -108,7 +109,7 @@ static void __esp_reset_reason_init(int init)
     }
 
     if (init)
-        ESP_LOGI(TAG, "RTC reset %u wakeup %u store %u, reason is %u", hw_reset, hw_wakeup, hint, s_reset_reason);
+        ESP_LOGD(TAG, "RTC reset %u wakeup %u store %u, reason is %u", hw_reset, hw_wakeup, hint, s_reset_reason);
 }
 
 /**

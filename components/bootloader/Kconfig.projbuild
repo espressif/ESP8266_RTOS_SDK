@@ -19,6 +19,13 @@ config BOOTLOADER_DISABLE_JTAG_IO
 
         If users use JTAG to help develop, please disable this option.
 
+config BOOTLOADER_FAST_BOOT
+    bool "Bootloader fast boot"
+    default n
+    help
+        Enable this option, after initializing hardware, bootloader will try to load boot image
+        information from RTC memory directly and then run image without verifying it.
+
 choice LOG_BOOTLOADER_LEVEL
    bool "Bootloader log verbosity"
    default LOG_BOOTLOADER_LEVEL_INFO

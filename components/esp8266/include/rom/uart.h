@@ -102,6 +102,11 @@ static inline STATUS UartRxString(uint8_t *pString, uint8_t MaxStrlen)
 }
 
 /**
+  * @brief Disable UART0 I/O swap and don't care about if TX FIFO is empty
+  */
+void uart_disable_swap_io(void);
+
+/**
   * @}
   */
 

@@ -30,10 +30,18 @@ static int selected_boot_partition(const bootloader_state_t *bs);
 
 void call_start_cpu(void)
 {
+#ifdef CONFIG_BOOTLOADER_FAST_BOOT
+    REG_SET_BIT(DPORT_CTL_REG, DPORT_CTL_DOUBLE_CLK);
+#endif
+
     // 1. Hardware initialization
     if(bootloader_init() != ESP_OK){
         return;
     }
+
+#ifdef CONFIG_BOOTLOADER_FAST_BOOT
+    bootloader_utility_fast_boot_image();
+#endif
 
     // 2. Select image to boot
     esp_image_metadata_t image_data;

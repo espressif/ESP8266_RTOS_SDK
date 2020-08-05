@@ -31,3 +31,8 @@ void uart_tx_wait_idle(uint8_t uart_no)
 
     ets_delay_us(byte_delay_us);
 }
+
+void uart_disable_swap_io(void)
+{
+   CLEAR_PERI_REG_MASK(UART_SWAP_REG, 0x4);
+}

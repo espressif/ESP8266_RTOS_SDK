@@ -62,3 +62,8 @@ bool bootloader_utility_load_boot_image(const bootloader_state_t *bs, int start_
  * @param[in] data Structure to hold on-flash image metadata.
  */
 void bootloader_utility_load_image(const esp_image_metadata_t* image_data);
+
+/**
+ * @brief Loading boot image information from RTC memory and then running image without verifying.
+ */
+void bootloader_utility_fast_boot_image(void);
