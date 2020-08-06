@@ -1,7 +1,7 @@
 gwen:
     crypto:     9099d86
     core:       9099d86
-    net80211:   9099d86
+    net80211:   cd2e2b2
     pp:         9099d86
     smartconfig:  2.8.0
     wpa:        9099d86
