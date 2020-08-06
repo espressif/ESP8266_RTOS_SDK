@@ -37,12 +37,12 @@ typedef enum {
 } esp_image_spi_mode_t;
 
 /* SPI flash clock frequency */
-enum {
+typedef enum {
     ESP_IMAGE_SPI_SPEED_40M,
     ESP_IMAGE_SPI_SPEED_26M,
     ESP_IMAGE_SPI_SPEED_20M,
     ESP_IMAGE_SPI_SPEED_80M = 0xF
-} esp_image_spi_freq_t;
+};
 
 #ifdef CONFIG_IDF_TARGET_ESP32
 /* Supported SPI flash sizes */
