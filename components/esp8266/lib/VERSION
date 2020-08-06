@@ -1,6 +1,6 @@
 gwen:
     core:       bf26f66
-    net80211:   bf26f66
+    net80211:   3862e3c
     pp:         bf26f66
     wpa:        bf26f66
     espnow:     bf26f66
