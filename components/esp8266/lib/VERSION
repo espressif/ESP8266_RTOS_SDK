@@ -1,6 +1,6 @@
 gwen:
     core:       eecf230
-    net80211:   eecf230
+    net80211:   2ca9f3b
     pp:         eecf230
     espnow:     eecf230
     wps:        eecf230
