@@ -1,6 +1,6 @@
 gwen:
     core:       f91b7e5
-    net80211:   f91b7e5
+    net80211:   23a826d
     pp:         f91b7e5
     wpa:        f91b7e5
     espnow:     f91b7e5
