@@ -42,7 +42,6 @@
 extern esp_err_t esp_pthread_init(void);
 extern void chip_boot(void);
 extern int base_gpio_init(void);
-extern int rtc_init(void);
 
 static inline int should_load(uint32_t load_addr)
 {
@@ -71,7 +70,6 @@ static void user_init_entry(void *param)
     for (func = &__init_array_start; func < &__init_array_end; func++)
         func[0]();
 
-    rtc_init();
     esp_phy_init_clk();
     assert(base_gpio_init() == 0);
 

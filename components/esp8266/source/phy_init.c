@@ -394,6 +394,7 @@ void esp_phy_init_clk(void)
 #else
     const uint32_t uart_baudrate = 74880; // ROM default baudrate
 #endif
+    extern int rtc_init(void);
 
     init_data = esp_phy_get_init_data();
     if (init_data == NULL) {
@@ -408,6 +409,7 @@ void esp_phy_init_clk(void)
     uart_tx_wait_idle(1);
     uart_div_modify(1, UART_CLK_FREQ / uart_baudrate);
 
+    rtc_init();
     rtc_init_clk(buf);
 
     esp_phy_release_init_data(init_data);
