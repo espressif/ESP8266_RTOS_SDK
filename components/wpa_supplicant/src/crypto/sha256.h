@@ -26,19 +26,12 @@ int sha256_prf(const u8 *key, size_t key_len, const char *label,
 int sha256_prf_bits(const u8 *key, size_t key_len, const char *label,
 		    const u8 *data, size_t data_len, u8 *buf,
 		    size_t buf_len_bits);
-void tls_prf_sha256(const u8 *secret, size_t secret_len,
+int tls_prf_sha256(const u8 *secret, size_t secret_len,
                     const char *label, const u8 *seed, size_t seed_len,
                                 u8 *out, size_t outlen);
 
 int hmac_sha256_kdf(const u8 *secret, size_t secret_len,
             const char *label, const u8 *seed, size_t seed_len,
             u8 *out, size_t outlen);
-
-void fast_hmac_sha256_vector(const uint8_t *key, size_t key_len, size_t num_elem,
-		             const uint8_t *addr[], const size_t *len, uint8_t *mac);
-void fast_hmac_sha256(const uint8_t *key, size_t key_len, const uint8_t *data,
-		      size_t data_len, uint8_t *mac);
-void fast_sha256_prf(const uint8_t *key, size_t key_len, const char *label,
-	             const uint8_t *data, size_t data_len, uint8_t *buf, size_t buf_len);
 
 #endif /* SHA256_H */

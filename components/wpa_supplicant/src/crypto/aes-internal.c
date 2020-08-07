@@ -24,8 +24,8 @@
 #include "utils/includes.h"
 
 #include "utils/common.h"
-#include "crypto/crypto.h"
-#include "crypto/aes_i.h"
+#include "crypto.h"
+#include "aes_i.h"
 
 /*
  * rijndael-alg-fst.c
@@ -52,10 +52,6 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include "sdkconfig.h"
-
-#ifndef CONFIG_ESP_AES
 
 #define AES_SMALL_TABLES
 
@@ -855,5 +851,3 @@ int rijndaelKeySetupEnc(u32 rk[], const u8 cipherKey[], int keyBits)
 
 	return -1;
 }
-
-#endif /* CONFIG_ESP_AES */

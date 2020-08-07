@@ -17,6 +17,8 @@
 #pragma pack(push, 1)
 #endif /* _MSC_VER */
 
+#define WPA_IS_MULTICAST(_a) (*(_a) & 0x01)
+
 /* IEEE Std 802.11r-2008, 11A.10.3 - Remote request/response frame definition
  */
 struct ft_rrb_frame {

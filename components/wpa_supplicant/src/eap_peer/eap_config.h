@@ -141,7 +141,7 @@ struct eap_peer_config {
 	 *
 	 * If left out, this will be asked through control interface.
 	 */
-	u8 *private_key_passwd;
+	const u8 *private_key_passwd;
 
 	/**
 	 * Phase 2

@@ -102,10 +102,6 @@ struct wpa_state_machine {
 	} wpa;
 	int pairwise; /* Pairwise cipher suite, WPA_CIPHER_* */
 	int wpa_key_mgmt; /* the selected WPA_KEY_MGMT_* */
-//	struct rsn_pmksa_cache_entry *pmksa;
-
-//	u32 dot11RSNAStatsTKIPLocalMICFailures;
-//	u32 dot11RSNAStatsTKIPRemoteMICFailures;
 
 #ifdef CONFIG_IEEE80211R
 	u8 xxkey[PMK_LEN]; /* PSK or the second 256 bits of MSK */
@@ -120,7 +116,7 @@ struct wpa_state_machine {
 #endif /* CONFIG_IEEE80211R */
 
 	int pending_1_of_4_timeout;
-    u32 index;
+	u32 index;
 };
 
 
@@ -161,40 +157,18 @@ struct wpa_ft_pmk_cache;
 struct wpa_authenticator {
 	struct wpa_group *group;
 
-//	unsigned int dot11RSNAStatsTKIPRemoteMICFailures;
-//	u32 dot11RSNAAuthenticationSuiteSelected;
-//	u32 dot11RSNAPairwiseCipherSelected;
-//	u32 dot11RSNAGroupCipherSelected;
-//	u8 dot11RSNAPMKIDUsed[PMKID_LEN];
-//	u32 dot11RSNAAuthenticationSuiteRequested; /* FIX: update */
-//	u32 dot11RSNAPairwiseCipherRequested; /* FIX: update */
-//	u32 dot11RSNAGroupCipherRequested; /* FIX: update */
-//	unsigned int dot11RSNATKIPCounterMeasuresInvoked;
-//	unsigned int dot11RSNA4WayHandshakeFailures;
-
-//	struct wpa_stsl_negotiation *stsl_negotiations;
-
 	struct wpa_auth_config conf;
-//	struct wpa_auth_callbacks cb;
 
 	u8 *wpa_ie;
 	size_t wpa_ie_len;
 
 	u8 addr[ETH_ALEN];
 
-//	struct rsn_pmksa_cache *pmksa;
-//	struct wpa_ft_pmk_cache *ft_pmk_cache;
 };
 
 
 int wpa_write_rsn_ie(struct wpa_auth_config *conf, u8 *buf, size_t len,
 		     const u8 *pmkid);
-#if 0
-void wpa_auth_logger(struct wpa_authenticator *wpa_auth, const u8 *addr,
-		     logger_level level, const char *txt);
-void wpa_auth_vlogger(struct wpa_authenticator *wpa_auth, const u8 *addr,
-		      logger_level level, const char *fmt, ...);
-#endif
 void __wpa_send_eapol(struct wpa_authenticator *wpa_auth,
 		      struct wpa_state_machine *sm, int key_info,
 		      const u8 *key_rsc, const u8 *nonce,

@@ -11,18 +11,20 @@
  *
  * See README and COPYING for more details.
  */
-#ifdef EMBEDDED_SUPP
+ #ifdef ESP_SUPPLICANT
 
-#include "rom/ets_sys.h"
 #include "utils/includes.h"
 #include "utils/common.h"
 #include "common/defs.h"
 #include "common/ieee802_11_defs.h"
 #include "common/wpa_common.h"
+#include "rsn_supp/wpa.h"
 #include "crypto/sha1.h"
 #include "crypto/sha256.h"
 #include "crypto/md5.h"
 #include "crypto/aes.h"
+ 
+#define MD5_MAC_LEN 16
 
 #ifndef CONFIG_NO_WPA2
 static int rsn_selector_to_bitfield(const u8 *s)
@@ -127,22 +129,22 @@ int wpa_parse_wpa_ie_rsn(const u8 *rsn_ie, size_t rsn_ie_len,
 	}
 
 	if (rsn_ie_len < sizeof(struct rsn_ie_hdr)) {
-		#ifdef DEBUG_PRINT	
+	    #ifdef DEBUG_PRINT	
 		wpa_printf(MSG_DEBUG, "%s: ie len too short %lu",
 			   __func__, (unsigned long) rsn_ie_len);
-		#endif	
+	    #endif	
 		return -1;
 	}
 
 	hdr = (const struct rsn_ie_hdr *) rsn_ie;
 
 	if (hdr->elem_id != WLAN_EID_RSN ||
-		hdr->len != rsn_ie_len - 2 ||
-		WPA_GET_LE16(hdr->version) != RSN_VERSION) {
-			#ifdef DEBUG_PRINT	
+	    hdr->len != rsn_ie_len - 2 ||
+	    WPA_GET_LE16(hdr->version) != RSN_VERSION) {
+    	    #ifdef DEBUG_PRINT	
 		wpa_printf(MSG_DEBUG, "%s: malformed ie or unknown version",
 			   __func__);
-		 #endif		
+	     #endif		
 		return -2;
 	}
 
@@ -353,7 +355,7 @@ int wpa_parse_wpa_ie_wpa(const u8 *wpa_ie, size_t wpa_ie_len,
 
 	if (left > 0) {
 		wpa_printf(MSG_DEBUG, "%s: ie has %u trailing bytes - ignored",
-				   __func__, left);
+			   __func__, left);
 	}
 
 	return 0;
@@ -545,11 +547,12 @@ void wpa_pmk_to_ptk(const u8 *pmk, size_t pmk_len, const char *label,
 void rsn_pmkid(const u8 *pmk, size_t pmk_len, const u8 *aa, const u8 *spa,
 	       u8 *pmkid, int use_sha256)
 {
-	char* title = "PMK Name";
-	const u8* addr[3];
-	static const size_t len[3] ICACHE_RODATA_ATTR = { 8, ETH_ALEN, ETH_ALEN };
+	char title[9];
+	const u8 *addr[3];
+	const size_t len[3] = { 8, ETH_ALEN, ETH_ALEN };
 	unsigned char hash[SHA256_MAC_LEN];
 
+    os_memcpy(title, "PMK Name", sizeof("PMK Name"));
 	addr[0] = (u8 *) title;
 	addr[1] = aa;
 	addr[2] = spa;
@@ -670,6 +673,6 @@ int wpa_cipher_put_suites(u8 *pos, int ciphers)
 	return num_suites;
 }
 
-#endif // EMBEDDED_SUPP
+#endif // ESP_SUPPLICANT
 
 

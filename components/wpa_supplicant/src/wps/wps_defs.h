@@ -186,13 +186,13 @@ enum wps_msg_type {
 };
 
 /* Authentication Type Flags */
-#define WPS_AUTH_OPEN 0x0001
+#define WPS_WIFI_AUTH_OPEN 0x0001
 #define WPS_AUTH_WPAPSK 0x0002
 #define WPS_AUTH_SHARED 0x0004
 #define WPS_AUTH_WPA 0x0008
 #define WPS_AUTH_WPA2 0x0010
 #define WPS_AUTH_WPA2PSK 0x0020
-#define WPS_AUTH_TYPES (WPS_AUTH_OPEN | WPS_AUTH_WPAPSK | WPS_AUTH_SHARED | \
+#define WPS_AUTH_TYPES (WPS_WIFI_AUTH_OPEN | WPS_AUTH_WPAPSK | WPS_AUTH_SHARED | \
 			WPS_AUTH_WPA | WPS_AUTH_WPA2 | WPS_AUTH_WPA2PSK)
 
 /* Encryption Type Flags */
@@ -338,4 +338,5 @@ enum wps_response_type {
 #define WPS_IGNORE_SEL_REG_MAX_CNT	4
 
 #define WPS_MAX_DIS_AP_NUM	10
+
 #endif /* WPS_DEFS_H */

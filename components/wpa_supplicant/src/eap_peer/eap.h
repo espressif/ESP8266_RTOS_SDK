@@ -45,7 +45,7 @@ struct wpabuf * eap_sm_build_nak(struct eap_sm *sm, EapType type, u8 id);
 int eap_peer_blob_init(struct eap_sm *sm);
 void eap_peer_blob_deinit(struct eap_sm *sm);
 int eap_peer_config_init(
-	struct eap_sm *sm, u8 *private_key_passwd,
+	struct eap_sm *sm, const u8 *private_key_passwd,
 	int private_key_passwd_len);
 void eap_peer_config_deinit(struct eap_sm *sm);
 void eap_sm_abort(struct eap_sm *sm);

@@ -16,10 +16,6 @@
 #include "os.h"
 #include "stdarg.h"
 
-#ifdef MEMLEAK_DEBUG
-static const char mem_debug_file[] ICACHE_RODATA_ATTR = __FILE__;
-#endif
-
 #ifndef CHAR_BIT
 #define CHAR_BIT 8
 #endif

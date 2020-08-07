@@ -17,9 +17,6 @@
 #include "os.h"
 #include "stdarg.h"
 
-#if CONFIG_LTM_FAST
-#define LTM_FAST
-#endif
 
 #ifndef CHAR_BIT
 #define CHAR_BIT 8
@@ -80,9 +77,9 @@ typedef u64 mp_word;
 #define MP_28BIT
 
 
-#define XMALLOC  _xmalloc
-#define XFREE    _xfree
-#define XREALLOC _xrealloc
+#define XMALLOC  os_malloc
+#define XFREE    os_free
+#define XREALLOC os_realloc
 
 
 #define MP_MASK          ((((mp_digit)1)<<((mp_digit)DIGIT_BIT))-((mp_digit)1))

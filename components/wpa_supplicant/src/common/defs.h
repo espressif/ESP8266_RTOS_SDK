@@ -1,15 +1,9 @@
 /*
  * WPA Supplicant - Common definitions
- * Copyright (c) 2004-2008, Jouni Malinen <j@w1.fi>
+ * Copyright (c) 2004-2015, Jouni Malinen <j@w1.fi>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- * Alternatively, this software may be distributed under the terms of BSD
- * license.
- *
- * See README and COPYING for more details.
+ * This software may be distributed under the terms of the BSD license.
+ * See README for more details.
  */
 
 #ifndef DEFS_H
@@ -23,57 +17,13 @@
 #endif
 typedef enum { FALSE = 0, TRUE = 1 } Boolean;
 
-/*
-#define WPA_CIPHER_NONE BIT(0)
-#define WPA_CIPHER_WEP40 BIT(1)
-#define WPA_CIPHER_WEP104 BIT(2)
-#define WPA_CIPHER_TKIP BIT(3)
-#define WPA_CIPHER_CCMP BIT(4)
-#ifdef CONFIG_IEEE80211W
-#define WPA_CIPHER_AES_128_CMAC BIT(5)
-#endif 
-*/
-
-/*
- * NB: these values are ordered carefully; there are lots of
- * of implications in any reordering.  Beware that 4 is used
- * only to indicate h/w TKIP MIC support in driver capabilities;
- * there is no separate cipher support (it's rolled into the
- * TKIP cipher support).
- */
-#define	IEEE80211_CIPHER_NONE		0	/* pseudo value */
-#define	IEEE80211_CIPHER_TKIP		1
-#define	IEEE80211_CIPHER_AES_OCB	2
-#define	IEEE80211_CIPHER_AES_CCM	3
-#define	IEEE80211_CIPHER_TKIPMIC	4	/* TKIP MIC capability */
-#define	IEEE80211_CIPHER_CKIP		5
-#define	IEEE80211_CIPHER_WEP		6
-#define	IEEE80211_CIPHER_WEP40		7
-#define	IEEE80211_CIPHER_WEP104		8
-
-
-#define	IEEE80211_CIPHER_MAX		(IEEE80211_CIPHER_NONE+2)
-
-/* capability bits in ic_cryptocaps/iv_cryptocaps */
-#define	IEEE80211_CRYPTO_NONE		(1<<IEEE80211_CIPHER_NONE)
-#define	IEEE80211_CRYPTO_WEP		(1<<IEEE80211_CIPHER_WEP)
-#define	IEEE80211_CRYPTO_WEP40		(1<<IEEE80211_CIPHER_WEP40)
-#define	IEEE80211_CRYPTO_WEP104	(1<<IEEE80211_CIPHER_WEP104)
-#define	IEEE80211_CRYPTO_TKIP		(1<<IEEE80211_CIPHER_TKIP)
-#define	IEEE80211_CRYPTO_AES_OCB	(1<<IEEE80211_CIPHER_AES_OCB)
-#define	IEEE80211_CRYPTO_AES_CCM	(1<<IEEE80211_CIPHER_AES_CCM)
-#define	IEEE80211_CRYPTO_TKIPMIC	(1<<IEEE80211_CIPHER_TKIPMIC)
-#define	IEEE80211_CRYPTO_CKIP		(1<<IEEE80211_CIPHER_CKIP)
-
-#define WPA_CIPHER_NONE                     IEEE80211_CRYPTO_NONE
-#define WPA_CIPHER_WEP40                    IEEE80211_CRYPTO_WEP40
-#define WPA_CIPHER_WEP104                  IEEE80211_CRYPTO_WEP104
-#define WPA_CIPHER_TKIP                       IEEE80211_CRYPTO_TKIP
-#define WPA_CIPHER_CCMP                     IEEE80211_CRYPTO_AES_CCM
-#ifdef CONFIG_IEEE80211W
-#define WPA_CIPHER_AES_128_CMAC    IEEE80211_CRYPTO_AES_OCB
-#endif /* CONFIG_IEEE80211W */
-#define WPA_CIPHER_GCMP BIT(6)
+#define WPA_CIPHER_NONE                 BIT(0)
+#define WPA_CIPHER_WEP40                BIT(7)
+#define WPA_CIPHER_WEP104               BIT(8)
+#define WPA_CIPHER_TKIP                 BIT(1)
+#define WPA_CIPHER_CCMP                 BIT(3)
+#define WPA_CIPHER_AES_128_CMAC         BIT(5)
+#define WPA_CIPHER_GCMP                 BIT(6)
 
 #define WPA_KEY_MGMT_IEEE8021X BIT(0)
 #define WPA_KEY_MGMT_PSK BIT(1)
@@ -164,16 +114,20 @@ static inline int wpa_key_mgmt_cckm(int akm)
 	return akm == WPA_KEY_MGMT_CCKM;
 }
 
+
 #define WPA_PROTO_WPA BIT(0)
 #define WPA_PROTO_RSN BIT(1)
+#define WPA_PROTO_WAPI BIT(2)
+#define WPA_PROTO_OSEN BIT(3)
 
 #define WPA_AUTH_ALG_OPEN BIT(0)
 #define WPA_AUTH_ALG_SHARED BIT(1)
 #define WPA_AUTH_ALG_LEAP BIT(2)
 #define WPA_AUTH_ALG_FT BIT(3)
+#define WPA_AUTH_ALG_SAE BIT(4)
 
 
-enum ieee80211_key_alg {
+enum wifi_key_alg {
 	ALG_WEP,
 	ALG_TKIP,
 	ALG_CCMP,
@@ -239,6 +193,15 @@ enum wpa_states {
 	 * connection is lost.
 	 */
 	WPA_DISCONNECTED,
+
+	/**
+	 * WPA_INTERFACE_DISABLED - Interface disabled
+	 *
+	 * This state is entered if the network interface is disabled, e.g.,
+	 * due to rfkill. wpa_supplicant refuses any new operations that would
+	 * use the radio until the interface has been enabled.
+	 */
+	WPA_INTERFACE_DISABLED,
 
 	/**
 	 * WPA_INACTIVE - Inactive state (wpa_supplicant disabled)
@@ -360,7 +323,43 @@ enum hostapd_hw_mode {
 	HOSTAPD_MODE_IEEE80211G,
 	HOSTAPD_MODE_IEEE80211A,
 	HOSTAPD_MODE_IEEE80211AD,
+	HOSTAPD_MODE_IEEE80211ANY,
 	NUM_HOSTAPD_MODES
+};
+
+/**
+ * enum wpa_ctrl_req_type - Control interface request types
+ */
+enum wpa_ctrl_req_type {
+	WPA_CTRL_REQ_UNKNOWN,
+	WPA_CTRL_REQ_EAP_IDENTITY,
+	WPA_CTRL_REQ_EAP_PASSWORD,
+	WPA_CTRL_REQ_EAP_NEW_PASSWORD,
+	WPA_CTRL_REQ_EAP_PIN,
+	WPA_CTRL_REQ_EAP_OTP,
+	WPA_CTRL_REQ_EAP_PASSPHRASE,
+	WPA_CTRL_REQ_SIM,
+	WPA_CTRL_REQ_PSK_PASSPHRASE,
+	NUM_WPA_CTRL_REQS
+};
+
+/* Maximum number of EAP methods to store for EAP server user information */
+#define EAP_MAX_METHODS 8
+
+enum mesh_plink_state {
+	PLINK_LISTEN = 1,
+	PLINK_OPEN_SENT,
+	PLINK_OPEN_RCVD,
+	PLINK_CNF_RCVD,
+	PLINK_ESTAB,
+	PLINK_HOLDING,
+	PLINK_BLOCKED,
+};
+
+enum set_band {
+	WPA_SETBAND_AUTO,
+	WPA_SETBAND_5G,
+	WPA_SETBAND_2G
 };
 
 #endif /* DEFS_H */

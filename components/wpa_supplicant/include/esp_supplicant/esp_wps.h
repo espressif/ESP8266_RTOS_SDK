@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2019 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include "esp_err.h"
 #include "esp_wifi_crypto_types.h"
+#include "esp_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,10 +79,10 @@ typedef struct {
     .wps_type = type, \
     .crypto_funcs = &g_wifi_default_wps_crypto_funcs, \
     .factory_info = {   \
-        .manufacturer = "ESPRESSIF",  \
-        .model_number = "ESP8266",  \
-        .model_name = "ESPRESSIF IOT",  \
-        .device_name = "ESP STATION",  \
+        ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(manufacturer, "ESPRESSIF")  \
+        ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(model_number, "ESP8266")  \
+        ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(model_name, "ESPRESSIF IOT")  \
+        ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(device_name, "ESP STATION")  \
     }  \
 }
 

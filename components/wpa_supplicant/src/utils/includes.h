@@ -19,8 +19,9 @@
 #ifndef INCLUDES_H
 #define INCLUDES_H
 
+#include "supplicant_opt.h"
+
 /* Include possible build time configuration before including anything else */
-//#include "build_config.h"  //don't need anymore
 #ifndef __ets__
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,12 +45,8 @@
 
 #ifndef CONFIG_NATIVE_WINDOWS
 #ifndef CONFIG_TI_COMPILER
-//#include <sys/socket.h>
-//#include <netinet/in.h>
-//#include <arpa/inet.h>
 #ifndef __vxworks
 #ifndef __SYMBIAN32__
-//#include <sys/uio.h>
 #endif /* __SYMBIAN32__ */
 #include <sys/time.h>
 #endif /* __vxworks */
@@ -57,8 +54,13 @@
 #endif /* CONFIG_NATIVE_WINDOWS */
 
 #else
-
+#if CONFIG_IDF_TARGET_ESP32
+#include "esp32/rom/ets_sys.h"
+#elif CONFIG_IDF_TARGET_ESP32S2
+#include "esp32s2/rom/ets_sys.h"
+#elif CONFIG_IDF_TARGET_ESP8266
 #include "rom/ets_sys.h"
+#endif
 
 #endif /* !__ets__ */
 

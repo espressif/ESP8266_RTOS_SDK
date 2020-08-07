@@ -174,6 +174,16 @@ void os_timer_arm(os_timer_t *ptimer, uint32_t msec, bool repeat_flag);
   */
 void os_timer_disarm(os_timer_t *ptimer);
 
+/* redefine esp-idf name to esp8266 */
+#define ets_delay_us      os_delay_us
+#define ETSTimer          os_timer_t
+#define ETSTimerFunc      os_timer_func_t
+#define ets_timer_disarm  os_timer_disarm
+#define ets_timer_setfn   os_timer_setfn
+#define ets_timer_arm     os_timer_arm
+
+void ets_timer_done(os_timer_t *ptimer);
+
 /**
   * @}
   */

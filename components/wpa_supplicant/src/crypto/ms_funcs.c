@@ -8,11 +8,11 @@
 
 
 #include "utils/includes.h"
-#include "utils/common.h"
 
-#include "crypto/sha1.h"
-#include "crypto/ms_funcs.h"
-#include "crypto/crypto.h"
+#include "utils/common.h"
+#include "sha1.h"
+#include "ms_funcs.h"
+#include "crypto.h"
 
 /**
  * utf8_to_ucs2 - Convert UTF-8 string to UCS-2 encoding

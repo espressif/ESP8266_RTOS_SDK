@@ -48,61 +48,14 @@ struct sta_info {
 	u16 listen_interval; /* or beacon_int for APs */
 	u8 supported_rates[WLAN_SUPP_RATES_MAX];
 	int supported_rates_len;
-//	u8 qosinfo; /* Valid when WLAN_STA_WMM is set */
-
-//	unsigned int nonerp_set:1;
-//	unsigned int no_short_slot_time_set:1;
-//	unsigned int no_short_preamble_set:1;
-//	unsigned int no_ht_gf_set:1;
-//	unsigned int no_ht_set:1;
-//	unsigned int ht_20mhz_set:1;
-//	unsigned int no_p2p_set:1;
 
 	u16 auth_alg;
-//	u8 previous_ap[6];
 
 	enum {
 		STA_NULLFUNC = 0, STA_DISASSOC, STA_DEAUTH, STA_REMOVE
 	} timeout_next;
 
-//	u16 deauth_reason;
-//	u16 disassoc_reason;
-
-	/* IEEE 802.1X related data */
-//	struct eapol_state_machine *eapol_sm;
-
-	/* IEEE 802.11f (IAPP) related data */
-//	struct ieee80211_mgmt *last_assoc_req;
-
-//	u32 acct_session_id_hi;
-//	u32 acct_session_id_lo;
-//	time_t acct_session_start;
-//	int acct_session_started;
-//	int acct_terminate_cause; /* Acct-Terminate-Cause */
-//	int acct_interim_interval; /* Acct-Interim-Interval */
-
-//	unsigned long last_rx_bytes;
-//	unsigned long last_tx_bytes;
-//	u32 acct_input_gigawords; /* Acct-Input-Gigawords */
-//	u32 acct_output_gigawords; /* Acct-Output-Gigawords */
-
-//	u8 *challenge; /* IEEE 802.11 Shared Key Authentication Challenge */
-
 	struct wpa_state_machine *wpa_sm;
-//	struct rsn_preauth_interface *preauth_iface;
-
-	struct hostapd_ssid *ssid; /* SSID selection based on (Re)AssocReq */
-//	struct hostapd_ssid *ssid_probe; /* SSID selection based on ProbeReq */
-
-//	int vlan_id;
-	 /* PSKs from RADIUS authentication server */
-//	struct hostapd_sta_wpa_psk_short *psk;
-
-//	char *identity; /* User-Name from RADIUS */
-//	char *radius_cui; /* Chargeable-User-Identity from RADIUS */
-
-//	struct ieee80211_ht_capabilities *ht_capabilities;
-//	struct ieee80211_vht_capabilities *vht_capabilities;
 
 #ifdef CONFIG_IEEE80211W
 	int sa_query_count; /* number of pending SA Query requests;
@@ -119,12 +72,6 @@ struct sta_info {
 	struct gas_dialog_info *gas_dialog;
 	u8 gas_dialog_next;
 #endif /* CONFIG_INTERWORKING */
-
-//	struct wpabuf *wps_ie; /* WPS IE from (Re)Association Request */
-//	struct wpabuf *p2p_ie; /* P2P IE from (Re)Association Request */
-//	struct wpabuf *hs20_ie; /* HS 2.0 IE from (Re)Association Request */
-
-//	struct os_time connected_time;
 
 #ifdef CONFIG_SAE
 	enum { SAE_INIT, SAE_COMMIT, SAE_CONFIRM } sae_state;

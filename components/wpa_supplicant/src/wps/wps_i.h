@@ -11,6 +11,7 @@
 
 #include "wps.h"
 #include "wps_attr_parse.h"
+#include "esp_wps.h"
 #include "esp_wifi_crypto_types.h"
 
 #ifdef CONFIG_WPS_NFC
@@ -124,6 +125,7 @@ struct wps_data {
 #endif
 };
 
+#if 0
 typedef enum wps_type {
 	WPS_TYPE_DISABLE = 0,
 	WPS_TYPE_E_PBC,
@@ -155,6 +157,7 @@ typedef struct {
 }esp_wps_config_t;
 
 wps_crypto_funcs_t wps_crypto_funcs;
+#endif
 
 /* wps_common.c */
 void wps_kdf(const u8 *key, const u8 *label_prefix, size_t label_prefix_len,

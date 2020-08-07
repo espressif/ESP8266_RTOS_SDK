@@ -15,8 +15,6 @@
 #include "eap_config.h"
 #include "esp_wpa2.h"
 
-#include "esp_wifi_crypto_types.h"
-
 /* RFC 4137 - EAP Peer state machine */
 
 typedef enum {
@@ -130,7 +128,10 @@ struct eap_sm {
 	const struct eap_method *m;
 };
 
-//wpa2_crypto_funcs_t wpa2_crypto_funcs;
+typedef enum {
+    WPA2_STATE_ENABLED = 0,
+    WPA2_STATE_DISABLED,
+} wpa2_state_t;
 
 const u8 * eap_get_config_identity(struct eap_sm *sm, size_t *len);
 const u8 * eap_get_config_password(struct eap_sm *sm, size_t *len);

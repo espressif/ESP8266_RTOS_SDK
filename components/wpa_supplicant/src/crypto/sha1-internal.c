@@ -15,18 +15,22 @@
 #include "utils/includes.h"
 
 #include "utils/common.h"
-#include "crypto/sha1.h"
-#include "crypto/sha1_i.h"
-#include "crypto/md5.h"
-#include "crypto/crypto.h"
+#include "sha1.h"
+#include "sha1_i.h"
+#include "md5.h"
+#include "crypto.h"
 
-#ifndef CONFIG_ESP_SHA
+#ifdef USE_MBEDTLS_CRYPTO
+#include "mbedtls/sha1.h"
+#endif
+
 typedef struct SHA1Context SHA1_CTX;
 
 void SHA1Transform(u32 state[5], const unsigned char buffer[64]);
 
-#endif
 
+
+#ifndef USE_MBEDTLS_CRYPTO
 /**
  * sha1_vector - SHA-1 hash for data vector
  * @num_elem: Number of elements in the data vector
@@ -47,9 +51,50 @@ sha1_vector(size_t num_elem, const u8 *addr[], const size_t *len, u8 *mac)
 	SHA1Final(mac, &ctx);
 	return 0;
 }
+#else 
+/**
+ * sha1_vector - SHA-1 hash for data vector
+ * @num_elem: Number of elements in the data vector
+ * @addr: Pointers to the data areas
+ * @len: Lengths of the data blocks
+ * @mac: Buffer for the hash
+ * Returns: 0 on success, -1 of failure
+ */
+int
+sha1_vector(size_t num_elem, const u8 *addr[], const size_t *len, u8 *mac)
+{
+    mbedtls_sha1_context ctx;
+	size_t i;
+    int ret;
+
+    mbedtls_sha1_init( &ctx );
+
+    if ((ret = mbedtls_sha1_starts_ret( &ctx)) != 0) {
+        goto exit;
+    }
 
 
-#ifndef CONFIG_ESP_SHA
+    for (i = 0; i < num_elem; i++) {
+        if ((ret = mbedtls_sha1_update_ret(&ctx, addr[i], len[i])) != 0) {
+            goto exit;
+        }
+    }
+ 
+    if ((ret = mbedtls_sha1_finish_ret( &ctx, mac)) != 0) {
+        goto exit;
+    }
+
+exit:
+    mbedtls_sha1_free( &ctx );
+
+    if (ret) {
+        return -1;
+    }
+
+    return 0;
+}
+#endif
+
 /* ===== start - public domain SHA1 implementation ===== */
 
 /*
@@ -130,7 +175,6 @@ A million repetitions of "a"
   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
 */
 
-/* Disable the option, and reduce memory copying */
 #define SHA1HANDSOFF
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
@@ -228,12 +272,10 @@ SHA1Transform(u32 state[5], const unsigned char buffer[64])
 	state[2] += c;
 	state[3] += d;
 	state[4] += e;
-
 	/* Wipe variables */
-	/* Disable to reduce memory copying */
-	//a = b = c = d = e = 0;
+	a = b = c = d = e = 0;
 #ifdef SHA1HANDSOFF
-	//os_memset(block, 0, 64);
+	os_memset(block, 0, 64);
 #endif
 }
 
@@ -290,7 +332,9 @@ void
 SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 {
 	u32 i;
+#if CONFIG_IDF_TARGET_ESP8266
 	unsigned long index;
+#endif
 	unsigned char finalcount[8];
 
 	for (i = 0; i < 8; i++) {
@@ -298,13 +342,19 @@ SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 			((context->count[(i >= 4 ? 0 : 1)] >>
 			  ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
 	}
-
+#if CONFIG_IDF_TARGET_ESP8266
 	index = 0x80;
 	SHA1Update(context, (unsigned char *)&index, 1);
-
+#else
+	SHA1Update(context, (unsigned char *) "\200", 1);
+#endif
 	while ((context->count[0] & 504) != 448) {
+#if CONFIG_IDF_TARGET_ESP8266
 		index = 0;
 		SHA1Update(context, (unsigned char *)&index, 1);
+#else
+		SHA1Update(context, (unsigned char *) "\0", 1);
+#endif
 	}
 	SHA1Update(context, finalcount, 8);  /* Should cause a SHA1Transform()
 					      */
@@ -314,13 +364,10 @@ SHA1Final(unsigned char digest[20], SHA1_CTX* context)
 			 255);
 	}
 	/* Wipe variables */
-	/* Disable here to reduce memory copying */
-	// i = 0;
-	// os_memset(context->buffer, 0, 64);
-	// os_memset(context->state, 0, 20);
-	// os_memset(context->count, 0, 8);
-	// os_memset(finalcount, 0, 8);
+	i = 0;
+	os_memset(context->buffer, 0, 64);
+	os_memset(context->state, 0, 20);
+	os_memset(context->count, 0, 8);
+	os_memset(finalcount, 0, 8);
 }
-
 /* ===== end - public domain SHA1 implementation ===== */
-#endif /* CONFIG_ESP_SHA */
