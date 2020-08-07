@@ -19,7 +19,7 @@
 
 #include "esp_netif.h"
 #include "lwip/sockets.h"
-#include "esp32/rom/md5_hash.h"
+#include "rom/md5_hash.h"
 #include "mbedtls/base64.h"
 
 #include "esp_system.h"
@@ -79,6 +79,10 @@ char *http_auth_digest(const char *username, const char *password, esp_http_auth
         auth_data->uri == NULL ||
         auth_data->realm == NULL) {
         return NULL;
+    }
+
+    if (auth_data->algorithm == NULL) {
+        auth_data->algorithm = "md5";
     }
 
     ha1 = calloc(1, MD5_MAX_LEN);
