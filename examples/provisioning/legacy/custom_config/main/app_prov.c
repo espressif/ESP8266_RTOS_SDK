@@ -15,6 +15,9 @@
 #include <nvs.h>
 #include <esp_event.h>
 
+#include <task.h>
+#include <stdlib.h>
+#include <esp_timer.h>
 #include <protocomm.h>
 #include <protocomm_httpd.h>
 #include <protocomm_security0.h>
@@ -211,6 +214,10 @@ static void app_prov_event_handler(void* handler_arg, esp_event_base_t event_bas
             /* If none of the expected reasons,
              * retry connecting to host SSID */
             g_prov->wifi_state = WIFI_PROV_STA_CONNECTING;
+            if (disconnected->reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
+                /*Switch to 802.11 bgn mode */
+                esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
+            }
             esp_wifi_connect();
         }
     }
