@@ -1,6 +1,6 @@
 gwen:
     core:       31796f0
-    net80211:   31796f0
+    net80211:   7da244e
     pp:         31796f0
     espnow:     31796f0
     wps:        31796f0
