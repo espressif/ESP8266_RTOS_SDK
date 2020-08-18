@@ -28,7 +28,7 @@
 #include "esp8266/rom_functions.h"
 #include "driver/rtc.h"
 #include "rom/uart.h"
-#include "internal/phy_init_data.h"
+#include "esp_private/phy_init_data.h"
 
 #define FRC2_LOAD               (0x60000620)
 #define FRC2_COUNT              (0x60000624)

@@ -28,7 +28,7 @@
 #include "nvs_flash.h"
 #include "sdkconfig.h"
 
-#include "internal/phy_init_data.h"
+#include "esp_private/phy_init_data.h"
 #include "phy.h"
 
 #include "driver/rtc.h"

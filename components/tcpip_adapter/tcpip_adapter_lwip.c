@@ -41,7 +41,7 @@
 #include "dhcpserver/dhcpserver.h"
 #include "dhcpserver/dhcpserver_options.h"
 #include "esp_log.h"
-#include "internal/esp_wifi_internal.h"
+#include "esp_private/wifi.h"
 
 #include "FreeRTOS.h"
 #include "timers.h"

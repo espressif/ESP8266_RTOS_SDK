@@ -494,7 +494,7 @@ static void set_cache_and_start_app(
 
 #include "esp_flash_partitions.h"
 #include "esp_fast_boot.h"
-#include "internal/esp_system_internal.h"
+#include "esp_private/esp_system_internal.h"
 
 static const char* TAG = "boot";
 

@@ -26,8 +26,8 @@
 #include "esp_libc.h"
 #include "esp8266/rom_functions.h"
 #include "esp8266/eagle_soc.h"
-#include "internal/phy_init_data.h"
-#include "internal/esp_system_internal.h"
+#include "esp_private/phy_init_data.h"
+#include "esp_private/esp_system_internal.h"
 
 #define PARTITION_DATA_OFFSET   (s_v2_flash_bin_size / 2)
 

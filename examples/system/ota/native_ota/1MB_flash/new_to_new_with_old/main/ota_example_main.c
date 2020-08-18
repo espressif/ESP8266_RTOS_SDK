@@ -13,7 +13,7 @@
 
 #include "sdkconfig.h"
 #ifdef CONFIG_CONNECT_ORIGINAL_AP
-#include "internal/esp_system_internal.h"
+#include "esp_private/esp_system_internal.h"
 #endif
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
