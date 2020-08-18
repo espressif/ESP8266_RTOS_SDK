@@ -16,22 +16,12 @@
 #define _ESP_WPA2_H
 
 #include <stdbool.h>
-#include "esp_wifi_crypto_types.h"
+
 #include "esp_err.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern const wpa2_crypto_funcs_t g_wifi_default_wpa2_crypto_funcs;
-
-typedef struct {
-    const wpa2_crypto_funcs_t *crypto_funcs;
-}esp_wpa2_config_t;
-
-#define WPA2_CONFIG_INIT_DEFAULT() { \
-    .crypto_funcs = &g_wifi_default_wpa2_crypto_funcs \
-}
 
 /**
   * @brief  Enable wpa2 enterprise authentication.
@@ -43,7 +33,7 @@ typedef struct {
   *    - ESP_OK: succeed.
   *    - ESP_ERR_NO_MEM: fail(internal memory malloc fail)
   */
-esp_err_t esp_wifi_sta_wpa2_ent_enable(const esp_wpa2_config_t *config);
+esp_err_t esp_wifi_sta_wpa2_ent_enable(void);
 
 /**
   * @brief  Disable wpa2 enterprise authentication.

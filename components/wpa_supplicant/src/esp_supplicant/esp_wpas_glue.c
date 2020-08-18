@@ -19,10 +19,6 @@
 #include "common/eapol_common.h"
 #include "rsn_supp/wpa.h"
 #include "rsn_supp/pmksa_cache.h"
-#define EP_OFFSET 36
-
-#define wpa_malloc_dram(s) heap_caps_malloc(s, MALLOC_CAP_8BIT)
-#define wpa_calloc_dram(n, s) heap_caps_calloc(n, s, MALLOC_CAP_8BIT)
 
 u8   *wpa_sm_alloc_eapol(struct wpa_sm *sm, u8 type,
                          const void *data, u16 data_len,
@@ -33,13 +29,11 @@ u8   *wpa_sm_alloc_eapol(struct wpa_sm *sm, u8 type,
 
     *msg_len = sizeof(struct ieee802_1x_hdr) + data_len;
 
-    buffer = wpa_malloc_dram(*msg_len + sizeof(struct l2_ethhdr) + EP_OFFSET);
+    buffer = os_malloc(*msg_len + sizeof(struct l2_ethhdr));
 
     if (buffer == NULL) {
         return NULL;
     }
-
-    buffer += EP_OFFSET;
 
     /* XXX: reserve l2_ethhdr is enough */
     hdr = (struct ieee802_1x_hdr *)((char *)buffer + sizeof(struct l2_ethhdr));
@@ -63,8 +57,8 @@ u8   *wpa_sm_alloc_eapol(struct wpa_sm *sm, u8 type,
 
 void  wpa_sm_free_eapol(u8 *buffer)
 {
-    // buffer = buffer - sizeof(struct l2_ethhdr) - EP_OFFSET;
-    // os_free(buffer);
+    buffer = buffer - sizeof(struct l2_ethhdr);
+    os_free(buffer);
 }
 
 void  wpa_sm_deauthenticate(struct wpa_sm *sm, u8 reason_code)

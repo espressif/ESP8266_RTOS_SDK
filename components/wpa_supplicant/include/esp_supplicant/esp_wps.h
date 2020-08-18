@@ -55,8 +55,6 @@ typedef enum wps_type {
     WPS_TYPE_MAX,
 } wps_type_t;
 
-extern const wps_crypto_funcs_t g_wifi_default_wps_crypto_funcs;
-
 #define WPS_MAX_MANUFACTURER_LEN 65
 #define WPS_MAX_MODEL_NUMBER_LEN 33
 #define WPS_MAX_MODEL_NAME_LEN   33
@@ -71,13 +69,11 @@ typedef struct {
 
 typedef struct {
     wps_type_t wps_type;
-    const wps_crypto_funcs_t *crypto_funcs;
     wps_factory_information_t factory_info;
 } esp_wps_config_t;
 
 #define WPS_CONFIG_INIT_DEFAULT(type) { \
     .wps_type = type, \
-    .crypto_funcs = &g_wifi_default_wps_crypto_funcs, \
     .factory_info = {   \
         ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(manufacturer, "ESPRESSIF")  \
         ESP_COMPILER_DESIGNATED_INIT_AGGREGATE_TYPE_STR(model_number, "ESP8266")  \

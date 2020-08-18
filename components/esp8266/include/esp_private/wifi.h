@@ -15,6 +15,10 @@
 #ifndef _ESP_WIFI_INTERNAL_H
 #define _ESP_WIFI_INTERNAL_H
 
+#include "esp_wifi_types.h"
+#include "esp_event.h"
+#include "esp_wifi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,6 +61,44 @@ typedef enum {
 #define WIFI_LOG_SUBMODULE_AMSDU     (1<<13)
 #define WIFI_LOG_SUBMODULE_FRAG      (1<<14)
 #define WIFI_LOG_SUBMODULE_WPA2      (1<<15)
+
+
+/**
+ * @brief Initialize Wi-Fi Driver
+ *     Alloc resource for WiFi driver, such as WiFi control structure, RX/TX buffer,
+ *     WiFi NVS structure among others.
+ *
+ * For the most part, you need not call this function directly. It gets called
+ * from esp_wifi_init().
+ *
+ * This function may be called, if you only need to initialize the Wi-Fi driver
+ * without having to use the network stack on top.
+ *
+ * @param  config provide WiFi init configuration
+ *
+ * @return
+ *    - ESP_OK: succeed
+ *    - ESP_ERR_NO_MEM: out of memory
+ *    - others: refer to error code esp_err.h
+ */
+esp_err_t esp_wifi_init_internal(const wifi_init_config_t *config);
+
+/**
+ * @brief Deinitialize Wi-Fi Driver
+ *     Free resource for WiFi driver, such as WiFi control structure, RX/TX buffer,
+ *     WiFi NVS structure among others.
+ *
+ * For the most part, you need not call this function directly. It gets called
+ * from esp_wifi_deinit().
+ *
+ * This function may be called, if you call esp_wifi_init_internal to initialize
+ * WiFi driver.
+ *
+ * @return
+ *    - ESP_OK: succeed
+ *    - others: refer to error code esp_err.h
+ */
+esp_err_t esp_wifi_deinit_internal(void);
 
 /**
   * @brief     Set WIFI received TCP/IP data cache ram type

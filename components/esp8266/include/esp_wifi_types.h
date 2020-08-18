@@ -89,12 +89,16 @@ typedef enum {
     WIFI_REASON_802_1X_AUTH_FAILED       = 23,
     WIFI_REASON_CIPHER_SUITE_REJECTED    = 24,
 
+    WIFI_REASON_INVALID_PMKID            = 53,
+
     WIFI_REASON_BEACON_TIMEOUT           = 200,
     WIFI_REASON_NO_AP_FOUND              = 201,
     WIFI_REASON_AUTH_FAIL                = 202,
     WIFI_REASON_ASSOC_FAIL               = 203,
     WIFI_REASON_HANDSHAKE_TIMEOUT        = 204,
-    WIFI_REASON_BASIC_RATE_NOT_SUPPORT   = 205,
+    WIFI_REASON_CONNECTION_FAIL          = 205,
+    WIFI_REASON_AP_TSF_RESET             = 206,
+    WIFI_REASON_BASIC_RATE_NOT_SUPPORT   = 207,
 } wifi_err_reason_t;
 
 typedef enum {
@@ -516,6 +520,10 @@ typedef struct {
     wifi_auth_mode_t old_mode;         /**< the old auth mode of AP */
     wifi_auth_mode_t new_mode;         /**< the new auth mode of AP */
 } wifi_event_sta_authmode_change_t;
+
+#define MAX_SSID_LEN        32
+#define MAX_PASSPHRASE_LEN  64
+#define MAX_WPS_AP_CRED     3
 
 /** Argument structure for WIFI_EVENT_STA_WPS_ER_PIN event */
 typedef struct {

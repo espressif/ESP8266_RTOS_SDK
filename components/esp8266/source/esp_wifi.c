@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdio.h>
+#include <string.h>
 #include "sdkconfig.h"
 #include "esp_libc.h"
 #include "esp_system.h"
@@ -19,6 +21,8 @@
 #include "esp_log.h"
 #include "esp_private/wifi.h"
 #include "phy.h"
+#include "esp_supplicant/esp_wpa.h"
+#include "esp_aio.h"
 
 #define TAG "wifi_init"
 
@@ -30,8 +34,10 @@ const bool _g_esp_wifi_connect_open_router_when_pwd_is_set = true;
 const bool _g_esp_wifi_connect_open_router_when_pwd_is_set = false;
 #endif
 
+#define  EP_OFFSET 36
+int ieee80211_output_pbuf(esp_aio_t *aio);
+
 esp_err_t mac_init(void);
-esp_err_t esp_wifi_init_internal(const wifi_init_config_t *config);
 
 ESP_EVENT_DEFINE_BASE(WIFI_EVENT);
 
@@ -109,6 +115,19 @@ static void esp_wifi_set_debug_log()
 #endif /* CONFIG_ESP8266_WIFI_DEBUG_LOG_ENABLE*/
 }
 
+esp_err_t esp_wifi_deinit(void)
+{
+    esp_err_t err = ESP_OK;
+
+    esp_supplicant_deinit();
+    err = esp_wifi_deinit_internal();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to deinit Wi-Fi driver (0x%x)", err);
+        return err;
+    }
+    return err;
+}
+
 /**
   * @brief  Init WiFi
   *         Alloc resource for WiFi driver, such as WiFi control structure, RX/TX buffer,
@@ -137,6 +156,16 @@ esp_err_t esp_wifi_init(const wifi_init_config_t *config)
     esp_err_t result = esp_wifi_init_internal(config);
     if (result == ESP_OK) {
         esp_wifi_set_debug_log();
+        result = esp_supplicant_init();
+        if (result != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to init supplicant (0x%x)", result);
+            esp_err_t deinit_ret = esp_wifi_deinit();
+            if (deinit_ret != ESP_OK) {
+                ESP_LOGE(TAG, "Failed to deinit Wi-Fi (0x%x)", deinit_ret);
+            }
+
+            return result;
+        }
     }
 
     result = tcpip_adapter_set_default_wifi_handlers();
@@ -169,3 +198,42 @@ bool IRAM_ATTR esp_wifi_try_rate_from_high(void) {
 #endif
     return false;
 }
+
+int wifi_internal_send_cb(esp_aio_t* aio)
+{
+    char* pb = (char*)aio->arg;
+
+    if (pb) {
+        os_free(pb);
+        pb = NULL;
+    }
+
+    return ESP_OK;
+}
+
+int esp_wifi_internal_tx(wifi_interface_t wifi_if, void *buffer, uint16_t len)
+{
+    esp_aio_t aio;
+    esp_err_t ret = ESP_OK;
+    uint8_t *dram_buffer = (uint8_t *)heap_caps_malloc(len + EP_OFFSET, MALLOC_CAP_8BIT);
+    if (!dram_buffer) {
+        return ESP_ERR_NO_MEM;
+    }
+    dram_buffer = ((uint8_t *)dram_buffer + EP_OFFSET);
+    memcpy(dram_buffer, buffer, len);
+
+    aio.arg = (char *)dram_buffer - EP_OFFSET;
+    aio.cb = wifi_internal_send_cb;
+    aio.fd = wifi_if;
+    aio.pbuf = (char *)dram_buffer;
+    aio.len = len;
+    aio.ret = 0;
+    ret = ieee80211_output_pbuf(&aio);
+
+    if(ret != 0) {
+        os_free(aio.arg);
+    }
+
+    return ret;
+}
+
