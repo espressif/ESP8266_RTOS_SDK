@@ -46,7 +46,6 @@
 #include "sdkconfig.h"
 #include "sntp.h"
 #include "netif/dhcp_state.h"
-#include "driver/soc.h"
 
 /* Enable all Espressif-only options */
 
@@ -106,12 +105,6 @@
 #define mem_clib_malloc(s) heap_caps_malloc(s, MALLOC_CAP_8BIT)
 #define mem_clib_calloc(n, s) heap_caps_calloc(n, s, MALLOC_CAP_8BIT)
 
-/**
- * @brief System
- */
-#define SYS_ARCH_DECL_PROTECT(_lev)    esp_irqflag_t _lev
-#define SYS_ARCH_PROTECT(_lev)         _lev = soc_save_local_irq()
-#define SYS_ARCH_UNPROTECT(_lev)       soc_restore_local_irq(_lev)
 /*
    ------------------------------------------------
    ---------- Internal Memory Pool Sizes ----------
