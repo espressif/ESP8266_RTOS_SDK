@@ -60,6 +60,16 @@ void vPortETSIntrUnlock(void);
 #define MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
 
+typedef uint32_t ETSSignal;
+typedef uint32_t ETSParam;
+
+typedef struct ETSEventTag ETSEvent;    /**< Event transmit/receive in ets*/
+
+struct ETSEventTag {
+    ETSSignal sig;  /**< Event signal, in same task, different Event with different signal*/
+    ETSParam  par;  /**< Event parameter, sometimes without usage, then will be set as 0*/
+};
+
 /**
   * @brief  Delay function, maximum value: 65535 us.
   *

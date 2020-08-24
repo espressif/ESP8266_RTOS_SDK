@@ -17,7 +17,7 @@
 
 #include "esp_log.h"
 #include "esp_system.h"
-#include "internal/esp_system_internal.h"
+#include "esp_private/esp_system_internal.h"
 
 #include "rom/crc.h"
 

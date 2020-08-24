@@ -32,7 +32,7 @@ static esp_err_t wpa3_build_sae_commit(u8 *bssid)
     u8 own_addr[ETH_ALEN];
     const u8 *pw;
 
-    if (wpa_sta_is_cur_pmksa_set()) {
+    if (wpa_sta_cur_pmksa_matches_akm()) {
         wpa_printf(MSG_INFO, "wpa3: Skip SAE and use cached PMK instead");
         return ESP_FAIL;
     }
@@ -130,7 +130,7 @@ void esp_wpa3_free_sae_data(void)
     sae_clear_data(&g_sae_data);
 }
 
-u8 *wpa3_build_sae_msg(u8 *bssid, u32 sae_msg_type, u32 *sae_msg_len)
+static u8 *wpa3_build_sae_msg(u8 *bssid, u32 sae_msg_type, u32 *sae_msg_len)
 {
     u8 *buf = NULL;
 
@@ -201,12 +201,11 @@ static int wpa3_parse_sae_confirm(u8 *buf, u32 len)
     g_sae_data.state = SAE_ACCEPTED;
 
     wpa_set_pmk(g_sae_data.pmk, g_sae_data.pmkid, true);
-    memcpy(esp_wifi_sta_get_ap_info_prof_pmk_internal(), g_sae_data.pmk, PMK_LEN);
 
     return ESP_OK;
 }
 
-int wpa3_parse_sae_msg(u8 *buf, u32 len, u32 sae_msg_type, u16 status)
+static int wpa3_parse_sae_msg(u8 *buf, u32 len, u32 sae_msg_type, u16 status)
 {
     int ret = ESP_OK;
 
@@ -226,15 +225,11 @@ int wpa3_parse_sae_msg(u8 *buf, u32 len, u32 sae_msg_type, u16 status)
 
     return ret;
 }
-#else
-u8 *wpa3_build_sae_msg(u8 *bssid, u32 sae_msg_type, u32 *sae_msg_len)
-{
-    return NULL;
-}
 
-int wpa3_parse_sae_msg(u8 *buf, u32 len, u32 sae_msg_type, u16 status)
+void esp_wifi_register_wpa3_cb(struct wpa_funcs *wpa_cb)
 {
-    return ESP_FAIL;
+    wpa_cb->wpa3_build_sae_msg = wpa3_build_sae_msg;
+    wpa_cb->wpa3_parse_sae_msg = wpa3_parse_sae_msg;
 }
 
 #endif /* CONFIG_WPA3_SAE */

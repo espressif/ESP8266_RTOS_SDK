@@ -1009,10 +1009,19 @@ enum wps_cb_status {
 
 typedef void (*wps_st_cb_t)(int status);
 
-#if 1//def USE_WPS_TASK
-#define SIG_WPS_START	0
-#define	SIG_WPS_RX	1
-#define	SIG_WPS_NUM	2
+#ifdef USE_WPS_TASK
+enum wps_sig_type {
+    SIG_WPS_ENABLE = 1,         //1
+    SIG_WPS_DISABLE,            //2
+    SIG_WPS_START,              //3
+    SIG_WPS_RX,                 //4
+    SIG_WPS_TIMER_TIMEOUT,      //5
+    SIG_WPS_TIMER_MSG_TIMEOUT,  //6
+    SIG_WPS_TIMER_SUCCESS_CB,   //7
+    SIG_WPS_TIMER_SCAN,         //8
+    SIG_WPS_TIMER_EAPOL_START,  //9
+    SIG_WPS_NUM,                //10
+};
 #endif
 
 #define WPS_EAP_EXT_VENDOR_TYPE "WFA-SimpleConfig-Enrollee-1-0"
@@ -1025,13 +1034,14 @@ struct wps_sm {
     u8 identity_len;
     u8 ownaddr[ETH_ALEN];
     u8 bssid[ETH_ALEN];
-    u8 ssid[32];
-    u8 ssid_len;
+    u8 ssid[MAX_WPS_AP_CRED][MAX_SSID_LEN];
+    u8 ssid_len[MAX_WPS_AP_CRED];
+    char key[MAX_WPS_AP_CRED][MAX_PASSPHRASE_LEN];
+    u8 key_len[MAX_WPS_AP_CRED];
+    u8 ap_cred_cnt;
     struct wps_device_data *dev;
     u8 uuid[16];
     u8 eapol_version;
-    char key[64];
-    u8 key_len;
     ETSTimer wps_timeout_timer;
     ETSTimer wps_msg_timeout_timer;
     ETSTimer wps_scan_timer;
@@ -1055,8 +1065,8 @@ struct wps_sm {
 #define    WIFI_CAPINFO_PRIVACY        0x0010
 
 struct wps_sm *wps_sm_get(void);
-int wps_ssid_save(u8 *ssid, u8 ssid_len);
-int wps_key_save(char *key, u8 key_len);
+int wps_ssid_save(u8 *ssid, u8 ssid_len, u8 idx);
+int wps_key_save(char *key, u8 key_len, u8 idx);
 int wps_station_wps_register_cb(wps_st_cb_t cb);
 int wps_station_wps_unregister_cb(void);
 int wps_start_pending(void);

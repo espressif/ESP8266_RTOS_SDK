@@ -41,8 +41,8 @@
  * been completed successfully since WPA-PSK does not use EAP state machine.
  */
 
-#define WPA_4_4_HANDSHAKE_BIT   (1<<6)  //(1<<13)
-#define WPA_GROUP_HANDSHAKE_BIT (1<<7)  //(1<<14)
+#define WPA_4_4_HANDSHAKE_BIT   (1<<13)
+#define WPA_GROUP_HANDSHAKE_BIT (1<<14)
   struct wpa_sm gWpaSm;
 /* fix buf for tx for now */
 #define WPA_TX_MSG_BUFF_MAXLEN 200
@@ -1944,7 +1944,7 @@ int   wpa_sm_rx_eapol(u8 *src_addr, u8 *buf, u32 len)
 #ifdef DEBUG_PRINT
                 wpa_printf(MSG_INFO, "EAPOL1 received for %d times, sending deauth", sm->eapol1_count);
 #endif
-                // esp_wifi_internal_issue_disconnect(WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT);
+                esp_wifi_internal_issue_disconnect(WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT);
                 goto out;
             }
             wpa_supplicant_process_1_of_4(sm, src_addr, key,
@@ -2044,9 +2044,9 @@ void wpa_sm_set_pmk_from_pmksa(struct wpa_sm *sm)
 
 
 #ifdef ESP_SUPPLICANT
-void wpa_register(char* payload, WPA_SEND_FUNC snd_func,
-                                    WPA_SET_ASSOC_IE set_assoc_ie_func, WPA_INSTALL_KEY ppinstallkey, WPA_GET_KEY ppgetkey, WPA_DEAUTH_FUNC wpa_deauth,
-                                    WPA_NEG_COMPLETE wpa_neg_complete)
+bool wpa_sm_init(char * payload, WPA_SEND_FUNC snd_func,
+                   WPA_SET_ASSOC_IE set_assoc_ie_func, WPA_INSTALL_KEY ppinstallkey, WPA_GET_KEY ppgetkey, WPA_DEAUTH_FUNC wpa_deauth,
+                   WPA_NEG_COMPLETE wpa_neg_complete)
 {
     struct wpa_sm *sm = &gWpaSm;
 
@@ -2140,6 +2140,9 @@ int wpa_set_bss(char *macddr, char * bssid, u8 pairwise_cipher, u8 group_cipher,
         esp_wifi_get_config(ESP_IF_WIFI_STA, &wifi_cfg);
         sm->pmf_cfg = wifi_cfg.sta.pmf_cfg;
         sm->mgmt_group_cipher = cipher_type_map_public_to_supp(esp_wifi_sta_get_mgmt_group_cipher());
+    } else {
+        memset(&sm->pmf_cfg, 0, sizeof(sm->pmf_cfg));
+        sm->mgmt_group_cipher = WPA_CIPHER_NONE;
     }
 #endif
     set_assoc_ie(assoc_ie_buf); /* use static buffer */
@@ -2172,11 +2175,11 @@ wpa_set_passphrase(char * passphrase, u8 *ssid, size_t ssid_len)
     /* This is really SLOW, so just re cacl while reset param */
     if (esp_wifi_sta_get_reset_param_internal() != 0) {
         // check it's psk
-        if (os_strlen((char *)esp_wifi_sta_get_prof_password_internal()) == 64) {
-            hexstr2bin((char *)esp_wifi_sta_get_prof_password_internal(), esp_wifi_sta_get_prof_pmk_internal(), PMK_LEN);
+        if (strlen((char *)esp_wifi_sta_get_prof_password_internal()) == 64) {
+            hexstr2bin((char *)esp_wifi_sta_get_prof_password_internal(), esp_wifi_sta_get_ap_info_prof_pmk_internal(), PMK_LEN);
         } else {
         pbkdf2_sha1((char *)esp_wifi_sta_get_prof_password_internal(), (char *)sta_ssid->ssid, (size_t)sta_ssid->len,
-            4096, esp_wifi_sta_get_prof_pmk_internal(), PMK_LEN);
+            4096, esp_wifi_sta_get_ap_info_prof_pmk_internal(), PMK_LEN);
         }
         esp_wifi_sta_update_ap_info_internal();
         esp_wifi_sta_set_reset_param_internal(0);
@@ -2370,6 +2373,15 @@ bool wpa_sta_in_4way_handshake(void)
 bool wpa_sta_is_cur_pmksa_set(void) {
     struct wpa_sm *sm = &gWpaSm;
     return (pmksa_cache_get_current(sm) != NULL);
+}
+
+bool wpa_sta_cur_pmksa_matches_akm(void) {
+    struct wpa_sm *sm = &gWpaSm;
+    struct rsn_pmksa_cache_entry *pmksa;
+
+    pmksa = pmksa_cache_get_current(sm);
+    return (pmksa != NULL  &&
+            sm->key_mgmt == pmksa->akmp);
 }
 
 void wpa_sta_clear_curr_pmksa(void) {

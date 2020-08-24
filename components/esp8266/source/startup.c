@@ -27,8 +27,8 @@
 #include "esp_phy_init.h"
 #include "esp_heap_caps_init.h"
 #include "esp_task_wdt.h"
-#include "internal/esp_wifi_internal.h"
-#include "internal/esp_system_internal.h"
+#include "esp_private/wifi.h"
+#include "esp_private/esp_system_internal.h"
 #include "esp8266/eagle_soc.h"
 
 #include "FreeRTOS.h"

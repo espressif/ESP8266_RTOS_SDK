@@ -152,7 +152,7 @@ typedef void (*WPA_DEAUTH_FUNC)(u8 reason_code);
 
 typedef void (*WPA_NEG_COMPLETE)(void);
 
-void wpa_register(char * payload, WPA_SEND_FUNC snd_func, \
+bool wpa_sm_init(char * payload, WPA_SEND_FUNC snd_func, \
         WPA_SET_ASSOC_IE set_assoc_ie_func, \
         WPA_INSTALL_KEY ppinstallkey, \
         WPA_GET_KEY ppgetkey, \

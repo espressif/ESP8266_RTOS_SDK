@@ -27,9 +27,7 @@
 
 #include "esp_supplicant/esp_wifi_driver.h"
 #include "esp_wifi.h"
-
-#define wpa_malloc_dram(s) heap_caps_malloc(s, MALLOC_CAP_8BIT)
-#define wpa_calloc_dram(n, s) heap_caps_calloc(n, s, MALLOC_CAP_8BIT)
+#include "esp_private/wifi.h"
 
 #define STATE_MACHINE_DATA struct wpa_state_machine
 #define STATE_MACHINE_DEBUG_PREFIX "WPA"
@@ -56,8 +54,6 @@ static const u32 eapol_key_timeout_first_group = 500; /* ms */
 #define WPA_SM_MAX_INDEX 16
 static void *s_sm_table[WPA_SM_MAX_INDEX];
 static u32 s_sm_valid_bitmap = 0;
-
-ETSTimer resend_eapol;
 
 static struct wpa_state_machine * wpa_auth_get_sm(u32 index)
 {
@@ -153,79 +149,28 @@ static inline int wpa_auth_get_seqnum(struct wpa_authenticator *wpa_auth,
     return -1;
 }
 
-#include "esp_aio.h"
-int ieee80211_output_pbuf(esp_aio_t *aio);
-#define  EP_OFFSET 36
 /* fix buf for tx for now */
 #define WPA_TX_MSG_BUFF_MAXLEN 200
-
-static int wpa_auth_send_cb(esp_aio_t* aio)
-{
-    char* pb = (char*)aio->arg;
-
-    os_free(pb);
-
-    return 0;
-}
 
 static inline int 
 wpa_auth_send_eapol(struct wpa_authenticator *wpa_auth, const u8 *addr,
             const u8 *data, size_t data_len, int encrypt)
 {
-    // wujg : need to add send data function
+    void *buffer = os_malloc(256);
+    struct l2_ethhdr *eth = buffer;
 
-#ifndef IOT_SIP_MODE
-    esp_aio_t aio;
-    uint8_t* pb = wpa_malloc_dram(data_len + EP_OFFSET + sizeof(struct l2_ethhdr));
-    struct l2_ethhdr* eth;
-    u8 mac[6];
-    pb = pb + EP_OFFSET;
-    esp_wifi_get_mac(WIFI_IF_AP, mac);
-
-    if (pb == NULL) {
-        wpa_printf( MSG_DEBUG, "send_eapol, buffer=%p\n", pb);
+    if (!buffer){
+        wpa_printf( MSG_DEBUG, "send_eapol, buffer=%p\n", buffer);
         return -1;
     }
 
-    eth = (struct l2_ethhdr*)pb;
-    os_memcpy(eth->h_dest, addr, ETH_ALEN);
-    os_memcpy(eth->h_source, mac, ETH_ALEN);
+    memcpy(eth->h_dest, addr, ETH_ALEN);
+    memcpy(eth->h_source, wpa_auth->addr, ETH_ALEN);
     eth->h_proto = host_to_be16(ETH_P_EAPOL);
 
-    os_memcpy((uint8_t*)pb + sizeof(struct l2_ethhdr), data, data_len);
-
-    aio.arg = pb - EP_OFFSET;
-    aio.cb = wpa_auth_send_cb;
-    aio.fd = 1;
-    aio.pbuf = (char *)pb;
-    aio.len = sizeof(struct l2_ethhdr) + data_len;
-    aio.ret = 0;
-
-    if (ieee80211_output_pbuf(&aio) != 0) {
-        os_free(pb - EP_OFFSET);
-        wpa_printf(MSG_INFO, "wpa_auth_send_eapol failed");
-        return -1;
-    }
-
-#else
-    esf_buf* eb = NULL;
-    struct l2_ethhdr* eth;
-    uint8_t* frm;
-
-    eb = ieee80211_getmgtframe(&frm, sizeof(struct ieee80211_frame), WPA_TX_MSG_BUFF_MAXLEN);
-    eth = etod(eb, struct l2_ethhdr);
-    os_memcpy(eth->h_dest, addr, ETH_ALEN);
-    os_memcpy(eth->h_source, g_ic.ic_if1_conn->ni_myaddr, ETH_ALEN);
-    eth->h_proto = host_to_be16(ETH_P_EAPOL);
-
-    os_memcpy(frm + sizeof(struct l2_ethhdr), data, data_len);
-
-    eb->hdr_len = sizeof(struct ieee80211_frame);
-    eb->data_len = sizeof(struct l2_ethhdr) + data_len;
-
-    ieee80211_output_pbuf(g_ic.ic_if1_conn, eb);
-#endif
-
+    memcpy((char *)buffer + sizeof(struct l2_ethhdr), data, data_len);
+    esp_wifi_internal_tx(1, buffer, sizeof(struct l2_ethhdr) + data_len);
+    os_free(buffer);
     return 0;
 }
 
@@ -239,9 +184,8 @@ int wpa_auth_for_each_sta(struct wpa_authenticator *wpa_auth,
 static void wpa_sta_disconnect(struct wpa_authenticator *wpa_auth,
                    const u8 *addr)
 {
-    // wujg : need to add disconnect function
     wpa_printf(MSG_DEBUG, "wpa_sta_disconnect STA " MACSTR, MAC2STR(addr));
-    //esp_wifi_ap_deauth_internal((uint8_t*)addr, WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT);
+    esp_wifi_ap_deauth_internal((uint8_t*)addr, WLAN_REASON_4WAY_HANDSHAKE_TIMEOUT);
     return;
 }
 
@@ -490,8 +434,8 @@ void wpa_auth_sta_deinit(struct wpa_state_machine *sm)
     if (sm == NULL)
         return;
 
-    ets_timer_disarm(&resend_eapol);
-    ets_timer_done(&resend_eapol);
+    ets_timer_disarm(&sm->resend_eapol);
+    ets_timer_done(&sm->resend_eapol);
 
     if (sm->in_step_loop) {
         /* Must not free state machine while wpa_sm_step() is running.
@@ -870,8 +814,8 @@ continue_processing:
         }
         sm->MICVerified = TRUE;
         eloop_cancel_timeout(wpa_send_eapol_timeout, wpa_auth, sm);
-        ets_timer_disarm(&resend_eapol);
-        ets_timer_done(&resend_eapol);
+        ets_timer_disarm(&sm->resend_eapol);
+        ets_timer_done(&sm->resend_eapol);
         sm->pending_1_of_4_timeout = 0;
     }
 
@@ -1155,7 +1099,7 @@ void __wpa_send_eapol(struct wpa_authenticator *wpa_auth,
     os_free(hdr);
 }
 
-void resend_eapol_handle(void *timeout_ctx)
+int hostap_eapol_resend_process(void *timeout_ctx)
 {
     u32 index = (u32)timeout_ctx;
     struct wpa_state_machine *sm = wpa_auth_get_sm(index);
@@ -1170,6 +1114,18 @@ void resend_eapol_handle(void *timeout_ctx)
     } else {
     	wpa_printf( MSG_INFO, "Station left, stop send EAPOL frame");
     }
+
+    return ESP_OK;
+}
+
+void resend_eapol_handle(void *timeout_ctx)
+{
+    wifi_ipc_config_t cfg;
+
+    cfg.fn = hostap_eapol_resend_process;
+    cfg.arg = timeout_ctx;
+    cfg.arg_size = 0;
+    esp_wifi_ipc_internal(&cfg, false);
 }
 
 static void wpa_send_eapol(struct wpa_authenticator *wpa_auth,
@@ -1200,9 +1156,9 @@ static void wpa_send_eapol(struct wpa_authenticator *wpa_auth,
            "counter %d)\n", timeout_ms, ctr);
     eloop_register_timeout(timeout_ms / 1000, (timeout_ms % 1000) * 1000,
                    wpa_send_eapol_timeout, wpa_auth, sm);
-    ets_timer_disarm(&resend_eapol);
-    ets_timer_setfn(&resend_eapol, (ETSTimerFunc *)resend_eapol_handle, (void*)(sm->index));
-    ets_timer_arm(&resend_eapol, 1000, 0);
+    ets_timer_disarm(&sm->resend_eapol);
+    ets_timer_setfn(&sm->resend_eapol, (ETSTimerFunc *)resend_eapol_handle, (void*)(sm->index));
+    ets_timer_arm(&sm->resend_eapol, 1000, 0);
 }
 
 

@@ -1,7 +1,7 @@
 # supplicant make file
 
 COMPONENT_PRIV_INCLUDEDIRS := src
-COMPONENT_SRCDIRS := port src/ap src/common src/crypto src/eap_peer src/fast_crypto src/rsn_supp src/tls src/utils src/esp_supplicant src/wps
+COMPONENT_SRCDIRS := port src/ap src/common src/crypto src/eap_peer src/rsn_supp src/tls src/utils src/esp_supplicant src/wps
 COMPONENT_ADD_INCLUDEDIRS := include port/include include/esp_supplicant
 
 ifeq ($(CONFIG_WPA_MBEDTLS_CRYPTO), y)

@@ -19,7 +19,7 @@
 #include <sys/errno.h>
 #include "esp_log.h"
 #include "rom/crc.h"
-#include "internal/esp_system_internal.h"
+#include "esp_private/esp_system_internal.h"
 #include "esp_fast_boot.h"
 #ifndef BOOTLOADER_BUILD
 #include "esp_ota_ops.h"

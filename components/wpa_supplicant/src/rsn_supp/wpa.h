@@ -39,6 +39,7 @@ struct wpa_sm;
 int wpa_sm_rx_eapol(u8 *src_addr, u8 *buf, u32 len);
 bool wpa_sta_is_cur_pmksa_set(void);
 bool wpa_sta_in_4way_handshake(void);
+bool wpa_sta_cur_pmksa_matches_akm(void);
 
 #define WPA_ASSERT  assert
 
@@ -126,6 +127,8 @@ void wpa_set_pmk(uint8_t *pmk, const u8 *pmkid, bool cache_pmksa);
 int wpa_hook_init(void);
 
 bool wpa_hook_deinit(void);
+
+char * dup_binstr(const void *src, size_t len);
 
 int wpa_michael_mic_failure(u16 isunicast);
 

@@ -18,7 +18,7 @@
 #include "esp_libc.h"
 #include "esp_system.h"
 #include "esp_task_wdt.h"
-#include "internal/esp_system_internal.h"
+#include "esp_private/esp_system_internal.h"
 
 #include "esp8266/rom_functions.h"
 #include "esp8266/backtrace.h"
