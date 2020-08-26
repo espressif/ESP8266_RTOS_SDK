@@ -1,10 +1,23 @@
-set(COMPONENT_ADD_INCLUDEDIRS include)
-set(COMPONENT_PRIV_INCLUDEDIRS proto-c ../protocomm/proto-c)
-set(COMPONENT_SRCS  "src/wifi_config.c"
-                    "proto-c/wifi_config.pb-c.c"
-                    "proto-c/wifi_constants.pb-c.c")
+if(CONFIG_ENABLE_UNIFIED_PROVISIONING)
+set(srcs "src/wifi_config.c"
+        "src/wifi_scan.c"
+        "src/manager.c"
+        "src/handlers.c"
+        "src/scheme_softap.c"
+        "proto-c/wifi_config.pb-c.c"
+        "proto-c/wifi_scan.pb-c.c"
+        "proto-c/wifi_constants.pb-c.c")
+endif()
 
-set(COMPONENT_REQUIRES lwip)
-set(COMPONENT_PRIV_REQUIRES protobuf-c protocomm)
+idf_component_register(SRCS "${srcs}"
+                    INCLUDE_DIRS include
+                    PRIV_INCLUDE_DIRS src proto-c ../protocomm/proto-c
+                    REQUIRES lwip protocomm
+                    PRIV_REQUIRES protobuf-c mdns json)
 
-register_component()
+# To avoid warning for strncpy
+set_source_files_properties(src/handlers.c src/scheme_softap.c
+    PROPERTIES COMPILE_FLAGS
+    -Wno-stringop-truncation
+)
+

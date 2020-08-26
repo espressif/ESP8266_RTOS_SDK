@@ -16,7 +16,7 @@
 #define _WIFI_PROV_CONFIG_H_
 
 #include <lwip/inet.h>
-#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -76,7 +76,7 @@ typedef struct {
  */
 typedef struct {
     char    ssid[33];       /*!< SSID of the AP to which the slave is to be connected */
-    char    password[65];   /*!< Password of the AP */
+    char    password[64];   /*!< Password of the AP */
     char    bssid[6];       /*!< BSSID of the AP */
     uint8_t channel;        /*!< Channel of the AP */
 } wifi_prov_config_set_data_t;
