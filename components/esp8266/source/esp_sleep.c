@@ -427,3 +427,8 @@ esp_err_t esp_pm_configure(const void* vconfig)
     }
     return ESP_OK;
 }
+
+uint32_t rtc_time_get(void)
+{
+    return REG_READ(RTC_SLP_CNT_VAL);
+}
