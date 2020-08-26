@@ -1,18 +1,23 @@
 menu "ESP HTTP client"
 
 
-config ESP_HTTP_CLIENT_ENABLE_HTTPS
-    bool "Enable https"
-    default y
-    help
-        This option will enable https protocol by linking mbedtls library and initializing SSL transport
+    config ESP_HTTP_CLIENT_ENABLE_HTTPS
+        bool "Enable https"
+        default y
+        help
+            This option will enable https protocol by linking mbedtls library and initializing SSL transport
 
-config HTTP_BUF_SIZE
-    int "Default HTTP Buffer Size (both send and receive)"
-    default 512
-    range 512 1460
-    help
-        Set HTTP Buffer Size. The larger buffer size will make send and receive more size packet once. 
+    config ESP_HTTP_CLIENT_ENABLE_BASIC_AUTH
+        bool "Enable HTTP Basic Authentication"
+        default n
+        help
+            This option will enable HTTP Basic Authentication. It is disabled by default as Basic
+            auth uses unencrypted encoding, so it introduces a vulnerability when not using TLS
 
-
+    config HTTP_BUF_SIZE
+        int "Default HTTP Buffer Size (both send and receive)"
+        default 512
+        range 512 1460
+        help
+            Set HTTP Buffer Size. The larger buffer size will make send and receive more size packet once. 
 endmenu

@@ -17,11 +17,11 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "tcpip_adapter.h"
+#include "esp_netif.h"
 #include "lwip/sockets.h"
 #include "rom/md5_hash.h"
+#include "mbedtls/base64.h"
 
-#include "esp_base64.h"
 #include "esp_system.h"
 #include "esp_log.h"
 
@@ -138,19 +138,17 @@ _digest_exit:
 
 char *http_auth_basic(const char *username, const char *password)
 {
+    int out;
     char *user_info = NULL;
     char *digest = NULL;
-    size_t n = 0, size = 0;
+    size_t n = 0;
     asprintf(&user_info, "%s:%s", username, password);
     HTTP_MEM_CHECK(TAG, user_info, return NULL);
-    size = strlen(user_info);
-    n = (size / 3) * 4 + 1; // String to Base64 length calculation
-    if (size % 3 != 0)
-        n += 4;
-    digest = calloc(1, 6 + n);
+    mbedtls_base64_encode(NULL, 0, &n, (const unsigned char *)user_info, strlen(user_info));
+    digest = calloc(1, 6 + n + 1);
     HTTP_MEM_CHECK(TAG, digest, goto _basic_exit);
     strcpy(digest, "Basic ");
-    n = esp_base64_encode((const unsigned char *)user_info, strlen(user_info), (unsigned char *)digest + 6, n);
+    mbedtls_base64_encode((unsigned char *)digest + 6, n, (size_t *)&out, (const unsigned char *)user_info, strlen(user_info));
 _basic_exit:
     free(user_info);
     return digest;
