@@ -79,6 +79,7 @@ esp_err_t esp_event_send_to_default_loop(system_event_t *event)
         HANDLE_SYS_EVENT(WIFI, STA_WPS_ER_TIMEOUT);
         HANDLE_SYS_EVENT_ARG(WIFI, STA_WPS_ER_FAILED, sta_er_fail_reason);
         HANDLE_SYS_EVENT_ARG(WIFI, STA_WPS_ER_PIN, sta_er_pin);
+        HANDLE_SYS_EVENT_ARG(WIFI, STA_BSS_RSSI_LOW, bss_rssi_low);
 
         /* AP events */
         HANDLE_SYS_EVENT(WIFI, AP_START);
@@ -248,6 +249,11 @@ static void esp_system_event_debug(const system_event_t* event)
             ESP_LOGD(TAG, "SYSTEM_EVENT_AP_PROBEREQRECVED, rssi:%d, mac:" MACSTR, \
                        ap_probereqrecved->rssi, \
                        MAC2STR(ap_probereqrecved->mac));
+            break;
+        }
+        case SYSTEM_EVENT_STA_BSS_RSSI_LOW: {
+            const system_event_bss_rssi_low_t *bss_rssi_low = &event->event_info.bss_rssi_low;
+            ESP_LOGD(TAG, "SYSTEM_EVENT_STA_BSS_RSSI_LOW, rssi:%d", bss_rssi_low->rssi);
             break;
         }
 #if LWIP_IPV6

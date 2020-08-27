@@ -34,6 +34,7 @@ typedef enum {
     SYSTEM_EVENT_STA_CONNECTED,            /*!< station connected to AP */
     SYSTEM_EVENT_STA_DISCONNECTED,         /*!< station disconnected from AP */
     SYSTEM_EVENT_STA_AUTHMODE_CHANGE,      /*!< the auth mode of AP connected by station changed */
+    SYSTEM_EVENT_STA_BSS_RSSI_LOW,         /*!< Connected BSS rssi goes below threshold */
     SYSTEM_EVENT_STA_GOT_IP,               /*!< station got IP from connected AP */
     SYSTEM_EVENT_STA_LOST_IP,              /*!< station lost IP and the IP is reset to 0 */
     SYSTEM_EVENT_STA_WPS_ER_SUCCESS,       /*!< station wps succeeds in enrollee mode */
@@ -89,6 +90,9 @@ typedef wifi_event_ap_stadisconnected_t system_event_ap_stadisconnected_t;
 typedef wifi_event_ap_probe_req_rx_t system_event_ap_probe_req_rx_t;
 
 /** Argument structure of  event */
+typedef wifi_event_bss_rssi_low_t system_event_bss_rssi_low_t;
+
+/** Argument structure of  event */
 typedef ip_event_ap_staipassigned_t system_event_ap_staipassigned_t;
 
 /** Argument structure of  event */
@@ -109,6 +113,7 @@ typedef union {
     system_event_ap_staconnected_t             sta_connected;      /*!< a station connected to soft-AP */
     system_event_ap_stadisconnected_t          sta_disconnected;   /*!< a station disconnected to soft-AP */
     system_event_ap_probe_req_rx_t             ap_probereqrecved;  /*!< soft-AP receive probe request packet */
+    system_event_bss_rssi_low_t                bss_rssi_low;       /*!< Connected BSS rssi goes below threshold */
     system_event_ap_staipassigned_t            ap_staipassigned;   /**< soft-AP assign an IP to the station*/
     system_event_got_ip6_t                     got_ip6;            /*!< station　or ap or ethernet ipv6 addr state change to preferred */
 } system_event_info_t;

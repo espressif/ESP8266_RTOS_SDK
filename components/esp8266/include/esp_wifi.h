@@ -992,6 +992,33 @@ esp_err_t esp_wifi_80211_tx(wifi_interface_t ifx, const void *buffer, int len, b
  */
 wifi_state_t esp_wifi_get_state(void);
 
+/**
+ * @brief      Set RSSI threshold below which APP will get an event
+ *
+ * @attention  This API needs to be called every time after WIFI_EVENT_STA_BSS_RSSI_LOW event is received.
+ *
+ * @param      rssi threshold value in dbm between -100 to 0
+ *
+ * @return
+ *    - ESP_OK: succeed
+ *    - ESP_ERR_WIFI_NOT_INIT: WiFi is not initialized by esp_wifi_init
+ *    - ESP_ERR_WIFI_ARG: invalid argument
+ */
+esp_err_t esp_wifi_set_rssi_threshold(int32_t rssi);
+
+/**
+ * @brief      Get the TSF time
+ *             In Station mode or SoftAP+Station mode if station is not connected or station doesn't receive at least
+ *             one beacon after connected, will return 0
+ *
+ * @attention  Enabling power save may cause the return value inaccurate, except WiFi modem sleep
+ *
+ * @param      interface The interface whose tsf_time is to be retrieved.
+ *
+ * @return     0 or the TSF time
+ */
+int64_t esp_wifi_get_tsf_time(wifi_interface_t interface);
+
 #ifdef __cplusplus
 }
 #endif

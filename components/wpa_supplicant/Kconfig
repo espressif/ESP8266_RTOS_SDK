@@ -50,4 +50,22 @@ config LTM_FAST
             button bit without setting virtual/phycial display/button bit which
             will cause M2 validation fail, bypassing WPS-Config method validation.
 
+    menuconfig WPA_11KV_SUPPORT
+        bool "Enable 802.11k, 802.11v APIs handling in supplicant"
+        default n
+        help
+            Select this option to enable 802.11k 802.11v APIs.
+            Only APIs which are helpful for network assisted roaming
+            are supported for now.
+            Enable this option with btm and rrm enabled in sta config
+            to make device ready for network assisted roaming.
+
+    if WPA_11KV_SUPPORT
+        config WPA_SCAN_CACHE
+            bool "Keep scan results in cache"
+            default n
+            help
+                Keep scan results in cache, if not enabled, those
+                will be flushed immediately.
+    endif
 endmenu
