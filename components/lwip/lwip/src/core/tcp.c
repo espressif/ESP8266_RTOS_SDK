@@ -1562,6 +1562,57 @@ tcp_kill_timewait(void)
   }
 }
 
+#if ESP_LWIP
+typedef struct {
+  u8_t time_wait;
+  u8_t closing;
+  u8_t fin_wait2;
+  u8_t last_ack;
+  u8_t fin_wait1;
+  u8_t listen;
+  u8_t bound;
+  u8_t total;
+}tcp_pcb_num_t;
+void tcp_pcb_num_cal(tcp_pcb_num_t *tcp_pcb_num);
+void tcp_pcb_num_cal(tcp_pcb_num_t *tcp_pcb_num)
+{
+  struct tcp_pcb_listen *listen;
+  struct tcp_pcb *pcb;
+
+  if (!tcp_pcb_num) {
+    return;
+  }
+  memset(tcp_pcb_num, 0, sizeof(*tcp_pcb_num));
+  for(pcb = tcp_tw_pcbs; pcb != NULL; pcb = pcb->next) {
+    tcp_pcb_num->total ++;
+    tcp_pcb_num->time_wait ++;
+  }
+
+  for (pcb = tcp_active_pcbs; pcb != NULL; pcb = pcb->next) {
+    tcp_pcb_num->total ++;
+    if (pcb->state == FIN_WAIT_2){
+      tcp_pcb_num->fin_wait2 ++;
+    } else if (pcb->state == LAST_ACK) {
+      tcp_pcb_num->last_ack ++;
+    } else if (pcb->state == CLOSING) {
+      tcp_pcb_num->closing ++;
+    } else if (pcb->state == FIN_WAIT_1) {
+      tcp_pcb_num->fin_wait1 ++;
+    }
+  }
+
+  for (listen = tcp_listen_pcbs.listen_pcbs; listen != NULL; listen = listen->next) {
+    tcp_pcb_num->total ++;
+    tcp_pcb_num->listen ++;
+  }
+
+  for (pcb = tcp_bound_pcbs; pcb != NULL; pcb = pcb->next) {
+    tcp_pcb_num->total ++;
+    tcp_pcb_num->bound ++;
+  }
+}
+#endif
+
 /**
  * Allocate a new tcp_pcb structure.
  *
@@ -1572,7 +1623,34 @@ struct tcp_pcb *
 tcp_alloc(u8_t prio)
 {
   struct tcp_pcb *pcb;
+#if ESP_LWIP
+  tcp_pcb_num_t tcp_pcb_num;
+  tcp_pcb_num_cal(&tcp_pcb_num);
 
+  if (tcp_pcb_num.total >= MEMP_NUM_TCP_PCB) {
+    if (tcp_pcb_num.time_wait > 0){
+      tcp_kill_timewait();
+    } else if (tcp_pcb_num.last_ack > 0){
+      tcp_kill_state(LAST_ACK);
+    } else if (tcp_pcb_num.closing > 0){
+      tcp_kill_state(CLOSING);
+    } else if (tcp_pcb_num.fin_wait2 > 0){
+      tcp_kill_state(FIN_WAIT_2);
+    } else if (tcp_pcb_num.fin_wait1 > 0){
+      tcp_kill_state(FIN_WAIT_1);
+    } else {
+      tcp_kill_prio(prio);
+    }
+  }
+
+  tcp_pcb_num_cal(&tcp_pcb_num);
+  if (tcp_pcb_num.total >= MEMP_NUM_TCP_PCB){
+    LWIP_DEBUGF(TCP_DEBUG, ("tcp_alloc: no available tcp pcb %d %d %d %d %d %d %d %d\n",
+    tcp_pcb_num.total, tcp_pcb_num.time_wait, tcp_pcb_num.last_ack, tcp_pcb_num.closing,
+    tcp_pcb_num.fin_wait2, tcp_pcb_num.fin_wait1, tcp_pcb_num.listen, tcp_pcb_num.bound));
+    return NULL;
+  }
+#endif
   pcb = (struct tcp_pcb *)memp_malloc(MEMP_TCP_PCB);
   if (pcb == NULL) {
     /* Try killing oldest connection in TIME-WAIT. */
