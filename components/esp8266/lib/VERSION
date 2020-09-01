@@ -1,7 +1,7 @@
 gwen:
     core:       daab7f3
     net80211:   daab7f3
-    pp:         daab7f3
+    pp:         874acad
     espnow:     daab7f3
 
     smartconfig:  2.8.2
