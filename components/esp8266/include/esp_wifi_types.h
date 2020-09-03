@@ -272,6 +272,9 @@ typedef struct {
     wifi_sort_method_t sort_method;    /**< sort the connect AP in the list by rssi or security mode */
     wifi_fast_scan_threshold_t  threshold;     /**< When scan_method is set to WIFI_FAST_SCAN, only APs which have an auth mode that is more secure than the selected auth mode and a signal stronger than the minimum RSSI will be used. */
     wifi_pmf_config_t pmf_cfg;    /**< Configuration for Protected Management Frame. Will be advertized in RSN Capabilities in RSN IE. */
+    uint32_t rm_enabled:1;        /**< Whether radio measurements are enabled for the connection */
+    uint32_t btm_enabled:1;       /**< Whether BTM is enabled for the connection */
+    uint32_t reserved:30;         /**< Reserved for future feature set */
 } wifi_sta_config_t;
 
 /** @brief Configuration data for ESP8266 AP or STA.
@@ -481,6 +484,7 @@ typedef enum {
     WIFI_EVENT_STA_CONNECTED,            /**< station connected to AP */
     WIFI_EVENT_STA_DISCONNECTED,         /**< station disconnected from AP */
     WIFI_EVENT_STA_AUTHMODE_CHANGE,      /**< the auth mode of AP connected by station changed */
+    WIFI_EVENT_STA_BSS_RSSI_LOW,         /**< AP's RSSI crossed configured threshold */
     WIFI_EVENT_STA_WPS_ER_SUCCESS,       /**< station wps succeeds in enrollee mode */
     WIFI_EVENT_STA_WPS_ER_FAILED,        /**< station wps fails in enrollee mode */
     WIFI_EVENT_STA_WPS_ER_TIMEOUT,       /**< station wps timeout in enrollee mode */
@@ -555,6 +559,11 @@ typedef struct {
     uint8_t bssid[6];         /**< BSSID of disconnected AP */
     uint8_t reason;           /**< reason of disconnection */
 } wifi_event_sta_disconnected_t;
+
+/** Argument structure for WIFI_EVENT_STA_BSS_RSSI_LOW event */
+typedef struct {
+    int32_t rssi;                 /**< RSSI value of bss */
+} wifi_event_bss_rssi_low_t;
 
 #ifdef __cplusplus
 }
