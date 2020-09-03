@@ -65,7 +65,7 @@ typedef enum {
   *
   * @return    null
   */
-void esp_deep_sleep(uint32_t time_in_us);
+void esp_deep_sleep(uint64_t time_in_us);
 
 /**
  * @brief Set implementation-specific power management configuration
