@@ -48,8 +48,6 @@ static wifi_scan_arg_t scan_args;
 static wifi_args_t ap_args;
 static bool reconnect = true;
 static const char *TAG="cmd_wifi";
-static esp_netif_t *netif_ap = NULL;
-static esp_netif_t *netif_sta = NULL;
 
 static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
@@ -98,6 +96,13 @@ static void disconnect_handler(void* arg, esp_event_base_t event_base,
     xEventGroupSetBits(wifi_event_group, DISCONNECTED_BIT);
 }
 
+static void on_sta_start(void* arg, esp_event_base_t event_base,
+                                int32_t event_id, void* event_data)
+{
+    ESP_LOGI(TAG, "WIFI STA START");
+    ESP_ERROR_CHECK( esp_wifi_set_ps(WIFI_PS_NONE));
+    ESP_ERROR_CHECK(esp_wifi_set_protocol(ESP_IF_WIFI_STA,WIFI_PROTOCOL_11B|WIFI_PROTOCOL_11G|WIFI_PROTOCOL_11N));
+}
 
 void initialise_wifi(void)
 {
@@ -111,14 +116,11 @@ void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_netif_init());
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK( esp_event_loop_create_default() );
-    netif_ap = esp_netif_create_default_wifi_ap();
-    assert(netif_ap);
-    netif_sta = esp_netif_create_default_wifi_sta();
-    assert(netif_sta);
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
     ESP_ERROR_CHECK( esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_SCAN_DONE, &scan_done_handler, NULL) );
     ESP_ERROR_CHECK( esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &disconnect_handler, NULL) );
+    ESP_ERROR_CHECK( esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_START, &on_sta_start, NULL) );
     ESP_ERROR_CHECK( esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &got_ip_handler, NULL) );
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_NULL) );
@@ -272,22 +274,22 @@ static int wifi_cmd_query(int argc, char** argv)
 static uint32_t wifi_get_local_ip(void)
 {
     int bits = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, 0, 1, 0);
-    esp_netif_t * netif = netif_ap;
-    esp_netif_ip_info_t ip_info;
+    tcpip_adapter_if_t tcpip_if = TCPIP_ADAPTER_IF_AP;
+    tcpip_adapter_ip_info_t ip_info;
     wifi_mode_t mode;
 
     esp_wifi_get_mode(&mode);
     if (WIFI_MODE_STA == mode) {
         bits = xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, 0, 1, 0);
         if (bits & CONNECTED_BIT) {
-            netif = netif_sta;
+            tcpip_if = TCPIP_ADAPTER_IF_STA;
         } else {
             ESP_LOGE(TAG, "sta has no IP");
             return 0;
         }
      }
 
-     esp_netif_get_ip_info(netif, &ip_info);
+     tcpip_adapter_get_ip_info(tcpip_if, &ip_info);
      return ip_info.ip.addr;
 }
 
@@ -317,7 +319,7 @@ static int wifi_cmd_iperf(int argc, char** argv)
     if (iperf_args.ip->count == 0) {
         cfg.flag |= IPERF_FLAG_SERVER;
     } else {
-        cfg.dip = esp_ip4addr_aton(iperf_args.ip->sval[0]);
+        cfg.dip = ipaddr_addr(iperf_args.ip->sval[0]);
         cfg.flag |= IPERF_FLAG_CLIENT;
     }
 
