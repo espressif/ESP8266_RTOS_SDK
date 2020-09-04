@@ -303,7 +303,7 @@ static void tcpip_adapter_dhcpc_done(TimerHandle_t xTimer)
 
     xTimerStop(dhcp_check_timer, 0);
     if (netif_is_up(esp_netif[TCPIP_ADAPTER_IF_STA])) {
-        if (clientdhcp->state == DHCP_STATE_BOUND
+        if ((clientdhcp && clientdhcp->state == DHCP_STATE_BOUND)
 #if LWIP_IPV4 && LWIP_AUTOIP
             || (autoip && autoip->state == AUTOIP_STATE_ANNOUNCING)
 #endif
