@@ -20,6 +20,10 @@
 #include "md5.h"
 #include "crypto.h"
 
+#if CONFIG_IDF_TARGET_ESP8266
+#undef USE_MBEDTLS_CRYPTO
+#endif
+
 #ifdef USE_MBEDTLS_CRYPTO
 #include "mbedtls/sha1.h"
 #endif
