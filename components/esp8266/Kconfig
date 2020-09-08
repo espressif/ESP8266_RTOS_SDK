@@ -92,6 +92,21 @@ config LINK_ETS_PRINTF_TO_IRAM
 
         Note: Bootloader can't use this function.
 
+config ETS_PRINTF_EXIT_WHEN_FLASH_RW
+    bool "ets_printf exits when flash R/W"
+    default y
+    depends on !LINK_ETS_PRINTF_TO_IRAM
+    help
+        By default option, we link the ets_printf function and its calling functions
+        in SPI Flash. So when the SPI Flash is working in read/write mode, and we
+        call ets_printf in high level interrupt like NMI, this behavior will cause a
+        crash, and the EXCCAUSE=0.
+
+        Enable this option, we link the ets_printf in IRAM, and its calling functions
+        in SPI Flash. In the entry of ets_printf, we check if the SPI Flash is working
+        in read/write mode, and exit if it is. So that ets_printf will not call functions
+        in SPI Flash.
+
 config SOC_FULL_ICACHE
     bool "Enable full cache mode"
     default n

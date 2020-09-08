@@ -24,6 +24,12 @@
 #include "esp8266/uart_register.h"
 #include "esp8266/rom_functions.h"
 
+#ifdef CONFIG_ETS_PRINTF_EXIT_WHEN_FLASH_RW
+#define ETS_PRINTF_ATTR IRAM_ATTR
+#else
+#define ETS_PRINTF_ATTR
+#endif
+
 #ifndef CONFIG_ESP_CONSOLE_UART_NONE
 static void uart_putc(int c)
 {
@@ -285,10 +291,18 @@ int ets_vprintf(const char *fmt, va_list ap)
  *                            "%s": 172 Bytes
  *      "%p", "%d, "%i, "%u", "%x": 215 Bytes
  */
-int ets_printf(const char *fmt, ...)
+int ETS_PRINTF_ATTR ets_printf(const char *fmt, ...)
 {
     va_list ap;
     int ret;
+
+#ifdef CONFIG_ETS_PRINTF_EXIT_WHEN_FLASH_RW
+    extern uint8_t FlashIsOnGoing;
+
+    if (FlashIsOnGoing) {
+        return -1;
+    }
+#endif
 
     va_start(ap, fmt);
     ret = ets_vprintf(fmt, ap);
