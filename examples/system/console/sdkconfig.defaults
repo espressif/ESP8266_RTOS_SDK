@@ -13,5 +13,3 @@ CONFIG_PARTITION_TABLE_FILENAME="partitions_example.csv"
 # Enable FreeRTOS stats formatting functions, needed for 'tasks' command
 CONFIG_FREERTOS_USE_TRACE_FACILITY=y
 CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS=y
-
-CONFIG_USING_ESP_CONSOLE=y
