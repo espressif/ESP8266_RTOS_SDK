@@ -601,6 +601,20 @@ menu "LWIP"
             This would in turn fail the configuration for the whole link.
             If your modem is not responding correctly to PPP Phase Network, try to disable IPV6 support.
 
+    config LWIP_IPV6_MEMP_NUM_ND6_QUEUE
+        int "Max number of IPv6 packets to queue during MAC resolution"
+        range 3 20
+        default 3
+        help
+            Config max number of IPv6 packets to queue during MAC resolution.
+
+    config LWIP_IPV6_ND6_NUM_NEIGHBORS
+        int "Max number of entries in IPv6 neighbor cache"
+        range 3 10
+        default 5
+        help
+            Config max number of entries in IPv6 neighbor cache
+
     config LWIP_PPP_NOTIFY_PHASE_SUPPORT
         bool "Enable Notify Phase Callback"
         depends on LWIP_PPP_SUPPORT
@@ -703,4 +717,43 @@ menu "LWIP"
             Enable this option allows lwip to check assert.
             It is recommended to keep it open, do not close it.
 
+    menu "Debug"
+
+        config LWIP_NETIF_DEBUG
+            bool "Enable netif debug messages"
+            default n
+
+        config LWIP_PBUF_DEBUG
+            bool "Enable pbuf debug messages"
+            default n
+
+        config LWIP_ETHARP_DEBUG
+            bool "Enable etharp debug messages"
+            default n
+
+        config LWIP_API_LIB_DEBUG
+            bool "Enable api lib debug messages"
+            default n
+
+        config LWIP_SOCKETS_DEBUG
+            bool "Enable socket debug messages"
+            default n
+
+        config LWIP_IP_DEBUG
+            bool "Enable IP debug messages"
+            default n
+
+        config LWIP_ICMP_DEBUG
+            bool "Enable ICMP debug messages"
+            default n
+
+        config LWIP_IP6_DEBUG
+            bool "Enable IP6 debug messages"
+            default n
+
+        config LWIP_ICMP6_DEBUG
+            bool "Enable ICMP6 debug messages"
+            default n
+
+    endmenu #debug
 endmenu
