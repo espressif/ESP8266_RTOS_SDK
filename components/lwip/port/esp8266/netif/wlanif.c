@@ -78,9 +78,8 @@ void tcp_print_status(int status, void* buf, uint32_t tmp1, uint32_t tmp2, uint3
     if (p->tot_len < 50) {
         return;
     }
-
-    uint32_t i;
-
+    uint32_t i, offset = 0;
+    bool tcp_flag = false;
     i = *((unsigned char*)p->payload + 12);
 
     if (i == 0x08) { /*ipv4*/
@@ -93,73 +92,89 @@ void tcp_print_status(int status, void* buf, uint32_t tmp1, uint32_t tmp2, uint3
                 i = *((unsigned char*)p->payload + 16);
                 i <<= 8;
                 i += *((unsigned char*)p->payload + 17);
+                tcp_flag = true;
+            }
+        }
+    } else if (i == 0x86) { /*ipv6*/
+        i = *((unsigned char*)p->payload + 13);
+        if (i == 0xdd) {
+            i = *((unsigned char*)p->payload + 20);
+            if (i == 0x06) { /*tcp*/
+                i = *((unsigned char*)p->payload + 18);
+                i <<= 8;
+                i += *((unsigned char*)p->payload + 19);
+                tcp_flag = true;
+                offset = 20;
+            }
+        }
+    }
 
-                if (i >= 40) { /*tcp data*/
-                    uint32_t len, seq, ack, srcport, destport, flags;
-                    wifi_tx_status_t *tx_result = (wifi_tx_status_t *)(&tmp1);
-                    len = i;
-                    i = *((unsigned char*)p->payload + 38);
-                    i <<= 8;
-                    i += *((unsigned char*)p->payload + 39);
-                    i <<= 8;
-                    i += *((unsigned char*)p->payload + 40);
-                    i <<= 8;
-                    i += *((unsigned char*)p->payload + 41);
-                    seq = i;
-                    i = *((unsigned char*)p->payload + 42);
-                    i <<= 8;
-                    i += *((unsigned char*)p->payload + 43);
-                    i <<= 8;
-                    i += *((unsigned char*)p->payload + 44);
-                    i <<= 8;
-                    i += *((unsigned char*)p->payload + 45);
-                    ack = i;
-                    i = *((unsigned char*)p->payload + 34);
-                    i <<= 8;
-                    i += *((unsigned char*)p->payload + 35);
-                    srcport = i;
-                    i = *((unsigned char*)p->payload + 36);
-                    i <<= 8;
-                    i += *((unsigned char*)p->payload + 37);
-                    destport = i;
-                    flags = *((unsigned char *)p->payload+47);
+    if (tcp_flag) {
+        if ((i + offset) >= 40) { /*tcp data*/
+            uint32_t len, seq, ack, srcport, destport, flags;
+            wifi_tx_status_t *tx_result = (wifi_tx_status_t *)(&tmp1);
+            len = i + offset;
+            i = *((unsigned char*)p->payload + 38 + offset);
+            i <<= 8;
+            i += *((unsigned char*)p->payload + 39 + offset);
+            i <<= 8;
+            i += *((unsigned char*)p->payload + 40 + offset);
+            i <<= 8;
+            i += *((unsigned char*)p->payload + 41 + offset);
+            seq = i;
+            i = *((unsigned char*)p->payload + 42 + offset);
+            i <<= 8;
+            i += *((unsigned char*)p->payload + 43 + offset);
+            i <<= 8;
+            i += *((unsigned char*)p->payload + 44 + offset);
+            i <<= 8;
+            i += *((unsigned char*)p->payload + 45 + offset);
+            ack = i;
+            i = *((unsigned char*)p->payload + 34 + offset);
+            i <<= 8;
+            i += *((unsigned char*)p->payload + 35 + offset);
+            srcport = i;
+            i = *((unsigned char*)p->payload + 36 + offset);
+            i <<= 8;
+            i += *((unsigned char*)p->payload + 37 + offset);
+            destport = i;
+            flags = *((unsigned char *)p->payload + 47 + offset);
 
-                    switch (status) {
-                        case LWIP_SEND_DATA_TO_WIFI:
-                            LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ Tx - L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", len, seq, ack, srcport, destport, flags));
-                            break;
+            switch (status) {
+                case LWIP_SEND_DATA_TO_WIFI:
+                    LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ Tx - L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", len, seq, ack, srcport, destport, flags));
+                    break;
 
-                        case LWIP_RESEND_DATA_TO_WIFI_WHEN_WIFI_SEND_FAILED:
-                            LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ Cache Tx - L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", len, seq, ack, srcport, destport, flags));
-                            break;
+                case LWIP_RESEND_DATA_TO_WIFI_WHEN_WIFI_SEND_FAILED:
+                    LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ Cache Tx - L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", len, seq, ack, srcport, destport, flags));
+                    break;
 
-                        case LWIP_RECV_DATA_FROM_WIFI:
-                            LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ WiFi Rx - L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", len, seq, ack, srcport, destport, flags));
-                            break;
+                case LWIP_RECV_DATA_FROM_WIFI:
+                    LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ WiFi Rx - L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", len, seq, ack, srcport, destport, flags));
+                    break;
 
-                        case LWIP_RETRY_DATA_WHEN_RECV_ACK_TIMEOUT:
-                            LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ TCP RTY - rtime:%d, rto:%d, L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", tmp1, tmp2, len, seq, ack, srcport, destport, flags));
-                            return;
+                case LWIP_RETRY_DATA_WHEN_RECV_ACK_TIMEOUT:
+                    LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ TCP RTY - rtime:%d, rto:%d, L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", tmp1, tmp2, len, seq, ack, srcport, destport, flags));
+                    return;
 
-                        case LWIP_FETCH_DATA_AT_TCPIP_THREAD:
-                            LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ eth Rx - L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", len, seq, ack, srcport, destport, flags));
-                            break;
+                case LWIP_FETCH_DATA_AT_TCPIP_THREAD:
+                    LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ eth Rx - L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n", len, seq, ack, srcport, destport, flags));
+                    break;
 
-                        case WIFI_SEND_DATA_FAILED:
-                            LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ WiFi Tx Fail - result:%d, src:%d, lrc:%d, rate:%d, L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n",\
-                            tx_result->wifi_tx_result, tx_result->wifi_tx_src, tx_result->wifi_tx_lrc, tx_result->wifi_tx_rate, len, seq, ack, srcport, destport, flags));
-                            break;
+                case WIFI_SEND_DATA_FAILED:
+                    LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ WiFi Tx Fail - result:%d, src:%d, lrc:%d, rate:%d, L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x\n",\
+                    tx_result->wifi_tx_result, tx_result->wifi_tx_src, tx_result->wifi_tx_lrc, tx_result->wifi_tx_rate, len, seq, ack, srcport, destport, flags));
+                    break;
 
-                        default:
-                            LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ status:%d, L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x, tmp1:%d, tmp2:%d, tmp3:%d\n",\
-                            status, len, seq, ack, srcport, destport, flags, tmp1, tmp2, tmp3));
-                            break;
-                    }
-                }
+                default:
+                    LWIP_DEBUGF(ESP_TCP_TXRX_PBUF_DEBUG, ("@@ status:%d, L:%u, S:%u, A:%u, SP:%u, DP:%u, F:%x, tmp1:%d, tmp2:%d, tmp3:%d\n",\
+                    status, len, seq, ack, srcport, destport, flags, tmp1, tmp2, tmp3));
+                    break;
             }
         }
     }
 }
+
 #endif
 
 #if ESP_TCP
@@ -556,7 +571,9 @@ void ethernetif_input(struct netif* netif, struct pbuf* p)
         case ETHTYPE_PPPOEDISC:
         case ETHTYPE_PPPOE:
 #endif /* PPPOE_SUPPORT */
-
+#if ESP_TCP_TXRX_PBUF_DEBUG
+            tcp_print_status(LWIP_RECV_DATA_FROM_WIFI, (void*)p, 0, 0, 0);
+#endif
             /* full packet send to tcpip_thread to process */
             if (netif->input(p, netif) != ERR_OK) {
                 LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
