@@ -1,0 +1,10 @@
+menu "COAP"
+
+config ENABLE_COAP
+    bool "Enable coap"
+    default n
+    select LWIP_IPV6
+    help
+        Enable this option and coap is to be used, IPv6 is to be Enable.
+endmenu
+

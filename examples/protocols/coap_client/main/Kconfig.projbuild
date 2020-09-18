@@ -1,9 +1,9 @@
 menu "Example Configuration"
 
-config TARGET_DOMAIN_URI
-    string "Target Uri"
-    default "coap://californium.eclipse.org"
-    help
-        Target uri for the example to use.
+    config TARGET_DOMAIN_URI
+        string "Target Uri"
+        default "coap://californium.eclipse.org"
+        help
+            Target uri for the example to use.
 
 endmenu
