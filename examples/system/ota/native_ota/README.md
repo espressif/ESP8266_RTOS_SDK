@@ -1,6 +1,6 @@
 # Native OTA
 
-We split the native OTA example into several sub-examples to let customers to choose which application scenario is the one they really want.
+We split the native OTA example into several sub-examples to let customers choose which application scenario is the one they really want.
 
 The projects' directory structure is as follows:
 
