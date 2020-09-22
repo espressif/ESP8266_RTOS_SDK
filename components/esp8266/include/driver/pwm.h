@@ -145,13 +145,13 @@ esp_err_t pwm_set_duties(uint32_t *duties);
   * 
   * @param   channel_num PWM channel number
   *          the channel_num cannot exceed the value initialized by pwm_init.
-  * @param   phase The phase of this PWM channel, the phase range is (-180 ~ 180).
+  * @param   phase The phase of this PWM channel, the phase range is (-180 ~ 180].
   * 
   * @return
   *     - ESP_OK Success
   *     - ESP_ERR_INVALID_ARG Parameter error
   */
-esp_err_t pwm_set_phase(uint8_t channel_num, int16_t phase);
+esp_err_t pwm_set_phase(uint8_t channel_num, float phase);
 
 /**
   * @brief   Set the phase of all channels.
@@ -164,7 +164,7 @@ esp_err_t pwm_set_phase(uint8_t channel_num, int16_t phase);
   *     - ESP_OK Success
   *     - ESP_ERR_INVALID_ARG Parameter error
   */
-esp_err_t pwm_set_phases(int16_t *phases);
+esp_err_t pwm_set_phases(float *phases);
 
 /**
   * @brief   Get the phase of a PWM channel.
@@ -177,7 +177,7 @@ esp_err_t pwm_set_phases(int16_t *phases);
   *     - ESP_OK Success
   *     - ESP_ERR_INVALID_ARG Parameter error
   */
-esp_err_t pwm_get_phase(uint8_t channel_num, uint16_t *phase_p);
+esp_err_t pwm_get_phase(uint8_t channel_num, float *phase_p);
 
 /**
   * @brief   Set PWM period and duty of each PWM channel.
