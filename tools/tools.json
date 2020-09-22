@@ -1,10 +1,10 @@
 {
   "tools": [
     {
-      "description": "Toolchain for Xtensa (ESP32) based on GCC",
+      "description": "Toolchain for Xtensa (ESP8266) based on GCC",
       "export_paths": [
         [
-          "xtensa-esp32-elf",
+          "xtensa-lx106-elf",
           "bin"
         ]
       ],
@@ -12,9 +12,9 @@
       "info_url": "https://github.com/espressif/crosstool-NG",
       "install": "always",
       "license": "GPL-3.0-with-GCC-exception",
-      "name": "xtensa-esp32-elf",
+      "name": "xtensa-lx106-elf",
       "version_cmd": [
-        "xtensa-esp32-elf-gcc",
+        "xtensa-lx106-elf-gcc",
         "--version"
       ],
       "version_regex": "\\(crosstool-NG\\s+(?:crosstool-ng-)?([0-9a-z\\.\\-]+)\\)\\s*([0-9\\.]+)",
@@ -22,81 +22,31 @@
       "versions": [
         {
           "linux-amd64": {
-            "sha256": "39db59b13f25e83e53c55f56979dbfce77b7f23126ad79de833509ad902d3f0a",
-            "size": 63025996,
-            "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-linux-amd64.tar.gz"
-          },
-          "linux-armel": {
-            "sha256": "4ffd19839fcb241af3111da7c419448b80be3bd844da570e95f8f3d5a7eccf79",
-            "size": 61164309,
-            "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-linux-armel.tar.gz"
+            "sha256": "706a02853759c2f85d912f68df4f5b4566ecb41422de5afe35a45d064eb8e494",
+            "size": 37049855,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz"
           },
           "linux-i686": {
-            "sha256": "85c02a4310bb97ac46e6f943b0de10e9e9572596c7d33d09b6f93f8bace3b784",
-            "size": 65016647,
-            "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-linux-i686.tar.gz"
+            "sha256": "a94df9788a73a362f01f32a6f9d46b8630a0aab708eec8d6523e72342f382769",
+            "size": 38388423,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-linux32-1.22.0-100-ge567ec7-5.2.0.tar.gz"
           },
           "macos": {
-            "sha256": "adb256394c948ca424ec6ef1d9bee91baa99a304d8ace8e6701303da952eb007",
-            "size": 69674700,
-            "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-macos.tar.gz"
+            "sha256": "4e3b2e6ba8ab7ff4dc4b70d90a181763b2077e4b6a69106241f8c175bab18184",
+            "size": 43153405,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-macos-1.22.0-100-ge567ec7-5.2.0.tar.gz"
           },
-          "name": "esp32-2019r1-8.2.0",
+          "name": "1.22.0-100-ge567ec7-5.2.0",
           "status": "recommended",
           "win32": {
-            "sha256": "ff00dbb02287219a61873c3b2649a50b94e80c82e607c336383f2838abbefbde",
-            "size": 73245169,
-            "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-win32.zip"
+            "sha256": "0756bb6e768fb986ec557bf1136a8978e106d7d2cca1bbb21fca5d566a30e468",
+            "size": 39567257,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-win32-1.22.0-100-ge567ec7-5.2.0.zip"
           },
           "win64": {
-            "sha256": "ff00dbb02287219a61873c3b2649a50b94e80c82e607c336383f2838abbefbde",
-            "size": 73245169,
-            "url": "https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp32-2019r1-win32.zip"
-          }
-        }
-      ]
-    },
-    {
-      "description": "Toolchain for ESP32 ULP coprocessor",
-      "export_paths": [
-        [
-          "esp32ulp-elf-binutils",
-          "bin"
-        ]
-      ],
-      "export_vars": {},
-      "info_url": "https://github.com/espressif/binutils-esp32ulp",
-      "install": "always",
-      "license": "GPL-2.0-or-later",
-      "name": "esp32ulp-elf",
-      "version_cmd": [
-        "esp32ulp-elf-as",
-        "--version"
-      ],
-      "version_regex": "\\(GNU Binutils\\)\\s+([0-9a-z\\.\\-]+)",
-      "versions": [
-        {
-          "linux-amd64": {
-            "sha256": "c1bbcd65e1e30c7312a50344c8dbc70c2941580a79aa8f8abbce8e0e90c79566",
-            "size": 8246604,
-            "url": "https://dl.espressif.com/dl/binutils-esp32ulp-linux64-2.28.51-esp32ulp-20180809.tar.gz"
-          },
-          "macos": {
-            "sha256": "c92937d85cc9a90eb6c6099ce767ca021108c18c94e34bd7b1fa0cde168f94a0",
-            "size": 5726662,
-            "url": "https://dl.espressif.com/dl/binutils-esp32ulp-macos-2.28.51-esp32ulp-20180809.tar.gz"
-          },
-          "name": "2.28.51.20170517",
-          "status": "recommended",
-          "win32": {
-            "sha256": "92dc83e69e534c9f73d7b939088f2e84f757d2478483415d17fe9dd1c236f2fd",
-            "size": 12231559,
-            "url": "https://dl.espressif.com/dl/binutils-esp32ulp-win32-2.28.51-esp32ulp-20180809.zip"
-          },
-          "win64": {
-            "sha256": "92dc83e69e534c9f73d7b939088f2e84f757d2478483415d17fe9dd1c236f2fd",
-            "size": 12231559,
-            "url": "https://dl.espressif.com/dl/binutils-esp32ulp-win32-2.28.51-esp32ulp-20180809.zip"
+            "sha256": "0756bb6e768fb986ec557bf1136a8978e106d7d2cca1bbb21fca5d566a30e468",
+            "size": 39567257,
+            "url": "https://dl.espressif.com/dl/xtensa-lx106-elf-win32-1.22.0-100-ge567ec7-5.2.0.zip"
           }
         }
       ]
@@ -163,53 +113,6 @@
             "sha256": "bcd477d49e4a9400b41213d53450b474beaedb264631693c958ef9affa8e5623",
             "size": 29696565,
             "url": "https://github.com/Kitware/CMake/releases/download/v3.13.4/cmake-3.13.4-win64-x64.zip"
-          }
-        }
-      ]
-    },
-    {
-      "description": "OpenOCD for ESP32",
-      "export_paths": [
-        [
-          "openocd-esp32",
-          "bin"
-        ]
-      ],
-      "export_vars": {
-        "OPENOCD_SCRIPTS": "${TOOL_PATH}/openocd-esp32/share/openocd/scripts"
-      },
-      "info_url": "https://github.com/espressif/openocd-esp32",
-      "install": "always",
-      "license": "GPL-2.0-only",
-      "name": "openocd-esp32",
-      "version_cmd": [
-        "openocd",
-        "--version"
-      ],
-      "version_regex": "Open On-Chip Debugger\\s+([a-z0-9.-]+)\\s+",
-      "versions": [
-        {
-          "linux-amd64": {
-            "sha256": "e5b5579edffde090e426b4995b346e281843bf84394f8e68c8e41bd1e4c576bd",
-            "size": 1681596,
-            "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.10.0-esp32-20190313/openocd-esp32-linux64-0.10.0-esp32-20190313.tar.gz"
-          },
-          "macos": {
-            "sha256": "09504eea5aa92646a117f16573c95b34e04b4010791a2f8fefcd2bd8c430f081",
-            "size": 1760536,
-            "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.10.0-esp32-20190313/openocd-esp32-macos-0.10.0-esp32-20190313.tar.gz"
-          },
-          "name": "v0.10.0-esp32-20190313",
-          "status": "recommended",
-          "win32": {
-            "sha256": "b86a7f9f39dfc4d8e289fc819375bbb7a5e9fcb8895805ba2b5faf67b8b25ce2",
-            "size": 2098513,
-            "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.10.0-esp32-20190313/openocd-esp32-win32-0.10.0-esp32-20190313.zip"
-          },
-          "win64": {
-            "sha256": "b86a7f9f39dfc4d8e289fc819375bbb7a5e9fcb8895805ba2b5faf67b8b25ce2",
-            "size": 2098513,
-            "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.10.0-esp32-20190313/openocd-esp32-win32-0.10.0-esp32-20190313.zip"
           }
         }
       ]
