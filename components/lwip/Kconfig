@@ -717,43 +717,198 @@ menu "LWIP"
             Enable this option allows lwip to check assert.
             It is recommended to keep it open, do not close it.
 
-    menu "Debug"
+    menuconfig LWIP_DEBUG
+        bool "Enable lwip Debug"
+        default n
+
+        config LWIP_ETHARP_DEBUG
+            bool "Enable debugging in etharp.c"
+            depends on LWIP_DEBUG
+            default n
 
         config LWIP_NETIF_DEBUG
-            bool "Enable netif debug messages"
+            bool "Enable debugging in netif.c"
+            depends on LWIP_DEBUG
             default n
 
         config LWIP_PBUF_DEBUG
-            bool "Enable pbuf debug messages"
-            default n
-
-        config LWIP_ETHARP_DEBUG
-            bool "Enable etharp debug messages"
+            bool "Enable debugging in pbuf.c"
+            depends on LWIP_DEBUG
             default n
 
         config LWIP_API_LIB_DEBUG
-            bool "Enable api lib debug messages"
+            bool "Enable debugging in api_lib.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_API_MSG_DEBUG
+            bool "Enable debugging in api_msg.c"
+            depends on LWIP_DEBUG
             default n
 
         config LWIP_SOCKETS_DEBUG
-            bool "Enable socket debug messages"
-            default n
-
-        config LWIP_IP_DEBUG
-            bool "Enable IP debug messages"
+            bool "Enable debugging in sockets.c"
+            depends on LWIP_DEBUG
             default n
 
         config LWIP_ICMP_DEBUG
-            bool "Enable ICMP debug messages"
+            bool "Enable debugging in icmp.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_IGMP_DEBUG
+            bool "Enable debugging in igmp.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_INET_DEBUG
+            bool "Enable debugging in inet.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_ETHERNETIF_DEBUG
+            bool "Enable debugging in ethernetif.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_IP_DEBUG
+            bool "Enable debugging for IP"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_IP_REASS_DEBUG
+            bool "Enable debugging in ip_frag.c for both frag & reass"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_RAW_DEBUG
+            bool "Enable debugging in raw.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_MEM_DEBUG
+            bool "Enable debugging in mem.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_MEMP_DEBUG
+            bool "Enable debugging in memp.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_SYS_DEBUG
+            bool "Enable debugging in sys.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TIMERS_DEBUG
+            bool "Enable debugging in timers.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_DEBUG
+            bool "Enable debugging for TCP"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_INPUT_DEBUG
+            bool "Enable debugging in tcp_in.c for incoming debug"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_FR_DEBUG
+            bool "Enable debugging in tcp_in.c for fast retransmit"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_RTO_DEBUG
+            bool "Enable debugging in TCP for retransmit"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_CWND_DEBUG
+            bool "Enable debugging for TCP congestion window"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_WND_DEBUG
+            bool "Enable debugging in tcp_in.c for window updating"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_OUTPUT_DEBUG
+            bool "Enable debugging in tcp_out.c output functions"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_RST_DEBUG
+            bool "Enable debugging for TCP with the RST message"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_QLEN_DEBUG
+            bool "Enable debugging for TCP queue lengths"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_UDP_DEBUG
+            bool "Enable debugging in UDP"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCPIP_DEBUG
+            bool "Enable debugging in tcpip.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_SLIP_DEBUG
+            bool "Enable debugging in slipif.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_DHCP_DEBUG
+            bool "Enable debugging in dhcp.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_DHCP_SERVER_DEBUG
+            bool "Enable debugging in dhcpserver.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_AUTOIP_DEBUG
+            bool "Enable debugging in autoip.c"
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_DNS_DEBUG
+            bool "Enable debugging for DNS"
+            depends on LWIP_DEBUG
             default n
 
         config LWIP_IP6_DEBUG
-            bool "Enable IP6 debug messages"
+            bool "Enable debugging for IPv6"
+            depends on LWIP_DEBUG
             default n
 
-        config LWIP_ICMP6_DEBUG
-            bool "Enable ICMP6 debug messages"
+        config LWIP_SNTP_DEBUG
+            bool "Enable debugging for SNTP."
+            depends on LWIP_DEBUG
             default n
 
-    endmenu #debug
-endmenu
+        config LWIP_THREAD_SAFE_DEBUG
+            bool "Enable debugging for LWIP thread safety."
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_PBUF_CACHE_DEBUG
+            bool "Enable debugging for LWIP pbuf cache."
+            depends on LWIP_DEBUG
+            default n
+
+        config LWIP_TCP_TXRX_PBUF_DEBUG
+            bool "Enable debugging for TCP TX/RX data."
+            depends on LWIP_DEBUG
+            default n
+
+    endmenu
