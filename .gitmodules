@@ -16,4 +16,4 @@
 
 [submodule "components/coap/libcoap"]
 	path = components/coap/libcoap
-	url = ../../espressif/libcoap
+	url = ../../obgm/libcoap.git
