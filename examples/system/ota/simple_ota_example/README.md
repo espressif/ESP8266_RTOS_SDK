@@ -56,6 +56,8 @@ openssl req -x509 -newkey rsa:2048 -keyout ca_key.pem -out ca_cert.pem -days 365
 
 ```
 
+*NOTE: If using Windows, add `winpty` to the beginning of your `openssl` or else it cannot accept input from terminal.*
+
 Copy the certificate to `server_certs` directory inside OTA example directory:
 
 ```
