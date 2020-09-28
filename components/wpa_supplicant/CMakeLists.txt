@@ -126,6 +126,12 @@ idf_component_register(SRCS "${srcs}" "${tls_src}" "${roaming_src}"
                     PRIV_INCLUDE_DIRS src
                     PRIV_REQUIRES mbedtls freertos heap newlib)
 
+set_source_files_properties(
+    src/crypto/crypto_ops.c
+    PROPERTIES COMPILE_FLAGS
+    -Wno-cast-function-type
+    )
+
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-strict-aliasing)
 target_compile_definitions(${COMPONENT_LIB} PRIVATE
     __ets__
