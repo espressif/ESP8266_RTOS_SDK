@@ -36,7 +36,7 @@ typedef int8_t s8;
 #endif /*__XTENSA__*/
 
 #if defined(__linux__) || defined(__GLIBC__) || defined(__ets__)
-#include <machine/endian.h>
+#include <endian.h>
 #include <byteswap.h>
 #endif /* __linux__ */
 
