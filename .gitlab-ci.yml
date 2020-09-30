@@ -25,8 +25,7 @@ before_script:
     - *apply_bot_filter
     - echo "Not setting up GitLab key, fetching submodules ..."
     - git submodule update --init --recursive
-    - ./install.sh
-    - . ./export.sh
+    - tools/idf_tools.py --non-interactive install && eval "$(tools/idf_tools.py --non-interactive export)" || exit 1
     - source tools/ci/configure_ci_environment.sh
 
 .build_template: &build_template
@@ -42,8 +41,7 @@ build_ssc:
       - ./SSC/ssc_bin
     expire_in: 6 mos
   script:
-    - ./install.sh
-    - . ./export.sh
+    - tools/idf_tools.py --non-interactive install && eval "$(tools/idf_tools.py --non-interactive export)" || exit 1
     - git clone $GITLAB_SSH_SERVER/yinling/SSC.git
     - cd SSC
     # try checkout same branch
