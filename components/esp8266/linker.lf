@@ -20,3 +20,10 @@ archive: libcore.a
 entries:
     if ESP8266_CORE_GLOBAL_DATA_LINK_IRAM = y:
         * (iram_bss)
+
+[mapping:gcc]
+archive: libgcc.a
+entries:
+    unwind-dw2 (inflash_text)
+    unwind-dw2-fde (inflash_text)
+
