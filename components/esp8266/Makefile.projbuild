@@ -130,6 +130,7 @@ ifdef __COMBILE_OTA_BIN
 	@rm -f ./build/esp8266/esp8266_out.ld
 	@export CFLAGS= && export CXXFLAGS= && make $(APP_BIN) APP_OFFSET=$(APP2_OFFSET) APP_SIZE=$(APP2_SIZE)
 endif
+	@rm -f build/esp8266/esp8266.project.ld
 	@cp $(RAW_BIN) $(OTA2_BIN)
 	@echo [GEN] $(OTA2_BIN)
 
