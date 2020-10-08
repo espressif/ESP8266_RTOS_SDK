@@ -106,3 +106,8 @@ set_source_files_properties(
     ${SRC}/crypto_shorthash/siphash24/ref/shorthash_siphash24_ref.c
     PROPERTIES COMPILE_FLAGS
     -Wno-implicit-fallthrough)
+
+set_source_files_properties(
+    ${SRC}/randombytes/randombytes.c
+    PROPERTIES COMPILE_FLAGS
+    -DRANDOMBYTES_DEFAULT_IMPLEMENTATION)
