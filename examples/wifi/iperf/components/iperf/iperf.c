@@ -18,7 +18,7 @@
 typedef struct {
     iperf_cfg_t cfg;
     bool finish;
-    uint32_t total_len;
+    uint64_t total_len;
     uint32_t buffer_len;
     uint8_t *buffer;
     uint32_t sockfd;
