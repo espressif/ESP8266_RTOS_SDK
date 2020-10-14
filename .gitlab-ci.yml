@@ -115,6 +115,12 @@ build_docs:
     when: always
     paths:
       - $LOG_PATH
+      - ./build_examples/example_builds/*/build/bootloader/*.bin
+      - ./build_examples/example_builds/*/build/partition_table/*.bin
+      - ./build_examples/example_builds/*/build/*.bin
+      - ./build_examples/example_builds/*/build/*.elf
+      - ./build_examples/example_builds/*/build/*.map
+      - ./build_examples/example_builds/*/build/*.config
     expire_in: 2 days
   variables:
     LOG_PATH: "$CI_PROJECT_DIR/log_examples_make"
@@ -142,6 +148,12 @@ build_docs:
     when: always
     paths:
       - $LOG_PATH
+      - ./build_examples_cmake/example_builds/*/build/bootloader/*.bin
+      - ./build_examples_cmake/example_builds/*/build/partition_table/*.bin
+      - ./build_examples_cmake/example_builds/*/build/*.bin
+      - ./build_examples_cmake/example_builds/*/build/*.elf
+      - ./build_examples_cmake/example_builds/*/build/*.map
+      - ./build_examples_cmake/example_builds/*/build/*.config
     expire_in: 2 days
   variables:
     LOG_PATH: "$CI_PROJECT_DIR/log_examples_cmake"
