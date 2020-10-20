@@ -32,6 +32,8 @@ else()
         "source/crc.c"
         "source/phy_init.c"
         "source/reset_reason.c"
+        "source/smartconfig.c"
+        "source/smartconfig_ack.c"
         "source/startup.c"
         "source/system_api.c"
         "source/task_wdt.c"

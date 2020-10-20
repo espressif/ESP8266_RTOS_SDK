@@ -18,6 +18,7 @@
 #include "esp_wifi_types.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
+#include "esp_smartconfig.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,7 +40,7 @@ typedef enum {
     WIFI_LOG_DEBUG,       /*can be set in menuconfig*/
     WIFI_LOG_VERBOSE,     /*can be set in menuconfig*/
 } wifi_log_level_t;
-  
+
 /**
   * @brief WiFi log submodule definition
   *
@@ -81,7 +82,7 @@ typedef enum {
  *    - ESP_ERR_NO_MEM: out of memory
  *    - others: refer to error code esp_err.h
  */
-esp_err_t esp_wifi_init_internal(const wifi_init_config_t *config);
+esp_err_t esp_wifi_init_internal(const wifi_init_config_t* config);
 
 /**
  * @brief Deinitialize Wi-Fi Driver
@@ -117,14 +118,14 @@ wifi_rx_pbuf_mem_type_t esp_wifi_get_rx_pbuf_mem_type(void);
 int8_t esp_wifi_get_ap_rssi(void);
 
 /**
-  * @brief The RX callback function when receive probe request packet. 
+  * @brief The RX callback function when receive probe request packet.
   *        When probe request packet is received, the callback function will be called.
   *
   * @param frame  Data of received probe request.
   * @param len  length of received probe request.
   * @param rssi  rssi of received probe request.
   */
-typedef void (*wifi_sta_rx_probe_req_t)(const uint8_t *frame, int len, int rssi);
+typedef void (*wifi_sta_rx_probe_req_t)(const uint8_t* frame, int len, int rssi);
 
 /**
   * @brief Register the RX callback function when receive probe request.
@@ -159,14 +160,14 @@ void esp_wifi_internal_free_rx_buffer(void* buffer);
   *    - ERR_IF : WiFi driver error
   *    - ERR_ARG : Invalid argument
   */
-int esp_wifi_internal_tx(wifi_interface_t wifi_if, void *buffer, uint16_t len);
+int esp_wifi_internal_tx(wifi_interface_t wifi_if, void* buffer, uint16_t len);
 
 /**
   * @brief     The WiFi RX callback function
   *
   *            Each time the WiFi need to forward the packets to high layer, the callback function will be called
   */
-typedef esp_err_t (*wifi_rxcb_t)(void *buffer, uint16_t len, void *eb);
+typedef esp_err_t (*wifi_rxcb_t)(void* buffer, uint16_t len, void* eb);
 
 /**
   * @brief     Set the WiFi RX callback
@@ -183,7 +184,7 @@ typedef esp_err_t (*wifi_rxcb_t)(void *buffer, uint16_t len, void *eb);
 esp_err_t esp_wifi_internal_reg_rxcb(wifi_interface_t ifx, wifi_rxcb_t fn);
 
 /**
-  * @brief     Set current WiFi log level     
+  * @brief     Set current WiFi log level
   *
   * @param     level   Log level.
   *
@@ -207,7 +208,7 @@ esp_err_t esp_wifi_internal_set_log_level(wifi_log_level_t level);
 esp_err_t esp_wifi_internal_set_log_mod(uint32_t submodule);
 
 /**
-  * @brief     Get current WiFi log info     
+  * @brief     Get current WiFi log info
   *
   * @param     log_level  the return log level.
   * @param     log_mod    the return log module and submodule
@@ -215,21 +216,49 @@ esp_err_t esp_wifi_internal_set_log_mod(uint32_t submodule);
   * @return
   *    - ESP_OK: succeed
   */
-esp_err_t esp_wifi_internal_get_log(wifi_log_level_t *log_level, uint32_t *log_mod);
+esp_err_t esp_wifi_internal_get_log(wifi_log_level_t* log_level, uint32_t* log_mod);
 
 /**
   * @brief     get wifi power management config.
-  * 
+  *
   * @param     ps_config    power management config
   */
-void esp_wifi_set_pm_config(esp_pm_config_t *pm_config);
+void esp_wifi_set_pm_config(esp_pm_config_t* pm_config);
 
 /**
   * @brief     set wifi power management config.
-  * 
+  *
   * @param     ps_config    power management config
   */
-void esp_wifi_get_pm_config(esp_pm_config_t *pm_config);
+void esp_wifi_get_pm_config(esp_pm_config_t* pm_config);
+
+/**
+  * @brief     Start SmartConfig, config ESP device to connect AP. You need to broadcast information by phone APP.
+  *            Device sniffer special packets from the air that containing SSID and password of target AP.
+  *
+  * @attention 1. This API can be called in station or softAP-station mode.
+  * @attention 2. Can not call esp_smartconfig_start twice before it finish, please call
+  *               esp_smartconfig_stop first.
+  *
+  * @param     config pointer to smartconfig start configure structure
+  *
+  * @return
+  *     - ESP_OK: succeed
+  *     - others: fail
+  */
+esp_err_t esp_smartconfig_internal_start(const smartconfig_start_config_t* config);
+
+/**
+  * @brief     Stop SmartConfig, free the buffer taken by esp_smartconfig_start.
+  *
+  * @attention Whether connect to AP succeed or not, this API should be called to free
+  *            memory taken by smartconfig_start.
+  *
+  * @return
+  *     - ESP_OK: succeed
+  *     - others: fail
+  */
+esp_err_t esp_smartconfig_internal_stop(void);
 
 #ifdef __cplusplus
 }
