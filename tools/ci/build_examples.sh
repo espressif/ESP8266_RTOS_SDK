@@ -118,13 +118,15 @@ build_example () {
     local EXAMPLE_DIR=$(dirname "${MAKE_FILE}")
     local EXAMPLE_NAME=$(basename "${EXAMPLE_DIR}")
 
-    if [[ -f "example_builds/${ID}/${EXAMPLE_NAME}/build/ci_build_success" ]]; then
-        echo "Project ${EXAMPLE_NAME} has been built and skip building ..."
+    local EXAMPLE_BUILD_DIR="${ID}_${EXAMPLE_NAME}"
+
+    if [[ -f "example_builds/${EXAMPLE_BUILD_DIR}/build/ci_build_success" ]]; then
+        echo "Project ${EXAMPLE_BUILD_DIR} has been built and skip building ..."
     else
-        echo "Building ${EXAMPLE_NAME} as ${ID}..."
-        mkdir -p "example_builds/${ID}"
-        cp -r "${EXAMPLE_DIR}" "example_builds/${ID}"
-        pushd "example_builds/${ID}/${EXAMPLE_NAME}"
+        echo "Building ${EXAMPLE_BUILD_DIR}..."
+        mkdir -p "example_builds/${EXAMPLE_BUILD_DIR}"
+        cp -r "${EXAMPLE_DIR}/"* "example_builds/${EXAMPLE_BUILD_DIR}/"
+        pushd "example_builds/${EXAMPLE_BUILD_DIR}"
             # be stricter in the CI build than the default IDF settings
             export EXTRA_CFLAGS="-Werror -Werror=deprecated-declarations"
             export EXTRA_CXXFLAGS=${EXTRA_CFLAGS}
@@ -140,7 +142,7 @@ build_example () {
             fi
 
             # build non-verbose first
-            local BUILDLOG=${LOG_PATH}/ex_${ID}_log.txt
+            local BUILDLOG=${LOG_PATH}/ex_${EXAMPLE_BUILD_DIR}_log.txt
             touch ${BUILDLOG}
 
             local FLASH_ARGS=build/download.config
