@@ -953,7 +953,7 @@ def init_cli():
                 "names": ["-n", "--no-warnings"],
                 "help": "Disable Cmake warnings.",
                 "is_flag": True,
-                "default": False,
+                "default": True,
             },
             {
                 "names": ["-v", "--verbose"],
