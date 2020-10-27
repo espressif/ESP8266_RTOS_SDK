@@ -88,6 +88,7 @@ void system_station_got_ip_set();
 static int dhcp_fail_time = 0;
 static tcpip_adapter_ip_info_t esp_ip[TCPIP_ADAPTER_IF_MAX];
 static TimerHandle_t *dhcp_check_timer;
+static wifi_ps_type_t s_ps_type;
 
 static void tcpip_adapter_dhcps_cb(u8_t client_ip[4])
 {
@@ -308,6 +309,8 @@ static void tcpip_adapter_dhcpc_done(TimerHandle_t xTimer)
             || (autoip && autoip->state == AUTOIP_STATE_ANNOUNCING)
 #endif
         ) {
+            esp_wifi_set_ps(s_ps_type);
+
             /*send event here*/
             tcpip_adapter_dhcpc_cb(esp_netif[TCPIP_ADAPTER_IF_STA]);
             ESP_LOGD(TAG,"ip:" IPSTR ",mask:" IPSTR ",gw:" IPSTR "\n", IP2STR(ip_2_ip4(&(esp_netif[0]->ip_addr))),
@@ -318,10 +321,14 @@ static void tcpip_adapter_dhcpc_done(TimerHandle_t xTimer)
             dhcp_fail_time ++;
             xTimerReset(dhcp_check_timer, 0);
         } else {
+            esp_wifi_set_ps(s_ps_type);
+
             dhcp_fail_time = 0;
             ESP_LOGD(TAG,"ERROR dhcp get ip error\n");
         }
     } else {
+        esp_wifi_set_ps(s_ps_type);
+
         dhcp_fail_time = 0;
         tcpip_adapter_release_dhcp(esp_netif[TCPIP_ADAPTER_IF_STA]);
 
@@ -1153,6 +1160,8 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
 #endif
 
         if (p_netif != NULL) {
+            wifi_ps_type_t ps;
+
             if (netif_is_up(p_netif)) {
                 ESP_LOGD(TAG, "dhcp client init ip/mask/gw to all-0");
                 ip_addr_set_zero(&p_netif->ip_addr);
@@ -1165,9 +1174,16 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
                 return ESP_OK;
             }
 
+            esp_wifi_get_ps(&ps);
+
+            esp_wifi_set_ps(WIFI_PS_NONE);
+
             if (tcpip_adapter_start_dhcp(p_netif) != ERR_OK) {
+                esp_wifi_set_ps(ps);
                 ESP_LOGD(TAG, "dhcp client start failed");
                 return ESP_ERR_TCPIP_ADAPTER_DHCPC_START_FAILED;
+            } else {
+                s_ps_type = ps;
             }
 
             dhcp_fail_time = 0;
