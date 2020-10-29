@@ -10,6 +10,26 @@ config ESP8266_NMI_WDT
         Enable this non-mask watch dog can help users to debug blocking code
         when CPU is at critical state(disable interrupt).
 
+
+choice ESP8266_XTAL_FREQ_SEL
+    prompt "Main XTAL frequency"
+    default ESP8266_XTAL_FREQ_26
+    help
+        ESP8266 currently supports the following XTAL frequencies:
+
+        - 26 MHz
+        - 40 MHz
+    config ESP8266_XTAL_FREQ_40
+        bool "40 MHz"
+    config ESP8266_XTAL_FREQ_26
+        bool "26 MHz"
+endchoice
+
+config ESP8266_XTAL_FREQ
+    int
+    default 40 if ESP8266_XTAL_FREQ_40
+    default 26 if ESP8266_XTAL_FREQ_26
+
 choice ESP8266_DEFAULT_CPU_FREQ_MHZ
     prompt "CPU frequency"
     default ESP8266_DEFAULT_CPU_FREQ_160

@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "esp_phy_init.h"
 #include "sdkconfig.h"
+#include "esp_phy_init.h"
 
 // constrain a value between 'low' and 'high', inclusive
 #define LIMIT(val, low, high) ((val < low) ? low : (val > high) ? high : val)
@@ -75,7 +75,7 @@ static const esp_phy_init_data_t phy_init_data= { {
         0x03,
         0x04,
         0x05,
-        0x01,
+        ESP8266_XTAL_FLAG,
         0x00,
         0x00,
         0x00,

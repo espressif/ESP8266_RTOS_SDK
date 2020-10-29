@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-#define CRYSTAL_USED 26
+#define CRYSTAL_USED CONFIG_ESP8266_XTAL_FREQ
 
 typedef enum {
     ESP_MAC_WIFI_STA,

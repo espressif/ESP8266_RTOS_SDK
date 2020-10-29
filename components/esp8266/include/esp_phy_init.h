@@ -14,7 +14,7 @@
 
 #pragma once
 #include <stdint.h>
-
+#include "sdkconfig.h"
 #include "esp_err.h"
 
 #ifdef __cplusplus
@@ -74,6 +74,15 @@ typedef enum {
     PHY_MODEM_MODULE,       //!< Modem sleep used
     PHY_MODULE_COUNT        //!< Number of items
 } phy_rf_module_t;
+
+/**
+ * @brief Outside XTAL 40MHz: 0, 26MHz: 1
+ */
+#ifdef CONFIG_ESP8266_XTAL_FREQ_40
+#define ESP8266_XTAL_FLAG   (0)
+#elif defined(CONFIG_ESP8266_XTAL_FREQ_26)
+#define ESP8266_XTAL_FLAG   (1)
+#endif
 
 /**
  * @brief Get PHY init data
