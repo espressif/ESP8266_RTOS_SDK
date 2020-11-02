@@ -18,7 +18,15 @@
 #ifdef IEEE8021X_EAPOL
 
 static const int pmksa_cache_max_entries = 10;
-static const int dot11RSNAConfigPMKLifetime = 43200;
+/*
+ * The PTK shall not be used longer than the PMK lifetime as determined by the minimum of
+ * the PMK lifetime indicated by the AS, e.g., Session-Timeout + dot1xAuthTxPeriod or from
+ * dot11RSNAConfigPMKLifetime. When RADIUS is used and the Session-Timeout attribute is
+ * not in the RADIUS Accept message, and if the key lifetime is not otherwise specified,
+ * then the PMK lifetime is infinite.
+ *                                     From 802.11-2016 12.7.1.3 Pairwise key hierarchy
+ * */
+static const int dot11RSNAConfigPMKLifetime = 43200 * 2 * 12;
 static const int dot11RSNAConfigPMKReauthThreshold = 70;
 
 struct rsn_pmksa_cache {
