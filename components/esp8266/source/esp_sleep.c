@@ -419,10 +419,13 @@ esp_err_t esp_pm_configure(const void* vconfig)
     return ESP_ERR_NOT_SUPPORTED;
 #endif
 
+    extern void reset_noise_timer(uint16_t interval);
     const esp_pm_config_esp8266_t* config = (const esp_pm_config_esp8266_t*) vconfig;
     if (config->light_sleep_enable) {
+        reset_noise_timer(3000);
         s_sleep_mode = ESP_CPU_LIGHTSLEEP;
     } else {
+        reset_noise_timer(100);
         s_sleep_mode = ESP_CPU_WAIT;
     }
     return ESP_OK;
