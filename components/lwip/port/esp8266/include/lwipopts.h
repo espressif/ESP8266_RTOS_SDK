@@ -758,104 +758,269 @@
    ---------------------------------------
 */
 /**
- * ETHARP_DEBUG: Enable debugging in etharp.c.
+ * Enable debug message printing.
  */
-#ifdef CONFIG_LWIP_ETHARP_DEBUG
-#define ETHARP_DEBUG                     LWIP_DBG_ON
-#else
-#define ETHARP_DEBUG                     LWIP_DBG_OFF
+#if CONFIG_LWIP_DEBUG
+#define LWIP_DEBUG                      LWIP_DBG_ON
 #endif
 
+/**
+ * ETHARP_DEBUG: Enable debugging in etharp.c.
+ */
+#if CONFIG_LWIP_ETHARP_DEBUG
+#define ETHARP_DEBUG                    LWIP_DBG_ON
+#endif
 
 /**
  * NETIF_DEBUG: Enable debugging in netif.c.
  */
-#ifdef CONFIG_LWIP_NETIF_DEBUG
+#if CONFIG_LWIP_NETIF_DEBUG
 #define NETIF_DEBUG                     LWIP_DBG_ON
-#else
-#define NETIF_DEBUG                     LWIP_DBG_OFF
 #endif
 
 /**
  * PBUF_DEBUG: Enable debugging in pbuf.c.
  */
-#ifdef CONFIG_LWIP_PBUF_DEBUG
-#define PBUF_DEBUG                     LWIP_DBG_ON
-#else
-#define PBUF_DEBUG                     LWIP_DBG_OFF
+#if CONFIG_LWIP_PBUF_DEBUG
+#define PBUF_DEBUG                      LWIP_DBG_ON
 #endif
 
 /**
  * API_LIB_DEBUG: Enable debugging in api_lib.c.
  */
-#ifdef CONFIG_LWIP_API_LIB_DEBUG
-#define API_LIB_DEBUG                     LWIP_DBG_ON
-#else
-#define API_LIB_DEBUG                     LWIP_DBG_OFF
+#if CONFIG_LWIP_API_LIB_DEBUG
+#define API_LIB_DEBUG                   LWIP_DBG_ON
 #endif
 
+/**
+ * API_MSG_DEBUG: Enable debugging in api_msg.c.
+ */
+#if CONFIG_LWIP_API_MSG_DEBUG
+#define API_MSG_DEBUG                   LWIP_DBG_ON
+#endif
 
 /**
  * SOCKETS_DEBUG: Enable debugging in sockets.c.
  */
-#ifdef CONFIG_LWIP_SOCKETS_DEBUG
+#if CONFIG_LWIP_SOCKETS_DEBUG
 #define SOCKETS_DEBUG                   LWIP_DBG_ON
-#else
-#define SOCKETS_DEBUG                   LWIP_DBG_OFF
 #endif
 
 /**
  * ICMP_DEBUG: Enable debugging in icmp.c.
  */
-#ifdef CONFIG_LWIP_ICMP_DEBUG
+#if CONFIG_LWIP_ICMP_DEBUG
 #define ICMP_DEBUG                      LWIP_DBG_ON
-#else
-#define ICMP_DEBUG                      LWIP_DBG_OFF
 #endif
 
-#ifdef CONFIG_LWIP_ICMP6_DEBUG
-#define ICMP6_DEBUG                      LWIP_DBG_ON
-#else
-#define ICMP6_DEBUG                      LWIP_DBG_OFF
+/**
+ * IGMP_DEBUG: Enable debugging in igmp.c.
+ */
+#if CONFIG_LWIP_IGMP_DEBUG
+#define IGMP_DEBUG                      LWIP_DBG_ON
+#endif
+
+/**
+ * INET_DEBUG: Enable debugging in inet.c.
+ */
+#if CONFIG_LWIP_INET_DEBUG
+#define INET_DEBUG                      LWIP_DBG_ON
 #endif
 
 /**
  * IP_DEBUG: Enable debugging for IP.
  */
-#ifdef CONFIG_LWIP_IP_DEBUG
+#if CONFIG_LWIP_IP_DEBUG
 #define IP_DEBUG                        LWIP_DBG_ON
-#else
-#define IP_DEBUG                        LWIP_DBG_OFF
 #endif
 
 /**
- * IP_DEBUG: Enable debugging for IP.
+ * IP_REASS_DEBUG: Enable debugging in ip_frag.c for both frag & reass.
  */
-#ifdef CONFIG_LWIP_IP6_DEBUG
-#define IP6_DEBUG                        LWIP_DBG_ON
-#else
-#define IP6_DEBUG                        LWIP_DBG_OFF
+#if CONFIG_LWIP_IP_REASS_DEBUG
+#define IP_REASS_DEBUG                  LWIP_DBG_ON
+#endif
+
+/**
+ * RAW_DEBUG: Enable debugging in raw.c.
+ */
+#if CONFIG_LWIP_RAW_DEBUG
+#define RAW_DEBUG                       LWIP_DBG_ON
+#endif
+
+/**
+ * MEM_DEBUG: Enable debugging in mem.c.
+ */
+#if CONFIG_LWIP_MEM_DEBUG
+#define MEM_DEBUG                       LWIP_DBG_ON
 #endif
 
 /**
  * MEMP_DEBUG: Enable debugging in memp.c.
  */
-#define MEMP_DEBUG                      LWIP_DBG_OFF
+#if CONFIG_LWIP_MEMP_DEBUG
+#define MEMP_DEBUG                      LWIP_DBG_ON
+#endif
+
+/**
+ * SYS_DEBUG: Enable debugging in sys.c.
+ */
+#if CONFIG_LWIP_SYS_DEBUG
+#define SYS_DEBUG                       LWIP_DBG_ON
+#endif
+
+/**
+ * TIMERS_DEBUG: Enable debugging in timers.c.
+ */
+#if CONFIG_LWIP_TIMERS_DEBUG
+#define TIMERS_DEBUG                    LWIP_DBG_ON
+#endif
+
+/**
+ * TCP_DEBUG: Enable debugging for TCP.
+ */
+#if CONFIG_LWIP_TCP_DEBUG
+#define TCP_DEBUG                       LWIP_DBG_ON
+#endif
 
 /**
  * TCP_INPUT_DEBUG: Enable debugging in tcp_in.c for incoming debug.
  */
-#define TCP_INPUT_DEBUG                 LWIP_DBG_OFF
+#if CONFIG_LWIP_TCP_INPUT_DEBUG
+#define TCP_INPUT_DEBUG                 LWIP_DBG_ON
+#endif
+
+/**
+ * TCP_FR_DEBUG: Enable debugging in tcp_in.c for fast retransmit.
+ */
+#if CONFIG_LWIP_TCP_FR_DEBUG
+#define TCP_FR_DEBUG                    LWIP_DBG_ON
+#endif
+
+/**
+ * TCP_RTO_DEBUG: Enable debugging in TCP for retransmit
+ * timeout.
+ */
+#if CONFIG_LWIP_TCP_RTO_DEBUG
+#define TCP_RTO_DEBUG                   LWIP_DBG_ON
+#endif
+
+/**
+ * TCP_CWND_DEBUG: Enable debugging for TCP congestion window.
+ */
+#if CONFIG_LWIP_TCP_CWND_DEBUG
+#define TCP_CWND_DEBUG                  LWIP_DBG_ON
+#endif
+
+/**
+ * TCP_WND_DEBUG: Enable debugging in tcp_in.c for window updating.
+ */
+#if CONFIG_LWIP_TCP_WND_DEBUG
+#define TCP_WND_DEBUG                   LWIP_DBG_ON
+#endif
 
 /**
  * TCP_OUTPUT_DEBUG: Enable debugging in tcp_out.c output functions.
  */
-#define TCP_OUTPUT_DEBUG                LWIP_DBG_OFF
+#if CONFIG_LWIP_TCP_OUTPUT_DEBUG
+#define TCP_OUTPUT_DEBUG                LWIP_DBG_ON
+#endif
+
+/**
+ * TCP_RST_DEBUG: Enable debugging for TCP with the RST message.
+ */
+#if CONFIG_LWIP_TCP_RST_DEBUG
+#define TCP_RST_DEBUG                   LWIP_DBG_ON
+#endif
+
+/**
+ * TCP_QLEN_DEBUG: Enable debugging for TCP queue lengths.
+ */
+#if CONFIG_LWIP_TCP_QLEN_DEBUG
+#define TCP_QLEN_DEBUG                  LWIP_DBG_ON
+#endif
+
+/**
+ * UDP_DEBUG: Enable debugging in UDP.
+ */
+#if CONFIG_LWIP_UDP_DEBUG
+#define UDP_DEBUG                       LWIP_DBG_ON
+#endif
 
 /**
  * TCPIP_DEBUG: Enable debugging in tcpip.c.
  */
-#define TCPIP_DEBUG                     LWIP_DBG_OFF
+#if CONFIG_LWIP_TCPIP_DEBUG
+#define TCPIP_DEBUG                     LWIP_DBG_ON
+#endif
+
+/**
+ * SLIP_DEBUG: Enable debugging in slipif.c.
+ */
+#if CONFIG_LWIP_SLIP_DEBUG
+#define SLIP_DEBUG                      LWIP_DBG_ON
+#endif
+
+/**
+ * DHCP_DEBUG: Enable debugging in dhcp.c.
+ */
+#if CONFIG_LWIP_DHCP_DEBUG
+#define DHCP_DEBUG                      LWIP_DBG_ON
+#endif
+
+/**
+ * AUTOIP_DEBUG: Enable debugging in autoip.c.
+ */
+#if CONFIG_LWIP_AUTOIP_DEBUG
+#define AUTOIP_DEBUG                    LWIP_DBG_ON
+#endif
+
+/**
+ * DNS_DEBUG: Enable debugging for DNS.
+ */
+#if CONFIG_LWIP_DNS_DEBUG
+#define DNS_DEBUG                       LWIP_DBG_ON
+#endif
+
+/**
+ * IP6_DEBUG: Enable debugging for IPv6.
+ */
+#if CONFIG_LWIP_IP6_DEBUG
+#define IP6_DEBUG                       LWIP_DBG_ON
+#endif
+
+/**
+ * SNTP_DEBUG: Enable debugging for SNTP.
+ */
+#if CONFIG_LWIP_SNTP_DEBUG
+#define SNTP_DEBUG                      LWIP_DBG_ON
+#endif
+
+#ifdef CONFIG_LWIP_THREAD_SAFE_DEBUG
+#define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_ON
+#else
+#define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_OFF
+#endif
+
+#if CONFIG_LWIP_PBUF_CACHE_DEBUG
+#define PBUF_CACHE_DEBUG                      LWIP_DBG_ON
+#else
+#define PBUF_CACHE_DEBUG                      LWIP_DBG_OFF
+#endif
+
+#ifdef CONFIG_LWIP_TCP_TXRX_PBUF_DEBUG
+#define ESP_TCP_TXRX_PBUF_DEBUG         LWIP_DBG_ON
+#define LWIP_SEND_DATA_TO_WIFI                           1
+#define LWIP_RESEND_DATA_TO_WIFI_WHEN_WIFI_SEND_FAILED   2
+#define LWIP_RECV_DATA_FROM_WIFI                         3
+#define LWIP_RETRY_DATA_WHEN_RECV_ACK_TIMEOUT            4
+#define LWIP_FETCH_DATA_AT_TCPIP_THREAD                  5
+#define WIFI_SEND_DATA_FAILED                            6
+
+void tcp_print_status(int status, void* p, uint32_t tmp1, uint32_t tmp2, uint32_t tmp3);
+#else
+#define ESP_TCP_TXRX_PBUF_DEBUG         LWIP_DBG_OFF
+#endif
 
 /**
  * ETHARP_TRUST_IP_MAC==1: Incoming IP packets cause the ARP table to be
@@ -892,7 +1057,6 @@
 #define ESP_LWIP_ARP                    1
 #define ESP_PER_SOC_TCP_WND             0
 #define ESP_THREAD_SAFE                 1
-#define ESP_THREAD_SAFE_DEBUG           LWIP_DBG_OFF
 #define ESP_DHCP                        1
 #define ESP_DNS                         1
 #define ESP_PERF                        0
@@ -937,23 +1101,6 @@
 
 #define TCP_SND_BUF                     CONFIG_LWIP_TCP_SND_BUF_DEFAULT
 #define TCP_WND                         CONFIG_LWIP_TCP_WND_DEFAULT
-
-/**
- * DHCP_DEBUG: Enable debugging in dhcp.c.
- */
-#define DHCP_DEBUG                      LWIP_DBG_OFF
-#define LWIP_DEBUG                      LWIP_DBG_OFF
-#define TCP_DEBUG                       LWIP_DBG_OFF
-
-#define ESP_TCP_TXRX_PBUF_DEBUG         LWIP_DBG_OFF
-#define LWIP_SEND_DATA_TO_WIFI                           1
-#define LWIP_RESEND_DATA_TO_WIFI_WHEN_WIFI_SEND_FAILED   2
-#define LWIP_RECV_DATA_FROM_WIFI                         3
-#define LWIP_RETRY_DATA_WHEN_RECV_ACK_TIMEOUT            4
-#define LWIP_FETCH_DATA_AT_TCPIP_THREAD                  5
-#define WIFI_SEND_DATA_FAILED                            6
-
-void tcp_print_status(int status, void* p, uint32_t tmp1, uint32_t tmp2, uint32_t tmp3);
 
 #define CHECKSUM_CHECK_UDP              0
 #define CHECKSUM_CHECK_IP               0
