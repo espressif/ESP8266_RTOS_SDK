@@ -553,7 +553,24 @@ void __assert_func(const char *file, int line, const char *func, const char *exp
 #include "esp8266/pin_mux_register.h"
 #include "esp8266/rom_functions.h"
 
-#define BOOTLOADER_CONSOLE_CLK_FREQ 52 * 1000 * 1000
+#define BOOTLOADER_CONSOLE_CLK_FREQ ((CONFIG_ESP8266_XTAL_FREQ * 2) * 1000 * 1000)
+
+/**
+ * XTAL=26MHz, UART baudrate=74880 (default)
+ * XTAL=40MHz, UART baudrate=115200 (default)
+ */
+
+#if CONFIG_ESP_CONSOLE_UART_NUM == 0
+#  if CONFIG_ESP8266_XTAL_FREQ == 26 && CONFIG_ESP_CONSOLE_UART_BAUDRATE == 74880
+#    define ESP8266_MODIFY_UART_BAUDRATE 0
+#  elif CONFIG_ESP8266_XTAL_FREQ == 40 && CONFIG_ESP_CONSOLE_UART_BAUDRATE == 115200
+#    define ESP8266_MODIFY_UART_BAUDRATE 0
+#  endif
+#endif
+
+#ifndef ESP8266_MODIFY_UART_BAUDRATE
+#  define ESP8266_MODIFY_UART_BAUDRATE 1
+#endif
 
 extern int _bss_start;
 extern int _bss_end;
@@ -595,7 +612,19 @@ static void uart_console_configure(void)
     CLEAR_PERI_REG_MASK(UART_CONF0(CONFIG_ESP_CONSOLE_UART_NUM), UART_RXFIFO_RST | UART_TXFIFO_RST);
 #endif
 
-#ifdef CONFIG_ESP_CONSOLE_UART_BAUDRATE
+#if ESP8266_MODIFY_UART_BAUDRATE
+
+    /* Wait UART TX over */
+
+    while(1) {
+        int uart_status = REG_READ(UART_STATUS(CONFIG_ESP_CONSOLE_UART_NUM));
+        int tx_bytes = (uart_status >> UART_TXFIFO_CNT_S) & UART_TXFIFO_CNT;
+
+        if (!tx_bytes) {
+            break;
+        }
+    }
+
     uart_div_modify(CONFIG_ESP_CONSOLE_UART_NUM, BOOTLOADER_CONSOLE_CLK_FREQ / CONFIG_ESP_CONSOLE_UART_BAUDRATE);
 #endif
 }
