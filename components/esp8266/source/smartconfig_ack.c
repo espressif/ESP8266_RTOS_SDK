@@ -32,12 +32,35 @@
 #include "esp_smartconfig.h"
 #include "smartconfig_ack.h"
 
-static const char *TAG = "smartconfig";
+#define SC_ACK_TASK_PRIORITY             2          /*!< Priority of sending smartconfig ACK task */
+#define SC_ACK_TASK_STACK_SIZE           2048       /*!< Stack size of sending smartconfig ACK task */
+
+#define SC_ACK_TOUCH_SERVER_PORT         18266      /*!< ESP touch UDP port of server on cellphone */
+#define SC_ACK_AIRKISS_SERVER_PORT       10000      /*!< Airkiss UDP port of server on cellphone */
+#define SC_ACK_AIRKISS_DEVICE_PORT       10001      /*!< Airkiss UDP port of server on device */
+#define SC_ACK_AIRKISS_TIMEOUT           1500       /*!< Airkiss read data timout millisecond */
+
+#define SC_ACK_TOUCH_LEN                 11         /*!< Length of ESP touch ACK context */
+#define SC_ACK_AIRKISS_LEN               7          /*!< Length of Airkiss ACK context */
+
+#define SC_ACK_MAX_COUNT                 60         /*!< Maximum count of sending smartconfig ACK */
+
+/**
+ * @brief Smartconfig parameters passed to sc_ack_send call.
+ */
+typedef struct sc_ack {
+    smartconfig_type_t type;      /*!< Smartconfig type(ESPTouch or AirKiss) */
+    struct {
+        uint8_t token;            /*!< Smartconfig token from the cellphone */
+        uint8_t mac[6];           /*!< MAC address of station */
+        uint8_t ip[4];            /*!< IP address of cellphone */
+    } ctx;
+} sc_ack_t;
+
+static const char* TAG = "smartconfig";
 
 /* Flag to indicate sending smartconfig ACK or not. */
 static bool s_sc_ack_send = false;
-static void *s_sc_ack_info = NULL;
-static size_t s_sc_ack_info_size = 0;
 
 static int sc_ack_send_get_errno(int fd)
 {
@@ -49,32 +72,26 @@ static int sc_ack_send_get_errno(int fd)
     return sock_errno;
 }
 
-static void sc_ack_send_task(void *pvParameters)
+static void sc_ack_send_task(void* pvParameters)
 {
-    sc_ack_t *ack = (sc_ack_t *)pvParameters;
+    sc_ack_t* ack = (sc_ack_t*)pvParameters;
     tcpip_adapter_ip_info_t local_ip;
-    sc_callback_data_t sc_callback_data;
     uint8_t remote_ip[4];
-    memset(&sc_callback_data, 0x0, sizeof(sc_callback_data_t));
-    if (ack->type == SC_ACK_TYPE_ESPTOUCH) {
-        memcpy(sc_callback_data.ip, ack->ctx.ip, sizeof(sc_callback_data.ip));
-    }
-    memcpy(remote_ip, ack->ctx.ip, sizeof(remote_ip));
-    sc_callback_data.type = ack->type;
-    int remote_port = (ack->type == SC_ACK_TYPE_ESPTOUCH) ? SC_ACK_TOUCH_SERVER_PORT : SC_ACK_AIRKISS_SERVER_PORT;
+    memset(remote_ip, 0xFF, sizeof(remote_ip));
+    int remote_port = (ack->type == SC_TYPE_ESPTOUCH) ? SC_ACK_TOUCH_SERVER_PORT : SC_ACK_AIRKISS_SERVER_PORT;
     struct sockaddr_in server_addr;
     socklen_t sin_size = sizeof(server_addr);
     int send_sock = -1;
     int optval = 1;
     int sendlen;
-    int ack_len = (ack->type == SC_ACK_TYPE_ESPTOUCH) ? SC_ACK_TOUCH_LEN : SC_ACK_AIRKISS_LEN;
+    int ack_len = (ack->type == SC_TYPE_ESPTOUCH) ? SC_ACK_TOUCH_LEN : SC_ACK_AIRKISS_LEN;
     uint8_t packet_count = 1;
     int err;
     int ret;
 
     bzero(&server_addr, sizeof(struct sockaddr_in));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr((const char*)remote_ip);
+    memcpy(&server_addr.sin_addr.s_addr, remote_ip, sizeof(remote_ip));
     server_addr.sin_port = htons(remote_port);
 
     esp_wifi_get_mac(WIFI_IF_STA, ack->ctx.mac);
@@ -84,22 +101,24 @@ static void sc_ack_send_task(void *pvParameters)
     while (s_sc_ack_send) {
         /* Get local IP address of station */
         ret = tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &local_ip);
+
         if ((ESP_OK == ret) && (local_ip.ip.addr != INADDR_ANY)) {
             /* If ESP touch, smartconfig ACK contains local IP address. */
-            if (ack->type == SC_ACK_TYPE_ESPTOUCH) {
+            if (ack->type == SC_TYPE_ESPTOUCH) {
                 memcpy(ack->ctx.ip, &local_ip.ip.addr, 4);
             }
 
             /* Create UDP socket. */
             send_sock = socket(AF_INET, SOCK_DGRAM, 0);
+
             if ((send_sock < LWIP_SOCKET_OFFSET) || (send_sock > (FD_SETSIZE - 1))) {
                 ESP_LOGE(TAG,  "Creat udp socket failed");
-                goto _end;	
+                goto _end;
             }
 
             setsockopt(send_sock, SOL_SOCKET, SO_BROADCAST | SO_REUSEADDR, &optval, sizeof(int));
 
-            if (ack->type == SC_ACK_TYPE_AIRKISS) {
+            if (ack->type == SC_TYPE_AIRKISS) {
                 char data = 0;
                 struct sockaddr_in local_addr, from;
                 socklen_t sockadd_len = sizeof(struct sockaddr);
@@ -114,18 +133,15 @@ static void sc_ack_send_task(void *pvParameters)
                 local_addr.sin_addr.s_addr = INADDR_ANY;
                 local_addr.sin_port = htons(SC_ACK_AIRKISS_DEVICE_PORT);
 
-                bind(send_sock, (struct sockaddr *)&local_addr, sockadd_len);
+                bind(send_sock, (struct sockaddr*)&local_addr, sockadd_len);
                 setsockopt(send_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-                recvfrom(send_sock, &data, 1, 0, (struct sockaddr *)&from, &sockadd_len);
+                recvfrom(send_sock, &data, 1, 0, (struct sockaddr*)&from, &sockadd_len);
+
                 if (from.sin_addr.s_addr != INADDR_ANY) {
                     memcpy(remote_ip, &from.sin_addr, 4);
-                    memcpy(sc_callback_data.ip, &from.sin_addr, sizeof(sc_callback_data.ip));
                     server_addr.sin_addr.s_addr = from.sin_addr.s_addr;
                 } else {
-                    if (ack->cb) {
-                        ack->cb(SC_STATUS_LINK_OVER, &sc_callback_data);
-                    }
                     goto _end;
                 }
             }
@@ -133,95 +149,73 @@ static void sc_ack_send_task(void *pvParameters)
             while (s_sc_ack_send) {
                 /* Send smartconfig ACK every 100ms. */
                 vTaskDelay(100 / portTICK_RATE_MS);
-
-                if (s_sc_ack_info) {
-                    sendlen = sendto(send_sock, s_sc_ack_info, s_sc_ack_info_size, 0, (struct sockaddr*) &server_addr, sin_size);
-                } else {
-                    sendlen = sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
-                }
+                sendlen = sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
 
                 if (sendlen > 0) {
                     /* Totally send 30 smartconfig ACKs. Then smartconfig is successful. */
                     if (packet_count++ >= SC_ACK_MAX_COUNT) {
-                        if (ack->link_flag) {
-                            *ack->link_flag = 1;
-                        }
-                        if (ack->cb) {
-                            ack->cb(SC_STATUS_LINK_OVER, &sc_callback_data);
-                        }
+                        esp_event_post(SC_EVENT, SC_EVENT_SEND_ACK_DONE, NULL, 0, portMAX_DELAY);
                         goto _end;
                     }
-                }
-                else {
+                } else {
                     err = sc_ack_send_get_errno(send_sock);
+
                     if (err == ENOMEM || err == EAGAIN) {
                         ESP_LOGD(TAG, "send failed, errno %d", err);
                         continue;
                     }
+
                     ESP_LOGE(TAG, "send failed, errno %d", err);
                     goto _end;
                 }
             }
-        }
-        else {
-            vTaskDelay((portTickType)(100 / portTICK_RATE_MS));
+        } else {
+            vTaskDelay((portTickType)(200 / portTICK_RATE_MS));
         }
     }
 
 _end:
+
     if ((send_sock >= LWIP_SOCKET_OFFSET) && (send_sock <= (FD_SETSIZE - 1))) {
         close(send_sock);
     }
-    if (s_sc_ack_info) {
-        free(s_sc_ack_info);
-        s_sc_ack_info = NULL;
-        s_sc_ack_info_size = 0;
-    }
+
     free(ack);
     vTaskDelete(NULL);
 }
 
-void sc_ack_send(sc_ack_t *param)
+esp_err_t sc_send_ack_start(smartconfig_type_t type, uint8_t token, uint8_t* cellphone_ip)
 {
-    sc_ack_t *ack = NULL;
+    sc_ack_t* ack = NULL;
 
-    if (param == NULL) {
-        ESP_LOGE(TAG, "Smart config ack parameter error");
-        return;
+    if (cellphone_ip == NULL) {
+        ESP_LOGE(TAG, "Cellphone IP address is NULL");
+        return ESP_ERR_INVALID_ARG;
     }
 
     ack = malloc(sizeof(sc_ack_t));
+
     if (ack == NULL) {
-        ESP_LOGE(TAG, "Smart config ack parameter malloc fail");
-        return;
+        ESP_LOGE(TAG, "ACK parameter malloc fail");
+        return ESP_ERR_NO_MEM;
     }
-    memcpy(ack, param, sizeof(sc_ack_t));
+
+    ack->type = type;
+    ack->ctx.token = token;
+    memcpy(ack->ctx.ip, cellphone_ip, 4);
 
     s_sc_ack_send = true;
 
     if (xTaskCreate(sc_ack_send_task, "sc_ack_send_task", SC_ACK_TASK_STACK_SIZE, ack, SC_ACK_TASK_PRIORITY, NULL) != pdPASS) {
         ESP_LOGE(TAG, "Create sending smartconfig ACK task fail");
         free(ack);
+        return ESP_ERR_NO_MEM;
     }
+
+    return ESP_OK;
 }
 
-void sc_ack_send_stop(void)
+void sc_send_ack_stop(void)
 {
     s_sc_ack_send = false;
-}
-
-bool sc_ack_send_info(void *buffer, size_t size)
-{
-    if (!buffer || !size)
-        return false;
-
-    s_sc_ack_info = s_sc_ack_info ? realloc(s_sc_ack_info, size + 1) : malloc(size + 1);
-    if (!s_sc_ack_info)
-        return false;
-
-    s_sc_ack_info_size = size;
-    memset(s_sc_ack_info, 0, size + 1);
-    memcpy(s_sc_ack_info, buffer, size);
-
-    return true;
 }
