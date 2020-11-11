@@ -80,6 +80,8 @@ void esp_mbedtls_free_cacert(mbedtls_ssl_context *ssl);
 
 #ifdef CONFIG_MBEDTLS_DYNAMIC_FREE_PEER_CERT
 void esp_mbedtls_free_peer_cert(mbedtls_ssl_context *ssl);
+
+bool esp_mbedtls_ssl_is_rsa(mbedtls_ssl_context *ssl);
 #endif
 
 #endif /* _DYNAMIC_IMPL_H_ */

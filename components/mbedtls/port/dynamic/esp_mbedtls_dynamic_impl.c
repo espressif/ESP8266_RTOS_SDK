@@ -519,4 +519,17 @@ void esp_mbedtls_free_peer_cert(mbedtls_ssl_context *ssl)
         ssl->session_negotiate->peer_cert = NULL;
     }
 }
+
+bool esp_mbedtls_ssl_is_rsa(mbedtls_ssl_context *ssl)
+{
+    const mbedtls_ssl_ciphersuite_t *ciphersuite_info =
+        ssl->transform_negotiate->ciphersuite_info;
+
+    if (ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA ||
+        ciphersuite_info->key_exchange == MBEDTLS_KEY_EXCHANGE_RSA_PSK) {
+        return true;
+    } else {
+        return false;
+    }
+}
 #endif
