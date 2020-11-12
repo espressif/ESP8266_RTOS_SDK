@@ -549,6 +549,10 @@ esp_err_t pwm_init(uint32_t period, uint32_t *duties, uint8_t channel_num, const
 
     uint8_t i;
 
+    /*enable tsf0 interrupt for pwm*/
+    REG_WRITE(PERIPHS_DPORT_BASEADDR, (REG_READ(PERIPHS_DPORT_BASEADDR) & ~0x1F) | 0x1);
+    REG_WRITE(INT_ENA_WDEV, REG_READ(INT_ENA_WDEV) | WDEV_TSF0_REACH_INT);
+
     if (ESP_ERR_NO_MEM == pwm_obj_malloc(channel_num)) {
         pwm_obj_free();
         return ESP_ERR_NO_MEM;
