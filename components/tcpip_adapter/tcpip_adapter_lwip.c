@@ -289,6 +289,7 @@ static int tcpip_adapter_sta_recv_cb(void *buffer, uint16_t len, void *eb)
 
 static void tcpip_adapter_dhcpc_done(TimerHandle_t xTimer)
 {
+    bool unlock_ps = true;
     struct dhcp *clientdhcp = netif_dhcp_data(esp_netif[TCPIP_ADAPTER_IF_STA]) ;
     struct netif *netif = esp_netif[TCPIP_ADAPTER_IF_STA];
 
@@ -317,6 +318,7 @@ static void tcpip_adapter_dhcpc_done(TimerHandle_t xTimer)
             ESP_LOGD(TAG,"dhcpc time(ms): %d\n", dhcp_fail_time * 500);
             dhcp_fail_time ++;
             xTimerReset(dhcp_check_timer, 0);
+            unlock_ps = false;
         } else {
             dhcp_fail_time = 0;
             ESP_LOGD(TAG,"ERROR dhcp get ip error\n");
@@ -328,6 +330,10 @@ static void tcpip_adapter_dhcpc_done(TimerHandle_t xTimer)
         dhcpc_status[TCPIP_ADAPTER_IF_STA] = TCPIP_ADAPTER_DHCP_INIT;
 
         tcpip_adapter_reset_ip_info(TCPIP_ADAPTER_IF_STA);
+    }
+
+    if (unlock_ps) {
+       esp_wifi_ps_unlock();
     }
 }
 
@@ -1165,13 +1171,16 @@ esp_err_t tcpip_adapter_dhcpc_start(tcpip_adapter_if_t tcpip_if)
                 return ESP_OK;
             }
 
+            esp_wifi_ps_lock();
+
             if (tcpip_adapter_start_dhcp(p_netif) != ERR_OK) {
+                esp_wifi_ps_unlock();
                 ESP_LOGD(TAG, "dhcp client start failed");
                 return ESP_ERR_TCPIP_ADAPTER_DHCPC_START_FAILED;
             }
 
             dhcp_fail_time = 0;
-            xTimerReset(dhcp_check_timer, 0);
+            xTimerReset(dhcp_check_timer, portMAX_DELAY);
             ESP_LOGD(TAG, "dhcp client start successfully");
             dhcpc_status[tcpip_if] = TCPIP_ADAPTER_DHCP_STARTED;
             return ESP_OK;
