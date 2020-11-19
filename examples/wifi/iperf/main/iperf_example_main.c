@@ -87,7 +87,7 @@ void app_main(void)
     /* Prompt to be printed before each line.
      * This can be customized, made dynamic, etc.
      */
-    const char *prompt = LOG_COLOR_I "esp8266> " LOG_RESET_COLOR;
+    const char *prompt = LOG_COLOR_I "iperf> " LOG_RESET_COLOR;
 
     printf("\n ==================================================\n");
     printf(" |       Steps to test WiFi throughput            |\n");
@@ -111,7 +111,7 @@ void app_main(void)
         /* Since the terminal doesn't support escape sequences,
          * don't use color codes in the prompt.
          */
-        prompt = "esp8266> ";
+        prompt = "iperf> ";
 #endif //CONFIG_LOG_COLORS
     }
 

@@ -22,19 +22,19 @@ Demo steps to test station TCP Tx performance:
 
 The console output, which is printed by station TCP TX throughput test, looks like:
 
->esp8266> sta aptest
+>iperf> sta aptest
 >
 >I (5325) iperf: sta connecting to 'aptest'
 >
->esp8266> I (6017) event: ip: 192.168.4.2, mask: 255.255.255.0, gw: 192.168.4.1
+>iperf> I (6017) event: ip: 192.168.4.2, mask: 255.255.255.0, gw: 192.168.4.1
 >
->esp8266> iperf -s -i 3 -t 60
+>iperf> iperf -s -i 3 -t 60
 >
 >I (14958) iperf: mode=tcp-server sip=192.168.4.1:5001, dip=0.0.0.0:5001, interval=3, time=60
 >
 >Interval Bandwidth
 >
->esp8266> accept: 192.168.4.2,63201
+>iperf> accept: 192.168.4.2,63201
 >
 >0-   3 sec       5.50 Mbits/sec
 >
