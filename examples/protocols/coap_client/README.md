@@ -68,11 +68,33 @@ published under EPL+EDL: http://www.eclipse.org/californium/
 ...
 ```
 
+You can use example coap_server together with coap_client example.
+First, make coap_server and coap_client in the same local network by connecting to the same Wifi.
+Then, configure the coap_client uri to `coap://232.10.11.12/Espressif ` or `coap://[ff02::fc]/Espressif`.
+The coap_server will listen to ipv4 multicast ip address 232.10.11.12 and ipv6 multicast address ff02::fc.
+You will see the following log:
+
+```
+...
+I (468) example_connect: Connecting to HUAWEI_888...
+I (1658) wifi:state: 0 -> 2 (b0)
+I (1668) wifi:state: 2 -> 3 (0)
+I (1675) wifi:state: 3 -> 5 (10)
+I (1701) wifi:connected with HUAWEI_888, aid = 2, channel 1, HT20, bssid = 34:29:12:43:c5:40
+I (3654) tcpip_adapter: sta ip: 192.168.3.3, mask: 255.255.255.0, gw: 192.168.3.1
+I (3658) example_connect: Connected to HUAWEI_888
+I (3662) example_connect: IPv4 address: 192.168.3.3
+I (3671) example_connect: IPv6 address: fe80:0000:0000:0000:860d:8eff:fe9d:cd90
+I (3684) CoAP_client: Resolve the IP address is IPV6, FF02::FC
+Received: no data
+...
+```
+
 ## libcoap Documentation
 This can be found at https://libcoap.net/doc/reference/4.2.0/
 
 ## Troubleshooting
-* Please make sure Target Url includes valid `host`, optional `port`, optional `path`, and begins
+* Please make sure Target Url includes valid `host` or `ip`, optional `port`, optional `path`, and begins
 with `coap://` or `coap+tcp://` for a coap server that supports TCP
 (not all do including coap+tcp://californium.eclipse.org).
 
