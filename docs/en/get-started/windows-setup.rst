@@ -20,9 +20,9 @@ Unzip the zip file to ``C:\`` (or some other location, but this guide assumes ``
 Download the toolchain for the ESP8266
 --------------------------------------
 
-v5.2.0
+v8.4.0
 
-    https://dl.espressif.com/dl/xtensa-lx106-elf-win32-1.22.0-100-ge567ec7-5.2.0.zip
+    https://dl.espressif.com/dl/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-win32.zip
 
 If you are still using old version SDK(< 3.0), please use toolchain v4.8.5, as following:
 
