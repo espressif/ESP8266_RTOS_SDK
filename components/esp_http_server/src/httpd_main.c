@@ -380,6 +380,13 @@ esp_err_t httpd_stop(httpd_handle_t handle)
         return ESP_ERR_INVALID_ARG;
     }
 
+#ifndef CONFIG_LWIP_NETIF_LOOPBACK
+    ESP_LOGE(TAG, LOG_FMT("Can not stop httpd server if lwip loopback is not enabled!"));
+    ESP_LOGE(TAG, LOG_FMT("Set LWIP_LOOPBACK_MAX_PBUFS=1 & LWIP_NETIF_LOOPBACK=y"));
+    /* We don't return to loop endlessly in the while loop below
+       and be sure the user understands the problem */
+#endif
+
     struct httpd_ctrl_data msg;
     memset(&msg, 0, sizeof(msg));
     msg.hc_msg = HTTPD_CTRL_SHUTDOWN;
