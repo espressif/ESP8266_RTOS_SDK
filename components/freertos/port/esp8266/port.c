@@ -269,9 +269,10 @@ void IRAM_ATTR vPortETSIntrLock(void)
     if (NMIIrqIsOn == 0) {
         uint32_t regval = REG_READ(NMI_INT_ENABLE_REG);
 
+        vPortEnterCritical();
+
         REG_WRITE(NMI_INT_ENABLE_REG, 0);
 
-        vPortEnterCritical();
         if (!ESP_NMI_IS_CLOSED()) {
             do {
                 REG_WRITE(INT_ENA_WDEV, WDEV_TSF0_REACH_INT);
@@ -294,9 +295,10 @@ void IRAM_ATTR vPortETSIntrUnlock(void)
 
             REG_WRITE(INT_ENA_WDEV, WDEV_INTEREST_EVENT);
         }
-        vPortExitCritical();
 
         REG_WRITE(NMI_INT_ENABLE_REG, regval);
+
+        vPortExitCritical();
     }
 }
 
