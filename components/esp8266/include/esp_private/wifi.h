@@ -260,6 +260,17 @@ esp_err_t esp_smartconfig_internal_start(const smartconfig_start_config_t* confi
   */
 esp_err_t esp_smartconfig_internal_stop(void);
 
+/**
+  * @brief     Stop close RF when station connect to ap.
+  */
+void esp_wifi_ps_lock(void);
+
+
+/**
+  * @brief     Do normal sleep when station connect to ap.
+  */
+void esp_wifi_ps_unlock(void);
+
 #ifdef __cplusplus
 }
 #endif
