@@ -154,6 +154,8 @@ build_docs:
       - ./build_examples_cmake/example_builds/*/build/*.elf
       - ./build_examples_cmake/example_builds/*/build/*.map
       - ./build_examples_cmake/example_builds/*/build/*.config
+      - ./build_examples_cmake/example_builds/*/build/flasher_args.json
+      - ./build_examples_cmake/example_builds/*/sdkconfig
     expire_in: 2 days
   variables:
     LOG_PATH: "$CI_PROJECT_DIR/log_examples_cmake"
