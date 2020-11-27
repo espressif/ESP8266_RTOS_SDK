@@ -137,8 +137,15 @@ int esp_newlib_init(void)
     if (!_GLOBAL_REENT->_stdin)
         goto err_in;
 
+    environ = malloc(sizeof(char*));
+    if (!environ)
+        goto err_env;
+    environ[0] = NULL;
+
     return 0;
 
+err_env:
+    fclose(_GLOBAL_REENT->_stdin);
 err_in:
     fclose(_GLOBAL_REENT->_stderr);
 err_fail:
