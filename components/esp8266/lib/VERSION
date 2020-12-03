@@ -1,8 +1,8 @@
 gwen:
-    core:       5a78602
-    net80211:   8c48ba9
-    pp:         8c48ba9
-    espnow:     5a78602
+    core:       7a93d71
+    net80211:   7a93d71
+    pp:         7a93d71
+    espnow:     7a93d71
 
-    smartconfig:  2.9.0
+    smartconfig:  3.0.0
     phy:          1163.0

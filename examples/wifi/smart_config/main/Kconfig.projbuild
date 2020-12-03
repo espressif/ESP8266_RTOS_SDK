@@ -1,0 +1,28 @@
+menu "Example Configuration"
+
+choice ESP_SMARTCONFIG_TYPE
+	prompt "Smartconfig Type"
+	default ESP_TOUCH
+	help
+		Set protocol type of SmartConfig.
+
+		Start SmartConfig method according to the selected type when user select "ESPTouch", "AirKiss",  "ESPTouch and AirKiss" or "ESPTouch V2" type.
+
+config ESP_TOUCH
+	bool "ESPTouch"
+config AIRKISS
+	bool "AirKiss"
+config ESP_TOUCH-AIRKISS
+	bool "ESPTouch and AirKiss"
+config ESP_TOUCH_V2
+	bool "ESPTouch-V2"
+endchoice
+
+config ESP_SMARTCONFIG_TYPE
+	int
+	default 0 if ESP_TOUCH
+	default 1 if AIRKISS
+	default 2 if ESP_TOUCH-AIRKISS
+	default 3 if ESP_TOUCH_V2
+
+endmenu

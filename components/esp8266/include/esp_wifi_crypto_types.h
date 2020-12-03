@@ -761,6 +761,8 @@ typedef struct {
     esp_aes_decrypt_t aes_decrypt;
     esp_aes_decrypt_init_t aes_decrypt_init;
     esp_aes_decrypt_deinit_t aes_decrypt_deinit;
+    esp_aes_128_encrypt_t aes_128_encrypt;         
+    esp_aes_128_decrypt_t aes_128_decrypt;
     esp_omac1_aes_128_t omac1_aes_128;
     esp_ccmp_decrypt_t ccmp_decrypt;
     esp_ccmp_encrypt_t ccmp_encrypt;
