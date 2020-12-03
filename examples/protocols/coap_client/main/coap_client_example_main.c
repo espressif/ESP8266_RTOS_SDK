@@ -28,6 +28,7 @@
 #define COAP_DEFAULT_TIME_SEC 5
 
 /* Set this to 9 to get verbose logging from within libcoap */
+/* If want to change log level num to open log, don't forget to enlarge coap_example_task size*/
 #define COAP_LOGGING_LEVEL 0
 
 /* The examples use uri "coap://californium.eclipse.org" that
@@ -39,7 +40,7 @@
 #define COAP_DEFAULT_DEMO_URI CONFIG_TARGET_DOMAIN_URI
 
 const static char *TAG = "CoAP_client";
-
+static char addr_str[64] = {0};
 static int resp_wait = 1;
 static coap_optlist_t *optlist = NULL;
 static int wait_ms;
@@ -126,9 +127,8 @@ clean_up:
 
 static void coap_example_task(void *p)
 {
-    struct hostent *hp;
-    struct ip4_addr *ip4_addr;
-
+    struct addrinfo *ainfo;
+    struct addrinfo hints;
     coap_address_t    dst_addr, src_addr;
     static coap_uri_t uri;
     const char*       server_uri = COAP_DEFAULT_DEMO_URI;
@@ -165,26 +165,43 @@ static void coap_example_task(void *p)
         }
 
         memcpy(phostname, uri.host.s, uri.host.length);
-        hp = gethostbyname(phostname);
-        free(phostname);
-
-        if (hp == NULL) {
-            ESP_LOGE(TAG, "DNS lookup failed");
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_family = AF_UNSPEC;
+        if (getaddrinfo(phostname, NULL, &hints, &ainfo) != 0) {
+            ESP_LOGE(TAG, "getaddrinfo failed");
             free(phostname);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
             continue;
         }
-
-        /* Code to print the resolved IP.
-
-           Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */
-        ip4_addr = (struct ip4_addr *)hp->h_addr;
-        ESP_LOGI(TAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*ip4_addr));
+        free(phostname);
 
         coap_address_init(&src_addr);
-        src_addr.addr.sin.sin_family      = AF_INET;
-        src_addr.addr.sin.sin_port        = htons(0);
-        src_addr.addr.sin.sin_addr.s_addr = INADDR_ANY;
+
+        if (ainfo->ai_family == AF_INET) {
+            struct sockaddr_in *p = (struct sockaddr_in *)ainfo->ai_addr;
+            inet_ntop(AF_INET, &p->sin_addr, addr_str, sizeof(addr_str));
+            ESP_LOGI(TAG, "Resolve the IP address is IPV4, %s",addr_str);
+            src_addr.addr.sin.sin_family      = AF_INET;
+            src_addr.addr.sin.sin_port        = htons(0);
+            src_addr.addr.sin.sin_addr.s_addr = INADDR_ANY;
+        } else if (ainfo->ai_family == AF_INET6) {
+            struct sockaddr_in6 *p = (struct sockaddr_in6 *)ainfo->ai_addr;
+            inet_ntop(AF_INET6, &p->sin6_addr, addr_str, sizeof(addr_str));
+            ESP_LOGI(TAG, "Resolve the IP address is IPV6, %s",addr_str);
+            struct in6_addr if_inaddr = { 0 };
+            struct ip6_addr if_ipaddr = { 0 };
+            src_addr.addr.sin6.sin6_port   = htons(0);
+            src_addr.addr.sin6.sin6_family = AF_INET6;
+            src_addr.size = sizeof(struct sockaddr_in6);
+            bzero(&src_addr.addr.sin6.sin6_addr.un, sizeof(src_addr.addr.sin6.sin6_addr.un));
+            tcpip_adapter_get_ip6_linklocal(TCPIP_ADAPTER_IF_STA, &if_ipaddr);
+            inet6_addr_from_ip6addr(&if_inaddr, &if_ipaddr);
+            src_addr.addr.sin6.sin6_addr = if_inaddr;
+        } else {
+            ESP_LOGI(TAG, "ai_family is error %d", ainfo->ai_family);
+            goto clean_up;
+        }
 
         if (uri.path.length) {
             buflen = BUFSIZE;
@@ -223,9 +240,15 @@ static void coap_example_task(void *p)
         }
 
         coap_address_init(&dst_addr);
-        dst_addr.addr.sin.sin_family      = AF_INET;
-        dst_addr.addr.sin.sin_port        = htons(uri.port);
-        dst_addr.addr.sin.sin_addr.s_addr = ip4_addr->addr;
+        dst_addr.size = ainfo->ai_addrlen;
+        memcpy(&dst_addr.addr, ainfo->ai_addr, ainfo->ai_addrlen);
+        if (ainfo->ai_family == AF_INET6) {
+            dst_addr.addr.sin6.sin6_family = AF_INET6;
+            dst_addr.addr.sin6.sin6_port   = htons(uri.port);
+        } else {
+            dst_addr.addr.sin.sin_family   = AF_INET;
+            dst_addr.addr.sin.sin_port     = htons(uri.port);
+        }
 
         session = coap_new_client_session(ctx, &src_addr, &dst_addr,
            uri.scheme==COAP_URI_SCHEME_COAP_TCP ? COAP_PROTO_TCP :
@@ -272,6 +295,7 @@ clean_up:
         if (session) coap_session_release(session);
         if (ctx) coap_free_context(ctx);
         coap_cleanup();
+        freeaddrinfo(ainfo);
         /* Only send the request off once */
         break;
     }
