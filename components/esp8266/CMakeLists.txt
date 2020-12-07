@@ -108,23 +108,26 @@ else()
     add_custom_target(esp8266_linker_script DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/esp8266_out.ld")
     add_dependencies(${COMPONENT_LIB} esp8266_linker_script)
 
-    if(CONFIG_ESP8266_PHY_INIT_DATA_IN_PARTITION)
-        set(PHY_INIT_DATA_BIN phy_init_data.bin)
+    if(CONFIG_ESP_PHY_INIT_DATA_IN_PARTITION)
+        set(PHY_INIT_DATA_BIN ${build_dir}/phy_init_data.bin)
 
         # To get the phy_init_data.bin file, compile phy_init_data.h as a C file and then objcopy
         # the object file to a raw binary
         add_custom_command(
             OUTPUT ${PHY_INIT_DATA_BIN}
-            DEPENDS ${CMAKE_CURRENT_LIST_DIR}/phy_init_data.h
+            DEPENDS ${CMAKE_CURRENT_LIST_DIR}/include/internal/phy_init_data.h
             COMMAND ${CMAKE_C_COMPILER} -x c -c
             -I ${CMAKE_CURRENT_LIST_DIR} -I ${CMAKE_CURRENT_LIST_DIR}/include -I ${CMAKE_BINARY_DIR}
+            -I ${CONFIG_DIR} -I ${CMAKE_CURRENT_LIST_DIR}/../esp_common/include
             -o phy_init_data.obj
-            ${CMAKE_CURRENT_LIST_DIR}/phy_init_data.h
+            ${CMAKE_CURRENT_LIST_DIR}/include/internal/phy_init_data.h
             COMMAND ${CMAKE_OBJCOPY} -O binary phy_init_data.obj ${PHY_INIT_DATA_BIN}
             )
         add_custom_target(phy_init_data ALL DEPENDS ${PHY_INIT_DATA_BIN})
         add_dependencies(flash phy_init_data)
 
+        partition_table_get_partition_info(phy_init_data_offset "--partition-type data --partition-subtype phy" "offset")
+        esptool_py_flash_project_args(phy_init_data ${phy_init_data_offset} "${PHY_INIT_DATA_BIN}" FLASH_IN_PROJECT)
     endif()
 
     if(CONFIG_ESP_FILENAME_MACRO_NO_PATH)
