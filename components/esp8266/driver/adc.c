@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "esp_attr.h"
 #include "esp_err.h"
@@ -51,7 +52,9 @@ esp_err_t adc_read(uint16_t *data)
     xSemaphoreTake(adc_handle->adc_mux, portMAX_DELAY);
 
     if (adc_handle->config.mode == ADC_READ_TOUT_MODE) {
+        vTaskSuspendAll();
         ret = test_tout(0);
+        xTaskResumeAll();
 
         if (ret != 0xFFFF) {
             // The working voltage of ADC is designed according to 1.1v. Later, the actual working voltage of ADC is increased to 1.2v, so this scale is added.
@@ -63,7 +66,9 @@ esp_err_t adc_read(uint16_t *data)
             }
         }
     } else if (adc_handle->config.mode == ADC_READ_VDD_MODE) {
+        vTaskSuspendAll();
         ret = phy_get_vdd33();
+        xTaskResumeAll();
 
         if (ret != 0xFFFF) {
             // The working voltage of ADC is designed according to 1.1v. Later, the actual working voltage of ADC is increased to 1.2v, so this scale is added.
@@ -86,7 +91,9 @@ esp_err_t adc_read_fast(uint16_t *data, uint16_t len)
     uint16_t ret;
 
     xSemaphoreTake(adc_handle->adc_mux, portMAX_DELAY);
+    vTaskSuspendAll();
     phy_adc_read_fast(data, len, adc_handle->config.clk_div);
+    xTaskResumeAll();
 
     for (i = 0; i < len; i++) {
         ret = data[i];
