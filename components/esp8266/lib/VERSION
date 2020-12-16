@@ -4,5 +4,5 @@ gwen:
     pp:         451bd08
     espnow:     7a93d71
 
-    smartconfig:  3.0.0
+    smartconfig:  3.0.0/5f550c40
     phy:          1163.0
