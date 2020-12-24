@@ -14,11 +14,6 @@ The WiFi libraries provide support for configuring and monitoring the ESP8266 Wi
 - Scanning for access points (active & passive scanning).
 - Promiscuous mode monitoring of IEEE802.11 WiFi packets.
 
-Important
-^^^^^^^^^
-
-Since the ESP8266 RTOS SDK V3.0, we moved some functions from IRAM to flash, including `malloc` and `free` fucntions, to save more memory.
-In this case, please do not read/write/erase flash during sniffer or promiscuous mode. You need to disable the sniffer or promiscuous mode at first, then read/write/erase flash.
 
 Application Examples
 --------------------
