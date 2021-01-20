@@ -6,6 +6,20 @@ This example connects to a local broker configured to PSK authentication
 
 ## How to use example
 
+### Code prepare
+
+If want to use psk function, maybe need change IDF version beyond v4.1 in `esp_idf_version.h`. Like this :
+```
+/** Major version number (X.x.x) */
+#define ESP_IDF_VERSION_MAJOR   4
+/** Minor version number (x.X.x) */
+#define ESP_IDF_VERSION_MINOR   2
+/** Patch version number (x.x.X) */
+#define ESP_IDF_VERSION_PATCH   0
+```
+
+This feature is controled by macro `MQTT_SUPPORTED_FEATURE_PSK_AUTHENTICATION`, defined in `mqtt_supported_features.h`.
+
 ### Hardware Required
 
 This example can be executed on any ESP32 board, the only required interface is WiFi (or ethernet) to connect to a MQTT 
