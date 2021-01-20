@@ -21,6 +21,8 @@
 extern "C" {
 #endif
 
+#define HEAP_MAX_SIZE           (96 * 1024)
+
 #define MEM_BLK_TAG             0x80000000  ///< Mark the memory block used
 
 #ifdef CONFIG_HEAP_TRACING

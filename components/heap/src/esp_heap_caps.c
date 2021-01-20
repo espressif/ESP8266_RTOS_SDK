@@ -101,6 +101,11 @@ void IRAM_ATTR *_heap_caps_malloc(size_t size, uint32_t caps, const char *file, 
     uint32_t num;
     uint32_t mem_blk_size;
 
+    if (size > (HEAP_MAX_SIZE - sizeof(mem2_blk_t) * 2)) {
+        ESP_EARLY_LOGV(TAG, "size=%u is oveflow", size);
+        return NULL;
+    }
+
     if (line == 0) {
         ESP_EARLY_LOGV(TAG, "caller func %p", file);
     } else {
@@ -297,9 +302,16 @@ void IRAM_ATTR _heap_caps_free(void *ptr, const char *file, size_t line)
  */
 void *_heap_caps_calloc(size_t count, size_t size, uint32_t caps, const char *file, size_t line)
 {
-    void *p = _heap_caps_malloc(count * size, caps, file, line);
+    size_t size_bytes;
+
+    if (__builtin_mul_overflow(count, size, &size_bytes)) {
+        ESP_EARLY_LOGV(TAG, "count=%u size=%u is oveflow", count, size);
+        return NULL;
+    }
+
+    void *p = _heap_caps_malloc(size_bytes, caps, file, line);
     if (p)
-        memset(p, 0, count * size);
+        memset(p, 0, size_bytes);
 
     return p;
 }
