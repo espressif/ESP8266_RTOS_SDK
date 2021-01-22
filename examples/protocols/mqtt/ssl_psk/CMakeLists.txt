@@ -7,7 +7,4 @@ cmake_minimum_required(VERSION 3.5)
 set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_examples_common)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-
-project(mqtt_publish)
-
-target_add_binary_data(mqtt_publish.elf "main/mqtt_eclipse_org.pem" TEXT)
+project(mqtt_ssl_psk)

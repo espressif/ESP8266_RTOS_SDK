@@ -11,6 +11,7 @@ from threading import Thread, Event
 from tiny_test_fw import DUT
 import ttfw_idf
 
+
 event_client_connected = Event()
 event_stop_client = Event()
 event_client_received_correct = Event()
@@ -51,12 +52,12 @@ def test_examples_protocol_mqtt_wss(env, extra_data):
       3. Test evaluates it received correct qos0 message
       4. Test ESP32 client received correct qos0 message
     """
-    dut1 = env.get_dut("mqtt_websocket_secure", "examples/protocols/mqtt/wss")
+    dut1 = env.get_dut("mqtt_websocket_secure", "examples/protocols/mqtt/wss", dut_class=ttfw_idf.ESP32DUT)
     # check and log bin size
     binary_file = os.path.join(dut1.app.binary_path, "mqtt_websocket_secure.bin")
     bin_size = os.path.getsize(binary_file)
     ttfw_idf.log_performance("mqtt_websocket_secure_bin_size", "{}KB".format(bin_size // 1024))
-    ttfw_idf.check_performance("mqtt_websocket_secure_size", bin_size // 1024)
+    ttfw_idf.check_performance("mqtt_websocket_secure_size", bin_size // 1024, dut1.TARGET)
     # Look for host:port in sdkconfig
     try:
         value = re.search(r'\:\/\/([^:]+)\:([0-9]+)', dut1.app.get_sdkconfig()["CONFIG_BROKER_URI"])
