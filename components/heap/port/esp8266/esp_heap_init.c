@@ -46,7 +46,7 @@ void heap_caps_init(void)
     if (iram_size > HEAP_REGION_IRAM_MIN && iram_size < HEAP_REGION_IRAM_MAX) {
         g_heap_region[heap_region_num].start_addr = (uint8_t *)&_iram_end;
         g_heap_region[heap_region_num].total_size = iram_size;
-        g_heap_region[heap_region_num].caps = MALLOC_CAP_32BIT;
+        g_heap_region[heap_region_num].caps = MALLOC_CAP_32BIT | MALLOC_CAP_EXEC;
         heap_region_num++;
     }
 #endif

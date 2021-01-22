@@ -31,6 +31,7 @@ extern "C" {
  */
 #define HEAP_ALIGN(ptr)	        (((size_t)ptr + (HEAP_ALIGN_SIZE - 1)) & ~(HEAP_ALIGN_SIZE - 1))
 
+#define MALLOC_CAP_EXEC         (1 << 0)    ///< Memory must be able to run executable code
 #define MALLOC_CAP_32BIT	    (1 << 1)    ///< Memory must allow for aligned 32-bit data accesses
 #define MALLOC_CAP_8BIT	        (1 << 2)    ///< Memory must allow for 8-bit data accesses
 #define MALLOC_CAP_DMA		    (1 << 3)    ///< Memory must be able to accessed by DMA
