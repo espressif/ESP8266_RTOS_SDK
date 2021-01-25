@@ -508,7 +508,7 @@ void esp_mbedtls_free_cacert(mbedtls_ssl_context *ssl)
 #ifdef CONFIG_ESP_TLS_USING_MBEDTLS
         if (conf->ca_chain != esp_tls_get_global_ca_store())
 #endif
-            mbedtls_x509_crt_free(conf->ca_chain);
+        mbedtls_x509_crt_free(conf->ca_chain);
         conf->ca_chain = NULL;
     }
 }
