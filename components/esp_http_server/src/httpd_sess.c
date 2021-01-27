@@ -78,7 +78,10 @@ esp_err_t httpd_sess_new(struct httpd_data *hd, int newfd)
             /* Call user-defined session opening function */
             if (hd->config.open_fn) {
                 esp_err_t ret = hd->config.open_fn(hd, hd->hd_sd[i].fd);
-                if (ret != ESP_OK) return ret;
+                if (ret != ESP_OK) {
+                    hd->hd_sd[i].fd = -1;
+                    return ret;
+                }
             }
             return ESP_OK;
         }
