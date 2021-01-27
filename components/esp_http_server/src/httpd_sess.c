@@ -79,7 +79,8 @@ esp_err_t httpd_sess_new(struct httpd_data *hd, int newfd)
             if (hd->config.open_fn) {
                 esp_err_t ret = hd->config.open_fn(hd, hd->hd_sd[i].fd);
                 if (ret != ESP_OK) {
-                    hd->hd_sd[i].fd = -1;
+                    httpd_sess_delete(hd, hd->hd_sd[i].fd);
+                    ESP_LOGD(TAG, LOG_FMT("open_fn failed for fd = %d"), newfd);
                     return ret;
                 }
             }
