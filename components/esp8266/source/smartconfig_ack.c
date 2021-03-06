@@ -180,7 +180,11 @@ static void sc_ack_send_task(void* pvParameters)
                     }
 
                     ESP_LOGE(TAG, "send failed, errno %d", err);
-                    goto _end;
+                    if ((send_sock >= LWIP_SOCKET_OFFSET) && (send_sock <= (FD_SETSIZE - 1))) {
+                        close(send_sock);
+                    }
+                    send_sock = -1;
+                    break;
                 }
             }
         } else {
