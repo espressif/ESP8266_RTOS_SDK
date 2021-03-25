@@ -247,6 +247,17 @@ esp_err_t esp_timer_delete(esp_timer_handle_t timer)
 int64_t esp_timer_get_time(void)
 {
     extern uint64_t g_esp_os_us;
+    uint64_t os_us;
+    uint32_t ccount,ccompare;
+    /* local instance of cpu_sr to avoid conflicts with any critical section */
+    uint32_t cpu_sr;
 
-    return (int64_t)(g_esp_os_us + soc_get_ccount() / g_esp_ticks_per_us);
+    /* deliberately replicate portDISABLE_INTERRUPTS() */
+    __asm__ volatile ("rsil %0, " XTSTR(XCHAL_EXCM_LEVEL) : "=a" (cpu_sr) :: "memory");
+    os_us = g_esp_os_us;
+	ccount = soc_get_ccount();
+	ccompare = soc_get_ccompare();
+	__asm__ volatile ("wsr %0, ps" :: "a" (cpu_sr) : "memory");
+
+	return (int64_t)(os_us + (ccount - (ccompare - _xt_tick_divisor))/g_esp_ticks_per_us);
 }

@@ -64,10 +64,16 @@ variable. */
 static uint32_t uxCriticalNesting = 0;
 
 uint32_t g_esp_boot_ccount;
-uint64_t g_esp_os_ticks;
 uint64_t g_esp_os_us;
-uint64_t g_esp_os_cpu_clk;
 
+#ifdef ESP_ENABLE_ESP_OS_TICKS
+/* apparently unused for at least a year. remove to free resources and increase performance  */
+uint64_t g_esp_os_ticks;
+#endif
+
+#ifndef CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
+uint64_t g_esp_os_cpu_clk;
+#endif
 static uint32_t s_switch_ctx_flag;
 
 void vPortEnterCritical(void);
@@ -135,43 +141,69 @@ void IRAM_ATTR SoftIsrHdl(void* arg)
     }
 }
 
+#ifdef ESP_ENABLE_ESP_OS_TICKS
 void IRAM_ATTR esp_increase_tick_cnt(const TickType_t ticks)
 {
-    g_esp_os_ticks += ticks;
+	g_esp_os_ticks += ticks;
 }
+#endif
 
 void IRAM_ATTR xPortSysTickHandle(void *p)
 {
-    uint32_t us;
-    uint32_t ticks;
-    uint32_t ccount;
+	uint32_t us, ticks;
+	uint32_t ccount, elapsed, new_ccompare;
 
-    /**
-     * System or application may close interrupt too long, such as the operation of read/write/erase flash.
-     * And then the "ccount" value may be overflow.
-     *
-     * So add code here to calibrate system time.
-     */
-    ccount = soc_get_ccount();
-    us = ccount / g_esp_ticks_per_us;
-  
-    g_esp_os_us += us;
-    g_esp_os_cpu_clk += ccount;
+	/**
+	 * System or application may close interrupt too long, such as the operation of read/write/erase flash.
+	 * And then the "ccount" value may be overflow.     *
+	 * .
+	 * - Reworked to avoid an heavy  drift in ccount management, in g_esp_os_us (esp_timer_get_time) and and xTickCount (xTaskGetTickCount)).
+	 * - A "control loop" has been added to check the evaluated latency and protect against further latencies due to nmi (pwm driver)
+	 * - The handler performances are increased by avoiding the math division at runtime in the main flow (about 150 fewer cpu ticks).
+	 * - Others section are removed if not required by the current compile options.
+	 * Finally, the maximum recoverable interrupt latency is close to: UINT32_MAX - _xt_tick_divisor cpu ticks.  (>26 secs @160Mhz.) and ccount is
+	 * no longer set to 0 at each handler call. This also restore the old feature that allow the sharing of ccount (read only) with other applications
+	 */
+	new_ccompare = soc_get_ccompare() + _xt_tick_divisor;
+	ticks = 1;
+	for (;;) {
+		soc_set_ccompare(new_ccompare);
+		ccount = soc_get_ccount();
+		elapsed = ccount - new_ccompare;
+		/* check for the expected negative value (underflow) or for a very unlikely new shot */
+		if ((elapsed > (uint32_t)-_xt_tick_divisor) || (soc_get_int_mask() & (1ul << ETS_MAX_INUM))) {
+			break;
+		} else {
+			/* too late. ccount will never fire again. need recover */
+			uint32_t missedTicks = elapsed / _xt_tick_divisor +1;
+			ticks += missedTicks;
+			new_ccompare += missedTicks * _xt_tick_divisor;
+		}
+	}
 
-    soc_set_ccount(0);
-    soc_set_ccompare(_xt_tick_divisor);
+	us = ticks * (1000000 / configTICK_RATE_HZ);
+	g_esp_os_us += us;
 
-    ticks = us / 1000 / portTICK_PERIOD_MS;
+#ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
+	if ((uint32_t) g_esp_os_cpu_clk > ccount) {
+		/* ccount overflow */
+		g_esp_os_cpu_clk += 0x100000000; //inc high part
+	}
+	g_esp_os_cpu_clk = (g_esp_os_cpu_clk & 0xFFFFFFFF00000000) | ccount; //low part overwrite
+#endif
 
-    if (ticks > 1) {
-        vTaskStepTick(ticks - 1);
-    }
+	if (ticks > 1) {
+		vTaskStepTick(ticks - 1);
+	}
 
-    g_esp_os_ticks++;
+#ifdef ESP_ENABLE_ESP_OS_TICKS
+	g_esp_os_ticks++;
+#endif
 
-    if (xTaskIncrementTick() != pdFALSE) {
-        portYIELD_FROM_ISR();
-    }
+	if (xTaskIncrementTick() != pdFALSE) {
+		portYIELD_FROM_ISR();
+	}
+
 }
 
 /**
