@@ -151,8 +151,8 @@ void IRAM_ATTR esp_increase_tick_cnt(const TickType_t ticks)
 void IRAM_ATTR xPortSysTickHandle(void *p)
 {
 	uint32_t us, ticks;
-	uint32_t ccount, elapsed, new_ccompare;
-
+	uint32_t ccount,  new_ccompare;
+	int32_t elapsed;
 	/**
 	 * System or application may close interrupt too long, such as the operation of read/write/erase flash.
 	 * And then the "ccount" value may be overflow.     *
@@ -161,7 +161,7 @@ void IRAM_ATTR xPortSysTickHandle(void *p)
 	 * - A "control loop" has been added to check the evaluated latency and protect against further latencies due to nmi (pwm driver)
 	 * - The handler performances are increased by avoiding the math division at runtime in the main flow (about 150 fewer cpu ticks).
 	 * - Others section are removed if not required by the current compile options.
-	 * Finally, the maximum recoverable interrupt latency is close to: UINT32_MAX - _xt_tick_divisor cpu ticks.  (>26 secs @160Mhz.) and ccount is
+	 * Finally, the maximum recoverable interrupt latency is close to: INT32_MAX ticks.  (>13 secs @160Mhz.) and ccount is
 	 * no longer set to 0 at each handler call. This also restore the old feature that allow the sharing of ccount (read only) with other applications
 	 */
 	new_ccompare = soc_get_ccompare() + _xt_tick_divisor;
@@ -169,9 +169,9 @@ void IRAM_ATTR xPortSysTickHandle(void *p)
 	for (;;) {
 		soc_set_ccompare(new_ccompare);
 		ccount = soc_get_ccount();
-		elapsed = ccount - new_ccompare;
-		/* check for the expected negative value (underflow) or for a very unlikely new shot */
-		if ((elapsed > (uint32_t)-_xt_tick_divisor) || (soc_get_int_mask() & (1ul << ETS_MAX_INUM))) {
+		elapsed = (int32_t)(ccount - new_ccompare);
+		/* check for the expected negative value or for a very unlikely new shot */
+		if ((elapsed < 0) || (soc_get_int_mask() & (1ul << ETS_MAX_INUM))) {
 			break;
 		} else {
 			/* too late. ccount will never fire again. need recover */

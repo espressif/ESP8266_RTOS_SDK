@@ -244,20 +244,26 @@ esp_err_t esp_timer_delete(esp_timer_handle_t timer)
     return ret;
 }
 
+/* replicate OS macros */
+#define localDISABLE_INTERRUPT(state) __asm__ volatile ("rsil %0, " XTSTR(XCHAL_EXCM_LEVEL) : "=a" (state) :: "memory")
+#define localENABLE_INTERRUPT(state)  __asm__ volatile ("wsr %0, ps" :: "a" (state) : "memory")
+
 int64_t esp_timer_get_time(void)
 {
     extern uint64_t g_esp_os_us;
     uint64_t os_us;
     uint32_t ccount,ccompare;
-    /* local instance of cpu_sr to avoid conflicts with any critical section */
-    uint32_t cpu_sr;
+    int32_t elapsed_us;
+    uint32_t cpu_sr; //local to avoid conflicts
 
-    /* deliberately replicate portDISABLE_INTERRUPTS() */
-    __asm__ volatile ("rsil %0, " XTSTR(XCHAL_EXCM_LEVEL) : "=a" (cpu_sr) :: "memory");
+    localDISABLE_INTERRUPT(cpu_sr);
     os_us = g_esp_os_us;
 	ccount = soc_get_ccount();
 	ccompare = soc_get_ccompare();
-	__asm__ volatile ("wsr %0, ps" :: "a" (cpu_sr) : "memory");
+	localENABLE_INTERRUPT(cpu_sr);
 
-	return (int64_t)(os_us + (ccount - (ccompare - _xt_tick_divisor))/g_esp_ticks_per_us);
+	/* signed value to mitigate some issues due a possible underflow in case of a frequency switch.
+	 * note: in a such case, the function may still be not monotonic like the original one. This up to  the next timer interrupt */
+	elapsed_us = (int32_t) (ccount - (ccompare - _xt_tick_divisor)) / (int32_t) g_esp_ticks_per_us;
+	return (int64_t) (os_us + elapsed_us);
 }
