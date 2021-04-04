@@ -164,7 +164,7 @@ void IRAM_ATTR vPortCheckCCompareAndRecover(void){
      */
 
 
-    int32_t margin = 0; //_xt_tick_divisor/4; //force recover if there is not enough time in the current time slice
+    const int32_t margin = 0; //ex. _xt_tick_divisor/4; //force recover if there is not enough time in the current time slice
 
     uint32_t ticks_to_recover,ccount,missed_ticks,new_ccompare;
     int32_t elapsed;
