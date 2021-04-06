@@ -398,14 +398,54 @@ uint32_t esp_get_old_sysconf_addr(void)
 
 void os_update_cpu_frequency(uint32_t ticks_per_us)
 {
-    extern uint32_t _xt_tick_divisor;
+    /* ets_update_cpu_frequency (alias of os_update_cpu_frequency) is called from esp_set_cpu_freq() just after the
+     * frequency switch. The call occur in a interrupt DISABLED context.
+     * In this function is also assumed that CCOUNT timer has worked with the previous frequency up to this point,
+     * so, the current CCOUNT value can be used to minimize the time error (due the frequency change) by an immediate
+     * evaluation of a new value of ccompare.
+     * This immediate evaluation (new_ccompare) also make sure that esp_timer_get_time() will produce monotonic values only.
+     *
+     * note1: Tests has shown that the time error of esp_timer_get_time() is < 1us for each esp_set_cpu_freq() call.
+     * note2: A further test performed with 36000 frequency changes spanned over one hour, and the time point of
+     *        each esp_set_cpu_freq() call randomly chosen in the current time slice, has reported a cumulative
+     *        time error <100us.
+     * note3: An nmi activity (pwm) may degrade these performances.
+     */
 
-    if (REG_READ(DPORT_CTL_REG) & DPORT_CTL_DOUBLE_CLK) {
-        g_esp_ticks_per_us = CPU_CLK_FREQ * 2 / 1000000;
-        _xt_tick_divisor = (CPU_CLK_FREQ * 2 / CONFIG_FREERTOS_HZ);
-    } else {
-        g_esp_ticks_per_us = CPU_CLK_FREQ / 1000000;;
-        _xt_tick_divisor = (CPU_CLK_FREQ / CONFIG_FREERTOS_HZ);
+    extern void vPortCheckCCompareAndRecover(void); //patched port.c
+    extern uint32_t _xt_tick_divisor;             //port.c
+    uint32_t ccount, new_ccompare;
+    int32_t left;
+    bool new160, old160;
+
+    ccount = soc_get_ccount();  //as soon as possible.
+
+    old160 = (g_esp_ticks_per_us == CPU_CLK_FREQ * 2 / 1000000);
+    new160 = !!(REG_READ(DPORT_CTL_REG) & DPORT_CTL_DOUBLE_CLK);
+
+    if (old160 != new160) {
+        // a change of frequency has been occurred.
+        left = (int32_t) (soc_get_ccompare() - ccount);   //negative if too late
+
+        if (new160) {
+            /* 80MHz -> 160MHz */
+            left *= 2;
+            g_esp_ticks_per_us = CPU_CLK_FREQ * 2 / 1000000;
+            _xt_tick_divisor = (CPU_CLK_FREQ * 2 / CONFIG_FREERTOS_HZ);
+        } else {
+            /* 160MHz -> 80MHz */
+            left /= 2;
+            g_esp_ticks_per_us = CPU_CLK_FREQ / 1000000;
+            _xt_tick_divisor = (CPU_CLK_FREQ / CONFIG_FREERTOS_HZ);
+        }
+        new_ccompare = ccount + left;
+        soc_set_ccompare(new_ccompare);
+
+        /* Timer may have already fired due to the previous ccompare value. clear bit with no further checks.
+         * vPortCheckCCompareAndRecover() will perform the other required jobs */
+        soc_clear_int_mask(1ul << ETS_MAX_INUM);
+
+        vPortCheckCCompareAndRecover();
     }
 }
 

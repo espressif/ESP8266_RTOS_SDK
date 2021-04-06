@@ -148,11 +148,9 @@ void IRAM_ATTR esp_increase_tick_cnt(const TickType_t ticks)
 }
 #endif
 
-void IRAM_ATTR xPortSysTickHandle(void *p)
-{
-    uint32_t us, ticks;
-    uint32_t ccount, new_ccompare;
-    int32_t elapsed;
+void IRAM_ATTR vPortCheckCCompareAndRecover(void){
+    /* shared with xPortSysTickHandle and os_update_cpu_frequency */
+
     /**
      * System or application may close interrupt too long, such as the operation of read/write/erase flash.
      * And then the "ccount" value may be overflow.     *
@@ -161,49 +159,57 @@ void IRAM_ATTR xPortSysTickHandle(void *p)
      * - A "control loop" has been added to check the evaluated latency and protect against further latencies due to nmi (pwm driver)
      * - The handler performances are increased by avoiding the math division at runtime in the main flow (about 150 fewer cpu ticks).
      * - Others section are removed if not required by the current compile options.
-     * Finally, the maximum recoverable interrupt latency is close to: INT32_MAX ticks.  (>13 secs @160Mhz.) and ccount is
+     * Finally, the maximum recoverable interrupt latency is close to: INT32_MAX ticks.  (>13 secs @160Mhz, >26 secs@80Mhz) and ccount is
      * no longer set to 0 at each handler call. This also restore the old feature that allow the sharing of ccount (read only) with other applications
      */
-    new_ccompare = soc_get_ccompare() + _xt_tick_divisor;
-    ticks = 1;
+
+
+    const int32_t margin = 0; //ex. _xt_tick_divisor/4; //force recover if there is not enough time in the current time slice
+
+    uint32_t ticks_to_recover,ccount,missed_ticks,new_ccompare;
+    int32_t elapsed;
+    new_ccompare = soc_get_ccompare();
+    ticks_to_recover = 0;
     for (;;) {
-        soc_set_ccompare(new_ccompare);
         ccount = soc_get_ccount();
-        elapsed = (int32_t) (ccount - new_ccompare);
-        /* check for the expected negative value or for a very unlikely new shot */
-        if ((elapsed < 0) || (soc_get_int_mask() & (1ul << ETS_MAX_INUM))) {
+        elapsed = (int32_t) (ccount - new_ccompare); //expected negative
+        if (elapsed < -margin) {
+            /* ok . Timer is allowed to fire again */
             break;
-        } else {
-            /* too late. ccount will never fire again. need recover */
-            uint32_t missedTicks = elapsed / _xt_tick_divisor + 1;
-            ticks += missedTicks;
-            new_ccompare += missedTicks * _xt_tick_divisor;
         }
+        /* ccompare set too late and/or timer fired again. Need recover */
+        missed_ticks = (elapsed + margin) / _xt_tick_divisor + 1;
+        ticks_to_recover += missed_ticks;
+        new_ccompare += missed_ticks * _xt_tick_divisor;
+        soc_set_ccompare(new_ccompare);
+        soc_clear_int_mask(1ul << ETS_MAX_INUM);
+    }
+    if (ticks_to_recover >0){
+        g_esp_os_us += ticks_to_recover * (1000000 / configTICK_RATE_HZ);
+        vTaskStepTick(ticks_to_recover);
     }
 
-    us = ticks * (1000000 / configTICK_RATE_HZ);
-    g_esp_os_us += us;
-
-#ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
+ #ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
     if ((uint32_t) g_esp_os_cpu_clk > ccount) {
         /* ccount overflow */
         g_esp_os_cpu_clk += 0x100000000; //inc high part
     }
     g_esp_os_cpu_clk = (g_esp_os_cpu_clk & 0xFFFFFFFF00000000) | ccount; //low part overwrite
 #endif
+}
 
-    if (ticks > 1) {
-        vTaskStepTick(ticks - 1);
-    }
+void IRAM_ATTR xPortSysTickHandle(void *p)
+{
+    uint32_t new_ccompare;
+    new_ccompare = soc_get_ccompare() + _xt_tick_divisor;
+    soc_set_ccompare(new_ccompare);
+    vPortCheckCCompareAndRecover();
 
-#ifdef ESP_ENABLE_ESP_OS_TICKS
-    g_esp_os_ticks++;
-#endif
+    g_esp_os_us += (1000000 / configTICK_RATE_HZ);
 
     if (xTaskIncrementTick() != pdFALSE) {
         portYIELD_FROM_ISR();
     }
-
 }
 
 /**

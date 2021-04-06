@@ -253,7 +253,7 @@ int64_t esp_timer_get_time(void)
     extern uint64_t g_esp_os_us;
     uint64_t os_us;
     uint32_t ccount, ccompare;
-    int32_t elapsed_us;
+    int32_t elapsed;
     uint32_t cpu_sr; //local to avoid conflicts
 
     localDISABLE_INTERRUPT(cpu_sr);
@@ -262,8 +262,7 @@ int64_t esp_timer_get_time(void)
     ccompare = soc_get_ccompare();
     localENABLE_INTERRUPT(cpu_sr);
 
-    /* signed value to mitigate some issues due a possible underflow in case of a frequency switch.
-     * note: in a such case, the function may still be not monotonic like the original one. This up to  the next timer interrupt */
-    elapsed_us = (int32_t) (ccount - (ccompare - _xt_tick_divisor)) / (int32_t) g_esp_ticks_per_us;
-    return (int64_t) (os_us + elapsed_us);
+    /* signed value to allow the margin setting in the handler */
+    elapsed = (int32_t) (ccount - (ccompare - _xt_tick_divisor));
+    return (int64_t) (os_us + elapsed/(int32_t) g_esp_ticks_per_us);
 }
