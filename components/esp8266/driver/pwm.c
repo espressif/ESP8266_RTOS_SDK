@@ -119,7 +119,7 @@ static void pwm_phase_init(void)
         } else if (180 >= pwm_obj->pwm_info[i].phase && pwm_obj->pwm_info[i].phase > 0) {
             time_delay = (int32_t)(pwm_obj->pwm_info[i].phase * pwm_obj->depth / 360.0);
         } else {
-            ESP_LOGE(TAG, "channel[%d]  phase error %f, valid ramge from (-180,180]\n", i, pwm_obj->pwm_info[i].phase);
+            ESP_LOGE(TAG, "channel[%d]  phase error %f, valid range is [-180,180]\n", i, pwm_obj->pwm_info[i].phase);
             continue;
         }
 
