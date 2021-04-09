@@ -67,7 +67,7 @@ uint32_t g_esp_boot_ccount;
 uint64_t g_esp_os_us;
 
 #ifdef ESP_ENABLE_ESP_OS_TICKS
-/* apparently unused for at least a year. remove to free resources and increase performance  */
+/* Apparently unused for at least one year. Removed to free up resources and increase performance  */
 uint64_t g_esp_os_ticks;
 #endif
 
@@ -158,7 +158,7 @@ void IRAM_ATTR vPortCheckCCompareAndRecover(void){
      * - Reworked to avoid an heavy  drift in ccount management, in g_esp_os_us (esp_timer_get_time) and and xTickCount (xTaskGetTickCount)).
      * - A "control loop" has been added to check the evaluated latency and protect against further latencies due to nmi (pwm driver)
      * - The handler performances are increased by avoiding the math division at runtime in the main flow (about 150 fewer cpu ticks).
-     * - Others section are removed if not required by the current compile options.
+     * - Other sections are removed if not required by the current compile options.
      * Finally, the maximum recoverable interrupt latency is close to: INT32_MAX ticks.  (>13 secs @160Mhz, >26 secs@80Mhz) and ccount is
      * no longer set to 0 at each handler call. This also restore the old feature that allow the sharing of ccount (read only) with other applications
      */
