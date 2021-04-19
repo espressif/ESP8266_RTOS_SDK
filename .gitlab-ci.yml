@@ -7,6 +7,9 @@ variables:
 
   IDF_PATH: "$CI_PROJECT_DIR"
 
+  # Versioned esp-idf-doc env image to use for all document building jobs
+  ESP_IDF_DOC_ENV_IMAGE: "$CI_DOCKER_REGISTRY/esp-idf-doc-env:v8"
+
 # before each job, we need to check if this job is filtered by bot stage/job filter
 .apply_bot_filter: &apply_bot_filter
   python $APPLY_BOT_FILTER_SCRIPT || exit 0
@@ -79,7 +82,7 @@ push_master_to_github:
 
 build_docs:
   stage: build
-  image: $CI_DOCKER_REGISTRY/esp32-ci-env$BOT_DOCKER_IMAGE_TAG
+  image: $ESP_IDF_DOC_ENV_IMAGE
   tags:
     - build_docs
   artifacts:
