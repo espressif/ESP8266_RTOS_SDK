@@ -79,7 +79,7 @@ static void sc_ack_send_task(void* pvParameters)
     sc_ack_t* ack = (sc_ack_t*)pvParameters;
     tcpip_adapter_ip_info_t local_ip;
     uint8_t remote_ip[4];
-    memset(remote_ip, 0xFF, sizeof(remote_ip));
+    memcpy(remote_ip, ack->ctx.ip, sizeof(remote_ip));
     struct sockaddr_in server_addr;
     socklen_t sin_size = sizeof(server_addr);
     int send_sock = -1;
@@ -99,6 +99,7 @@ static void sc_ack_send_task(void* pvParameters)
             port_bit = 0;
         }
         remote_port = SC_ACK_TOUCH_V2_SERVER_PORT(port_bit);
+        memset(remote_ip, 0xFF, sizeof(remote_ip));
     } else {
         remote_port = SC_ACK_AIRKISS_SERVER_PORT;
     }
@@ -156,35 +157,33 @@ static void sc_ack_send_task(void* pvParameters)
                     memcpy(remote_ip, &from.sin_addr, 4);
                     server_addr.sin_addr.s_addr = from.sin_addr.s_addr;
                 } else {
-                    goto _end;
+                    server_addr.sin_addr.s_addr = INADDR_BROADCAST;
                 }
             }
 
+            uint32_t ip_addr = server_addr.sin_addr.s_addr;
             while (s_sc_ack_send) {
                 /* Send smartconfig ACK every 100ms. */
                 vTaskDelay(100 / portTICK_RATE_MS);
-                sendlen = sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
-
-                if (sendlen > 0) {
-                    /* Totally send 60 smartconfig ACKs. Then smartconfig is successful. */
-                    if (packet_count++ >= SC_ACK_MAX_COUNT) {
-                        esp_event_post(SC_EVENT, SC_EVENT_SEND_ACK_DONE, NULL, 0, portMAX_DELAY);
-                        goto _end;
-                    }
+                if (ip_addr != INADDR_BROADCAST) {
+                    sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
+                    server_addr.sin_addr.s_addr = INADDR_BROADCAST;
+                    sendlen = sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
+                    server_addr.sin_addr.s_addr = ip_addr;
                 } else {
+                    sendlen = sendto(send_sock, &ack->ctx, ack_len, 0, (struct sockaddr*) &server_addr, sin_size);
+                }
+
+                if (sendlen <= 0) {
                     err = sc_ack_send_get_errno(send_sock);
-
-                    if (err == ENOMEM || err == EAGAIN) {
-                        ESP_LOGD(TAG, "send failed, errno %d", err);
-                        continue;
-                    }
-
                     ESP_LOGE(TAG, "send failed, errno %d", err);
-                    if ((send_sock >= LWIP_SOCKET_OFFSET) && (send_sock <= (FD_SETSIZE - 1))) {
-                        close(send_sock);
-                    }
-                    send_sock = -1;
-                    break;
+                    vTaskDelay(200 / portTICK_RATE_MS);
+                }
+
+                /* Send 60 smartconfig ACKs, exit regardless of failure or success. */
+                if (packet_count++ >= SC_ACK_MAX_COUNT) {
+                    esp_event_post(SC_EVENT, SC_EVENT_SEND_ACK_DONE, NULL, 0, portMAX_DELAY);
+                    goto _end;
                 }
             }
         } else {
