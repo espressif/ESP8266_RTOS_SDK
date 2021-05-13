@@ -157,6 +157,16 @@ static void esp_panic_reset(void)
 }
 #endif
 
+
+static void (*user_panic_handler)(void *, int);
+
+
+void system_set_panic_handler(void (*fp)(void *, int))
+{
+    user_panic_handler = fp;
+}
+
+
 void panicHandler(void *frame, int wdt)
 {
     extern int _chip_nmi_cnt;
@@ -176,6 +186,10 @@ void panicHandler(void *frame, int wdt)
 
     panic_frame(frame);
 #endif
+
+    if (user_panic_handler) {
+        (*user_panic_handler)(frame, wdt);
+    }
 
 #ifdef ESP_PANIC_REBOOT
     esp_panic_reset();

@@ -395,7 +395,7 @@ class ESPLoader(object):
         #
         # DTR & RTS are active low signals,
         # ie True = pin @ 0V, False = pin @ VCC.
-        if mode != 'no_reset':
+        if mode != 'no_reset' and mode != 'no_reset_rts':
             self._setDTR(False)  # IO0=HIGH
             self._setRTS(True)   # EN=LOW, chip in reset
             time.sleep(0.1)
@@ -413,6 +413,9 @@ class ESPLoader(object):
                 time.sleep(0.4)  # allow watchdog reset to occur
             time.sleep(0.05)
             self._setDTR(False)  # IO0=HIGH, done
+        
+        if mode == 'no_reset_rts':
+            self._setRTS(True)
 
         for _ in range(5):
             try:
@@ -2512,7 +2515,7 @@ def main():
     parser.add_argument(
         '--before',
         help='What to do before connecting to the chip',
-        choices=['default_reset', 'no_reset', 'no_reset_no_sync'],
+        choices=['default_reset', 'no_reset', 'no_reset_rts', 'no_reset_no_sync'],
         default=os.environ.get('ESPTOOL_BEFORE', 'default_reset'))
 
     parser.add_argument(
