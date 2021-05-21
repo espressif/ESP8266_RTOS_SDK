@@ -225,6 +225,9 @@ static int  wpa_gen_wpa_ie_rsn(u8 *rsn_ie, size_t rsn_ie_len,
         }
     }
 #endif /* CONFIG_IEEE80211W */
+
+    capab |= WPA_CAPABILITY_SPP_CAPABLE;
+
     WPA_PUT_LE16(pos, capab);
     pos += 2;
 
