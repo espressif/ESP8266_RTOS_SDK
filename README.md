@@ -43,6 +43,8 @@ v8.4.0
 * [Linux(64)](https://dl.espressif.com/dl/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-linux-amd64.tar.gz)
 * [Linux(32)](https://dl.espressif.com/dl/xtensa-lx106-elf-gcc8_4_0-esp-2020r3-linux-i686.tar.gz)
 
+Notice: If you are using Windows, please download [MSYS2](https://dl.espressif.com/dl/esp32_win32_msys2_environment_and_toolchain-20181001.zip) and run `mingw32.exe` first, because windows does not have a make environment by default.
+
 If you are still using old version SDK(< 3.0), please use toolchain v4.8.5, as following:
 
 * [Windows](https://dl.espressif.com/dl/xtensa-lx106-elf-win32-1.22.0-88-gde0bdc1-4.8.5.tar.gz)
@@ -88,10 +90,10 @@ cd ~/esp/ESP8266_RTOS_SDK/examples/get-started/hello_world
 make menuconfig
 ```
 
-In the menu, navigate to `Serial flasher config` > `Default serial port` to configure the serial port, where project will be loaded to. Confirm selection by pressing enter, save configuration by selecting `< Save >` and then exit application by selecting `< Exit >`.
+In the menu, navigate to `Serial flasher config` > `Default serial port` to configure the serial port, where project will be loaded to. Then navigate to `SDK tool configuration` and set your toolchain path/prefix. The path should be like `path/to/toolchain/xtensa-lx106-elf/bin/xtensa-lx106-elf-`. Confirm selection by pressing enter, save configuration by selecting `< Save >` and then exit application by selecting `< Exit >`.
 
 > Note:
-	On Windows, serial ports have names like COM1. On MacOS, they start with `/dev/cu.`. On Linux, they start with `/dev/tty`.
+	On Windows, serial ports have names like COM1 (And even if you are using MSYS2, you should still use names like COM1). On MacOS, they start with `/dev/cu.`. On Linux, they start with `/dev/tty`.
 
 Here are couple of tips on navigation and use of `menuconfig`:
 
