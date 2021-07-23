@@ -52,7 +52,7 @@ public:
 
     esp_err_t read_raw(size_t src_offset, void* dst, size_t size) override
     {
-        return esp_partition_read_raw(&partition, src_offset, dst, size);
+        return esp_partition_read(&partition, src_offset, dst, size);
     }
 
     esp_err_t read(size_t src_offset, void* dst, size_t size) override
@@ -62,7 +62,7 @@ public:
 
     esp_err_t write_raw(size_t dst_offset, const void* src, size_t size) override
     {
-        return esp_partition_write_raw(&partition, dst_offset, src, size);
+        return esp_partition_write(&partition, dst_offset, src, size);
     }
 
     esp_err_t write(size_t dst_offset, const void* src, size_t size) override

@@ -50,7 +50,7 @@ public:
     const char *get_partition_name() override;
 
     /**
-     * Look into \c esp_partition_read_raw for more details.
+     * Look into \c esp_partition_read for more details.
      *
      * @return
      *      - ESP_OK on success
@@ -69,7 +69,7 @@ public:
     esp_err_t read(size_t src_offset, void* dst, size_t size) override;
 
     /**
-     * Look into \c esp_partition_write_raw for more details.
+     * Look into \c esp_partition_write for more details.
      *
      * @return
      *      - ESP_OK on success

@@ -33,7 +33,7 @@ const char *NVSPartition::get_partition_name()
 
 esp_err_t NVSPartition::read_raw(size_t src_offset, void* dst, size_t size)
 {
-    return esp_partition_read_raw(mESPPartition, src_offset, dst, size);
+    return esp_partition_read(mESPPartition, src_offset, dst, size);
 }
 
 esp_err_t NVSPartition::read(size_t src_offset, void* dst, size_t size)
@@ -47,7 +47,7 @@ esp_err_t NVSPartition::read(size_t src_offset, void* dst, size_t size)
 
 esp_err_t NVSPartition::write_raw(size_t dst_offset, const void* src, size_t size)
 {
-    return esp_partition_write_raw(mESPPartition, dst_offset, src, size);
+    return esp_partition_write(mESPPartition, dst_offset, src, size);
 }
 
 esp_err_t NVSPartition::write(size_t dst_offset, const void* src, size_t size)

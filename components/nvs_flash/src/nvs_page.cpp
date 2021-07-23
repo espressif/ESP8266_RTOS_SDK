@@ -15,7 +15,7 @@
 #if defined(LINUX_TARGET)
 #include "crc.h"
 #else
-#include <esp_rom_crc.h>
+#include <esp_crc.h>
 #endif
 #include <cstdio>
 #include <cstring>
@@ -27,7 +27,7 @@ Page::Page() : mPartition(nullptr) { }
 
 uint32_t Page::Header::calculateCrc32()
 {
-    return esp_rom_crc32_le(0xffffffff,
+    return crc32_le(0xffffffff,
                     reinterpret_cast<uint8_t*>(this) + offsetof(Header, mSeqNumber),
                     offsetof(Header, mCrc32) - offsetof(Header, mSeqNumber));
 }

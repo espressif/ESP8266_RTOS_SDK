@@ -7,7 +7,6 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "esp_partition.h"
-#include "esp_flash_encrypt.h"
 #include "esp_log.h"
 #include <string.h>
 #include "esp_system.h"
