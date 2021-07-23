@@ -13,7 +13,11 @@
 // limitations under the License.
 #include "nvs_types.hpp"
 
-#include <rom/crc.h>
+#if defined(LINUX_TARGET)
+#include "crc.h"
+#else
+#include <esp_rom_crc.h>
+#endif
 
 namespace nvs
 {
@@ -21,10 +25,10 @@ uint32_t Item::calculateCrc32() const
 {
     uint32_t result = 0xffffffff;
     const uint8_t* p = reinterpret_cast<const uint8_t*>(this);
-    result = crc32_le(result, p + offsetof(Item, nsIndex),
+    result = esp_rom_crc32_le(result, p + offsetof(Item, nsIndex),
                       offsetof(Item, crc32) - offsetof(Item, nsIndex));
-    result = crc32_le(result, p + offsetof(Item, key), sizeof(key));
-    result = crc32_le(result, p + offsetof(Item, data), sizeof(data));
+    result = esp_rom_crc32_le(result, p + offsetof(Item, key), sizeof(key));
+    result = esp_rom_crc32_le(result, p + offsetof(Item, data), sizeof(data));
     return result;
 }
 
@@ -32,16 +36,17 @@ uint32_t Item::calculateCrc32WithoutValue() const
 {
     uint32_t result = 0xffffffff;
     const uint8_t* p = reinterpret_cast<const uint8_t*>(this);
-    result = crc32_le(result, p + offsetof(Item, nsIndex),
+    result = esp_rom_crc32_le(result, p + offsetof(Item, nsIndex),
                       offsetof(Item, datatype) - offsetof(Item, nsIndex));
-    result = crc32_le(result, p + offsetof(Item, key), sizeof(key));
+    result = esp_rom_crc32_le(result, p + offsetof(Item, key), sizeof(key));
+    result = esp_rom_crc32_le(result, p + offsetof(Item, chunkIndex), sizeof(chunkIndex));
     return result;
 }
 
 uint32_t Item::calculateCrc32(const uint8_t* data, size_t size)
 {
     uint32_t result = 0xffffffff;
-    result = crc32_le(result, data, size);
+    result = esp_rom_crc32_le(result, data, size);
     return result;
 }
 

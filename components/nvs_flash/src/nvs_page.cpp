@@ -12,28 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "nvs_page.hpp"
-#include <rom/crc.h>
+#if defined(LINUX_TARGET)
+#include "crc.h"
+#else
+#include <esp_rom_crc.h>
+#endif
 #include <cstdio>
 #include <cstring>
 
 namespace nvs
 {
 
+Page::Page() : mPartition(nullptr) { }
+
 uint32_t Page::Header::calculateCrc32()
 {
-    return crc32_le(0xffffffff,
+    return esp_rom_crc32_le(0xffffffff,
                     reinterpret_cast<uint8_t*>(this) + offsetof(Header, mSeqNumber),
                     offsetof(Header, mCrc32) - offsetof(Header, mSeqNumber));
 }
 
-esp_err_t Page::load(uint32_t sectorNumber)
+esp_err_t Page::load(Partition *partition, uint32_t sectorNumber)
 {
+    if (partition == nullptr) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    mPartition = partition;
     mBaseAddress = sectorNumber * SEC_SIZE;
     mUsedEntryCount = 0;
     mErasedEntryCount = 0;
 
     Header header;
-    auto rc = spi_flash_read(mBaseAddress, &header, sizeof(header));
+    auto rc = mPartition->read_raw(mBaseAddress, &header, sizeof(header));
     if (rc != ESP_OK) {
         mState = PageState::INVALID;
         return rc;
@@ -42,24 +53,35 @@ esp_err_t Page::load(uint32_t sectorNumber)
         mState = header.mState;
         // check if the whole page is really empty
         // reading the whole page takes ~40 times less than erasing it
-        uint32_t line[8];
-        for (uint32_t i = 0; i < SPI_FLASH_SEC_SIZE; i += sizeof(line)) {
-            rc = spi_flash_read(mBaseAddress + i, line, sizeof(line));
+        const int BLOCK_SIZE = 128;
+        uint32_t* block = new (std::nothrow) uint32_t[BLOCK_SIZE];
+
+        if (!block) return ESP_ERR_NO_MEM;
+
+        for (uint32_t i = 0; i < SPI_FLASH_SEC_SIZE; i += 4 * BLOCK_SIZE) {
+            rc = mPartition->read_raw(mBaseAddress + i, block, 4 * BLOCK_SIZE);
             if (rc != ESP_OK) {
                 mState = PageState::INVALID;
+                delete[] block;
                 return rc;
             }
-            if (std::any_of(line, line + 4, [](uint32_t val) -> bool { return val != 0xffffffff; })) {
+            if (std::any_of(block, block + BLOCK_SIZE, [](uint32_t val) -> bool { return val != 0xffffffff; })) {
                 // page isn't as empty after all, mark it as corrupted
                 mState = PageState::CORRUPT;
                 break;
             }
         }
+        delete[] block;
     } else if (header.mCrc32 != header.calculateCrc32()) {
         header.mState = PageState::CORRUPT;
     } else {
         mState = header.mState;
         mSeqNumber = header.mSeqNumber;
+        if(header.mVersion < NVS_VERSION) {
+            return ESP_ERR_NVS_NEW_VERSION_FOUND;
+        } else {
+            mVersion = header.mVersion;
+        }
     }
 
     switch (mState) {
@@ -82,13 +104,16 @@ esp_err_t Page::load(uint32_t sectorNumber)
 
 esp_err_t Page::writeEntry(const Item& item)
 {
-    auto rc = spi_flash_write(getEntryAddress(mNextFreeEntry), &item, sizeof(item));
-    if (rc != ESP_OK) {
+    esp_err_t err;
+
+    err = mPartition->write(getEntryAddress(mNextFreeEntry), &item, sizeof(item));
+
+    if (err != ESP_OK) {
         mState = PageState::INVALID;
-        return rc;
+        return err;
     }
 
-    auto err = alterEntryState(mNextFreeEntry, EntryState::WRITTEN);
+    err = alterEntryState(mNextFreeEntry, EntryState::WRITTEN);
     if (err != ESP_OK) {
         return err;
     }
@@ -102,17 +127,18 @@ esp_err_t Page::writeEntry(const Item& item)
 
     return ESP_OK;
 }
-    
+
 esp_err_t Page::writeEntryData(const uint8_t* data, size_t size)
 {
     assert(size % ENTRY_SIZE == 0);
     assert(mNextFreeEntry != INVALID_ENTRY);
     assert(mFirstUsedEntry != INVALID_ENTRY);
     const uint16_t count = size / ENTRY_SIZE;
-    
+
     const uint8_t* buf = data;
-    
-#ifdef ESP_PLATFORM
+
+#if !defined LINUX_TARGET
+    // TODO: check whether still necessary with esp_partition* API
     /* On the ESP32, data can come from DROM, which is not accessible by spi_flash_write
      * function. To work around this, we copy the data to heap if it came from DROM.
      * Hopefully this won't happen very often in practice. For data from DRAM, we should
@@ -127,13 +153,15 @@ esp_err_t Page::writeEntryData(const uint8_t* data, size_t size)
         }
         memcpy((void*)buf, data, size);
     }
-#endif //ESP_PLATFORM
-    auto rc = spi_flash_write(getEntryAddress(mNextFreeEntry), buf, size);
-#ifdef ESP_PLATFORM
+#endif // ! LINUX_TARGET
+
+    auto rc = mPartition->write(getEntryAddress(mNextFreeEntry), buf, size);
+
+#if !defined LINUX_TARGET
     if (buf != data) {
         free((void*)buf);
     }
-#endif //ESP_PLATFORM
+#endif // ! LINUX_TARGET
     if (rc != ESP_OK) {
         mState = PageState::INVALID;
         return rc;
@@ -147,15 +175,15 @@ esp_err_t Page::writeEntryData(const uint8_t* data, size_t size)
     return ESP_OK;
 }
 
-esp_err_t Page::writeItem(uint8_t nsIndex, ItemType datatype, const char* key, const void* data, size_t dataSize)
+esp_err_t Page::writeItem(uint8_t nsIndex, ItemType datatype, const char* key, const void* data, size_t dataSize, uint8_t chunkIdx)
 {
     Item item;
     esp_err_t err;
-    
+
     if (mState == PageState::INVALID) {
         return ESP_ERR_NVS_INVALID_STATE;
     }
-    
+
     if (mState == PageState::UNINITIALIZED) {
         err = initialize();
         if (err != ESP_OK) {
@@ -171,21 +199,22 @@ esp_err_t Page::writeItem(uint8_t nsIndex, ItemType datatype, const char* key, c
     if (keySize > Item::MAX_KEY_LENGTH) {
         return ESP_ERR_NVS_KEY_TOO_LONG;
     }
-    
-    if (dataSize > Page::BLOB_MAX_SIZE) {
+
+    if (dataSize > Page::CHUNK_MAX_SIZE) {
         return ESP_ERR_NVS_VALUE_TOO_LONG;
     }
 
     size_t totalSize = ENTRY_SIZE;
     size_t entriesCount = 1;
-    if (datatype == ItemType::SZ || datatype == ItemType::BLOB) {
+    if (isVariableLengthType(datatype)) {
         size_t roundedSize = (dataSize + ENTRY_SIZE - 1) & ~(ENTRY_SIZE - 1);
         totalSize += roundedSize;
         entriesCount += roundedSize / ENTRY_SIZE;
     }
 
     // primitive types should fit into one entry
-    assert(totalSize == ENTRY_SIZE || datatype == ItemType::BLOB || datatype == ItemType::SZ);
+    assert(totalSize == ENTRY_SIZE ||
+       isVariableLengthType(datatype));
 
     if (mNextFreeEntry == INVALID_ENTRY || mNextFreeEntry + entriesCount > ENTRY_COUNT) {
         // page will not fit this amount of data
@@ -194,10 +223,14 @@ esp_err_t Page::writeItem(uint8_t nsIndex, ItemType datatype, const char* key, c
 
     // write first item
     size_t span = (totalSize + ENTRY_SIZE - 1) / ENTRY_SIZE;
-    item = Item(nsIndex, datatype, span, key);
-    mHashList.insert(item, mNextFreeEntry);
+    item = Item(nsIndex, datatype, span, key, chunkIdx);
+    err = mHashList.insert(item, mNextFreeEntry);
 
-    if (datatype != ItemType::SZ && datatype != ItemType::BLOB) {
+    if (err != ESP_OK) {
+        return err;
+    }
+
+    if (!isVariableLengthType(datatype)) {
         memcpy(item.data, data, dataSize);
         item.crc32 = item.calculateCrc32();
         err = writeEntry(item);
@@ -208,7 +241,7 @@ esp_err_t Page::writeItem(uint8_t nsIndex, ItemType datatype, const char* key, c
         const uint8_t* src = reinterpret_cast<const uint8_t*>(data);
         item.varLength.dataCrc32 = Item::calculateCrc32(src, dataSize);
         item.varLength.dataSize = dataSize;
-        item.varLength.reserved2 = 0xffff;
+        item.varLength.reserved = 0xffff;
         item.crc32 = item.calculateCrc32();
         err = writeEntry(item);
         if (err != ESP_OK) {
@@ -222,36 +255,36 @@ esp_err_t Page::writeItem(uint8_t nsIndex, ItemType datatype, const char* key, c
                 return err;
             }
         }
-        
+
         size_t tail = dataSize - left;
         if (tail > 0) {
-            std::fill_n(item.rawData, ENTRY_SIZE / 4, 0xffffffff);
+            std::fill_n(item.rawData, ENTRY_SIZE, 0xff);
             memcpy(item.rawData, static_cast<const uint8_t*>(data) + left, tail);
             err = writeEntry(item);
             if (err != ESP_OK) {
                 return err;
             }
         }
-    
+
     }
     return ESP_OK;
 }
 
-esp_err_t Page::readItem(uint8_t nsIndex, ItemType datatype, const char* key, void* data, size_t dataSize)
+esp_err_t Page::readItem(uint8_t nsIndex, ItemType datatype, const char* key, void* data, size_t dataSize, uint8_t chunkIdx, VerOffset chunkStart)
 {
     size_t index = 0;
     Item item;
-    
+
     if (mState == PageState::INVALID) {
         return ESP_ERR_NVS_INVALID_STATE;
     }
-    
-    esp_err_t rc = findItem(nsIndex, datatype, key, index, item);
+
+    esp_err_t rc = findItem(nsIndex, datatype, key, index, item, chunkIdx, chunkStart);
     if (rc != ESP_OK) {
         return rc;
     }
 
-    if (datatype != ItemType::SZ && datatype != ItemType::BLOB) {
+    if (!isVariableLengthType(datatype)) {
         if (dataSize != getAlignmentForType(datatype)) {
             return ESP_ERR_NVS_TYPE_MISMATCH;
         }
@@ -288,22 +321,74 @@ esp_err_t Page::readItem(uint8_t nsIndex, ItemType datatype, const char* key, vo
     return ESP_OK;
 }
 
-esp_err_t Page::eraseItem(uint8_t nsIndex, ItemType datatype, const char* key)
+esp_err_t Page::cmpItem(uint8_t nsIndex, ItemType datatype, const char* key, const void* data, size_t dataSize, uint8_t chunkIdx, VerOffset chunkStart)
 {
     size_t index = 0;
     Item item;
-    esp_err_t rc = findItem(nsIndex, datatype, key, index, item);
+
+    if (mState == PageState::INVALID) {
+        return ESP_ERR_NVS_INVALID_STATE;
+    }
+
+    esp_err_t rc = findItem(nsIndex, datatype, key, index, item, chunkIdx, chunkStart);
+    if (rc != ESP_OK) {
+        return rc;
+    }
+
+    if (!isVariableLengthType(datatype)) {
+        if (dataSize != getAlignmentForType(datatype)) {
+            return ESP_ERR_NVS_TYPE_MISMATCH;
+        }
+
+        if (memcmp(data, item.data, dataSize)) {
+            return ESP_ERR_NVS_CONTENT_DIFFERS;
+        }
+        return ESP_OK;
+    }
+
+    if (dataSize < static_cast<size_t>(item.varLength.dataSize)) {
+        return ESP_ERR_NVS_INVALID_LENGTH;
+    }
+
+    const uint8_t* dst = reinterpret_cast<const uint8_t*>(data);
+    size_t left = item.varLength.dataSize;
+    for (size_t i = index + 1; i < index + item.span; ++i) {
+        Item ditem;
+        rc = readEntry(i, ditem);
+        if (rc != ESP_OK) {
+            return rc;
+        }
+        size_t willCopy = ENTRY_SIZE;
+        willCopy = (left < willCopy)?left:willCopy;
+        if (memcmp(dst, ditem.rawData, willCopy)) {
+            return ESP_ERR_NVS_CONTENT_DIFFERS;
+        }
+        left -= willCopy;
+        dst += willCopy;
+    }
+    if (Item::calculateCrc32(reinterpret_cast<const uint8_t*>(data), item.varLength.dataSize) != item.varLength.dataCrc32) {
+        return ESP_ERR_NVS_NOT_FOUND;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t Page::eraseItem(uint8_t nsIndex, ItemType datatype, const char* key, uint8_t chunkIdx, VerOffset chunkStart)
+{
+    size_t index = 0;
+    Item item;
+    esp_err_t rc = findItem(nsIndex, datatype, key, index, item, chunkIdx, chunkStart);
     if (rc != ESP_OK) {
         return rc;
     }
     return eraseEntryAndSpan(index);
 }
 
-esp_err_t Page::findItem(uint8_t nsIndex, ItemType datatype, const char* key)
+esp_err_t Page::findItem(uint8_t nsIndex, ItemType datatype, const char* key, uint8_t chunkIdx, VerOffset chunkStart)
 {
     size_t index = 0;
     Item item;
-    return findItem(nsIndex, datatype, key, index, item);
+    return findItem(nsIndex, datatype, key, index, item, chunkIdx, chunkStart);
 }
 
 esp_err_t Page::eraseEntryAndSpan(size_t index)
@@ -406,7 +491,11 @@ esp_err_t Page::copyItems(Page& other)
             return err;
         }
 
-        other.mHashList.insert(entry, other.mNextFreeEntry);
+        err = other.mHashList.insert(entry, other.mNextFreeEntry);
+        if (err != ESP_OK) {
+            return err;
+        }
+
         err = other.writeEntry(entry);
         if (err != ESP_OK) {
             return err;
@@ -435,7 +524,7 @@ esp_err_t Page::mLoadEntryTable()
     if (mState == PageState::ACTIVE ||
             mState == PageState::FULL ||
             mState == PageState::FREEING) {
-        auto rc = spi_flash_read(mBaseAddress + ENTRY_TABLE_OFFSET, mEntryTable.data(),
+        auto rc = mPartition->read_raw(mBaseAddress + ENTRY_TABLE_OFFSET, mEntryTable.data(),
                                  mEntryTable.byteSize());
         if (rc != ESP_OK) {
             mState = PageState::INVALID;
@@ -474,7 +563,7 @@ esp_err_t Page::mLoadEntryTable()
         while (mNextFreeEntry < ENTRY_COUNT) {
             uint32_t entryAddress = getEntryAddress(mNextFreeEntry);
             uint32_t header;
-            auto rc = spi_flash_read(entryAddress, &header, sizeof(header));
+            auto rc = mPartition->read_raw(entryAddress, &header, sizeof(header));
             if (rc != ESP_OK) {
                 mState = PageState::INVALID;
                 return rc;
@@ -519,7 +608,7 @@ esp_err_t Page::mLoadEntryTable()
                 mState = PageState::INVALID;
                 return err;
             }
-            
+
             if (item.crc32 != item.calculateCrc32()) {
                 err = eraseEntryAndSpan(i);
                 if (err != ESP_OK) {
@@ -529,12 +618,16 @@ esp_err_t Page::mLoadEntryTable()
                 continue;
             }
 
-            mHashList.insert(item, i);
+            err = mHashList.insert(item, i);
+            if (err != ESP_OK) {
+                mState = PageState::INVALID;
+                return err;
+            }
 
             // search for potential duplicate item
             size_t duplicateIndex = mHashList.find(0, item);
-            
-            if (item.datatype == ItemType::BLOB || item.datatype == ItemType::SZ) {
+
+            if (isVariableLengthType(item.datatype)) {
                 span = item.span;
                 bool needErase = false;
                 for (size_t j = i; j < i + span; ++j) {
@@ -549,7 +642,11 @@ esp_err_t Page::mLoadEntryTable()
                     continue;
                 }
             }
-            
+
+            /* Note that logic for duplicate detections works fine even
+             * when old-format blob is present along with new-format blob-index
+             * for same key on active page. Since datatype is not used in hash calculation,
+             * old-format blob will be removed.*/
             if (duplicateIndex < i) {
                 eraseEntryAndSpan(duplicateIndex);
             }
@@ -592,12 +689,18 @@ esp_err_t Page::mLoadEntryTable()
                 }
                 continue;
             }
+
             assert(item.span > 0);
 
-            mHashList.insert(item, i);
+            err = mHashList.insert(item, i);
+            if (err != ESP_OK) {
+                mState = PageState::INVALID;
+                return err;
+            }
+
             size_t span = item.span;
 
-            if (item.datatype == ItemType::BLOB || item.datatype == ItemType::SZ) {
+            if (isVariableLengthType(item.datatype)) {
                 for (size_t j = i + 1; j < i + span; ++j) {
                     if (mEntryTable.get(j) != EntryState::WRITTEN) {
                         eraseEntryAndSpan(i);
@@ -622,9 +725,10 @@ esp_err_t Page::initialize()
     Header header;
     header.mState = mState;
     header.mSeqNumber = mSeqNumber;
+    header.mVersion = mVersion;
     header.mCrc32 = header.calculateCrc32();
 
-    auto rc = spi_flash_write(mBaseAddress, &header, sizeof(header));
+    auto rc = mPartition->write_raw(mBaseAddress, &header, sizeof(header));
     if (rc != ESP_OK) {
         mState = PageState::INVALID;
         return rc;
@@ -641,7 +745,7 @@ esp_err_t Page::alterEntryState(size_t index, EntryState state)
     mEntryTable.set(index, state);
     size_t wordToWrite = mEntryTable.getWordIndex(index);
     uint32_t word = mEntryTable.data()[wordToWrite];
-    auto rc = spi_flash_write(mBaseAddress + ENTRY_TABLE_OFFSET + static_cast<uint32_t>(wordToWrite) * 4,
+    auto rc = mPartition->write_raw(mBaseAddress + ENTRY_TABLE_OFFSET + static_cast<uint32_t>(wordToWrite) * 4,
             &word, sizeof(word));
     if (rc != ESP_OK) {
         mState = PageState::INVALID;
@@ -665,7 +769,7 @@ esp_err_t Page::alterEntryRangeState(size_t begin, size_t end, EntryState state)
         }
         if (nextWordIndex != wordIndex) {
             uint32_t word = mEntryTable.data()[wordIndex];
-            auto rc = spi_flash_write(mBaseAddress + ENTRY_TABLE_OFFSET + static_cast<uint32_t>(wordIndex) * 4,
+            auto rc = mPartition->write_raw(mBaseAddress + ENTRY_TABLE_OFFSET + static_cast<uint32_t>(wordIndex) * 4,
                     &word, 4);
             if (rc != ESP_OK) {
                 return rc;
@@ -679,7 +783,7 @@ esp_err_t Page::alterEntryRangeState(size_t begin, size_t end, EntryState state)
 esp_err_t Page::alterPageState(PageState state)
 {
     uint32_t state_val = static_cast<uint32_t>(state);
-    auto rc = spi_flash_write(mBaseAddress, &state_val, sizeof(state));
+    auto rc = mPartition->write_raw(mBaseAddress, &state_val, sizeof(state));
     if (rc != ESP_OK) {
         mState = PageState::INVALID;
         return rc;
@@ -690,19 +794,19 @@ esp_err_t Page::alterPageState(PageState state)
 
 esp_err_t Page::readEntry(size_t index, Item& dst) const
 {
-    auto rc = spi_flash_read(getEntryAddress(index), &dst, sizeof(dst));
+    auto rc = mPartition->read(getEntryAddress(index), &dst, sizeof(dst));
     if (rc != ESP_OK) {
         return rc;
     }
     return ESP_OK;
 }
 
-esp_err_t Page::findItem(uint8_t nsIndex, ItemType datatype, const char* key, size_t &itemIndex, Item& item)
+esp_err_t Page::findItem(uint8_t nsIndex, ItemType datatype, const char* key, size_t &itemIndex, Item& item, uint8_t chunkIdx, VerOffset chunkStart)
 {
     if (mState == PageState::CORRUPT || mState == PageState::INVALID || mState == PageState::UNINITIALIZED) {
         return ESP_ERR_NVS_NOT_FOUND;
     }
-    
+
     size_t findBeginIndex = itemIndex;
     if (findBeginIndex >= ENTRY_COUNT) {
         return ESP_ERR_NVS_NOT_FOUND;
@@ -719,7 +823,7 @@ esp_err_t Page::findItem(uint8_t nsIndex, ItemType datatype, const char* key, si
     }
 
     if (nsIndex != NS_ANY && datatype != ItemType::ANY && key != NULL) {
-        size_t cachedIndex = mHashList.find(start, Item(nsIndex, datatype, 0, key));
+        size_t cachedIndex = mHashList.find(start, Item(nsIndex, datatype, 0, key, chunkIdx));
         if (cachedIndex < ENTRY_COUNT) {
             start = cachedIndex;
         } else {
@@ -750,7 +854,7 @@ esp_err_t Page::findItem(uint8_t nsIndex, ItemType datatype, const char* key, si
             continue;
         }
 
-        if (item.datatype == ItemType::BLOB || item.datatype == ItemType::SZ) {
+        if (isVariableLengthType(item.datatype)) {
             next = i + item.span;
         }
 
@@ -761,8 +865,31 @@ esp_err_t Page::findItem(uint8_t nsIndex, ItemType datatype, const char* key, si
         if (key != nullptr && strncmp(key, item.key, Item::MAX_KEY_LENGTH) != 0) {
             continue;
         }
+        /* For blob data, chunkIndex should match*/
+        if (chunkIdx != CHUNK_ANY
+                && datatype == ItemType::BLOB_DATA
+                && item.chunkIndex != chunkIdx) {
+            continue;
+        }
+        /* Blob-index will match the <ns,key> with blob data.
+         * Skip data chunks when searching for blob index*/
+        if (datatype == ItemType::BLOB_IDX
+                && item.chunkIndex != CHUNK_ANY) {
+            continue;
+        }
+        /* Match the version for blob-index*/
+        if (datatype == ItemType::BLOB_IDX
+                && chunkStart != VerOffset::VER_ANY
+                && item.blobIndex.chunkStart != chunkStart) {
+            continue;
+        }
+
 
         if (datatype != ItemType::ANY && item.datatype != datatype) {
+            if (key == nullptr && nsIndex == NS_ANY && chunkIdx == CHUNK_ANY) {
+                continue; // continue for bruteforce search on blob indices.
+            }
+            itemIndex = i;
             return ESP_ERR_NVS_TYPE_MISMATCH;
         }
 
@@ -793,10 +920,18 @@ esp_err_t Page::setSeqNumber(uint32_t seqNumber)
     return ESP_OK;
 }
 
+esp_err_t Page::setVersion(uint8_t ver)
+{
+    if (mState != PageState::UNINITIALIZED) {
+        return ESP_ERR_NVS_INVALID_STATE;
+    }
+    mVersion = ver;
+    return ESP_OK;
+}
+
 esp_err_t Page::erase()
 {
-    auto sector = mBaseAddress / SPI_FLASH_SEC_SIZE;
-    auto rc = spi_flash_erase_sector(sector);
+    auto rc = mPartition->erase_range(mBaseAddress, SPI_FLASH_SEC_SIZE);
     if (rc != ESP_OK) {
         mState = PageState::INVALID;
         return rc;
@@ -825,28 +960,39 @@ esp_err_t Page::markFull()
     }
     return alterPageState(PageState::FULL);
 }
-    
+
+size_t Page::getVarDataTailroom() const
+{
+    if (mState == PageState::UNINITIALIZED) {
+        return CHUNK_MAX_SIZE;
+    } else if (mState == PageState::FULL) {
+        return 0;
+    }
+    /* Skip one entry for blob data item precessing the data */
+    return ((mNextFreeEntry < (ENTRY_COUNT-1)) ? ((ENTRY_COUNT - mNextFreeEntry - 1) * ENTRY_SIZE): 0);
+}
+
 const char* Page::pageStateToName(PageState ps)
 {
     switch (ps) {
         case PageState::CORRUPT:
             return "CORRUPT";
-            
+
         case PageState::ACTIVE:
             return "ACTIVE";
-            
+
         case PageState::FREEING:
             return "FREEING";
-            
+
         case PageState::FULL:
             return "FULL";
-            
+
         case PageState::INVALID:
             return "INVALID";
-            
+
         case PageState::UNINITIALIZED:
             return "UNINITIALIZED";
-            
+
         default:
             assert(0 && "invalid state value");
             return "";
@@ -868,7 +1014,7 @@ void Page::debugDump() const
             Item item;
             readEntry(i, item);
             if (skip == 0) {
-                printf("W ns=%2u type=%2u span=%3u key=\"%s\" len=%d\n", item.nsIndex, static_cast<unsigned>(item.datatype), item.span, item.key, (item.span != 1)?((int)item.varLength.dataSize):-1);
+                printf("W ns=%2u type=%2u span=%3u key=\"%s\" chunkIdx=%d len=%d\n", item.nsIndex, static_cast<unsigned>(item.datatype), item.span, item.key, item.chunkIndex, (item.span != 1)?((int)item.varLength.dataSize):-1);
                 if (item.span > 0 && item.span <= ENTRY_COUNT - i) {
                     skip = item.span - 1;
                 } else {
@@ -880,6 +1026,35 @@ void Page::debugDump() const
             }
         }
     }
+}
+
+esp_err_t Page::calcEntries(nvs_stats_t &nvsStats)
+{
+    assert(mState != PageState::FREEING);
+
+    nvsStats.total_entries += ENTRY_COUNT;
+
+    switch (mState) {
+        case PageState::UNINITIALIZED:
+        case PageState::CORRUPT:
+            nvsStats.free_entries += ENTRY_COUNT;
+            break;
+
+        case PageState::FULL:
+        case PageState::ACTIVE:
+            nvsStats.used_entries += mUsedEntryCount;
+            nvsStats.free_entries += ENTRY_COUNT - mUsedEntryCount; // it's equivalent free + erase entries.
+            break;
+
+        case PageState::INVALID:
+            return ESP_ERR_INVALID_STATE;
+            break;
+
+        default:
+            assert(false && "Unhandled state");
+            break;
+    }
+    return ESP_OK;
 }
 
 } // namespace nvs
