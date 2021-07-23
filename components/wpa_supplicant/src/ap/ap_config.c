@@ -130,14 +130,12 @@ static int hostapd_derive_psk(struct hostapd_ssid *ssid)
     wpa_hexdump_ascii_key(MSG_DEBUG, "PSK (ASCII passphrase)",
                   (u8 *) ssid->wpa_passphrase,
                   strlen(ssid->wpa_passphrase));
-#ifdef ESP_SUPPLICANT
-    memcpy(ssid->wpa_psk->psk, esp_wifi_ap_get_prof_pmk_internal(), PMK_LEN);
-#else
+
     /* It's too SLOW */
     pbkdf2_sha1(ssid->wpa_passphrase,
-            ssid->ssid, ssid->ssid_len,
+            (const char *)ssid->ssid, ssid->ssid_len,
             4096, ssid->wpa_psk->psk, PMK_LEN);
-#endif
+
     wpa_hexdump_key(MSG_DEBUG, "PSK (from passphrase)",
             ssid->wpa_psk->psk, PMK_LEN);
     return 0;
