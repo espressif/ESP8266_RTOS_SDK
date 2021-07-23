@@ -68,4 +68,10 @@
 
 #define _COUNTER_STRINGIFY(COUNTER) #COUNTER
 
+#ifdef IDF_CI_BUILD
+#define IDF_DEPRECATED(REASON) __attribute__((deprecated(REASON)))
+#else
+#define IDF_DEPRECATED(REASON)
+#endif
+
 #endif /* __ESP_ATTR_H__ */
