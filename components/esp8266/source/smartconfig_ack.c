@@ -31,6 +31,7 @@
 #include "esp_wifi.h"
 #include "esp_smartconfig.h"
 #include "smartconfig_ack.h"
+#include "lwip/inet.h"
 
 #define SC_ACK_TASK_PRIORITY             2          /*!< Priority of sending smartconfig ACK task */
 #define SC_ACK_TASK_STACK_SIZE           2048       /*!< Stack size of sending smartconfig ACK task */
@@ -40,7 +41,7 @@
 #define SC_ACK_TOUCH_V2_SERVER_PORT(i)   (18266+i*10000)     /*!< ESP touch_v2 UDP port of server on cellphone */
 #define SC_ACK_AIRKISS_SERVER_PORT       10000      /*!< Airkiss UDP port of server on cellphone */
 #define SC_ACK_AIRKISS_DEVICE_PORT       10001      /*!< Airkiss UDP port of server on device */
-#define SC_ACK_AIRKISS_TIMEOUT           1500       /*!< Airkiss read data timout millisecond */
+#define SC_ACK_TIMEOUT                   1500       /*!< Airkiss and ESP touch_v2 read data timout millisecond */
 
 #define SC_ACK_TOUCH_LEN                 11         /*!< Length of ESP touch ACK context */
 #define SC_ACK_AIRKISS_LEN               7          /*!< Length of Airkiss ACK context */
@@ -133,21 +134,24 @@ static void sc_ack_send_task(void* pvParameters)
 
             setsockopt(send_sock, SOL_SOCKET, SO_BROADCAST | SO_REUSEADDR, &optval, sizeof(int));
 
-            if (ack->type == SC_TYPE_AIRKISS) {
+            if (ack->type == SC_TYPE_AIRKISS || ack->type == SC_TYPE_ESPTOUCH_V2) {
                 char data = 0;
                 struct sockaddr_in local_addr, from;
                 socklen_t sockadd_len = sizeof(struct sockaddr);
                 struct timeval timeout = {
-                    SC_ACK_AIRKISS_TIMEOUT / 1000,
-                    SC_ACK_AIRKISS_TIMEOUT % 1000 * 1000
+                    SC_ACK_TIMEOUT / 1000,
+                    SC_ACK_TIMEOUT % 1000 * 1000
                 };
 
                 bzero(&local_addr, sizeof(struct sockaddr_in));
                 bzero(&from, sizeof(struct sockaddr_in));
                 local_addr.sin_family = AF_INET;
                 local_addr.sin_addr.s_addr = INADDR_ANY;
-                local_addr.sin_port = htons(SC_ACK_AIRKISS_DEVICE_PORT);
-
+                if (ack->type == SC_TYPE_AIRKISS) {
+                    local_addr.sin_port = htons(SC_ACK_AIRKISS_DEVICE_PORT);
+                } else {    
+                    local_addr.sin_port = htons(SC_ACK_TOUCH_DEVICE_PORT);
+                }
                 bind(send_sock, (struct sockaddr*)&local_addr, sockadd_len);
                 setsockopt(send_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
@@ -156,6 +160,7 @@ static void sc_ack_send_task(void* pvParameters)
                 if (from.sin_addr.s_addr != INADDR_ANY) {
                     memcpy(remote_ip, &from.sin_addr, 4);
                     server_addr.sin_addr.s_addr = from.sin_addr.s_addr;
+                    ESP_LOGI(TAG, "cellphone_ip: %s", inet_ntoa(server_addr.sin_addr));
                 } else {
                     server_addr.sin_addr.s_addr = INADDR_BROADCAST;
                 }
