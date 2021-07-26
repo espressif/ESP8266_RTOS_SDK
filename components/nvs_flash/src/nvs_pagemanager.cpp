@@ -15,16 +15,22 @@
 
 namespace nvs
 {
-esp_err_t PageManager::load(uint32_t baseSector, uint32_t sectorCount)
+esp_err_t PageManager::load(Partition *partition, uint32_t baseSector, uint32_t sectorCount)
 {
+    if (partition == nullptr) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
     mBaseSector = baseSector;
     mPageCount = sectorCount;
     mPageList.clear();
     mFreePageList.clear();
-    mPages.reset(new Page[sectorCount]);
+    mPages.reset(new (nothrow) Page[sectorCount]);
+
+    if (!mPages) return ESP_ERR_NO_MEM;
 
     for (uint32_t i = 0; i < sectorCount; ++i) {
-        auto err = mPages[i].load(baseSector + i);
+        auto err = mPages[i].load(partition, baseSector + i);
         if (err != ESP_OK) {
             return err;
         }
@@ -66,11 +72,24 @@ esp_err_t PageManager::load(uint32_t baseSector, uint32_t sectorCount)
 
     if (lastItemIndex != SIZE_MAX) {
         auto last = PageManager::TPageListIterator(&lastPage);
-        for (auto it = begin(); it != last; ++it) {
+        TPageListIterator it;
+
+        for (it = begin(); it != last; ++it) {
 
             if ((it->state() != Page::PageState::FREEING) &&
-                    (it->eraseItem(item.nsIndex, item.datatype, item.key) == ESP_OK)) {
+                    (it->eraseItem(item.nsIndex, item.datatype, item.key, item.chunkIndex) == ESP_OK)) {
                 break;
+            }
+        }
+        if ((it == last) && (item.datatype == ItemType::BLOB_IDX)) {
+            /* Rare case in which the blob was stored using old format, but power went just after writing
+             * blob index during modification. Loop again and delete the old version blob*/
+            for (it = begin(); it != last; ++it) {
+
+                if ((it->state() != Page::PageState::FREEING) &&
+                        (it->eraseItem(item.nsIndex, ItemType::BLOB, item.key, item.chunkIndex) == ESP_OK)) {
+                    break;
+                }
             }
         }
     }
@@ -111,7 +130,7 @@ esp_err_t PageManager::load(uint32_t baseSector, uint32_t sectorCount)
     }
 
     // partition should have at least one free page
-    if (mFreePageList.size() == 0) {
+    if (mFreePageList.empty()) {
         return ESP_ERR_NVS_NO_FREE_PAGES;
     }
 
@@ -198,6 +217,28 @@ esp_err_t PageManager::activatePage()
     p->setSeqNumber(mSeqNumber);
     ++mSeqNumber;
     return ESP_OK;
+}
+
+esp_err_t PageManager::fillStats(nvs_stats_t& nvsStats)
+{
+    nvsStats.used_entries      = 0;
+    nvsStats.free_entries      = 0;
+    nvsStats.total_entries     = 0;
+    esp_err_t err = ESP_OK;
+
+    // list of used pages
+    for (auto p = mPageList.begin(); p != mPageList.end(); ++p) {
+        err = p->calcEntries(nvsStats);
+        if (err != ESP_OK) {
+            return err;
+        }
+    }
+
+    // free pages
+    nvsStats.total_entries += mFreePageList.size() * Page::ENTRY_COUNT;
+    nvsStats.free_entries  += mFreePageList.size() * Page::ENTRY_COUNT;
+
+    return err;
 }
 
 } // namespace nvs
