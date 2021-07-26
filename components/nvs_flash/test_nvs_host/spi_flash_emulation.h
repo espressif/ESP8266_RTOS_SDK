@@ -36,6 +36,16 @@ public:
     SpiFlashEmulator(size_t sectorCount) : mUpperSectorBound(sectorCount)
     {
         mData.resize(sectorCount * SPI_FLASH_SEC_SIZE / 4, 0xffffffff);
+        mEraseCnt.resize(sectorCount);
+        spi_flash_emulator_set(this);
+    }
+
+    SpiFlashEmulator(const char *filename)
+    {
+        load(filename);
+        // Atleast one page should be free, hence we create mData of size of 2 sectors.
+        mData.resize(mData.size() + SPI_FLASH_SEC_SIZE / 4, 0xffffffff);
+        mUpperSectorBound = mData.size() * 4 / SPI_FLASH_SEC_SIZE;
         spi_flash_emulator_set(this);
     }
 
@@ -67,13 +77,13 @@ public:
             WARN("invalid flash operation detected: erase sector=" << sectorNumber);
             return false;
         }
-        
+
         if (dstAddr % 4 != 0 ||
                 size % 4 != 0 ||
                 dstAddr + size > mData.size() * 4) {
             return false;
         }
-        
+
         for (size_t i = 0; i < size / 4; ++i) {
             if (mFailCountdown != SIZE_MAX && mFailCountdown-- == 0) {
                 return false;
@@ -102,12 +112,12 @@ public:
         if (offset > mData.size()) {
             return false;
         }
-        
+
         if (sectorNumber < mLowerSectorBound || sectorNumber >= mUpperSectorBound) {
             WARN("invalid flash operation detected: erase sector=" << sectorNumber);
             return false;
         }
-        
+
         if (mFailCountdown != SIZE_MAX && mFailCountdown-- == 0) {
             return false;
         }
@@ -115,10 +125,11 @@ public:
         std::fill_n(begin(mData) + offset, SPI_FLASH_SEC_SIZE / 4, 0xffffffff);
 
         ++mEraseOps;
+        mEraseCnt[sectorNumber]++;
         mTotalTime += getEraseOpTime();
         return true;
     }
-    
+
     void randomize(uint32_t seed)
     {
         std::random_device rd;
@@ -141,7 +152,7 @@ public:
     {
         return reinterpret_cast<const uint8_t*>(mData.data());
     }
-    
+
     void load(const char* filename)
     {
         FILE* f = fopen(filename, "rb");
@@ -154,7 +165,7 @@ public:
         assert(s == static_cast<size_t>(size / SPI_FLASH_SEC_SIZE));
         fclose(f);
     }
-    
+
     void save(const char* filename)
     {
         FILE* f = fopen(filename, "wb");
@@ -198,14 +209,18 @@ public:
     {
         return mTotalTime;
     }
-    
+
     void setBounds(uint32_t lowerSector, uint32_t upperSector) {
         mLowerSectorBound = lowerSector;
         mUpperSectorBound = upperSector;
     }
-    
+
     void failAfter(uint32_t count) {
         mFailCountdown = count;
+    }
+
+    size_t getSectorEraseCount(uint32_t sector) const {
+        return mEraseCnt[sector];
     }
 
 protected:
@@ -215,6 +230,7 @@ protected:
 
 
     std::vector<uint32_t> mData;
+    std::vector<uint32_t> mEraseCnt;
 
     mutable size_t mReadOps = 0;
     mutable size_t mWriteOps = 0;
@@ -224,7 +240,7 @@ protected:
     mutable size_t mTotalTime = 0;
     size_t mLowerSectorBound = 0;
     size_t mUpperSectorBound = 0;
-    
+
     size_t mFailCountdown = SIZE_MAX;
 
 };
