@@ -1,6 +1,6 @@
 gwen:
     core:       db51cd0
-    net80211:   db51cd0
+    net80211:   8e675c3
     pp:         db51cd0
     espnow:     db51cd0
 
