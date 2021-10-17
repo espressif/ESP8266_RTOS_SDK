@@ -39,6 +39,6 @@ wifi_constants_pb2 = _load_source("wifi_constants_pb2", idf_path + "/components/
 wifi_config_pb2    = _load_source("wifi_config_pb2",    idf_path + "/components/wifi_provisioning/python/wifi_config_pb2.py")
 wifi_scan_pb2      = _load_source("wifi_scan_pb2",      idf_path + "/components/wifi_provisioning/python/wifi_scan_pb2.py")
 
-# custom_provisioning component related python files generated from .proto files
-custom_config_pb2  = _load_source("custom_config_pb2",  idf_path +
-                                  "/examples/provisioning/custom_config/components/custom_provisioning/python/custom_config_pb2.py")
+# # custom_provisioning component related python files generated from .proto files
+# custom_config_pb2  = _load_source("custom_config_pb2",  idf_path +
+#                                   "/examples/provisioning/custom_config/components/custom_provisioning/python/custom_config_pb2.py")
