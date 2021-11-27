@@ -18,12 +18,7 @@ import os
 from pyparsing import Word, alphanums, printables, Combine, Literal, hexnums, quotedString, Optional, nums, removeQuotes, oneOf, Group, infixNotation, opAssoc
 
 import sys
-
-try:
-    idf_path = os.environ['IDF_PATH']
-except KeyError:
-    idf_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '../..'))
-sys.path.insert(0, idf_path + '/tools/kconfig_new')
+sys.path.insert(0, os.environ.get('IDF_PATH') + '/tools/kconfig_new')
 
 try:
     import kconfiglib
