@@ -429,6 +429,14 @@ macro(project project_name)
 
     unset(idf_size)
 
+    
+    add_custom_target(monitor DEPENDS ${project_elf})
+    add_custom_command(TARGET monitor
+        COMMAND ${IDF_PATH}/tools/idf_monitor.py --baud ${CONFIG_ESPTOOLPY_MONITOR_BAUD} --port $ENV{ESPPORT} --toolchain-prefix xtensa-lx106-elf- ${build_dir}/${project_elf}
+        VERBATIM
+        WORKING_DIRECTORY ${build_dir}
+        COMMENT "Run monitor tool to view serial output")
+
     idf_build_executable(${project_elf})
 
     __project_info("${test_components}")

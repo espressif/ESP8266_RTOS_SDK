@@ -138,7 +138,7 @@ function(esptool_py_custom_target target_name flasher_filename dependencies)
         -D ESPTOOLPY="${ESPTOOLPY}"
         -D ESPTOOL_ARGS="write_flash;@flash_${flasher_filename}_args"
         -D ESPTOOL_WORKING_DIR="${build_dir}"
-        -P run_esptool.cmake
+        -P "${idf_path}/components/esptool_py/run_esptool.cmake"
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         USES_TERMINAL
         )

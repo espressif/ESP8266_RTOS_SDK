@@ -17,3 +17,6 @@
 [submodule "components/coap/libcoap"]
 	path = components/coap/libcoap
 	url = ../../obgm/libcoap.git
+[submodule "tools/mkspiffs"]
+	path = tools/mkspiffs
+	url = https://github.com/igrr/mkspiffs.git

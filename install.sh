@@ -11,6 +11,8 @@ ${IDF_PATH}/tools/idf_tools.py install
 echo "Installing Python environment and packages"
 ${IDF_PATH}/tools/idf_tools.py install-python-env
 
+./build_mkspiffs.sh
+
 basedir="$(dirname $0)"
 echo "All done! You can now run:"
 echo ""
