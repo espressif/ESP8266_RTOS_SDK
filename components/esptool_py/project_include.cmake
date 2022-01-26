@@ -72,8 +72,6 @@ else()
     set(unsigned_project_binary "${elf_name}.bin")
 endif()
 
-
-
 #
 # Add erase target - Erasing flash chip
 #
