@@ -1167,6 +1167,8 @@ esp_err_t wifi_prov_mgr_configure_sta(wifi_config_t *wifi_cfg)
     }
     /* Configure Wi-Fi station with host credentials
      * provided during provisioning */
+    wifi_cfg->sta.pmf_cfg.capable = true;
+    wifi_cfg->sta.pmf_cfg.required = false;
     if (esp_wifi_set_config(ESP_IF_WIFI_STA, wifi_cfg) != ESP_OK) {
         ESP_LOGE(TAG, "Failed to set Wi-Fi configuration");
         RELEASE_LOCK(prov_ctx_lock);
@@ -1444,6 +1446,9 @@ esp_err_t wifi_prov_mgr_start_provisioning(wifi_prov_security_t security, const 
         RELEASE_LOCK(prov_ctx_lock);
         return err;
     }
+    wifi_cfg_empty.sta.pmf_cfg.capable = true;
+    wifi_cfg_empty.sta.pmf_cfg.required = false;
+
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg_empty);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to set empty Wi-Fi credentials");
@@ -1530,6 +1535,8 @@ esp_err_t wifi_prov_mgr_start_provisioning(wifi_prov_security_t security, const 
 err:
     prov_ctx->prov_state = WIFI_PROV_STATE_IDLE;
     esp_wifi_set_storage(WIFI_STORAGE_FLASH);
+    wifi_cfg_old.sta.pmf_cfg.capable = true;
+    wifi_cfg_old.sta.pmf_cfg.required = false;
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg_old);
 
 exit:
