@@ -31,7 +31,11 @@ static inline esp_irqflag_t soc_save_local_irq(void)
     esp_irqflag_t flag;
 
     __asm__ __volatile__(
+#ifdef BOOTLOADER_BUILD
+            "rsil   %0, 3\n"
+#else
             "rsil   %0, 1\n"
+#endif
             : "=a"(flag)
             :
             : "memory"
