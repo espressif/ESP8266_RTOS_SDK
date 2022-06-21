@@ -259,6 +259,12 @@ bool spi_flash_check_wr_protect(void)
                 special_flash_write_status(0x01, status&(~(SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS)), 1, true);
             }
         }
+    } else if (flash_id == 0x164068) {
+        if(spi_flash_read_status(&status)==0) { //Read status Ok
+            if(status&SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS) {
+                special_flash_write_status(0x01, status&(~(SPI_GD25Q32_FLASH_WRITE_PROTECT_STATUS)), 1, true);
+            }
+        }       
     }
     //Others
     else {
@@ -435,6 +441,10 @@ void user_spi_flash_dio_to_qio_pre_init(void)
             to_qio = true;
         }
         //ENBALE FLASH QIO 0X01H+0X00+0X02
+    } else if (flash_id == 0x164068) {
+        if (flash_gd25q32c_enable_QIO_mode() == true) {
+            to_qio = true;
+        }  
     } else {
         if (spi_flash_enable_qmode_raw(&g_rom_flashchip) == ESP_OK) {
             to_qio = true;
