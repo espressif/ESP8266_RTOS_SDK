@@ -22,6 +22,11 @@
 
 #define FLASH_SECTOR_SIZE 0x1000
 
+#define CMD_RDSFDP      0x5A /* Read the SFDP of the flash */
+#define CMD_RDJEDECID   0x9F /* Read the JEDEC ID of the flash */
+
+#define XMC_VENDOR_ID   0x20
+
 /* Provide a Flash API for bootloader_support code,
    that can be used from bootloader or app code.
 
@@ -99,5 +104,21 @@ esp_err_t bootloader_flash_write(size_t dest_addr, void *src, size_t size, bool 
  * @return esp_err_t
  */
 esp_err_t bootloader_flash_erase_sector(size_t sector);
+
+/**
+ * @brief Read the SFDP of the flash
+ *
+ * @param sfdp_addr Address of the parameter to read
+ * @param miso_byte_num Bytes to read
+ * @return The read SFDP, little endian, 4 bytes at most
+ */
+uint32_t bootloader_flash_read_sfdp(uint32_t sfdp_addr, unsigned int miso_byte_num);
+
+/**
+ * @brief Startup flow recommended by XMC. Call at startup before any erase/write operation.
+ *
+ * @return ESP_OK When startup successfully, otherwise ESP_FAIL (indiciating you should reboot before erase/write).
+ */
+esp_err_t bootloader_flash_xmc_startup(void);
 
 #endif

@@ -642,6 +642,8 @@ esp_err_t bootloader_init()
 
 static esp_err_t bootloader_main()
 {
+    esp_err_t ret;
+
 #ifdef CONFIG_BOOTLOADER_DISABLE_JTAG_IO
     /* Set GPIO 12-15 to be normal GPIO  */
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_GPIO12);
@@ -654,6 +656,11 @@ static esp_err_t bootloader_main()
 #endif
 
     uart_console_configure();
+
+    if ((ret = bootloader_flash_xmc_startup()) != ESP_OK) {
+        ESP_LOGE(TAG, "failed when running XMC startup flow, reboot!");
+        return ESP_FAIL;
+    }
 
     esp_image_header_t fhdr;
     if (bootloader_flash_read(ESP_BOOTLOADER_OFFSET, &fhdr, sizeof(esp_image_header_t), true) != ESP_OK) {
