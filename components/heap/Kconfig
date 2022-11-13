@@ -13,4 +13,12 @@ menu "Heap memory"
         help
             Enables heap tracing API.
 
+    config HEAP_PRIO_8BIT_RAM
+        bool "Prioritize allocation of 8-bit access capable RAM"
+        default n
+        depends on !HEAP_DISABLE_IRAM
+        help
+            Set DRAM region ahead of IRAM region during initialization, so that allocations
+            can be made against it first.
+
 endmenu
