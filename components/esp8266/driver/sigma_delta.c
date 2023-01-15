@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 <qb4.dev@gmail.com>
+ * Copyright (c) 2023 <qb4.dev@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
@@ -82,26 +82,12 @@ esp_err_t sigma_delta_deinit(void)
 
 esp_err_t sigma_delta_set_output(gpio_num_t gpio_num)
 {
-	gpio_config_t io_config = {
-		.pin_bit_mask = (1 << gpio_num),
-		.mode = GPIO_MODE_OUTPUT,
-		.pull_up_en = 0,
-		.pull_down_en = 0,
-		.intr_type = GPIO_INTR_DISABLE
-	};
-	ESP_ERROR_CHECK(gpio_config(&io_config));
-
 	GPIO.pin[gpio_num].source = SIGMA_AS_PIN_SOURCE;
-	ESP_LOGI(TAG,"signal output set on GPIO[%d]", gpio_num);
 	return ESP_OK;
 }
 
 esp_err_t sigma_delta_clear_output(gpio_num_t gpio_num)
 {
-	ESP_ERROR_CHECK(gpio_set_level(gpio_num,0));
-	ESP_ERROR_CHECK(gpio_set_direction(gpio_num,GPIO_MODE_DISABLE));
-
 	GPIO.pin[gpio_num].source = GPIO_AS_PIN_SOURCE;
-	ESP_LOGI(TAG,"signal output clear on GPIO[%d]", gpio_num);
 	return ESP_OK;
 }

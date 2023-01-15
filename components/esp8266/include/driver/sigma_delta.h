@@ -1,14 +1,16 @@
 /*
- * Copyright (c) 2022 <qb4.dev@gmail.com>
+ * Copyright (c) 2023 <qb4.dev@gmail.com>
  *
  * SPDX-License-Identifier: LGPL-2.1-or-later
  */
 
-#ifndef _SIGMA_DELTA_H
-#define _SIGMA_DELTA_H
+#pragma once
 
-#include <stdint.h>
 #include "esp_err.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
   * @brief  Setup sigma-delta signal generator
@@ -76,6 +78,8 @@ esp_err_t sigma_delta_deinit(void);
   * @brief  Set sigma-delta signal generator output
   * on selected GPIO
   *
+  * @note GPIO should already been configured as output
+  *
   * @param[in] gpio_num selected gpio pin
   * @return
   *     - ESP_OK Success
@@ -94,4 +98,6 @@ esp_err_t sigma_delta_set_output(gpio_num_t gpio_num);
   */
 esp_err_t sigma_delta_clear_output(gpio_num_t gpio_num);
 
+#ifdef __cplusplus
+}
 #endif
