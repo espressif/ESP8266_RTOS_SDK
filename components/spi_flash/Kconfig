@@ -1,0 +1,12 @@
+menu "SPI Flash"
+
+    menu "Patch"
+        config ENABLE_TH25Q16HB_PATCH_0
+            bool "Enable TH25Q16HB Patch 0"
+            default n
+            help
+                WARNING: If you don't use TH25Q16HB, you must not enable this option.
+                         Although you use TH25Q16HB, you should ask your flash manufacturer
+                         if your flash need use this patch.
+    endmenu
+endmenu
