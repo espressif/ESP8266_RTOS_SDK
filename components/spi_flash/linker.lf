@@ -2,3 +2,4 @@
 archive: libspi_flash.a
 entries:
     spi_flash_raw (noflash)
+    th25q16hb (noflash)
