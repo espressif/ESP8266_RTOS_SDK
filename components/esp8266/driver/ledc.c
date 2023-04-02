@@ -143,7 +143,7 @@ esp_err_t ledc_set_fade_with_time(ledc_mode_t speed_mode, ledc_channel_t ledc_ch
     p_ledc_obj[ledc_channel]->step_001duty = duty_value * 100 / (ledc_fade_time / LEDC_STEP_TIME) % 10;
 
     //The duty print value for this channel is duty/period(Program internal value), corresponding to duty/ledc_max_duty
-    ESP_LOGI(LEDC_TAG, "channel_num = %d | duty = %d; duty_p = %d | step_duty = %d | step_01duty = %d | step_001duty = %d",
+    ESP_LOGD(LEDC_TAG, "channel_num = %d | duty = %d; duty_p = %d | step_duty = %d | step_01duty = %d | step_001duty = %d",
         p_ledc_obj[ledc_channel]->channel_num, p_ledc_obj[ledc_channel]->duty,
         p_ledc_obj[ledc_channel]->duty_p, p_ledc_obj[ledc_channel]->step_duty, p_ledc_obj[ledc_channel]->step_01duty, p_ledc_obj[ledc_channel]->step_001duty);
 
