@@ -93,6 +93,10 @@ static void user_init_entry(void *param)
     esp_set_cpu_freq(ESP_CPU_FREQ_160M);
 #endif
 
+#ifdef CONFIG_ENABLE_TH25Q16HB_PATCH_0
+    assert(th25q16hb_apply_patch_0() == 0);
+#endif
+
     app_main();
 
     vTaskDelete(NULL);

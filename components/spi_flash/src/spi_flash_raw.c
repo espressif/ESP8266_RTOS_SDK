@@ -39,7 +39,9 @@ uint32_t spi_flash_get_id_raw(esp_rom_spiflash_chip_t *chip)
 {
     uint32_t rdid = 0;
 
+#ifndef BOOTLOADER_BUILD
     Cache_Read_Disable();
+#endif
 
     Wait_SPI_Idle(chip);
 
@@ -49,7 +51,9 @@ uint32_t spi_flash_get_id_raw(esp_rom_spiflash_chip_t *chip)
 
     rdid = READ_PERI_REG(PERIPHS_SPI_FLASH_C0)&0xffffff;
 
+#ifndef BOOTLOADER_BUILD
     Cache_Read_Enable_New();
+#endif
 
     return rdid;
 }
@@ -150,8 +154,11 @@ bool spi_user_cmd_raw(esp_rom_spiflash_chip_t *chip, spi_cmd_dir_t mode, spi_cmd
 {
     int idx = 0;
 
+#ifndef BOOTLOADER_BUILD
     // Cache Disable
     Cache_Read_Disable_2();
+#endif
+
     //wait spi idle
     if((mode & SPI_RAW) == 0) {
         Wait_SPI_Idle(chip);
@@ -272,8 +279,11 @@ bool spi_user_cmd_raw(esp_rom_spiflash_chip_t *chip, spi_cmd_dir_t mode, spi_cmd
     if((mode & SPI_RAW) == 0) {
         Wait_SPI_Idle(chip);
     }
+
+#ifndef BOOTLOADER_BUILD
     //enable icache
     Cache_Read_Enable_2();
+#endif
 
     return true;
 }

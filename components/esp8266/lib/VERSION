@@ -1,6 +1,6 @@
 gwen:
     core:       231e0e2
-    net80211:   bde282f
+    net80211:   7b39142
     pp:         ec7ffb2
     espnow:     231e0e2
 
