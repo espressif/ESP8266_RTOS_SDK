@@ -19,7 +19,6 @@
 
 #include <esp_http_server.h>
 #include "esp_httpd_priv.h"
-#include <sys/fcntl.h>
 
 static const char *TAG = "httpd_sess";
 
@@ -78,7 +77,11 @@ esp_err_t httpd_sess_new(struct httpd_data *hd, int newfd)
             /* Call user-defined session opening function */
             if (hd->config.open_fn) {
                 esp_err_t ret = hd->config.open_fn(hd, hd->hd_sd[i].fd);
-                if (ret != ESP_OK) return ret;
+                if (ret != ESP_OK) {
+                    httpd_sess_delete(hd, hd->hd_sd[i].fd);
+                    ESP_LOGD(TAG, LOG_FMT("open_fn failed for fd = %d"), newfd);
+                    return ret;
+                }
             }
             return ESP_OK;
         }
@@ -193,13 +196,13 @@ void httpd_sess_set_descriptors(struct httpd_data *hd,
 /** Check if a FD is valid */
 static int fd_is_valid(int fd)
 {
-    return fcntl(fd, F_GETFD, 0) != -1 || errno != EBADF;
+    return fcntl(fd, F_GETFD) != -1 || errno != EBADF;
 }
 
-static inline uint64_t httpd_sess_get_lru_counter()
+static inline uint64_t httpd_sess_get_lru_counter(void)
 {
     static uint64_t lru_counter = 0;
-    return lru_counter++;
+    return ++lru_counter;
 }
 
 void httpd_sess_delete_invalid(struct httpd_data *hd)
@@ -278,7 +281,9 @@ bool httpd_sess_pending(struct httpd_data *hd, int fd)
     if (sd->pending_fn) {
         // test if there's any data to be read (besides read() function, which is handled by select() in the main httpd loop)
         // this should check e.g. for the SSL data buffer
-        if (sd->pending_fn(hd, fd) > 0) return true;
+        if (sd->pending_fn(hd, fd) > 0) {
+            return true;
+        }
     }
 
     return (sd->pending_len != 0);
@@ -345,6 +350,8 @@ esp_err_t httpd_sess_close_lru(struct httpd_data *hd)
         }
     }
     ESP_LOGD(TAG, LOG_FMT("fd = %d"), lru_fd);
+    struct sock_db *sd = httpd_sess_get(hd, lru_fd);
+    sd->lru_socket = true;
     return httpd_sess_trigger_close(hd, lru_fd);
 }
 
@@ -375,7 +382,12 @@ static void httpd_sess_close(void *arg)
 {
     struct sock_db *sock_db = (struct sock_db *)arg;
     if (sock_db) {
+        if (sock_db->lru_counter == 0 && !sock_db->lru_socket) {
+            ESP_LOGD(TAG, "Skipping session close for %d as it seems to be a race condition", sock_db->fd);
+            return;
+        }
         int fd = sock_db->fd;
+        sock_db->lru_socket = false;
         struct httpd_data *hd = (struct httpd_data *) sock_db->handle;
         httpd_sess_delete(hd, fd);
         close(fd);

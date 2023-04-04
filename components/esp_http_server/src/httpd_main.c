@@ -102,6 +102,26 @@ esp_err_t httpd_queue_work(httpd_handle_t handle, httpd_work_fn_t work, void *ar
     return ESP_OK;
 }
 
+esp_err_t httpd_get_client_list(httpd_handle_t handle, size_t *fds, int *client_fds)
+{
+    struct httpd_data *hd = (struct httpd_data *) handle;
+    if (hd == NULL || fds == NULL || *fds == 0 || client_fds == NULL || *fds < hd->config.max_open_sockets) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    size_t max_fds = *fds;
+    *fds = 0;
+    for (int i = 0; i < hd->config.max_open_sockets; ++i) {
+        if (hd->hd_sd[i].fd != -1) {
+            if (*fds < max_fds) {
+                client_fds[(*fds)++] = hd->hd_sd[i].fd;
+            } else {
+                return ESP_ERR_INVALID_ARG;
+            }
+        }
+    }
+    return ESP_OK;
+}
+
 void *httpd_get_global_user_ctx(httpd_handle_t handle)
 {
     return ((struct httpd_data *)handle)->config.global_user_ctx;
@@ -156,7 +176,12 @@ static esp_err_t httpd_server(struct httpd_data *hd)
 {
     fd_set read_set;
     FD_ZERO(&read_set);
-    FD_SET(hd->listen_fd, &read_set);
+    if (hd->config.lru_purge_enable || httpd_is_sess_available(hd)) {
+        /* Only listen for new connections if server has capacity to
+         * handle more (or when LRU purge is enabled, in which case
+         * older connections will be closed) */
+        FD_SET(hd->listen_fd, &read_set);
+    }
     FD_SET(hd->ctrl_fd, &read_set);
 
     int tmp_max_fd;
@@ -236,17 +261,16 @@ static void httpd_thread(void *arg)
 
 static esp_err_t httpd_server_init(struct httpd_data *hd)
 {
-#ifdef CONFIG_LWIP_IPV6
+#if CONFIG_LWIP_IPV6
     int fd = socket(PF_INET6, SOCK_STREAM, 0);
 #else
     int fd = socket(PF_INET, SOCK_STREAM, 0);
-#endif /* CONFIG_LWIP_IPV6 */
+#endif
     if (fd < 0) {
         ESP_LOGE(TAG, LOG_FMT("error in socket (%d)"), errno);
         return ESP_FAIL;
     }
-
-#ifdef CONFIG_LWIP_IPV6
+#if CONFIG_LWIP_IPV6
     struct in6_addr inaddr_any = IN6ADDR_ANY_INIT;
     struct sockaddr_in6 serv_addr = {
         .sin6_family  = PF_INET6,
@@ -261,7 +285,16 @@ static esp_err_t httpd_server_init(struct httpd_data *hd)
         },
         .sin_port     = htons(hd->config.server_port)
     };
-#endif /* CONFIG_LWIP_IPV6 */
+#endif
+    /* Enable SO_REUSEADDR to allow binding to the same
+     * address and port when restarting the server */
+    int enable = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0) {
+        /* This will fail if CONFIG_LWIP_SO_REUSE is not enabled. But
+         * it does not affect the normal working of the HTTP Server */
+        ESP_LOGW(TAG, LOG_FMT("error enabling SO_REUSEADDR (%d)"), errno);
+    }
+
     int ret = bind(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if (ret < 0) {
         ESP_LOGE(TAG, LOG_FMT("error in bind (%d)"), errno);
@@ -301,31 +334,43 @@ static struct httpd_data *httpd_create(const httpd_config_t *config)
 {
     /* Allocate memory for httpd instance data */
     struct httpd_data *hd = calloc(1, sizeof(struct httpd_data));
-    if (hd != NULL) {
-        hd->hd_calls = calloc(config->max_uri_handlers, sizeof(httpd_uri_t *));
-        if (hd->hd_calls == NULL) {
-            free(hd);
-            return NULL;
-        }
-        hd->hd_sd = calloc(config->max_open_sockets, sizeof(struct sock_db));
-        if (hd->hd_sd == NULL) {
-            free(hd->hd_calls);
-            free(hd);
-            return NULL;
-        }
-        struct httpd_req_aux *ra = &hd->hd_req_aux;
-        ra->resp_hdrs = calloc(config->max_resp_headers, sizeof(struct resp_hdr));
-        if (ra->resp_hdrs == NULL) {
-            free(hd->hd_sd);
-            free(hd->hd_calls);
-            free(hd);
-            return NULL;
-        }
-        /* Save the configuration for this instance */
-        hd->config = *config;
-    } else {
-        ESP_LOGE(TAG, "mem alloc failed");
+    if (!hd) {
+        ESP_LOGE(TAG, LOG_FMT("Failed to allocate memory for HTTP server instance"));
+        return NULL;
     }
+    hd->hd_calls = calloc(config->max_uri_handlers, sizeof(httpd_uri_t *));
+    if (!hd->hd_calls) {
+        ESP_LOGE(TAG, LOG_FMT("Failed to allocate memory for HTTP URI handlers"));
+        free(hd);
+        return NULL;
+    }
+    hd->hd_sd = calloc(config->max_open_sockets, sizeof(struct sock_db));
+    if (!hd->hd_sd) {
+        ESP_LOGE(TAG, LOG_FMT("Failed to allocate memory for HTTP session data"));
+        free(hd->hd_calls);
+        free(hd);
+        return NULL;
+    }
+    struct httpd_req_aux *ra = &hd->hd_req_aux;
+    ra->resp_hdrs = calloc(config->max_resp_headers, sizeof(struct resp_hdr));
+    if (!ra->resp_hdrs) {
+        ESP_LOGE(TAG, LOG_FMT("Failed to allocate memory for HTTP response headers"));
+        free(hd->hd_sd);
+        free(hd->hd_calls);
+        free(hd);
+        return NULL;
+    }
+    hd->err_handler_fns = calloc(HTTPD_ERR_CODE_MAX, sizeof(httpd_err_handler_func_t));
+    if (!hd->err_handler_fns) {
+        ESP_LOGE(TAG, LOG_FMT("Failed to allocate memory for HTTP error handlers"));
+        free(ra->resp_hdrs);
+        free(hd->hd_sd);
+        free(hd->hd_calls);
+        free(hd);
+        return NULL;
+    }
+    /* Save the configuration for this instance */
+    hd->config = *config;
     return hd;
 }
 
@@ -333,6 +378,7 @@ static void httpd_delete(struct httpd_data *hd)
 {
     struct httpd_req_aux *ra = &hd->hd_req_aux;
     /* Free memory of httpd instance data */
+    free(hd->err_handler_fns);
     free(ra->resp_hdrs);
     free(hd->hd_sd);
 
@@ -345,6 +391,23 @@ static void httpd_delete(struct httpd_data *hd)
 esp_err_t httpd_start(httpd_handle_t *handle, const httpd_config_t *config)
 {
     if (handle == NULL || config == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    /* Sanity check about whether LWIP is configured for providing the
+     * maximum number of open sockets sufficient for the server. Though,
+     * this check doesn't guarantee that many sockets will actually be
+     * available at runtime as other processes may use up some sockets.
+     * Note that server also uses 3 sockets for its internal use :
+     *     1) listening for new TCP connections
+     *     2) for sending control messages over UDP
+     *     3) for receiving control messages over UDP
+     * So the total number of required sockets is max_open_sockets + 3
+     */
+    if (CONFIG_LWIP_MAX_SOCKETS < config->max_open_sockets + 3) {
+        ESP_LOGE(TAG, "Configuration option max_open_sockets is too large (max allowed %d)\n\t"
+                      "Either decrease this or configure LWIP_MAX_SOCKETS to a larger value",
+                      CONFIG_LWIP_MAX_SOCKETS - 3);
         return ESP_ERR_INVALID_ARG;
     }
 
