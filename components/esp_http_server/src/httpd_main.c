@@ -262,6 +262,16 @@ static esp_err_t httpd_server_init(struct httpd_data *hd)
         .sin_port     = htons(hd->config.server_port)
     };
 #endif /* CONFIG_LWIP_IPV6 */
+
+    /* Enable SO_REUSEADDR to allow binding to the same
+     * address and port when restarting the server */
+    int enable = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) < 0) {
+        /* This will fail if CONFIG_LWIP_SO_REUSE is not enabled. But
+         * it does not affect the normal working of the HTTP Server */
+        ESP_LOGW(TAG, LOG_FMT("error in setsockopt SO_REUSEADDR (%d)"), errno);
+    }
+
     int ret = bind(fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
     if (ret < 0) {
         ESP_LOGE(TAG, LOG_FMT("error in bind (%d)"), errno);
