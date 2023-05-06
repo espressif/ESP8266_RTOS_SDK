@@ -58,7 +58,8 @@ function(__ldgen_process_template template output)
 
     add_custom_command(
         OUTPUT ${output}
-        COMMAND ${python} ${idf_path}/tools/ldgen/ldgen.py
+        COMMAND ${CMAKE_COMMAND} -E env "IDF_PATH=${IDF_PATH}"
+            ${python} ${idf_path}/tools/ldgen/ldgen.py
         --config    ${sdkconfig}
         --fragments "$<JOIN:${ldgen_fragment_files},\t>"
         --input     ${template}
