@@ -99,6 +99,15 @@ typedef void (*httpd_free_ctx_fn_t)(void *ctx);
 typedef esp_err_t (*httpd_open_func_t)(httpd_handle_t hd, int sockfd);
 
 /**
+ * @brief Function prototype for URI matching
+ * 
+ */
+
+typedef bool (*httpd_uri_match_func_t)(const char *reference_uri,
+                                       const char *uri_to_match,
+                                       size_t match_upto);
+
+/**
  * @brief  Function prototype for closing a session.
  *
  * @note   It's possible that the socket descriptor is invalid at this point, the function
@@ -195,6 +204,12 @@ typedef struct httpd_config {
      * was closed by the network stack - that is, the file descriptor may not be valid anymore.
      */
     httpd_close_func_t close_fn;
+
+    /**
+     * Uri matching function
+     * 
+     */
+    httpd_uri_match_func_t uri_match_fn;
 } httpd_config_t;
 
 /**
@@ -978,6 +993,32 @@ esp_err_t httpd_resp_send_408(httpd_req_t *r);
  *  - ESP_ERR_HTTPD_INVALID_REQ : Invalid request pointer
  */
 esp_err_t httpd_resp_send_500(httpd_req_t *r);
+
+
+/**
+ * @brief Test if a URI matches the given wildcard template.
+ *
+ * Template may end with "?" to make the previous character optional (typically a slash),
+ * "*" for a wildcard match, and "?*" to make the previous character optional, and if present,
+ * allow anything to follow.
+ *
+ * Example:
+ *   - * matches everything
+ *   - /foo/? matches /foo and /foo/
+ *   - /foo/\* (sans the backslash) matches /foo/ and /foo/bar, but not /foo or /fo
+ *   - /foo/?* or /foo/\*?  (sans the backslash) matches /foo/, /foo/bar, and also /foo, but not /foox or /fo
+ *
+ * The special characters "?" and "*" anywhere else in the template will be taken literally.
+ *
+ * @param[in] uri_template   URI template (pattern)
+ * @param[in] uri_to_match   URI to be matched
+ * @param[in] match_upto     how many characters of the URI buffer to test
+ *                          (there may be trailing query string etc.)
+ *
+ * @return true if a match was found
+ */
+bool httpd_uri_match_wildcard(const char *uri_template, const char *uri_to_match, size_t match_upto);
+
 
 /**
  * @brief   Raw HTTP send
