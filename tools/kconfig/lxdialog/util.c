@@ -566,6 +566,17 @@ int on_key_esc(WINDOW *win)
 	nodelay(win, TRUE);
 	keypad(win, FALSE);
 	key = wgetch(win);
+#ifdef WIN32
+    /*
+	 * On Windowa ncurses uses terminal driver, which reads keys directly
+	 * from Windows API, so it doesn't have to recognize ESC sequences and
+	 * buffer the first ESC as a consequence. ESC is emitted instantly to
+	 * an application, so second nodelay read will return ERR.
+	 * Yes, there's no need to press Esc twice.
+	 */
+    if (key == ERR)
+	    return KEY_ESC;
+#endif
 	key2 = wgetch(win);
 	do {
 		key3 = wgetch(win);
