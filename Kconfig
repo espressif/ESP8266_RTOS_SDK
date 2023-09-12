@@ -137,6 +137,14 @@ mainmenu "Espressif IoT Development Framework Configuration"
                 Enabling this option currently adds an additional ~500 bytes of heap overhead
                 when an exception is thrown in user code for the first time.
 
+        menuconfig COMPILER_CXX_RTTI
+            bool "Enable C++ RTTI"
+            default n
+            help
+                Enabling this option compiles all IDF C++ files with RTTI support enabled.
+
+                Disabling this option disables C++ RTTI support in all compiled files.
+
         choice COMPILER_STACK_CHECK_MODE
             prompt "Stack smashing protection mode"
             default COMPILER_STACK_CHECK_MODE_NONE
