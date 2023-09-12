@@ -789,6 +789,12 @@ static int uart_tx_all(uart_port_t uart_num, const char *src, size_t size)
         xSemaphoreGive(p_uart_obj[uart_num]->tx_done_sem);
     }
     xSemaphoreGive(p_uart_obj[uart_num]->tx_mux);
+
+    // If we don't wait it is possible to get into a race condition
+    // when the fifo tx interrupt is triggered late and another set of data
+    // gets stuck in the tx buffer until a third uart_tx_all pushes it through
+    uart_wait_tx_done(uart_num, (portTickType)portMAX_DELAY);
+
     return original_size;
 }
 
