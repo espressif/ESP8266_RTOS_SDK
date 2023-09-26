@@ -86,3 +86,7 @@ spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::cmd
 spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::addr
 spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::mosi
 spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::miso
+spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::cmd :  5
+spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::addr :  7
+spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::mosi :  10
+spi.inc:line: WARNING: Duplicate declaration, uint32_t spi_trans_t::miso :  10
