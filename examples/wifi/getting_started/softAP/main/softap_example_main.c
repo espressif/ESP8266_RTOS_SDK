@@ -62,7 +62,10 @@ void wifi_init_softap()
             .authmode = WIFI_AUTH_WPA_WPA2_PSK
         },
     };
-    if (strlen(EXAMPLE_ESP_WIFI_PASS) == 0) {
+    if (strlen(EXAMPLE_ESP_WIFI_PASS)<8) {
+        if (strlen(EXAMPLE_ESP_WIFI_PASS)>0) {
+            ESP_LOGW(TAG, "WiFi AP password has to be at least 8 characters long, falling back to WIFI_AUTH_OPEN authmode.");
+        }
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }
 
