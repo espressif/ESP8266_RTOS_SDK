@@ -1,7 +1,7 @@
 gwen:
     core:       db51cd0
     net80211:   58ed843
-    pp:         44c6f29
+    pp:         e27e66a
     espnow:     db51cd0
 
     smartconfig:  3.0.0/283eacca
