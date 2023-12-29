@@ -200,7 +200,8 @@ typedef struct esp_tls_cfg {
     esp_err_t (*crt_bundle_attach)(void *conf);
                                             /*!< Function pointer to esp_crt_bundle_attach. Enables the use of certification
                                                  bundle for server verification, must be enabled in menuconfig */
-
+    const int *ciphersuites_list;           /*!< Pointer to a zero-terminated array of IANA identifiers of TLS ciphersuites.
+                                                Please check the list validity by esp_tls_get_ciphersuites_list() API */
 } esp_tls_cfg_t;
 
 #ifdef CONFIG_ESP_TLS_SERVER
@@ -574,6 +575,15 @@ esp_err_t esp_tls_get_and_clear_last_error(esp_tls_error_handle_t h, int *esp_tl
  */
 mbedtls_x509_crt *esp_tls_get_global_ca_store(void);
 
+/**
+ * @brief Get supported TLS ciphersuites list.
+ *
+ * See https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-4 for the list of ciphersuites
+ *
+ * @return  Pointer to a zero-terminated array of IANA identifiers of TLS ciphersuites.
+ *
+ */
+const int *esp_tls_get_ciphersuites_list(void);
 #endif /* CONFIG_ESP_TLS_USING_MBEDTLS */
 #ifdef CONFIG_ESP_TLS_SERVER
 /**
@@ -602,7 +612,6 @@ int esp_tls_server_session_create(esp_tls_cfg_server_t *cfg, int sockfd, esp_tls
  */
 void esp_tls_server_session_delete(esp_tls_t *tls);
 #endif /* ! CONFIG_ESP_TLS_SERVER */
-
 #ifdef __cplusplus
 }
 #endif
