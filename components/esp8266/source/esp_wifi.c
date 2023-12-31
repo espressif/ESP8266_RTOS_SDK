@@ -117,9 +117,15 @@ static void esp_wifi_set_debug_log()
 
 esp_err_t esp_wifi_deinit(void)
 {
-    esp_err_t err = ESP_OK;
-
+    esp_err_t handlers_err = tcpip_adapter_clear_default_wifi_handlers();
+    if (handlers_err != ESP_OK) {
+        ESP_LOGW(TAG, "Failed to clear Wi-Fi handlers (0x%x)", handlers_err);
+        return handlers_err;
+    }
+    
     esp_supplicant_deinit();
+    
+    esp_err_t err = ESP_OK;
     err = esp_wifi_deinit_internal();
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to deinit Wi-Fi driver (0x%x)", err);
