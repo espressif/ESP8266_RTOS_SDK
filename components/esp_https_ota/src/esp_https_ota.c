@@ -64,6 +64,13 @@ esp_err_t esp_https_ota(const esp_http_client_config_t *config)
     }
     esp_http_client_fetch_headers(client);
 
+    int http_status = esp_http_client_get_status_code(client);
+    if (400 <= http_status) {
+        ESP_LOGE(TAG, "HTTP request returned error %d", http_status);
+        http_cleanup(client);
+        return ESP_FAIL;
+    }
+
     esp_ota_handle_t update_handle = 0;
     const esp_partition_t *update_partition = NULL;
     ESP_LOGI(TAG, "Starting OTA...");
