@@ -293,6 +293,13 @@ menu "mbedTLS"
             help
                 Enable to support ciphersuites with prefix TLS-ECDHE-RSA-WITH-
 
+        config MBEDTLS_KEY_EXCHANGE_ECJPAKE
+            bool "Enable ECJPAKE based ciphersuite modes"
+            depends on MBEDTLS_ECJPAKE_C && MBEDTLS_ECP_DP_SECP256R1_ENABLED
+            default n
+            help
+                Enable to support ciphersuites with prefix TLS-ECJPAKE-WITH-
+
     endmenu # TLS key exchange modes
 
     config MBEDTLS_SSL_RENEGOTIATION
@@ -498,6 +505,13 @@ menu "mbedTLS"
         help
             Enable ECDSA. Needed to use ECDSA-xxx TLS ciphersuites.
 
+    config MBEDTLS_ECJPAKE_C
+        bool "Elliptic curve J-PAKE"
+        depends on MBEDTLS_ECP_C
+        default n
+        help
+            Enable ECJPAKE. Needed to use ECJPAKE-xxx TLS ciphersuites.
+
     config MBEDTLS_ECP_DP_SECP192R1_ENABLED
         bool "Enable SECP192R1 curve"
         depends on MBEDTLS_ECP_C
@@ -592,6 +606,13 @@ menu "mbedTLS"
             Disabling this option saves some code size.
 
             # end of Elliptic Curve options
+
+    config MBEDTLS_HKDF_C
+        bool "HKDF algorithm (RFC 5869)"
+        default n
+        help
+            Enable support for the Hashed Message Authentication Code
+            (HMAC)-based key derivation function (HKDF).
 
     menu "Util"
 
