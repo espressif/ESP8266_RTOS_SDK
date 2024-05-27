@@ -31,6 +31,7 @@
 #include <protocomm_security1.h>
 
 #include "wifi_provisioning_priv.h"
+#include "sdkconfig.h"
 
 #define WIFI_PROV_MGR_VERSION      "v1.1"
 #define MAX_SCAN_RESULTS           CONFIG_WIFI_PROV_SCAN_MAX_ENTRIES
@@ -1167,6 +1168,12 @@ esp_err_t wifi_prov_mgr_configure_sta(wifi_config_t *wifi_cfg)
     }
     /* Configure Wi-Fi station with host credentials
      * provided during provisioning */
+
+    #if CONFIG_ESP8266_WIFI_ENABLE_WPA3_SAE
+    wifi_cfg->sta.pmf_cfg.capable = true;
+    wifi_cfg->sta.pmf_cfg.required = false;
+    #endif
+    
     if (esp_wifi_set_config(ESP_IF_WIFI_STA, wifi_cfg) != ESP_OK) {
         ESP_LOGE(TAG, "Failed to set Wi-Fi configuration");
         RELEASE_LOCK(prov_ctx_lock);
@@ -1444,6 +1451,12 @@ esp_err_t wifi_prov_mgr_start_provisioning(wifi_prov_security_t security, const 
         RELEASE_LOCK(prov_ctx_lock);
         return err;
     }
+
+    #if CONFIG_ESP8266_WIFI_ENABLE_WPA3_SAE
+    wifi_cfg_empty.sta.pmf_cfg.capable = true;
+    wifi_cfg_empty.sta.pmf_cfg.required = false;
+    #endif
+
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg_empty);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Failed to set empty Wi-Fi credentials");
@@ -1530,6 +1543,12 @@ esp_err_t wifi_prov_mgr_start_provisioning(wifi_prov_security_t security, const 
 err:
     prov_ctx->prov_state = WIFI_PROV_STATE_IDLE;
     esp_wifi_set_storage(WIFI_STORAGE_FLASH);
+
+    #if CONFIG_ESP8266_WIFI_ENABLE_WPA3_SAE
+    wifi_cfg_old.sta.pmf_cfg.capable = true;
+    wifi_cfg_old.sta.pmf_cfg.required = false;
+    #endif
+
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg_old);
 
 exit:
