@@ -4,8 +4,10 @@
 
 # Required
 version: 2
+
+# Set the version of Python and other tools you might need
 build:
-  os: "ubuntu-16.04"
+  os: "ubuntu-20.04"
   tools:
     python: "3.6"
 
@@ -17,4 +19,9 @@ formats:
 # Optionally set the version of Python and requirements required to build your docs
 python:
   install:
+    - requirements: docs/setuptools.requirements.txt
     - requirements: docs/requirements.txt
+
+# Specify the path for conf.py
+sphinx:
+  configuration: docs/en/conf.py
