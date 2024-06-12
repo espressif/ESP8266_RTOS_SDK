@@ -51,6 +51,8 @@ Generate self-signed certificate and key:
 
 *NOTE: `Common Name` of server certificate should be host-name of your server.*
 
+*NOTE: If using Windows, add `winpty` to the beginning of all your `openssl` commands, or else it cannot accept input from terminal.*
+
 ```
 openssl req -x509 -newkey rsa:2048 -keyout ca_key.pem -out ca_cert.pem -days 365
 
