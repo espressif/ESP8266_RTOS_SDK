@@ -39,6 +39,23 @@ void heap_caps_init(void)
     extern char _bss_end;
     size_t heap_region_num = 0;
 
+#if CONFIG_HEAP_PRIO_8BIT_RAM
+    g_heap_region[heap_region_num].start_addr = (uint8_t *)&_bss_end;
+    g_heap_region[heap_region_num].total_size = ((size_t)(0x40000000 - (uint32_t)&_bss_end));
+    g_heap_region[heap_region_num].caps = MALLOC_CAP_8BIT | MALLOC_CAP_32BIT | MALLOC_CAP_DMA;
+    heap_region_num++;
+
+    // CONFIG_HEAP_PRIO_8BIT_RAM is only available when CONFIG_HEAP_DISABLE_IRAM=n
+    extern char _iram_end;
+    const size_t iram_size = 0x40100000 + CONFIG_SOC_IRAM_SIZE - ((size_t)&_iram_end);
+
+    if (iram_size > HEAP_REGION_IRAM_MIN && iram_size < HEAP_REGION_IRAM_MAX) {
+        g_heap_region[heap_region_num].start_addr = (uint8_t *)&_iram_end;
+        g_heap_region[heap_region_num].total_size = iram_size;
+        g_heap_region[heap_region_num].caps = MALLOC_CAP_32BIT | MALLOC_CAP_EXEC;
+        heap_region_num++;
+    }
+#else
 #ifndef CONFIG_HEAP_DISABLE_IRAM
     extern char _iram_end;
     const size_t iram_size = 0x40100000 + CONFIG_SOC_IRAM_SIZE - ((size_t)&_iram_end);
@@ -55,6 +72,7 @@ void heap_caps_init(void)
     g_heap_region[heap_region_num].total_size = ((size_t)(0x40000000 - (uint32_t)&_bss_end));
     g_heap_region[heap_region_num].caps = MALLOC_CAP_8BIT | MALLOC_CAP_32BIT | MALLOC_CAP_DMA;
     heap_region_num++;
+#endif
 
     esp_heap_caps_init_region(g_heap_region, heap_region_num);
 }
