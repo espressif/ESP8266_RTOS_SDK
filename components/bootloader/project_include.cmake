@@ -108,6 +108,10 @@ externalproject_add(bootloader
                 # the bootloader common component requirements depends on this and
                 # config variables are not available before project() call.
                 -DLEGACY_INCLUDE_COMMON_HEADERS=${CONFIG_LEGACY_INCLUDE_COMMON_HEADERS}
+                # Use current compiler
+                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                -DCMAKE_ASM_COMPILER=${CMAKE_ASM_COMPILER}
     INSTALL_COMMAND ""
     BUILD_ALWAYS 1  # no easy way around this...
     BUILD_BYPRODUCTS ${bootloader_binary_files}
