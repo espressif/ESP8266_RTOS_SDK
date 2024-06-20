@@ -819,6 +819,10 @@ next:
 	if (*tmpname) {
 		strcat(dirname, basename);
 		strcat(dirname, ".old");
+#ifdef WIN32
+        // On Windows rename() fails if a file exists
+		unlink(dirname);
+#endif
 		rename(newname, dirname);
 		if (rename(tmpname, newname))
 			return 1;
