@@ -72,6 +72,20 @@ else()
     set(unsigned_project_binary "${elf_name}.bin")
 endif()
 
+#
+# Add erase target - Erasing flash chip
+#
+add_custom_target(erase
+    COMMAND ${CMAKE_COMMAND}
+    -D IDF_PATH="${idf_path}"
+    -D ESPTOOLPY="${ESPTOOLPY}"
+    -D ESPTOOL_ARGS="erase_flash"
+    -D ESPTOOL_WORKING_DIR="${build_dir}"
+    -P "${idf_path}/components/esptool_py/run_esptool.cmake"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+    USES_TERMINAL
+    )
+
 set(PROJECT_BIN "${elf_name}.bin")
 
 #
@@ -138,7 +152,7 @@ function(esptool_py_custom_target target_name flasher_filename dependencies)
         -D ESPTOOLPY="${ESPTOOLPY}"
         -D ESPTOOL_ARGS="write_flash;@flash_${flasher_filename}_args"
         -D ESPTOOL_WORKING_DIR="${build_dir}"
-        -P run_esptool.cmake
+        -P "${idf_path}/components/esptool_py/run_esptool.cmake"
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         USES_TERMINAL
         )
