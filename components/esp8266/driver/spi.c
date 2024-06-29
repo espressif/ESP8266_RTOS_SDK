@@ -489,9 +489,8 @@ static esp_err_t SPI_HIGH_THROUGHPUT_ATTR spi_master_trans(spi_host_t host, spi_
                 SPI[host]->data_buf[y] = trans->mosi[y];
             }
         } else {
-            ESP_LOGW(TAG,"Using unaligned data may reduce transmission efficiency");
-            memset(spi_object[host]->buf, 0, sizeof(uint32_t) * 16);
-            memcpy(spi_object[host]->buf, trans->mosi, trans->bits.mosi / 8 + (trans->bits.mosi % 8) ? 1 : 0);
+            memcpy(spi_object[host]->buf, trans->mosi, trans->bits.mosi / 8 + ((trans->bits.mosi % 8) ? 1 : 0));
+
             for (x = 0; x < trans->bits.mosi; x += 32) {
                 y = x / 32;
                 SPI[host]->data_buf[y] = spi_object[host]->buf[y];
@@ -522,19 +521,17 @@ static esp_err_t SPI_HIGH_THROUGHPUT_ATTR spi_master_trans(spi_host_t host, spi_
     if (trans->bits.miso && trans->miso) {
         while (SPI[host]->cmd.usr);
 
-        if ((uint32_t)(trans->miso) % 4 == 0) {
+        if ((uint32_t)(trans->miso) % 4 == 0 && trans->bits.miso % 32 == 0) {
             for (x = 0; x < trans->bits.miso; x += 32) {
                 y = x / 32;
                 trans->miso[y] = SPI[host]->data_buf[y];
             }
         } else {
-            ESP_LOGW(TAG,"Using unaligned data may reduce transmission efficiency");
-            memset(spi_object[host]->buf, 0, sizeof(uint32_t) * 16);
             for (x = 0; x < trans->bits.miso; x += 32) {
                 y = x / 32;
                 spi_object[host]->buf[y] = SPI[host]->data_buf[y];
             }
-            memcpy(trans->miso, spi_object[host]->buf, trans->bits.miso / 8 + (trans->bits.miso % 8) ? 1 : 0);
+            memcpy(trans->miso, spi_object[host]->buf, trans->bits.miso / 8 + ((trans->bits.miso % 8) ? 1 : 0));
         }
     }
 
@@ -577,7 +574,7 @@ static esp_err_t SPI_HIGH_THROUGHPUT_ATTR spi_slave_trans(spi_host_t host, spi_t
         } else {
             ESP_LOGW(TAG,"Using unaligned data may reduce transmission efficiency");
             memset(spi_object[host]->buf, 0, sizeof(uint32_t) * 16);
-            memcpy(spi_object[host]->buf, trans->miso, trans->bits.miso / 8 + (trans->bits.miso % 8) ? 1 : 0);
+            memcpy(spi_object[host]->buf, trans->miso, trans->bits.miso / 8 + ((trans->bits.miso % 8) ? 1 : 0));
             for (x = 0; x < trans->bits.miso; x += 32) {
                 y = x / 32;
                 SPI[host]->data_buf[y] = spi_object[host]->buf[y];
@@ -599,7 +596,7 @@ static esp_err_t SPI_HIGH_THROUGHPUT_ATTR spi_slave_trans(spi_host_t host, spi_t
                 y = x / 32;
                 spi_object[host]->buf[y] = SPI[host]->data_buf[y];
             }
-            memcpy(trans->mosi, spi_object[host]->buf, trans->bits.mosi / 8 + (trans->bits.mosi % 8) ? 1 : 0);
+            memcpy(trans->mosi, spi_object[host]->buf, trans->bits.mosi / 8 + ((trans->bits.mosi % 8) ? 1 : 0));
         }
     }
 

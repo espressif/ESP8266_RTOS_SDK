@@ -47,9 +47,11 @@
 #include "mbedtls/certs.h"
 
 /* Constants that aren't configurable in menuconfig */
-#define WEB_SERVER "www.howsmyssl.com"
+//#define WEB_SERVER "www.howsmyssl.com"
+#define WEB_SERVER "home.z52.hu"
 #define WEB_PORT "443"
-#define WEB_URL "https://www.howsmyssl.com/a/check"
+//#define WEB_URL "https://www.howsmyssl.com/a/check"
+#define WEB_URL "https://home.z52.hu"
 
 static const char *TAG = "example";
 

@@ -42,3 +42,4 @@ docs/doxygen_sqlite3.db
 
 # MacOS directory files
 .DS_Store
+examples/wifi/getting_started/station/.vs/
