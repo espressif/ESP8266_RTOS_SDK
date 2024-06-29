@@ -101,7 +101,7 @@ static esp_err_t oled_set_pos(uint8_t x_start, uint8_t y_start)
 {
     oled_write_cmd(0xb0 + y_start);
     oled_write_cmd(((x_start & 0xf0) >> 4) | 0x10);
-    oled_write_cmd((x_start & 0x0f) | 0x01);
+    oled_write_cmd((x_start & 0x0f));
     return ESP_OK;
 }
 
