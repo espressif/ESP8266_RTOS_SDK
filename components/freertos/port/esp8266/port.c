@@ -353,7 +353,13 @@ void _xt_isr_attach(uint8_t i, _xt_isr func, void* arg)
     s_isr[i].arg = arg;
 }
 
-void IRAM_ATTR _xt_isr_handler(void)
+/* 
+    this handler runs when any of the interrutps is triggered 
+    simply iterates through the interrupt register checking which bit
+    is set and then runs the respective handler function in the s_isr[i]
+    
+*/
+void IRAM_ATTR _xt_isr_handler(void) 
 {
     do {
         uint32_t mask = soc_get_int_mask();

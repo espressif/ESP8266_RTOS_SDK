@@ -2933,6 +2933,8 @@ void TASK_SW_ATTR vTaskSwitchContext( void )
 		taskSELECT_HIGHEST_PRIORITY_TASK();
 		traceTASK_SWITCHED_IN();
 
+		/* add debug code here to indicate which task is now going to run */
+
 		#if ( configUSE_NEWLIB_REENTRANT == 1 )
 		{
 			/* Switch Newlib's _impure_ptr variable to point to the _reent
