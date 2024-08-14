@@ -22,7 +22,7 @@ Also, it uses a component provided with this example `custom_provisioning` which
 
 ### Hardware Required
 
-Example should be able to run on any commonly available ESP32 development board.
+Example should be able to run on any commonly available ESP8266 development board.
 
 ### Application Required
 
