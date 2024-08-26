@@ -28,6 +28,10 @@ If you are still using old version SDK(< 3.0), please use toolchain v4.8.5, as f
 
     https://dl.espressif.com/dl/xtensa-lx106-elf-win32-1.22.0-88-gde0bdc1-4.8.5.tar.gz
 
+Add the toolchain for the ESP8266 to mysys32 installation (v8.4.0)
+------------------------------------------------------------------
+
+Once ``msys32`` folder was created, unzip the content for v8.4.0 at ``C:\msys32\opt`` to include the toolchain for the ESP8266 to the MSYS2 setup.
 
 Check it Out
 ============
@@ -47,6 +51,11 @@ By typing ``cd ~/esp`` you can then move to the newly created directory. If ther
 
 Use this window in the following steps setting up development environment for ESP8266.
 
+Include the path for the toolchain for the ESP8266 in the mysys32 environment
+-----------------------------------------------------------------------------
+
+When MSYS2 MINGW32 is runing properly, you need to add to the ``PATH`` of MSYS2 the ESP8266 toolchain path. Todo do so, execute ``export PATH=$PATH:/opt/xtensa-lx106-elf/bin``
+on the MSYS2 console.
 
 Next Steps
 ==========
