@@ -46,6 +46,7 @@ else()
         "driver/i2c.c"
         "driver/i2s.c"
         "driver/pwm.c"
+        "driver/sigma_delta.c"
         "driver/spi.c"
         "driver/hspi_logic_layer.c"
         "driver/uart.c"
