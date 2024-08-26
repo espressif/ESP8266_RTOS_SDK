@@ -12,10 +12,14 @@ endif()
 idf_component_register(SRCS "${srcs}"
                     INCLUDE_DIRS "."
                     PRIV_INCLUDE_DIRS "private_include"
-                    REQUIRES mbedtls
+                    REQUIRES mbedtls wolfssl
                     PRIV_REQUIRES lwip http_parser)
 
 if(CONFIG_ESP_TLS_USING_WOLFSSL)
-    idf_component_get_property(wolfssl esp-wolfssl COMPONENT_LIB)
-    target_link_libraries(${COMPONENT_LIB} PUBLIC ${wolfssl})
+    if(CONFIG_ESP_WOLFSSL_INTERNAL)
+        idf_component_get_property(wolfssl esp-wolfssl COMPONENT_LIB)
+        target_link_libraries(${COMPONENT_LIB} PUBLIC ${wolfssl})
+    elseif(CONFIG_TLS_STACK_WOLFSSL)
+        component_compile_options("-DWOLFSSL_USER_SETTINGS")
+    endif()
 endif()
