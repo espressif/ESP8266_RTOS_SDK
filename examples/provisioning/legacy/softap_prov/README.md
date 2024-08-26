@@ -23,7 +23,7 @@ This example can be used, as it is, for adding a provisioning service to any app
 
 ### Hardware Required
 
-Example should be able to run on any commonly available ESP32 development board.
+Example should be able to run on any commonly available ESP8266 development board.
 
 ### Application Required
 
