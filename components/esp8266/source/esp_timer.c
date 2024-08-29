@@ -244,9 +244,25 @@ esp_err_t esp_timer_delete(esp_timer_handle_t timer)
     return ret;
 }
 
+/* replicate OS macros */
+#define localDISABLE_INTERRUPT(state) __asm__ volatile ("rsil %0, " XTSTR(XCHAL_EXCM_LEVEL) : "=a" (state) :: "memory")
+#define localENABLE_INTERRUPT(state)  __asm__ volatile ("wsr %0, ps" :: "a" (state) : "memory")
+
 int64_t esp_timer_get_time(void)
 {
     extern uint64_t g_esp_os_us;
+    uint64_t os_us;
+    uint32_t ccount, ccompare;
+    int32_t elapsed;
+    uint32_t cpu_sr; //local to avoid conflicts
 
-    return (int64_t)(g_esp_os_us + soc_get_ccount() / g_esp_ticks_per_us);
+    localDISABLE_INTERRUPT(cpu_sr);
+    os_us = g_esp_os_us;
+    ccount = soc_get_ccount();
+    ccompare = soc_get_ccompare();
+    localENABLE_INTERRUPT(cpu_sr);
+
+    /* signed value to allow the margin setting in the handler */
+    elapsed = (int32_t) (ccount - (ccompare - _xt_tick_divisor));
+    return (int64_t) (os_us + elapsed/(int32_t) g_esp_ticks_per_us);
 }
