@@ -13,6 +13,8 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "esp_spiffs.h"
+#include <dirent.h>
+#include <sys/stat.h>
 
 static const char *TAG = "example";
 
@@ -21,7 +23,7 @@ void app_main(void)
     ESP_LOGI(TAG, "Initializing SPIFFS");
     
     esp_vfs_spiffs_conf_t conf = {
-      .base_path = "/spiffs",
+      .base_path = "",
       .partition_label = NULL,
       .max_files = 5,
       .format_if_mount_failed = true
@@ -49,36 +51,58 @@ void app_main(void)
     } else {
         ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
     }
+	
+	
+	  DIR *dp;
+  struct dirent *ep;     
+  dp = opendir ("/");
 
-    // Use POSIX and C standard library functions to work with files.
-    // First create a file.
-    ESP_LOGI(TAG, "Opening file");
-    FILE* f = fopen("/spiffs/hello.txt", "w");
-    if (f == NULL) {
-        ESP_LOGE(TAG, "Failed to open file for writing");
-        return;
-    }
-    fprintf(f, "Hello World!\n");
-    fclose(f);
-    ESP_LOGI(TAG, "File written");
+  if (dp != NULL)
+  {
+    while ((ep = readdir (dp)))
+      puts (ep->d_name);
 
-    // Check if destination file exists before renaming
-    struct stat st;
-    if (stat("/spiffs/foo.txt", &st) == 0) {
-        // Delete it if it exists
-        unlink("/spiffs/foo.txt");
-    }
+    (void) closedir (dp);
+  }
+  else
+    ESP_LOGE(TAG, "Couldn't open the directory");
+	
+	FILE* f = NULL;
+    
+	// // // Use POSIX and C standard library functions to work with files.
+    // // // First create a file.
+    // ESP_LOGI(TAG, "Opening file");
+    // f = fopen("/ademo.txt", "w");
+    // if (f == NULL) {
+        // ESP_LOGE(TAG, "Failed to open file for writing");
+        // return;
+    // }
+    // fprintf(f, "ademo szoveg");
+    // fclose(f);
+    // ESP_LOGI(TAG, "File written");
 
-    // Rename original file
-    ESP_LOGI(TAG, "Renaming file");
-    if (rename("/spiffs/hello.txt", "/spiffs/foo.txt") != 0) {
-        ESP_LOGE(TAG, "Rename failed");
-        return;
-    }
+    // // Check if destination file exists before renaming
+    // struct stat st;
+    // if (stat("/spiffs/foo.txt", &st) == 0) {
+        // // Delete it if it exists
+        // unlink("/spiffs/foo.txt");
+    // }
+
+    // // Rename original file
+    // ESP_LOGI(TAG, "Renaming file");
+    // if (rename("/spiffs/hello.txt", "/spiffs/foo.txt") != 0) {
+        // ESP_LOGE(TAG, "Rename failed");
+        // return;
+    // }
+
+struct stat st;
+stat("/demo.txt", &st);
+int size = st.st_size;
 
     // Open renamed file for reading
-    ESP_LOGI(TAG, "Reading file");
-    f = fopen("/spiffs/foo.txt", "r");
+    ESP_LOGI(TAG, "Reading file (size %u)",size);
+    f = fopen("/ademo.txt", "r");
+    //f = fopen("/spiffs/foo.txt", "r");
     if (f == NULL) {
         ESP_LOGE(TAG, "Failed to open file for reading");
         return;
@@ -88,6 +112,22 @@ void app_main(void)
     fclose(f);
     // strip newline
     char* pos = strchr(line, '\n');
+    if (pos) {
+        *pos = '\0';
+    }
+    ESP_LOGI(TAG, "Read from file: '%s'", line);
+	
+	    // Open file for reading
+    ESP_LOGI(TAG, "Reading file");
+    f = fopen("/demo.txt", "r");
+    if (f == NULL) {
+        ESP_LOGE(TAG, "Failed to open file for reading");
+        return;
+    }
+    fgets(line, sizeof(line), f);
+    fclose(f);
+    // strip newline
+    pos = strchr(line, '\n');
     if (pos) {
         *pos = '\0';
     }
