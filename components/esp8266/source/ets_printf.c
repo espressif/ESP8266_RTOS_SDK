@@ -176,8 +176,13 @@ static int ets_printf_int(val_attr_t * const attr, uint8_t hex)
     return 0;
 }
 
+int __ets_vprintf_disable = 0;
+
 int ets_vprintf(const char *fmt, va_list va)
 {
+    if (__ets_vprintf_disable)
+        return 0;
+
     for (; ;) {
         const char *ps = fmt;
         val_attr_t attr;
