@@ -94,6 +94,15 @@ SECTIONS
     _iram_end = ABSOLUTE(.);
   } > iram0_0_seg
 
+  .patch.text :
+  {
+    . = ALIGN (4);
+    _iram_patch_text_start = ABSOLUTE(.);
+    *(.flash.patch.literal .flash.patch.text)
+    _iram_patch_text_end = ABSOLUTE(.);
+    _iram_text_end = ABSOLUTE(.);
+  } > iram0_0_seg
+
   ASSERT(((_iram_end - ORIGIN(iram0_0_seg)) <= LENGTH(iram0_0_seg)),
           "IRAM0 segment data does not fit.")
 
@@ -153,6 +162,15 @@ SECTIONS
 
     . = ALIGN (8);
     _bss_end = ABSOLUTE(.);
+  } > dram0_0_seg
+
+  .patch.bss :
+  {
+    . = ALIGN (4);
+    _iram_patch_bss_start = ABSOLUTE(.);
+    *(.flash.patch.bss)
+    _iram_patch_bss_end = ABSOLUTE(.);
+    *(.flash.patch.rodata)
   } > dram0_0_seg
 
   ASSERT(((_bss_end - ORIGIN(dram0_0_seg)) <= LENGTH(dram0_0_seg)),

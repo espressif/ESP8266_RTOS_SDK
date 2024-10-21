@@ -1,12 +1,26 @@
 menu "SPI Flash"
 
     menu "Patch"
+        config ENABLE_SPI_FLASH_PATCH
+            bool "Enable TH25Q16HB Patch 0"
+            default n
+
         config ENABLE_TH25Q16HB_PATCH_0
             bool "Enable TH25Q16HB Patch 0"
+            depends on ENABLE_SPI_FLASH_PATCH
             default n
             help
                 WARNING: If you don't use TH25Q16HB, you must not enable this option.
                          Although you use TH25Q16HB, you should ask your flash manufacturer
+                         if your flash need use this patch.
+
+        config ENABLE_FM25Q16A_PATCH_0
+            bool "Enable FM25Q16A Patch 0"
+            depends on ENABLE_SPI_FLASH_PATCH
+            default n
+            help
+                WARNING: If you don't use FM25Q16A, you must not enable this option.
+                         Although you use FM25Q16A, you should ask your flash manufacturer
                          if your flash need use this patch.
     endmenu
 endmenu
