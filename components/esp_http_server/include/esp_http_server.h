@@ -49,6 +49,7 @@ initializer that should be kept in sync
         .global_transport_ctx_free_fn = NULL,           \
         .open_fn = NULL,                                \
         .close_fn = NULL,                               \
+        .uri_match_fn = NULL                            \
 }
 
 #define ESP_ERR_HTTPD_BASE              (0x8000)                    /*!< Starting number of HTTPD error codes */
@@ -108,6 +109,21 @@ typedef esp_err_t (*httpd_open_func_t)(httpd_handle_t hd, int sockfd);
  * @param[in] sockfd : session socket file descriptor
  */
 typedef void (*httpd_close_func_t)(httpd_handle_t hd, int sockfd);
+
+/**
+ * @brief  Function prototype for URI matching.
+ *
+ * @param[in] reference_uri   URI/template with respect to which the other URI is matched
+ * @param[in] uri_to_match    URI/template being matched to the reference URI/template
+ * @param[in] match_upto      For specifying the actual length of `uri_to_match` up to
+ *                            which the matching algorithm is to be applied (The maximum
+ *                            value is `strlen(uri_to_match)`, independent of the length
+ *                            of `reference_uri`)
+ * @return true on match
+ */
+typedef bool (*httpd_uri_match_func_t)(const char *reference_uri,
+                                       const char *uri_to_match,
+                                       size_t match_upto);
 
 /**
  * @brief   HTTP Server Configuration Structure
@@ -195,6 +211,25 @@ typedef struct httpd_config {
      * was closed by the network stack - that is, the file descriptor may not be valid anymore.
      */
     httpd_close_func_t close_fn;
+
+    
+    /**
+     * URI matcher function.
+     *
+     * Called when searching for a matching URI:
+     *     1) whose request handler is to be executed right
+     *        after an HTTP request is successfully parsed
+     *     2) in order to prevent duplication while registering
+     *        a new URI handler using `httpd_register_uri_handler()`
+     *
+     * Available options are:
+     *     1) NULL : Internally do basic matching using `strncmp()`
+     *     2) `httpd_uri_match_wildcard()` : URI wildcard matcher
+     *
+     * Users can implement their own matching functions (See description
+     * of the `httpd_uri_match_func_t` function prototype)
+     */
+    httpd_uri_match_func_t uri_match_fn;
 } httpd_config_t;
 
 /**
@@ -743,6 +778,30 @@ esp_err_t httpd_req_get_url_query_str(httpd_req_t *r, char *buf, size_t buf_len)
  *  - ESP_ERR_HTTPD_RESULT_TRUNC : Value string truncated
  */
 esp_err_t httpd_query_key_value(const char *qry, const char *key, char *val, size_t val_size);
+
+/**
+ * @brief Test if a URI matches the given wildcard template.
+ *
+ * Template may end with "?" to make the previous character optional (typically a slash),
+ * "*" for a wildcard match, and "?*" to make the previous character optional, and if present,
+ * allow anything to follow.
+ *
+ * Example:
+ *   - * matches everything
+ *   - /foo/? matches /foo and /foo/
+ *   - /foo/\* (sans the backslash) matches /foo/ and /foo/bar, but not /foo or /fo
+ *   - /foo/?* or /foo/\*?  (sans the backslash) matches /foo/, /foo/bar, and also /foo, but not /foox or /fo
+ *
+ * The special characters "?" and "*" anywhere else in the template will be taken literally.
+ *
+ * @param[in] uri_template   URI template (pattern)
+ * @param[in] uri_to_match   URI to be matched
+ * @param[in] match_upto     how many characters of the URI buffer to test
+ *                          (there may be trailing query string etc.)
+ *
+ * @return true if a match was found
+ */
+bool httpd_uri_match_wildcard(const char *uri_template, const char *uri_to_match, size_t match_upto);
 
 /**
  * @brief   API to send a complete HTTP response.
