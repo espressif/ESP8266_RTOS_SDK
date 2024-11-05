@@ -93,10 +93,6 @@ static void user_init_entry(void *param)
     esp_set_cpu_freq(ESP_CPU_FREQ_160M);
 #endif
 
-#ifdef CONFIG_ENABLE_TH25Q16HB_PATCH_0
-    assert(th25q16hb_apply_patch_0() == 0);
-#endif
-
     app_main();
 
     vTaskDelete(NULL);
@@ -109,6 +105,7 @@ void call_start_cpu(size_t start_addr)
 
     extern int _bss_start, _bss_end;
     extern int _iram_bss_start, _iram_bss_end;
+    extern int _iram_patch_bss_start, _iram_patch_bss_end;
 
 #ifdef CONFIG_BOOTLOADER_FAST_BOOT
     REG_SET_BIT(DPORT_CTL_REG, DPORT_CTL_DOUBLE_CLK);
@@ -154,6 +151,18 @@ void call_start_cpu(size_t start_addr)
     /* clear iram_bss data */
     for (p = &_iram_bss_start; p < &_iram_bss_end; p++)
         *p = 0;
+
+
+    for (p = &_iram_patch_bss_start; p < &_iram_patch_bss_end; p++)
+        *p = 0;
+
+#ifdef CONFIG_ENABLE_TH25Q16HB_PATCH_0
+    assert(th25q16hb_apply_patch_0() == 0);
+#endif
+
+#ifdef CONFIG_ENABLE_FM25Q16A_PATCH_0
+    assert(fm25q16a_apply_patch_0() == 0);
+#endif
 
     __asm__ __volatile__(
         "rsil       a2, 2\n"

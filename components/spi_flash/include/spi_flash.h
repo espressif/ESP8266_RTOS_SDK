@@ -213,6 +213,10 @@ int esp_patition_copy_ota1_to_ota0(const void *partition_info);
 int th25q16hb_apply_patch_0(void);
 #endif
 
+#ifdef CONFIG_ENABLE_FM25Q16A_PATCH_0
+int fm25q16a_apply_patch_0();
+#endif
+
 #ifdef __cplusplus
 }
 #endif
