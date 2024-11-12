@@ -30,7 +30,7 @@ extern "C" {
 
 #define FLASH_PATCH_STR(str) (__extension__({static const FLASH_PATCH_RODATA_ATTR char __c[] = (str); (const char *)&__c;}))
 
-#if 1
+#if CONFIG_ENABLE_SPI_FLASH_PATCH_DEBUG
 typedef int (*__ets_printf_t)(const char *fmt, ...); 
 #define ROM_PRINTF(_fmt, ...)   ((__ets_printf_t)(0x400024cc))(_fmt, ##__VA_ARGS__)
 #else
