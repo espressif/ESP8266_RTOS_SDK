@@ -237,7 +237,7 @@ static void FLASH_PATCH_TEXT_ATTR fm_cam_read_pre(void)
 static void FLASH_PATCH_TEXT_ATTR fm_soft_reset()
 {
     fm_send_spi_cmd(0x66, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
-    //    ets_delay_us(100);
+    // patch_delay(1);
     fm_send_spi_cmd(0x99, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
 }
 
@@ -378,7 +378,7 @@ static bool FLASH_PATCH_TEXT_ATTR fm_cam_erase_and_fix(uint8_t (*buf)[32])
         }
         if (memcmp(cam_check, buf[line], 32) != 0) {
             ERROR(FLASH_PATCH_STR("CAM BUF[%d] check error\n"), line);
-            ets_delay_us(50000);
+            patch_delay(50);
             return false;
         }
     }

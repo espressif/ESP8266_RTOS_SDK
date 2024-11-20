@@ -106,6 +106,7 @@ void FLASH_PATCH_TEXT_ATTR spi_exit(spi_state_t *state)
 
     Cache_Read_Enable_2();
     vPortExitCritical();
+    patch_delay(1);
 }
 
 static void FLASH_PATCH_TEXT_ATTR spi_trans_block(bool write_mode,
