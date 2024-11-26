@@ -43,7 +43,9 @@
 extern bool IRAM_FUNC_ATTR spi_user_cmd(spi_cmd_dir_t mode, spi_cmd_t *p_cmd);
 extern uint32_t IRAM_FUNC_ATTR spi_flash_get_id(void);
 
-static void FLASH_PATCH_TEXT_ATTR fm_send_spi_cmd(uint8_t cmd, uint8_t cmd_len, uint32_t addr, uint8_t addr_len, void* mosi_data, int mosi_len, void* miso_data, int miso_len, uint8_t dummy_bits)
+static bool FLASH_PATCH_TEXT_ATTR double_check_fm25q16a(void);
+
+static void FLASH_PATCH_TEXT_ATTR fm_send_spi_cmd(uint8_t cmd, uint8_t cmd_len, uint32_t addr, uint8_t addr_len, const void* mosi_data, int mosi_len, void* miso_data, int miso_len, uint8_t dummy_bits)
 {
     bool write_mode = false;
     uint32_t data_bytes = 0;
@@ -234,19 +236,36 @@ static void FLASH_PATCH_TEXT_ATTR fm_cam_read_pre(void)
     fm_cam_pre_cmd_generic(send_list, 7);
 }
 
-static void FLASH_PATCH_TEXT_ATTR fm_soft_reset()
-{
-    fm_send_spi_cmd(0x66, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
-    // patch_delay(1);
-    fm_send_spi_cmd(0x99, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
-}
-
 static bool FLASH_PATCH_TEXT_ATTR fm_flash_wait_idle()
 {
     uint8_t status = 0x1;
     while ((status&0x1) == 0x1) {
         fm_send_spi_cmd(0x05, 1*8, 0, 0, NULL, 0, &status, 1*8, 0);
     }
+    return true;
+}
+
+static void FLASH_PATCH_TEXT_ATTR fm_soft_reset()
+{
+    fm_send_spi_cmd(0x66, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
+    // patch_delay(1);
+    fm_send_spi_cmd(0x99, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
+    fm_flash_wait_idle();
+}
+
+static const uint8_t FLASH_PATCH_RODATA_ATTR uid_cmd[4] = {0x00, 0x03, 0xc0, 0x40};
+static const uint8_t FLASH_PATCH_RODATA_ATTR uid_data[4] = {0x00, 0x01, 0x00, 0x8F};
+
+static bool FLASH_PATCH_TEXT_ATTR fm_set_uid_flag(void)
+{
+    fm_soft_reset();
+    fm_cam_cmd_start();
+    fm_send_spi_cmd(0x32, 8, 0, 0, uid_cmd, 4 * 8, NULL, 0, 0);
+    fm_cam_cmd_end();
+    fm_send_spi_cmd(0x06, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
+    fm_send_spi_cmd(0x02, 8, 0, 0, uid_data, 4 * 8, 0, 0, 0);
+    fm_flash_wait_idle();
+
     return true;
 }
 
@@ -309,7 +328,7 @@ static bool FLASH_PATCH_TEXT_ATTR fm_cam_erase_and_fix(uint8_t (*buf)[32])
             fm_send_spi_cmd(0x03, 8, 0x20 * line, 24, 0, 0, cam_rd, 32*8, 0);
             int idx = 0;
             for (idx = 0;idx < 8; idx++) {
-                uint32_t* p = buf[line];
+                uint32_t* p = (uint32_t*)buf[line];
                 if (cam_rd[idx] != p[idx]) {
                     found_error = true;
                     ERROR(FLASH_PATCH_STR("erase check error, retry...%d, %d, 0x%08x\n"), retry, idx, cam_rd[idx]);
@@ -383,6 +402,7 @@ static bool FLASH_PATCH_TEXT_ATTR fm_cam_erase_and_fix(uint8_t (*buf)[32])
         }
     }
 
+    fm_set_uid_flag();
     INFO(FLASH_PATCH_STR("CAM prog done !!!\n"));
     return true;
 }
@@ -440,46 +460,76 @@ static bool FLASH_PATCH_TEXT_ATTR esp_fm_check_uid()
 static bool FLASH_PATCH_TEXT_ATTR fm_cam_check_buf_valid(uint8_t (*buf)[32])
 {
     bool res = false;
-    // cmd 1.
-    fm_cam_read_pre();
+    uint8_t count = 3;
 
-    int i = 0, j = 0;
-    for (i = 0; i < 20; i++) {
-        // read buf
-        fm_send_spi_cmd(0x03, 8, 0x20 * i, 24, 0, 0, &buf[i][0], 32*8, 0);
-        for (j = 0; j < 32; j++) {
-            DEBUG(FLASH_PATCH_STR("%02x "), buf[i][j]);
-            if ((j + 1) % 16 == 0) {
-                DEBUG(FLASH_PATCH_STR("\n"));
-                INFO(FLASH_PATCH_STR("\r"));
+    while (!res && count--) {
+        // cmd 1.
+        fm_cam_read_pre();
+
+        int i = 0, j = 0;
+        for (i = 0; i < 20; i++) {
+            // read buf
+            fm_send_spi_cmd(0x03, 8, 0x20 * i, 24, 0, 0, &buf[i][0], 32*8, 0);
+            for (j = 0; j < 32; j++) {
+                DEBUG(FLASH_PATCH_STR("%02x "), buf[i][j]);
+                if ((j + 1) % 16 == 0) {
+                    DEBUG(FLASH_PATCH_STR("\n"));
+                    INFO(FLASH_PATCH_STR("\r"));
+                }
             }
+        }
+
+        if (buf[0][0] == 0x55 && buf[0][4] == 0xaa \
+            && buf[4][0] == 0x00 \
+            && buf[10][0] == 0x1 && buf[10][20] == 0xff\
+            && buf[11][0] == 0x1 && buf[11][20] == 0xff\
+            && buf[12][0] == 0x1 && buf[12][20] == 0xff\
+            && buf[13][0] == 0x1 && buf[13][20] == 0xff\
+            && buf[14][0] == 0x1 && buf[14][20] == 0xff\
+            && buf[15][0] == 0x1 && buf[15][20] == 0xff\
+            && buf[16][0] == 0x1 && buf[16][20] == 0xff\
+            && buf[17][0] == 0x1 && buf[17][20] == 0xff
+        ) {
+            INFO(FLASH_PATCH_STR("CAM buffer check valid !!!\n"));
+            res = true;
+        } else {
+            INFO(FLASH_PATCH_STR("CAM buffer check IN-Valid !!!\n"));
+            res = false;
+        }
+    }
+    // while(1);
+    return res;
+}
+
+static bool FLASH_PATCH_TEXT_ATTR fm_cam_check_uid(void)
+{
+    bool res = false;
+    uint8_t count = 3;
+    uint8_t uid[8];
+
+    while (!res && count--) {
+        fm_send_spi_cmd(0x4B, 8, 0, 0, 0, 0, &uid[0], 8*8, 4*8);
+        DEBUG(FLASH_PATCH_STR("uid 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n"), uid[0], uid[1], uid[2], uid[3], uid[4], uid[5], uid[6], uid[7]);
+        if ((((uid[1]&0xf0) == 0x0) && ((uid[0]&0x70) == 0))
+            || (((uid[1]&0xf0) != 0x0))) {
+            res = true;
         }
     }
 
-    if (buf[0][0] == 0x55 && buf[0][4] == 0xaa \
-           && buf[4][0] == 0x00 \
-           && buf[10][0] == 0x1 && buf[10][20] == 0xff\
-           && buf[11][0] == 0x1 && buf[11][20] == 0xff\
-           && buf[12][0] == 0x1 && buf[12][20] == 0xff\
-           && buf[13][0] == 0x1 && buf[13][20] == 0xff\
-           && buf[14][0] == 0x1 && buf[14][20] == 0xff\
-           && buf[15][0] == 0x1 && buf[15][20] == 0xff\
-           && buf[16][0] == 0x1 && buf[16][20] == 0xff\
-           && buf[17][0] == 0x1 && buf[17][20] == 0xff
-    ) {
-        INFO(FLASH_PATCH_STR("CAM buffer check valid !!!\n"));
-        res = true;
-    } else {
-        INFO(FLASH_PATCH_STR("CAM buffer check IN-Valid !!!\n"));
-        res = false;
-    }
-    // while(1);
     return res;
 }
 
 static bool FLASH_PATCH_TEXT_ATTR fm_fix_cam()
 {
     uint8_t check_buf[20][32];
+
+    if (fm_cam_check_uid()) {
+        return true;
+    }
+
+    if (!double_check_fm25q16a()) {
+        return true;
+    }
 
     if (fm_cam_check_buf_valid(check_buf) == false) {
         ERROR(FLASH_PATCH_STR("Cam buf not valid\n"));
@@ -489,6 +539,7 @@ static bool FLASH_PATCH_TEXT_ATTR fm_fix_cam()
 
         if ((check_buf[3][0] & 0x08) == 0x08) {
             INFO(FLASH_PATCH_STR("Bit3 == 1, already fixed....\n"));
+            fm_set_uid_flag();
             fm_soft_reset();
         } else {
             check_buf[3][0] |= 0x08;
@@ -515,25 +566,83 @@ static uint32_t FLASH_PATCH_TEXT_ATTR fm_flash_id(void)
 #endif
 }
 
+static bool FLASH_PATCH_TEXT_ATTR double_check_fm25q16a(void)
+{
+    uint32_t addr = 0x10;
+    uint8_t value[6];
+    fm_send_spi_cmd(0x9f, 8, 0, 0, 0, 0, NULL, 0, 0);
+
+    fm_cam_cmd_start();
+    fm_send_spi_cmd(0x90, 8, addr, 3 * 8, 0, 0, value, sizeof(value) * 8, 0);
+    fm_cam_cmd_end();
+    DEBUG(FLASH_PATCH_STR("fm25q16a confirm: "));
+    for (uint loop = 0; loop < sizeof(value); loop++) {
+        DEBUG(FLASH_PATCH_STR(" 0x%02x"), value[loop]);
+        if (value[loop] != 0xA1) {
+            DEBUG(FLASH_PATCH_STR("\r\n"));
+            return false;
+        }
+    }
+    DEBUG(FLASH_PATCH_STR("\r\n"));
+
+    return true;
+}
+
+static bool FLASH_PATCH_TEXT_ATTR is_fm25q16a(void)
+{
+    uint8_t status = 0x0;
+    uint8_t count = 3;
+    uint8_t value = 0;
+
+    while (((status&0x20) == 0x0) && count--) {
+        fm_send_spi_cmd(0x50, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
+        value = 0x80;
+        fm_send_spi_cmd(0x01, 1*8, 0, 0, &value, 1*8, NULL, 0, 0);
+        fm_send_spi_cmd(0x50, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
+        value = 0x03;
+        fm_send_spi_cmd(0x31, 1*8, 0, 0, &value, 1*8, NULL, 0, 0);
+        fm_send_spi_cmd(0x06, 1*8, 0, 0, NULL, 0, NULL, 0, 0);
+        value = 0x02;
+        fm_send_spi_cmd(0x31, 1*8, 0, 0, &value, 1*8, NULL, 0, 0);
+
+        fm_flash_wait_idle();
+        fm_send_spi_cmd(0x35, 1*8, 0x0, 0, NULL, 0, &status, 1*8, 0);
+
+        fm_soft_reset();
+    }
+
+    if ((status&0x20) == 0) {
+        DEBUG(FLASH_PATCH_STR("It's FM25Q16A\n"));
+        return true;
+    }
+
+    DEBUG(FLASH_PATCH_STR("It's FM25Q16B\n"));
+    return false;
+}
+
 int FLASH_PATCH_TEXT_ATTR fm25q16a_apply_patch_0()
 {
-    bool res = false;
+    bool res = true;
 
     spi_state_t state;
     spi_enter(&state);
+
     uint32_t flash_id = fm_flash_id();
     DEBUG(FLASH_PATCH_STR("Flash id: 0x%x\n"), flash_id);
 
     WDT_FEED();
     if (flash_id == 0xa14015) {
-        INFO(DRAM_STR("Found FM25Q16A, check CAM buf\n"));
-        res = fm_fix_cam();
+        fm_soft_reset();
+        INFO(DRAM_STR("Found FM25Q16A or FM25Q16B\n"));
+        if(is_fm25q16a()) {
+            INFO(DRAM_STR("Found FM25Q16A, check CAM buf\n"));
+            res = fm_fix_cam();
+        }
     } else if ((flash_id&0xffffff) == 0x0 || (flash_id&0xffffff) == 0xffffff) {
         INFO(FLASH_PATCH_STR("Found ID error, recover default CAM buf\n"));
         res = esp_fm_check_uid();
     } else {
         INFO(FLASH_PATCH_STR("Normal flash, continue...\n"));
-        res = true;
     }
     WDT_FEED();
 
@@ -541,7 +650,8 @@ int FLASH_PATCH_TEXT_ATTR fm25q16a_apply_patch_0()
 
     if (res != true) {
         fm_printf(FLASH_PATCH_STR("fix fail\n"));
-        return 1;
+        // we should keep running
+        return 0;
     }
 
     fm_printf(FLASH_PATCH_STR("fix done\n"));
