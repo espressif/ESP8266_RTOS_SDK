@@ -187,6 +187,10 @@ typedef struct {
      * specific behavior. Use WIFI_PROV_EVENT_HANDLER_NONE when not used.
      */
     wifi_prov_event_handler_t app_event_handler;
+
+    // If set, signals the provision manager to avoid touch Wifi set ups, such as
+    // cleaning Wifi station config, before start provisioning.
+    bool wifi_touch_free;
 } wifi_prov_mgr_config_t;
 
 /**

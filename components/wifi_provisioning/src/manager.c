@@ -498,9 +498,11 @@ static void prov_stop_task(void *arg)
     free(prov_ctx->wifi_scan_handlers);
     prov_ctx->wifi_scan_handlers = NULL;
 
-    /* Switch device to Wi-Fi STA mode irrespective of
-     * whether provisioning was completed or not */
-    esp_wifi_set_mode(WIFI_MODE_STA);
+    if (!prov_ctx->mgr_config.wifi_touch_free) {
+        /* Switch device to Wi-Fi STA mode irrespective of
+        * whether provisioning was completed or not */
+        esp_wifi_set_mode(WIFI_MODE_STA);
+    }
     ESP_LOGI(TAG, "Provisioning stopped");
 
     if (is_this_a_task) {
@@ -1146,25 +1148,28 @@ esp_err_t wifi_prov_mgr_configure_sta(wifi_config_t *wifi_cfg)
     }
     debug_print_wifi_credentials(wifi_cfg->sta, "Received");
 
-    /* Configure Wi-Fi as both AP and/or Station */
-    if (esp_wifi_set_mode(prov_ctx->mgr_config.scheme.wifi_mode) != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to set Wi-Fi mode");
-        RELEASE_LOCK(prov_ctx_lock);
-        return ESP_FAIL;
+    if (!prov_ctx->mgr_config.wifi_touch_free) {
+        /* Configure Wi-Fi as both AP and/or Station */
+        if (esp_wifi_set_mode(prov_ctx->mgr_config.scheme.wifi_mode) != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to set Wi-Fi mode");
+            RELEASE_LOCK(prov_ctx_lock);
+            return ESP_FAIL;
+        }
+
+        /* Don't release mutex yet as it is possible that right after
+        * esp_wifi_connect()  is called below, the related Wi-Fi event
+        * happens even before manager state is updated in the next
+        * few lines causing the internal event handler to miss */
+
+        /* Set Wi-Fi storage again to flash to keep the newly
+        * provided credentials on NVS */
+        if (esp_wifi_set_storage(WIFI_STORAGE_FLASH) != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to set storage Wi-Fi");
+            RELEASE_LOCK(prov_ctx_lock);
+            return ESP_FAIL;
+        }
     }
 
-    /* Don't release mutex yet as it is possible that right after
-     * esp_wifi_connect()  is called below, the related Wi-Fi event
-     * happens even before manager state is updated in the next
-     * few lines causing the internal event handler to miss */
-
-    /* Set Wi-Fi storage again to flash to keep the newly
-     * provided credentials on NVS */
-    if (esp_wifi_set_storage(WIFI_STORAGE_FLASH) != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to set storage Wi-Fi");
-        RELEASE_LOCK(prov_ctx_lock);
-        return ESP_FAIL;
-    }
     /* Configure Wi-Fi station with host credentials
      * provided during provisioning */
     if (esp_wifi_set_config(ESP_IF_WIFI_STA, wifi_cfg) != ESP_OK) {
@@ -1416,45 +1421,48 @@ esp_err_t wifi_prov_mgr_start_provisioning(wifi_prov_security_t security, const 
      * thread doesn't interfere with this process */
     prov_ctx->prov_state = WIFI_PROV_STATE_STARTING;
 
-    /* Start Wi-Fi in Station Mode.
-     * This is necessary for scanning to work */
-    esp_err_t err = esp_wifi_set_mode(WIFI_MODE_STA);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to set Wi-Fi mode to STA");
-        RELEASE_LOCK(prov_ctx_lock);
-        return err;
-    }
-    err = esp_wifi_start();
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to start Wi-Fi");
-        RELEASE_LOCK(prov_ctx_lock);
-        return err;
-    }
+    wifi_config_t wifi_cfg_old;
+    if (!prov_ctx->mgr_config.wifi_touch_free) {
+        /* Start Wi-Fi in Station Mode.
+        * This is necessary for scanning to work */
+        esp_err_t err = esp_wifi_set_mode(WIFI_MODE_STA);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to set Wi-Fi mode to STA");
+            RELEASE_LOCK(prov_ctx_lock);
+            return err;
+        }
+        err = esp_wifi_start();
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to start Wi-Fi");
+            RELEASE_LOCK(prov_ctx_lock);
+            return err;
+        }
 
-    /* Change Wi-Fi storage to RAM temporarily and erase any old
-     * credentials (i.e. without erasing the copy on NVS). Also
-     * call disconnect to make sure device doesn't remain connected
-     * to the AP whose credentials were present earlier */
-    wifi_config_t wifi_cfg_empty, wifi_cfg_old;
-    memset(&wifi_cfg_empty, 0, sizeof(wifi_config_t));
-    esp_wifi_get_config(ESP_IF_WIFI_STA, &wifi_cfg_old);
-    err = esp_wifi_set_storage(WIFI_STORAGE_RAM);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to set Wi-Fi storage to RAM");
-        RELEASE_LOCK(prov_ctx_lock);
-        return err;
-    }
-    esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg_empty);
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to set empty Wi-Fi credentials");
-        RELEASE_LOCK(prov_ctx_lock);
-        return err;
-    }
-    err = esp_wifi_disconnect();
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to disconnect");
-        RELEASE_LOCK(prov_ctx_lock);
-        return err;
+        /* Change Wi-Fi storage to RAM temporarily and erase any old
+        * credentials (i.e. without erasing the copy on NVS). Also
+        * call disconnect to make sure device doesn't remain connected
+        * to the AP whose credentials were present earlier */
+        wifi_config_t wifi_cfg_empty;
+        memset(&wifi_cfg_empty, 0, sizeof(wifi_config_t));
+        esp_wifi_get_config(ESP_IF_WIFI_STA, &wifi_cfg_old);
+        err = esp_wifi_set_storage(WIFI_STORAGE_RAM);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to set Wi-Fi storage to RAM");
+            RELEASE_LOCK(prov_ctx_lock);
+            return err;
+        }
+        esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg_empty);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to set empty Wi-Fi credentials");
+            RELEASE_LOCK(prov_ctx_lock);
+            return err;
+        }
+        err = esp_wifi_disconnect();
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to disconnect");
+            RELEASE_LOCK(prov_ctx_lock);
+            return err;
+        }
     }
 
     /* Initialize app data */
@@ -1529,8 +1537,10 @@ esp_err_t wifi_prov_mgr_start_provisioning(wifi_prov_security_t security, const 
 
 err:
     prov_ctx->prov_state = WIFI_PROV_STATE_IDLE;
-    esp_wifi_set_storage(WIFI_STORAGE_FLASH);
-    esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg_old);
+    if (!prov_ctx->mgr_config.wifi_touch_free) {
+        esp_wifi_set_storage(WIFI_STORAGE_FLASH);
+        esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_cfg_old);
+    }
 
 exit:
     RELEASE_LOCK(prov_ctx_lock);
