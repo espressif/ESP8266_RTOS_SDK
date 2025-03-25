@@ -88,8 +88,25 @@ int FLASH_PATCH_TEXT_ATTR th25q16hb_apply_patch_0(void)
 
     flash_id = spi_flash_get_id();
     if (flash_id != 0x1560eb) {
-        ROM_PRINTF(FLASH_PATCH_STR("WARN: id=0x%x, is not TH25Q16HB\n"), flash_id);
-        return 0;
+        uint32_t data = 0;
+        bool is_th25q16hb = false;
+        if (flash_id == 0x0) {
+            spi_trans(0, 0x5A, 8, 0x10, 24, &data, 1, 0);
+            if (data == 0xEB) {
+                spi_trans(0, 0x5A, 8, 0x14, 24, &data, 1, 0);
+                if (data == 0x60) {
+                    spi_trans(0, 0x5A, 8, 0x34, 24, &data, 4, 0);
+                    if (data == 0xFFFFFF00) {
+                        is_th25q16hb = true;
+                    }
+                }
+            }
+        }
+
+        if (!is_th25q16hb) {
+            ROM_PRINTF(FLASH_PATCH_STR("WARN: id=0x%x, is not TH25Q16HB\n"), flash_id);
+            return 0;
+        }
     }
 
     buffer256_0 = buffer1024;
