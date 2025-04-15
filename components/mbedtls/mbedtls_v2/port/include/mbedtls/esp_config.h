@@ -2255,6 +2255,8 @@
 
 /* \} name SECTION: Module configuration options */
 
+#define MBEDTLS_PRIVATE(member) member
+
 #if defined(TARGET_LIKE_MBED)
 #include "mbedtls/target_config.h"
 #endif
