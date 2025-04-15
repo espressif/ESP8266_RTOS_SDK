@@ -27,9 +27,9 @@
    mbedTLS totals. This doesn't matter inside libsodium's documented API, but would matter if any callers try to use
    the state's bit count.
 */
-_Static_assert(sizeof(((crypto_hash_sha512_state *)0)->state) == sizeof(((mbedtls_sha512_context *)0)->state), "state mismatch");
-_Static_assert(sizeof(((crypto_hash_sha512_state *)0)->count) == sizeof(((mbedtls_sha512_context *)0)->total), "count mismatch");
-_Static_assert(sizeof(((crypto_hash_sha512_state *)0)->buf) == sizeof(((mbedtls_sha512_context *)0)->buffer), "buf mismatch");
+_Static_assert(sizeof(((crypto_hash_sha512_state *)0)->state) == sizeof(((mbedtls_sha512_context *)0)->MBEDTLS_PRIVATE(state)), "state mismatch");
+_Static_assert(sizeof(((crypto_hash_sha512_state *)0)->count) == sizeof(((mbedtls_sha512_context *)0)->MBEDTLS_PRIVATE(total)), "count mismatch");
+_Static_assert(sizeof(((crypto_hash_sha512_state *)0)->buf) == sizeof(((mbedtls_sha512_context *)0)->MBEDTLS_PRIVATE(buffer)), "buf mismatch");
 
 /* Inline functions to convert between mbedTLS & libsodium
    context structures
@@ -37,17 +37,17 @@ _Static_assert(sizeof(((crypto_hash_sha512_state *)0)->buf) == sizeof(((mbedtls_
 
 static void sha512_mbedtls_to_libsodium(crypto_hash_sha512_state *ls_state, const mbedtls_sha512_context *mb_ctx)
 {
-    memcpy(ls_state->count, mb_ctx->total, sizeof(ls_state->count));
-    memcpy(ls_state->state, mb_ctx->state, sizeof(ls_state->state));
-    memcpy(ls_state->buf, mb_ctx->buffer, sizeof(ls_state->buf));
+    memcpy(ls_state->count, mb_ctx->MBEDTLS_PRIVATE(total), sizeof(ls_state->count));
+    memcpy(ls_state->state, mb_ctx->MBEDTLS_PRIVATE(state), sizeof(ls_state->state));
+    memcpy(ls_state->buf, mb_ctx->MBEDTLS_PRIVATE(buffer), sizeof(ls_state->buf));
 }
 
 static void sha512_libsodium_to_mbedtls(mbedtls_sha512_context *mb_ctx, crypto_hash_sha512_state *ls_state)
 {
-    memcpy(mb_ctx->total, ls_state->count, sizeof(mb_ctx->total));
-    memcpy(mb_ctx->state, ls_state->state, sizeof(mb_ctx->state));
-    memcpy(mb_ctx->buffer, ls_state->buf, sizeof(mb_ctx->buffer));
-    mb_ctx->is384 = 0;
+    memcpy(mb_ctx->MBEDTLS_PRIVATE(total), ls_state->count, sizeof(mb_ctx->MBEDTLS_PRIVATE(total)));
+    memcpy(mb_ctx->MBEDTLS_PRIVATE(state), ls_state->state, sizeof(mb_ctx->MBEDTLS_PRIVATE(state)));
+    memcpy(mb_ctx->MBEDTLS_PRIVATE(buffer), ls_state->buf, sizeof(mb_ctx->MBEDTLS_PRIVATE(buffer)));
+    mb_ctx->MBEDTLS_PRIVATE(is384) = 0;
 }
 
 int

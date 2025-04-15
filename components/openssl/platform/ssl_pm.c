@@ -26,6 +26,12 @@
 #include "mbedtls/certs.h"
 
 #define X509_INFO_STRING_LENGTH 8192
+#if defined(CONFIG_MBEDTLS_V3)
+// Only for compliation, not work
+#define MBEDTLS_SSL_MINOR_VERSION_0             0   /*!< SSL v3.0 */
+#define MBEDTLS_SSL_MINOR_VERSION_1             1   /*!< TLS v1.0 */
+#define MBEDTLS_SSL_MINOR_VERSION_2             2   /*!< TLS v1.1 */
+#endif
 
 struct ssl_pm
 {
@@ -261,7 +267,7 @@ static int mbedtls_handshake( mbedtls_ssl_context *ssl )
 {
     int ret = 0;
 
-    while (ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER) {
+    while (ssl->MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER) {
         ret = mbedtls_ssl_handshake_step(ssl);
 
         SSL_DEBUG(SSL_PLATFORM_DEBUG_LEVEL, "ssl ret %d state %d", ret, ssl->state);
@@ -391,7 +397,7 @@ OSSL_HANDSHAKE_STATE ssl_pm_get_state(const SSL *ssl)
 
     struct ssl_pm *ssl_pm = (struct ssl_pm *)ssl->ssl_pm;
 
-    switch (ssl_pm->ssl.state)
+    switch (ssl_pm->ssl.MBEDTLS_PRIVATE(state))
     {
         case MBEDTLS_SSL_CLIENT_HELLO:
             state = TLS_ST_CW_CLNT_HELLO;
@@ -426,9 +432,11 @@ OSSL_HANDSHAKE_STATE ssl_pm_get_state(const SSL *ssl)
         case MBEDTLS_SSL_SERVER_KEY_EXCHANGE:
             state = TLS_ST_SR_KEY_EXCH;
             break;
+#if !defined(CONFIG_MBEDTLS_V3)
         case MBEDTLS_SSL_SERVER_NEW_SESSION_TICKET:
             state = TLS_ST_SW_SESSION_TICKET;
             break;
+#endif
         case MBEDTLS_SSL_SERVER_HELLO_VERIFY_REQUEST_SENT:
             state = TLS_ST_SW_CERT_REQ;
             break;
@@ -605,6 +613,14 @@ void pkey_pm_free(EVP_PKEY *pk)
     pk->pkey_pm = NULL;
 }
 
+#if defined(CONFIG_MBEDTLS_V3)
+static int mbedtls_ctr_drbg_random_fake(void *p_rng, unsigned char *output,
+    size_t output_len)
+{
+    return 0;
+}
+#endif
+
 int pkey_pm_load(EVP_PKEY *pk, const unsigned char *buffer, int len)
 {
     int ret;
@@ -632,8 +648,12 @@ int pkey_pm_load(EVP_PKEY *pk, const unsigned char *buffer, int len)
     load_buf[len] = '\0';
 
     mbedtls_pk_init(pkey_pm->pkey);
-
+#if defined(CONFIG_MBEDTLS_V3)
+    ret = mbedtls_pk_parse_key(pkey_pm->pkey, load_buf, len + 1, NULL, 0,
+        mbedtls_ctr_drbg_random_fake, NULL);
+#else
     ret = mbedtls_pk_parse_key(pkey_pm->pkey, load_buf, len + 1, NULL, 0);
+#endif
     ssl_mem_free(load_buf);
 
     if (ret) {

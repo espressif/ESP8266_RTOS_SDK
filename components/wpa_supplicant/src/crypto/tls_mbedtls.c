@@ -17,6 +17,10 @@
 #include "utils/includes.h"
 #include "utils/common.h"
 
+#ifdef CONFIG_MBEDTLS_V3
+#include "ssl_misc.h"
+#endif
+
 #include "tls/tls.h"
 #include "crypto/sha1.h"
 #include "crypto/md5.h"
@@ -159,10 +163,15 @@ static int set_pki_context(tls_context_t *tls, const struct tls_connection_param
 		wpa_printf(MSG_ERROR, "mbedtls_x509_crt_parse returned -0x%x", -ret);
 		return ret;
 	}
-
+#ifdef CONFIG_MBEDTLS_V3
+	ret = mbedtls_pk_parse_key(&tls->clientkey, cfg->private_key_blob, cfg->private_key_blob_len,
+		(const unsigned char *)cfg->private_key_passwd,
+		cfg->private_key_passwd ? os_strlen(cfg->private_key_passwd) : 0, mbedtls_ctr_drbg_random, &tls->ctr_drbg);
+#else
 	ret = mbedtls_pk_parse_key(&tls->clientkey, cfg->private_key_blob, cfg->private_key_blob_len,
 				   (const unsigned char *)cfg->private_key_passwd,
 				   cfg->private_key_passwd ? os_strlen(cfg->private_key_passwd) : 0);
+#endif
 	if (ret < 0) {
 		wpa_printf(MSG_ERROR, "mbedtls_pk_parse_keyfile returned -0x%x", -ret);
 		return ret;
@@ -519,7 +528,7 @@ int tls_connection_established(void *tls_ctx, struct tls_connection *conn)
 {
 	mbedtls_ssl_context *ssl = &conn->tls->ssl;
 
-	if (ssl->state == MBEDTLS_SSL_HANDSHAKE_OVER) {
+	if (ssl->MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER) {
 		return 1;
 	}
 
@@ -566,7 +575,7 @@ struct wpabuf * tls_connection_handshake(void *tls_ctx,
 	}
 
 	/* State machine just started, get client hello */
-	if (tls->ssl.state == MBEDTLS_SSL_CLIENT_HELLO) {
+	if (tls->ssl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_CLIENT_HELLO) {
 		ret = mbedtls_ssl_handshake_step(&tls->ssl);
 	}
 
@@ -576,15 +585,15 @@ struct wpabuf * tls_connection_handshake(void *tls_ctx,
 	}
 
 	/* Already read sever data till hello done */
-	if (tls->ssl.state == MBEDTLS_SSL_CLIENT_CERTIFICATE) {
+	if (tls->ssl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_CLIENT_CERTIFICATE) {
 		/* Read random data before session completes, not present after handshake */
-		if (tls->ssl.handshake) {
-			os_memcpy(conn->randbytes, tls->ssl.handshake->randbytes,
+		if (tls->ssl.MBEDTLS_PRIVATE(handshake)) {
+			os_memcpy(conn->randbytes, tls->ssl.MBEDTLS_PRIVATE(handshake)->randbytes,
 				  TLS_RANDOM_LEN * 2);
 		}
 
 		/* trigger state machine multiple times to reach till finish */
-		while (tls->ssl.state <= MBEDTLS_SSL_CLIENT_FINISHED) {
+		while (tls->ssl.MBEDTLS_PRIVATE(state) <= MBEDTLS_SSL_CLIENT_FINISHED) {
 			ret = mbedtls_ssl_handshake_step(&tls->ssl);
 			if (ret < 0) {
 				break;
@@ -593,8 +602,8 @@ struct wpabuf * tls_connection_handshake(void *tls_ctx,
 	}
 
 	/* Trigger state machine till handshake is complete or error occures */
-	if (tls->ssl.state == MBEDTLS_SSL_FLUSH_BUFFERS) {
-		while (tls->ssl.state <= MBEDTLS_SSL_HANDSHAKE_OVER) {
+	if (tls->ssl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_FLUSH_BUFFERS) {
+		while (tls->ssl.MBEDTLS_PRIVATE(state) <= MBEDTLS_SSL_HANDSHAKE_OVER) {
 			ret = mbedtls_ssl_handshake_step(&tls->ssl);
 			if (ret < 0) {
 				break;
@@ -663,8 +672,8 @@ struct wpabuf * tls_connection_decrypt(void *tls_ctx,
 
 int tls_connection_resumed(void *tls_ctx, struct tls_connection *conn)
 {
-	if (conn && conn->tls && conn->tls->ssl.handshake) {
-		return conn->tls->ssl.handshake->resume;
+	if (conn && conn->tls && conn->tls->ssl.MBEDTLS_PRIVATE(handshake)) {
+		return conn->tls->ssl.MBEDTLS_PRIVATE(handshake)->resume;
 	}
 
 	return 0;
@@ -799,14 +808,14 @@ static int tls_connection_prf(void *tls_ctx, struct tls_connection *conn,
 	int ret;
 	u8 seed[2 * TLS_RANDOM_LEN];
 	mbedtls_ssl_context *ssl = &conn->tls->ssl;
-	mbedtls_ssl_transform *transform = ssl->transform;
+	mbedtls_ssl_transform *transform = ssl->MBEDTLS_PRIVATE(transform);
 
 	if (!ssl || !transform) {
 		wpa_printf(MSG_ERROR, "TLS: %s, session ingo is null", __func__);
 		return -1;
 	}
-	if (ssl->state != MBEDTLS_SSL_HANDSHAKE_OVER) {
-		wpa_printf(MSG_ERROR, "TLS: %s, incorrect tls state=%d", __func__, ssl->state);
+	if (ssl->MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER) {
+		wpa_printf(MSG_ERROR, "TLS: %s, incorrect tls state=%d", __func__, ssl->MBEDTLS_PRIVATE(state));
 		return -1;
 	}
 
@@ -818,16 +827,22 @@ static int tls_connection_prf(void *tls_ctx, struct tls_connection *conn,
 	}
 
 	wpa_hexdump_key(MSG_MSGDUMP, "random", seed, 2 * TLS_RANDOM_LEN);
-	wpa_hexdump_key(MSG_MSGDUMP, "master", ssl->session->master, TLS_MASTER_SECRET_LEN);
+	wpa_hexdump_key(MSG_MSGDUMP, "master", ssl->MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(master), TLS_MASTER_SECRET_LEN);
 
-	if (transform->ciphersuite_info->mac == MBEDTLS_MD_SHA384) {
-		ret = tls_prf_sha384(ssl->session->master, TLS_MASTER_SECRET_LEN,
+#ifdef CONFIG_MBEDTLS_V3
+	mbedtls_md_type_t type = ssl->MBEDTLS_PRIVATE(handshake)->ciphersuite_info->mac;
+#else
+	mbedtls_md_type_t type = transform->ciphersuite_info->mac;
+#endif
+
+	if (type == MBEDTLS_MD_SHA384) {
+		ret = tls_prf_sha384(ssl->MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(master), TLS_MASTER_SECRET_LEN,
 				label, seed, 2 * TLS_RANDOM_LEN, out, out_len);
-	} else if (transform->ciphersuite_info->mac == MBEDTLS_MD_SHA256) {
-		ret = tls_prf_sha256(ssl->session->master, TLS_MASTER_SECRET_LEN,
+	} else if (type == MBEDTLS_MD_SHA256) {
+		ret = tls_prf_sha256(ssl->MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(master), TLS_MASTER_SECRET_LEN,
 				label, seed, 2 * TLS_RANDOM_LEN, out, out_len);
 	} else {
-		ret = tls_prf_sha1_md5(ssl->session->master, TLS_MASTER_SECRET_LEN,
+		ret = tls_prf_sha1_md5(ssl->MBEDTLS_PRIVATE(session)->MBEDTLS_PRIVATE(master), TLS_MASTER_SECRET_LEN,
 				label, seed, 2 * TLS_RANDOM_LEN, out, out_len);
 	}
 
@@ -864,14 +879,14 @@ int tls_connection_get_random(void *tls_ctx, struct tls_connection *conn,
 	mbedtls_ssl_context *ssl = &conn->tls->ssl;
 
 	os_memset(data, 0, sizeof(*data));
-	if (ssl->state == MBEDTLS_SSL_CLIENT_HELLO) {
+	if (ssl->MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_CLIENT_HELLO) {
 		return -1;
 	}
 
 	data->client_random = conn->randbytes;
 	data->client_random_len = TLS_RANDOM_LEN;
 
-	if (ssl->state != MBEDTLS_SSL_SERVER_HELLO) {
+	if (ssl->MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_SERVER_HELLO) {
 		data->server_random = conn->randbytes + TLS_RANDOM_LEN;
 		data->server_random_len = TLS_RANDOM_LEN;
 	}

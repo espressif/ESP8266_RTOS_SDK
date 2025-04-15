@@ -110,6 +110,13 @@ struct crypto_public_key *  crypto_public_key_import(const u8 *key, size_t len)
 	return (struct crypto_public_key *)pkey;
 }
 
+#ifdef CONFIG_MBEDTLS_V3
+static int crypto_rng_wrapper(void *ctx, unsigned char *buf, size_t len)
+{
+	return os_get_random(buf, len);
+}
+#endif
+
 struct crypto_private_key *  crypto_private_key_import(const u8 *key,
 		size_t len,
 		const char *passwd)
@@ -120,8 +127,12 @@ struct crypto_private_key *  crypto_private_key_import(const u8 *key,
 		return NULL;
 
 	mbedtls_pk_init(pkey);
-
+#ifdef CONFIG_MBEDTLS_V3
+	ret = mbedtls_pk_parse_key(pkey, key, len, (const unsigned char *)passwd,
+		passwd ? os_strlen(passwd) : 0, crypto_rng_wrapper, NULL);
+#else
 	ret = mbedtls_pk_parse_key(pkey, key, len, (const unsigned char *)passwd, passwd ? os_strlen(passwd) : 0);
+#endif
 
 	if (ret < 0) {
 		wpa_printf(MSG_ERROR, "failed to parse private key");
@@ -210,7 +221,16 @@ int crypto_public_key_encrypt_pkcs1_v15(struct crypto_public_key *key,
 				ret );
 		goto cleanup;
 	}
+#ifdef CONFIG_MBEDTLS_V3
+	ret = mbedtls_rsa_pkcs1_encrypt(mbedtls_pk_rsa(*pkey), mbedtls_ctr_drbg_random,
+					ctr_drbg, inlen, in, out);
 
+	if(ret != 0) {
+		wpa_printf(MSG_ERROR, " failed  !  mbedtls_rsa_pkcs1_encrypt returned -0x%04x", -ret);
+		goto cleanup;
+	}
+	*outlen = mbedtls_rsa_get_len(mbedtls_pk_rsa(*pkey));
+#else
 	ret = mbedtls_rsa_pkcs1_encrypt(mbedtls_pk_rsa(*pkey), mbedtls_ctr_drbg_random,
 			ctr_drbg, MBEDTLS_RSA_PUBLIC, inlen, in, out);
 
@@ -219,6 +239,7 @@ int crypto_public_key_encrypt_pkcs1_v15(struct crypto_public_key *key,
 		goto cleanup;
 	}
 	*outlen = mbedtls_pk_rsa(*pkey)->len;
+#endif
 
 cleanup:
 	mbedtls_ctr_drbg_free( ctr_drbg );
@@ -256,11 +277,15 @@ int  crypto_private_key_decrypt_pkcs1_v15(struct crypto_private_key *key,
 
 	if (ret < 0)
 		goto cleanup;
-
+#ifdef CONFIG_MBEDTLS_V3
+	i = mbedtls_rsa_get_len(mbedtls_pk_rsa(*pkey));
+	ret = mbedtls_rsa_rsaes_pkcs1_v15_decrypt(mbedtls_pk_rsa(*pkey), mbedtls_ctr_drbg_random,
+			ctr_drbg, &i, in, out, *outlen);
+#else
 	i =  mbedtls_pk_rsa(*pkey)->len;
 	ret = mbedtls_rsa_rsaes_pkcs1_v15_decrypt(mbedtls_pk_rsa(*pkey), mbedtls_ctr_drbg_random,
 			ctr_drbg, MBEDTLS_RSA_PRIVATE, &i, in, out, *outlen);
-
+#endif
 	*outlen = i;
 
 cleanup:
@@ -277,6 +302,41 @@ int crypto_private_key_sign_pkcs1(struct crypto_private_key *key,
 		const u8 *in, size_t inlen,
 		u8 *out, size_t *outlen)
 {
+#ifdef CONFIG_MBEDTLS_V3
+	int ret;
+	const char *pers = "rsa_encrypt";
+	mbedtls_pk_context *pkey  = (mbedtls_pk_context *)key;
+	mbedtls_entropy_context *entropy = os_malloc(sizeof(*entropy));
+	mbedtls_ctr_drbg_context *ctr_drbg = os_malloc(sizeof(*ctr_drbg));
+
+	if (!pkey || !entropy || !ctr_drbg) {
+		if (entropy)
+			os_free(entropy);
+		if (ctr_drbg)
+			os_free(ctr_drbg);
+		return -1;
+	}
+	mbedtls_ctr_drbg_init( ctr_drbg );
+	mbedtls_entropy_init( entropy );
+	ret = mbedtls_ctr_drbg_seed(ctr_drbg, mbedtls_entropy_func,
+			entropy, (const unsigned char *) pers,
+			strlen(pers));
+
+	if((ret = mbedtls_rsa_pkcs1_sign(mbedtls_pk_rsa(*pkey), mbedtls_ctr_drbg_random, ctr_drbg,
+					(mbedtls_pk_rsa(*pkey))->MBEDTLS_PRIVATE(hash_id),
+					inlen, in, out)) != 0 ) {
+		wpa_printf(MSG_ERROR, " failed  ! mbedtls_rsa_pkcs1_sign returned %d", ret );
+		goto cleanup;
+	}
+	*outlen = mbedtls_rsa_get_len(mbedtls_pk_rsa(*pkey));
+
+	cleanup:
+	mbedtls_ctr_drbg_free( ctr_drbg );
+	mbedtls_entropy_free( entropy );
+	os_free(entropy);
+	os_free(ctr_drbg);
+	return ret;
+#else
 	int ret;
 	mbedtls_pk_context *pkey  = (mbedtls_pk_context *)key;
 
@@ -289,6 +349,7 @@ int crypto_private_key_sign_pkcs1(struct crypto_private_key *key,
 	*outlen = mbedtls_pk_rsa(*pkey)->len;
 
 	return 0;
+#endif
 }
 
 
@@ -336,10 +397,16 @@ int  crypto_public_key_decrypt_pkcs1(struct crypto_public_key *key,
 		goto cleanup;
 	}
 
-	i =  mbedtls_pk_rsa(*pkey)->len;
+	i =  mbedtls_pk_rsa(*pkey)->MBEDTLS_PRIVATE(len);
+#ifdef CONFIG_MBEDTLS_V3
+	ret = mbedtls_rsa_pkcs1_decrypt(mbedtls_pk_rsa(*pkey), mbedtls_ctr_drbg_random,
+			&ctr_drbg, &i,
+			crypt, plain, *plain_len);
+#else
 	ret = mbedtls_rsa_pkcs1_decrypt(mbedtls_pk_rsa(*pkey), mbedtls_ctr_drbg_random,
 			&ctr_drbg, MBEDTLS_RSA_PUBLIC, &i,
 			crypt, plain, *plain_len);
+#endif
 	if( ret != 0 ) {
 		wpa_printf(MSG_ERROR, " failed ! mbedtls_rsa_pkcs1_decrypt returned %d",
 				ret );

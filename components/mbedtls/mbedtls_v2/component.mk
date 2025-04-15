@@ -2,13 +2,15 @@
 # Component Makefile
 #
 
-COMPONENT_ADD_INCLUDEDIRS := port/include mbedtls/include port/include/$(IDF_TARGET)
+CURRENT_DIR := mbedtls_v2
 
-COMPONENT_SRCDIRS := mbedtls/library port port/$(IDF_TARGET)
+COMPONENT_ADD_INCLUDEDIRS := $(CURRENT_DIR)/port/include $(CURRENT_DIR)/mbedtls/include $(CURRENT_DIR)/port/include/$(IDF_TARGET)
 
-COMPONENT_OBJEXCLUDE := mbedtls/library/net_sockets.o
+COMPONENT_SRCDIRS := $(CURRENT_DIR)/mbedtls/library $(CURRENT_DIR)/port $(CURRENT_DIR)/port/$(IDF_TARGET)
 
-COMPONENT_SUBMODULES += mbedtls
+COMPONENT_OBJEXCLUDE := $(CURRENT_DIR)/mbedtls/library/net_sockets.o
+
+COMPONENT_SUBMODULES += $(CURRENT_DIR)/mbedtls
 
 ifdef CONFIG_MBEDTLS_DYNAMIC_BUFFER
 
@@ -26,6 +28,6 @@ WRAP_ARGUMENT := -Wl,--wrap=
 
 COMPONENT_ADD_LDFLAGS = -l$(COMPONENT_NAME) $(addprefix $(WRAP_ARGUMENT),$(WRAP_FUNCTIONS))
 
-COMPONENT_SRCDIRS += port/dynamic
+COMPONENT_SRCDIRS += $(CURRENT_DIR)/port/dynamic
 
 endif

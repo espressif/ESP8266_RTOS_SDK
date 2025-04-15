@@ -270,8 +270,14 @@ static esp_err_t set_pki_context(esp_tls_t *tls, const esp_tls_pki_t *pki)
             return ESP_ERR_MBEDTLS_X509_CRT_PARSE_FAILED;
         }
 
+#ifdef CONFIG_MBEDTLS_V3
+        ret = mbedtls_pk_parse_key(pki->pk_key, pki->privkey_pem_buf, pki->privkey_pem_bytes,
+                                   pki->privkey_password, pki->privkey_password_len,
+                                   mbedtls_ctr_drbg_random, &tls->ctr_drbg);
+#else
         ret = mbedtls_pk_parse_key(pki->pk_key, pki->privkey_pem_buf, pki->privkey_pem_bytes,
                                    pki->privkey_password, pki->privkey_password_len);
+#endif
         if (ret < 0) {
             ESP_LOGE(TAG, "mbedtls_pk_parse_keyfile returned -0x%x", -ret);
             ESP_INT_EVENT_TRACKER_CAPTURE(tls->error_handle, ERR_TYPE_MBEDTLS, -ret);

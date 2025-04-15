@@ -1,4 +1,4 @@
-if(MBEDTLS_V3)
+if(CONFIG_MBEDTLS_V3)
     return()
 endif()
 
