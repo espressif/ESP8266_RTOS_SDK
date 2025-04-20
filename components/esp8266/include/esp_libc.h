@@ -61,6 +61,20 @@ int ets_putc(int c);
   */
 int ets_vprintf(const char *fmt, va_list ap);
 
+/**
+ * libnet80211.a produces some debug output using ets_printf(), and continues
+ * to use this function well after bootup. If the serial port is used for other
+ * purposes than logging, it disrupts serial communication at arbitraty moments.
+ * The output looks like:
+ * I (5504) wifi:state: 0 -> 2 (b0)
+ * I (5545) wifi:state: 2 -> 3 (0)
+ * I (5551) wifi:state: 3 -> 5 (10)
+ * This flag is a quick stopgap solution. If set by the app, ets_vprintf() output
+ * is completely supressed.
+ * See https://github.com/espressif/ESP8266_RTOS_SDK/issues/1082
+ */
+extern int __ets_vprintf_disable;
+
 #ifndef os_printf
 #define os_printf   printf
 #endif
