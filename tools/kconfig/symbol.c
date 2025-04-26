@@ -7,7 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <regex.h>
+#ifndef _WIN32
 #include <sys/utsname.h>
+#endif
 
 #include "lkc.h"
 
@@ -44,6 +46,7 @@ static void sym_add_default(struct symbol *sym, const char *def)
 
 void sym_init(void)
 {
+#ifndef _WIN32
 	struct symbol *sym;
 	struct utsname uts;
 	static bool inited = false;
@@ -58,6 +61,7 @@ void sym_init(void)
 	sym->type = S_STRING;
 	sym->flags |= SYMBOL_AUTO;
 	sym_add_default(sym, uts.release);
+#endif
 }
 
 enum symbol_type sym_get_type(struct symbol *sym)
