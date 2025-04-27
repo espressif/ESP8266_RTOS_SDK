@@ -164,7 +164,7 @@ int crypto_ec_point_to_bin(struct crypto_ec *e,
 	int len = mbedtls_mpi_size(&e->group.P);
 
 	if (x) {
-		if(crypto_bignum_to_bin((struct crypto_bignum *) & ((mbedtls_ecp_point *) point)->X,
+		if(crypto_bignum_to_bin((struct crypto_bignum *) & ((mbedtls_ecp_point *) point)->MBEDTLS_PRIVATE(X),
 					x, len, len) < 0) {
 			return -1;
 		}
@@ -172,7 +172,7 @@ int crypto_ec_point_to_bin(struct crypto_ec *e,
 	}
 
 	if (y) {
-		if(crypto_bignum_to_bin((struct crypto_bignum *) & ((mbedtls_ecp_point *) point)->Y,
+		if(crypto_bignum_to_bin((struct crypto_bignum *) & ((mbedtls_ecp_point *) point)->MBEDTLS_PRIVATE(Y),
 					y, len, len) < 0) {
 			return -1;
 		}
@@ -187,17 +187,17 @@ int crypto_ec_get_affine_coordinates(struct crypto_ec *e, struct crypto_ec_point
 	int ret = -1;
 	mbedtls_ecp_point *point = (mbedtls_ecp_point *)pt;
 
-	if (!mbedtls_ecp_is_zero(point)  && (mbedtls_mpi_cmp_int( &point->Z, 1 ) == 0 )) {
+	if (!mbedtls_ecp_is_zero(point)  && (mbedtls_mpi_cmp_int( &point->MBEDTLS_PRIVATE(Z), 1 ) == 0 )) {
 		// Affine coordinates mean that z should be 1,
 		wpa_printf(MSG_ERROR, "Z coordinate is neither 0 or 1");
 		return -1;
 	}
 
 	if (x) {
-		MBEDTLS_MPI_CHK(mbedtls_mpi_copy((mbedtls_mpi*) x, &((mbedtls_ecp_point* )point)->X));
+		MBEDTLS_MPI_CHK(mbedtls_mpi_copy((mbedtls_mpi*) x, &((mbedtls_ecp_point* )point)->MBEDTLS_PRIVATE(X)));
 	}
 	if (y) {
-		MBEDTLS_MPI_CHK(mbedtls_mpi_copy((mbedtls_mpi*) y, &((mbedtls_ecp_point* )point)->Y));
+		MBEDTLS_MPI_CHK(mbedtls_mpi_copy((mbedtls_mpi*) y, &((mbedtls_ecp_point* )point)->MBEDTLS_PRIVATE(Y)));
 	}
 	return 0;
 cleanup:
@@ -217,11 +217,14 @@ struct crypto_ec_point *crypto_ec_point_from_bin(struct crypto_ec *e,
 	len = mbedtls_mpi_size(&e->group.P);
 
 	pt = os_zalloc(sizeof(mbedtls_ecp_point));
+	if (!pt) {
+		return NULL;
+	}
 	mbedtls_ecp_point_init(pt);
 
-	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&pt->X, val, len));
-	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&pt->Y, val + len, len));
-	MBEDTLS_MPI_CHK(mbedtls_mpi_lset((&pt->Z), 1));
+	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&pt->MBEDTLS_PRIVATE(X), val, len));
+	MBEDTLS_MPI_CHK(mbedtls_mpi_read_binary(&pt->MBEDTLS_PRIVATE(Y), val + len, len));
+	MBEDTLS_MPI_CHK(mbedtls_mpi_lset((&pt->MBEDTLS_PRIVATE(Z)), 1));
 
 	return (struct crypto_ec_point *) pt;
 
@@ -291,8 +294,8 @@ static int ecp_opp(const mbedtls_ecp_group *grp, mbedtls_ecp_point *R, const mbe
 	}
 
 	/* In-place opposite */
-	if (mbedtls_mpi_cmp_int(&R->Y, 0) != 0) {
-		MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(&R->Y, &grp->P, &R->Y));
+	if (mbedtls_mpi_cmp_int(&R->MBEDTLS_PRIVATE(Y), 0) != 0) {
+		MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(&R->MBEDTLS_PRIVATE(Y), &grp->P, &R->MBEDTLS_PRIVATE(Y)));
 	}
 
 cleanup:
@@ -313,7 +316,7 @@ int crypto_ec_point_solve_y_coord(struct crypto_ec *e,
 	mbedtls_mpi_init(&temp);
 	int ret = 0;
 
-	y = &((mbedtls_ecp_point *)p)->Y;
+	y = &((mbedtls_ecp_point *)p)->MBEDTLS_PRIVATE(Y);
 
 	/* Faster way to find sqrt
 	 * Works only with curves having prime p
@@ -337,8 +340,8 @@ int crypto_ec_point_solve_y_coord(struct crypto_ec *e,
 		if (y_bit != mbedtls_mpi_get_bit(y, 0))
 			MBEDTLS_MPI_CHK(mbedtls_mpi_sub_mpi(y, &e->group.P, y));
 
-		MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&((mbedtls_ecp_point* )p)->X, (const mbedtls_mpi*) x));
-		MBEDTLS_MPI_CHK(mbedtls_mpi_lset(&((mbedtls_ecp_point *)p)->Z, 1));
+		MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&((mbedtls_ecp_point* )p)->MBEDTLS_PRIVATE(X), (const mbedtls_mpi*) x));
+		MBEDTLS_MPI_CHK(mbedtls_mpi_lset(&((mbedtls_ecp_point *)p)->MBEDTLS_PRIVATE(Z), 1));
 	} else {
 		ret = 1;
 	}
@@ -422,9 +425,9 @@ int crypto_ec_point_is_on_curve(struct crypto_ec *e,
 
 	/* Calculate y^2  mod P*/
 	MBEDTLS_MPI_CHK(mbedtls_mpi_lset(&two, 2));
-	MBEDTLS_MPI_CHK(mbedtls_mpi_exp_mod(&y_sqr_lhs, &((const mbedtls_ecp_point *)p)->Y , &two, &e->group.P, NULL));
+	MBEDTLS_MPI_CHK(mbedtls_mpi_exp_mod(&y_sqr_lhs, &((const mbedtls_ecp_point *)p)->MBEDTLS_PRIVATE(Y) , &two, &e->group.P, NULL));
 
-	y_sqr_rhs = (mbedtls_mpi *) crypto_ec_point_compute_y_sqr(e, (const struct crypto_bignum *) & ((const mbedtls_ecp_point *)p)->X);
+	y_sqr_rhs = (mbedtls_mpi *) crypto_ec_point_compute_y_sqr(e, (const struct crypto_bignum *) & ((const mbedtls_ecp_point *)p)->MBEDTLS_PRIVATE(X));
 
 	if (y_sqr_rhs && (mbedtls_mpi_cmp_mpi(y_sqr_rhs, &y_sqr_lhs) == 0)) {
 		on_curve = 1;
@@ -447,10 +450,30 @@ int crypto_ec_point_cmp(const struct crypto_ec *e,
 }
 int crypto_key_compare(struct crypto_key *key1, struct crypto_key *key2)
 {
+#ifdef CONFIG_MBEDTLS_V3
+	int ret = 0;
+	mbedtls_entropy_context entropy;
+	mbedtls_ctr_drbg_context ctr_drbg;
+
+	mbedtls_entropy_init(&entropy);
+	mbedtls_ctr_drbg_init(&ctr_drbg);
+
+	MBEDTLS_MPI_CHK(mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, NULL, 0));
+	if (mbedtls_pk_check_pair((mbedtls_pk_context *)key1, (mbedtls_pk_context *)key2, mbedtls_ctr_drbg_random, &ctr_drbg) < 0) {
+		goto cleanup;
+	}
+
+	ret = 1;
+cleanup:
+	mbedtls_ctr_drbg_free(&ctr_drbg);
+	mbedtls_entropy_free(&entropy);
+	return ret;
+#else
 	if (mbedtls_pk_check_pair((mbedtls_pk_context *)key1, (mbedtls_pk_context *)key2) < 0)
 		return 0;
 
 	return 1;
+#endif
 }
 
 void crypto_debug_print_point(const char *title, struct crypto_ec *e,
@@ -490,11 +513,15 @@ struct crypto_key * crypto_ec_set_pubkey_point(const struct crypto_ec_group *gro
 	mbedtls_pk_context *key = (mbedtls_pk_context *)crypto_alloc_key();
 
 	if (!key) {
-		wpa_printf(MSG_ERROR, "%s: memory allocation failed\n", __func__);
+		wpa_printf(MSG_ERROR, "%s: memory allocation failed", __func__);
 		return NULL;
 	}
 
 	point = (mbedtls_ecp_point *)crypto_ec_point_from_bin((struct crypto_ec *)group, buf);
+	if (!point) {
+		wpa_printf(MSG_ERROR, "%s: Point initialization failed", __func__);
+		goto fail;
+	}
 	if (crypto_ec_point_is_at_infinity((struct crypto_ec *)group, (struct crypto_ec_point *)point)) {
 		wpa_printf(MSG_ERROR, "Point is at infinity");
 		goto fail;
@@ -503,7 +530,22 @@ struct crypto_key * crypto_ec_set_pubkey_point(const struct crypto_ec_group *gro
 		wpa_printf(MSG_ERROR, "Point not on curve");
 		goto fail;
 	}
+#ifdef CONFIG_MBEDTLS_V3
+	mbedtls_ecp_group *ecp_grp = (mbedtls_ecp_group *)group;
+	if (mbedtls_ecp_check_pubkey(ecp_grp, point) < 0) {
+		// ideally should have failed in upper condition, duplicate code??
+		wpa_printf(MSG_ERROR, "Invalid key");
+		goto fail;
+	}
+	/* Assign values */
+	if( ( ret = mbedtls_pk_setup( key,
+					mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY) ) ) != 0 )
+		goto fail;
 
+	mbedtls_ecp_copy(&mbedtls_pk_ec(*key)->MBEDTLS_PRIVATE(Q), point);
+	mbedtls_ecp_group_load(&mbedtls_pk_ec(*key)->MBEDTLS_PRIVATE(grp), ecp_grp->id);
+    pkey = (struct crypto_key *)key;
+#else
 	if (mbedtls_ecp_check_pubkey((mbedtls_ecp_group *)group, point) < 0) { //typecast
 		// ideally should have failed in upper condition, duplicate code??
 		wpa_printf(MSG_ERROR, "Invalid key");
@@ -533,6 +575,7 @@ struct crypto_key * crypto_ec_set_pubkey_point(const struct crypto_ec_group *gro
 
 	pkey = (struct crypto_key *)key;
 cleanup:
+#endif
 	crypto_ec_point_deinit((struct crypto_ec_point *)point, 0);
 	return pkey;
 fail:
@@ -556,7 +599,7 @@ struct crypto_ec_point *crypto_ec_get_public_key(struct crypto_key *key)
 {
 	mbedtls_pk_context *pkey = (mbedtls_pk_context *)key;
 
-	return (struct crypto_ec_point *)&mbedtls_pk_ec(*pkey)->Q;
+	return (struct crypto_ec_point *)&mbedtls_pk_ec(*pkey)->MBEDTLS_PRIVATE(Q);
 }
 
 
@@ -584,14 +627,14 @@ struct crypto_ec_group *crypto_ec_get_group_from_key(struct crypto_key *key)
 {
 	mbedtls_pk_context *pkey = (mbedtls_pk_context *)key;
 
-	return (struct crypto_ec_group *)&(mbedtls_pk_ec(*pkey)->grp);
+	return (struct crypto_ec_group *)&(mbedtls_pk_ec(*pkey)->MBEDTLS_PRIVATE(grp));
 }
 
 struct crypto_bignum *crypto_ec_get_private_key(struct crypto_key *key)
 {
 	mbedtls_pk_context *pkey = (mbedtls_pk_context *)key;
 
-	return ((struct crypto_bignum *)&(mbedtls_pk_ec(*pkey)->d));
+	return ((struct crypto_bignum *)&(mbedtls_pk_ec(*pkey)->MBEDTLS_PRIVATE(d)));
 }
 
 int crypto_ec_get_publickey_buf(struct crypto_key *key, u8 *key_buf, int len)
@@ -599,12 +642,12 @@ int crypto_ec_get_publickey_buf(struct crypto_key *key, u8 *key_buf, int len)
 	mbedtls_pk_context *pkey = (mbedtls_pk_context *)key;
 	unsigned char buf[MBEDTLS_MPI_MAX_SIZE + 10]; /* tag, length + MPI */
 	unsigned char *c = buf + sizeof(buf );
-	size_t pk_len = 0;
+	int pk_len = 0;
 
 	memset(buf, 0, sizeof(buf) );
 	pk_len = mbedtls_pk_write_pubkey( &c, buf, pkey);
 
-	if (!pk_len)
+	if (pk_len < 0)
 		return -1;
 
 	if (len == 0)
@@ -637,11 +680,14 @@ struct crypto_key *crypto_ec_get_key(const u8 *privkey, size_t privkey_len)
 	mbedtls_pk_context *kctx = (mbedtls_pk_context *)crypto_alloc_key();
 
 	if (!kctx) {
-		wpa_printf(MSG_ERROR, "memory allocation failed\n");
+		wpa_printf(MSG_ERROR, "memory allocation failed");
 		return NULL;
 	}
+#ifdef CONFIG_MBEDTLS_V3
+    ret = mbedtls_pk_parse_key(kctx, privkey, privkey_len, NULL, 0, crypto_rng_wrapper, NULL);
+#else
 	ret = mbedtls_pk_parse_key(kctx, privkey, privkey_len, NULL, 0);
-
+#endif
 	if (ret < 0) {
 		//crypto_print_error_string(ret);
 		goto fail;
@@ -752,7 +798,7 @@ int crypto_ecdsa_get_sign(unsigned char *hash,
 
 	mbedtls_ecdsa_context *ctx = os_malloc(sizeof(*ctx));
 	if (!ctx) {
-		wpa_printf(MSG_ERROR,"failed to allcate memory\n");
+		wpa_printf(MSG_ERROR,"failed to allcate memory");
 		return -1;
 	}
 	mbedtls_ecdsa_init(ctx);
@@ -760,8 +806,8 @@ int crypto_ecdsa_get_sign(unsigned char *hash,
 	if (mbedtls_ecdsa_from_keypair(ctx, mbedtls_pk_ec(*pkey)) < 0) {
 		goto fail;
 	}
-	ret = mbedtls_ecdsa_sign(&ctx->grp, (mbedtls_mpi *)r, (mbedtls_mpi *)s,
-			&ctx->d, hash, SHA256_MAC_LEN, crypto_rng_wrapper, NULL);
+	ret = mbedtls_ecdsa_sign(&ctx->MBEDTLS_PRIVATE(grp), (mbedtls_mpi *)r, (mbedtls_mpi *)s,
+			&ctx->MBEDTLS_PRIVATE(d), hash, SHA256_MAC_LEN, crypto_rng_wrapper, NULL);
 
 fail:
 	mbedtls_ecdsa_free(ctx);
@@ -773,6 +819,22 @@ fail:
 int crypto_edcsa_sign_verify(const unsigned char *hash,
 		const struct crypto_bignum *r, const struct crypto_bignum *s, struct crypto_key *csign, int hlen)
 {
+#ifdef CONFIG_MBEDTLS_V3
+	/* (mbedtls_ecdsa_context *) */
+    mbedtls_ecp_keypair *ecp_kp = mbedtls_pk_ec(*(mbedtls_pk_context *)csign);
+    if (!ecp_kp) {
+        return -1;
+	}
+
+	mbedtls_ecp_group *ecp_kp_grp = &ecp_kp->MBEDTLS_PRIVATE(grp);
+	mbedtls_ecp_point *ecp_kp_q = &ecp_kp->MBEDTLS_PRIVATE(Q);
+	int ret = mbedtls_ecdsa_verify(ecp_kp_grp, hash, hlen,
+									ecp_kp_q, (mbedtls_mpi *)r, (mbedtls_mpi *)s);
+	if (ret != 0) {
+		wpa_printf(MSG_ERROR, "ecdsa verification failed");
+		return ret;
+	}
+#else
 	mbedtls_pk_context *pkey = (mbedtls_pk_context *)csign;
 	int ret = 0;
 
@@ -794,7 +856,7 @@ int crypto_edcsa_sign_verify(const unsigned char *hash,
 
 	mbedtls_ecdsa_free(ctx);
 	os_free(ctx);
-
+#endif
 	return ret;
 }
 
@@ -805,7 +867,7 @@ void crypto_debug_print_ec_key(const char *title, struct crypto_key *key)
 	mbedtls_ecp_keypair *ecp = mbedtls_pk_ec( *pkey );
 	u8 x[32], y[32], d[32];
 	wpa_printf(MSG_ERROR, "curve: %s\n",
-			mbedtls_ecp_curve_info_from_grp_id( ecp->grp.id )->name );
+			mbedtls_ecp_curve_info_from_grp_id( ecp->MBEDTLS_PRIVATE(grp).id )->name );
 	int len = mbedtls_mpi_size((mbedtls_mpi *)crypto_ec_get_prime((struct crypto_ec *)crypto_ec_get_group_from_key(key)));
 
 	wpa_printf(MSG_ERROR, "prime len is %d\n", len);
@@ -874,7 +936,7 @@ static int pk_write_ec_param( unsigned char **p, unsigned char *start,
 	const char *oid;
 	size_t oid_len;
 
-	if( ( ret = mbedtls_oid_get_oid_by_ec_grp( ec->grp.id, &oid, &oid_len ) ) != 0 )
+	if( ( ret = mbedtls_oid_get_oid_by_ec_grp( ec->MBEDTLS_PRIVATE(grp).id, &oid, &oid_len ) ) != 0 )
 		return( ret );
 
 	MBEDTLS_ASN1_CHK_ADD( len, mbedtls_asn1_write_oid( p, start, oid, oid_len ) );
@@ -889,7 +951,7 @@ static int pk_write_ec_pubkey_formatted( unsigned char **p, unsigned char *start
 	size_t len = 0;
 	unsigned char buf[MBEDTLS_ECP_MAX_PT_LEN];
 
-	if( ( ret = mbedtls_ecp_point_write_binary( &ec->grp, &ec->Q,
+	if( ( ret = mbedtls_ecp_point_write_binary( &ec->MBEDTLS_PRIVATE(grp), &ec->MBEDTLS_PRIVATE(Q),
 					format,
 					&len, buf, sizeof( buf ) ) ) != 0 )
 	{

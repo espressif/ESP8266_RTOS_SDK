@@ -1,0 +1,8 @@
+# Anyone compiling mbedTLS code needs the name of the
+# alternative config file
+CPPFLAGS += -DMBEDTLS_CONFIG_FILE='"mbedtls/esp_config.h"' -DCONFIG_SSL_USING_MBEDTLS
+
+# Catch usage of deprecated mbedTLS functions when building tests
+ifneq ("$(filter mbedtls,$(TEST_COMPONENTS_LIST))","")
+CPPFLAGS += -DMBEDTLS_DEPRECATED_WARNING
+endif

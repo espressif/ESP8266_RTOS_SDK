@@ -1,5 +1,5 @@
-menu "OpenSSL"
-
+menu "OpenSSL (Not Support mbedtls V3.x)"
+    depends on !MBEDTLS_V3
     config OPENSSL_DEBUG
         bool "Enable OpenSSL debugging"
         default n

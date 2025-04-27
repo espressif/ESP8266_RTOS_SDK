@@ -2,8 +2,12 @@
 	path = components/json/cJSON
 	url = ../../DaveGamble/cJSON.git
 
-[submodule "components/mbedtls/mbedtls"]
-	path = components/mbedtls/mbedtls
+[submodule "components/mbedtls/mbedtls_v2/mbedtls"]
+	path = components/mbedtls/mbedtls_v2/mbedtls
+	url = ../../espressif/mbedtls.git
+
+[submodule "components/mbedtls/mbedtls_v3/mbedtls"]
+	path = components/mbedtls/mbedtls_v3/mbedtls
 	url = ../../espressif/mbedtls.git
 
 [submodule "components/lwip/lwip"]
