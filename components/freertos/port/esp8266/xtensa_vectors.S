@@ -856,7 +856,9 @@ nmi_reentried:
     addi    a3,  a3,  1
     s32i    a3,  a2,  0
 
-    call0   wDev_ProcessFiq                         // call interrupt's C handler
+    .literal .LwDPF, wDev_ProcessFiq
+    l32r    a8, .LwDPF
+    callx0  a8                                      // call interrupt's C handler
 
     //Restore NMI level
     movi    a2,  _chip_nmi_cnt
