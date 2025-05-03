@@ -59,7 +59,11 @@
 #define MDNS_ANSWER_AAAA_SIZE       16
 
 #define MDNS_SERVICE_PORT           5353                    // UDP port that the server runs on
+#ifdef CONFIG_MDNS_STACKSIZE
+#define MDNS_SERVICE_STACK_DEPTH    CONFIG_MDNS_STACKSIZE
+#else
 #define MDNS_SERVICE_STACK_DEPTH    4096                    // Stack size for the service thread
+#endif
 #define MDNS_PACKET_QUEUE_LEN       16                      // Maximum packets that can be queued for parsing
 #define MDNS_ACTION_QUEUE_LEN       16                      // Maximum actions pending to the server
 #define MDNS_TXT_MAX_LEN            1024                    // Maximum string length of text data in TXT record
