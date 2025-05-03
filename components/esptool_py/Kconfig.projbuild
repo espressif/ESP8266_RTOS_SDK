@@ -14,10 +14,18 @@ choice ESPTOOLPY_BAUD
 		Default baud rate to use while communicating with the ESP chip. Can be overridden by
 		setting the ESPBAUD variable.
 
+config ESPTOOLPY_BAUD_57600B
+	bool "57600 baud"
 config ESPTOOLPY_BAUD_115200B
 	bool "115200 baud"
 config ESPTOOLPY_BAUD_230400B
 	bool "230400 baud"
+config ESPTOOLPY_BAUD_256000B
+	bool "256000 baud"
+config ESPTOOLPY_BAUD_460800B
+	bool "460800 baud"
+config ESPTOOLPY_BAUD_512000B
+	bool "512000 baud"
 config ESPTOOLPY_BAUD_921600B
 	bool "921600 baud"
 config ESPTOOLPY_BAUD_2MB
@@ -32,8 +40,12 @@ config ESPTOOLPY_BAUD_OTHER_VAL
 
 config ESPTOOLPY_BAUD
 	int
+	default 57600 if ESPTOOLPY_BAUD_57600B
 	default 115200 if ESPTOOLPY_BAUD_115200B
+	default 256000 if ESPTOOLPY_BAUD_256000B
 	default 230400 if ESPTOOLPY_BAUD_230400B
+	default 460800 if ESPTOOLPY_BAUD_460800B
+	default 512000 if ESPTOOLPY_BAUD_512000B
 	default 921600 if ESPTOOLPY_BAUD_921600B
 	default 2000000 if ESPTOOLPY_BAUD_2MB
 	default ESPTOOLPY_BAUD_OTHER_VAL if ESPTOOLPY_BAUD_OTHER
