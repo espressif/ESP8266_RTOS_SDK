@@ -1,15 +1,15 @@
 # Native OTA
 
-We split native OTA example into several sub-examples to let custemors to choose which application scenario is they really want.
+We split the native OTA example into several sub-examples to let customers choose which application scenario is the one they really want.
 
-The projects' directory structure is following:
+The projects' directory structure is as follows:
 
 ```
     1MB_flash --->                  # Only for ESP8266 + 1MB flash or ESP8285
 
         new_to_new                  # current firmware is based on new SDK and it does not update from old SDK's firmware
         (no old, no copy)           # new firmware is based on new SDK
-                                    # it can use copy mode, but here not use
+                                    # it can use copy mode, but copy mode is not used here
 
 
         new_to_new                  # current firmware is based on new SDK and it does not update from old SDK's firmware
