@@ -64,10 +64,16 @@ variable. */
 static uint32_t uxCriticalNesting = 0;
 
 uint32_t g_esp_boot_ccount;
-uint64_t g_esp_os_ticks;
 uint64_t g_esp_os_us;
-uint64_t g_esp_os_cpu_clk;
 
+#ifdef ESP_ENABLE_ESP_OS_TICKS
+/* Apparently unused for at least one year. Removed to free up resources and increase performance  */
+uint64_t g_esp_os_ticks;
+#endif
+
+#ifndef CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
+uint64_t g_esp_os_cpu_clk;
+#endif
 static uint32_t s_switch_ctx_flag;
 
 void vPortEnterCritical(void);
@@ -135,39 +141,71 @@ void IRAM_ATTR SoftIsrHdl(void* arg)
     }
 }
 
+#ifdef ESP_ENABLE_ESP_OS_TICKS
 void IRAM_ATTR esp_increase_tick_cnt(const TickType_t ticks)
 {
     g_esp_os_ticks += ticks;
 }
+#endif
 
-void IRAM_ATTR xPortSysTickHandle(void *p)
-{
-    uint32_t us;
-    uint32_t ticks;
-    uint32_t ccount;
+void IRAM_ATTR vPortCheckCCompareAndRecover(void){
+    /* shared with xPortSysTickHandle and os_update_cpu_frequency */
 
     /**
      * System or application may close interrupt too long, such as the operation of read/write/erase flash.
-     * And then the "ccount" value may be overflow.
-     *
-     * So add code here to calibrate system time.
+     * And then the "ccount" value may be overflow.     *
+     * .
+     * - Reworked to avoid an heavy  drift in ccount management, in g_esp_os_us (esp_timer_get_time) and and xTickCount (xTaskGetTickCount)).
+     * - A "control loop" has been added to check the evaluated latency and protect against further latencies due to nmi (pwm driver)
+     * - The handler performances are increased by avoiding the math division at runtime in the main flow (about 150 fewer cpu ticks).
+     * - Other sections are removed if not required by the current compile options.
+     * Finally, the maximum recoverable interrupt latency is close to: INT32_MAX ticks.  (>13 secs @160Mhz, >26 secs@80Mhz) and ccount is
+     * no longer set to 0 at each handler call. This also restore the old feature that allow the sharing of ccount (read only) with other applications
      */
-    ccount = soc_get_ccount();
-    us = ccount / g_esp_ticks_per_us;
-  
-    g_esp_os_us += us;
-    g_esp_os_cpu_clk += ccount;
 
-    soc_set_ccount(0);
-    soc_set_ccompare(_xt_tick_divisor);
 
-    ticks = us / 1000 / portTICK_PERIOD_MS;
+    const int32_t margin = 0; //ex. _xt_tick_divisor/4; //force recover if there is not enough time in the current time slice
 
-    if (ticks > 1) {
-        vTaskStepTick(ticks - 1);
+    uint32_t ticks_to_recover,ccount,missed_ticks,new_ccompare;
+    int32_t elapsed;
+    new_ccompare = soc_get_ccompare();
+    ticks_to_recover = 0;
+    for (;;) {
+        ccount = soc_get_ccount();
+        elapsed = (int32_t) (ccount - new_ccompare); //expected negative
+        if (elapsed < -margin) {
+            /* ok . Timer is allowed to fire again */
+            break;
+        }
+        /* ccompare set too late and/or timer fired again. Need recover */
+        missed_ticks = (elapsed + margin) / _xt_tick_divisor + 1;
+        ticks_to_recover += missed_ticks;
+        new_ccompare += missed_ticks * _xt_tick_divisor;
+        soc_set_ccompare(new_ccompare);
+        soc_clear_int_mask(1ul << ETS_MAX_INUM);
+    }
+    if (ticks_to_recover >0){
+        g_esp_os_us += ticks_to_recover * (1000000 / configTICK_RATE_HZ);
+        vTaskStepTick(ticks_to_recover);
     }
 
-    g_esp_os_ticks++;
+ #ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_CPU_CLK
+    if ((uint32_t) g_esp_os_cpu_clk > ccount) {
+        /* ccount overflow */
+        g_esp_os_cpu_clk += 0x100000000; //inc high part
+    }
+    g_esp_os_cpu_clk = (g_esp_os_cpu_clk & 0xFFFFFFFF00000000) | ccount; //low part overwrite
+#endif
+}
+
+void IRAM_ATTR xPortSysTickHandle(void *p)
+{
+    uint32_t new_ccompare;
+    new_ccompare = soc_get_ccompare() + _xt_tick_divisor;
+    soc_set_ccompare(new_ccompare);
+    vPortCheckCCompareAndRecover();
+
+    g_esp_os_us += (1000000 / configTICK_RATE_HZ);
 
     if (xTaskIncrementTick() != pdFALSE) {
         portYIELD_FROM_ISR();
