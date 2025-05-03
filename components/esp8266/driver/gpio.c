@@ -258,10 +258,13 @@ esp_err_t gpio_set_direction(gpio_num_t gpio_num, gpio_mode_t mode)
         gpio_output_disable(gpio_num);
     }
 
-    if ((mode & GPIO_MODE_DEF_OD) && !RTC_GPIO_IS_VALID_GPIO(gpio_num)) {
-        GPIO.pin[gpio_num].driver = 1;
-    } else {
-        GPIO.pin[gpio_num].driver = 0;
+    if (!RTC_GPIO_IS_VALID_GPIO(gpio_num))
+    {
+        if ((mode & GPIO_MODE_DEF_OD)) {
+            GPIO.pin[gpio_num].driver = 1;
+        } else {
+            GPIO.pin[gpio_num].driver = 0;
+        }
     }
 
     return ESP_OK;
