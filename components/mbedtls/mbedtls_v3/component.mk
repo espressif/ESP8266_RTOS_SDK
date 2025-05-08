@@ -10,7 +10,7 @@ COMPONENT_SRCDIRS := $(CURRENT_DIR)/mbedtls/library $(CURRENT_DIR)/port
 
 COMPONENT_OBJEXCLUDE := $(CURRENT_DIR)/mbedtls/library/net_sockets.o
 
-ifndef CONFIG_MBEDTLS_HARDWARE_MPI
+ifndef CONFIG_MBEDTLS_MPI_EXP_MOD_ALT
 COMPONENT_OBJEXCLUDE += $(CURRENT_DIR)/port/esp_bignum.o
 endif
 

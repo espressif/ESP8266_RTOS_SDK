@@ -196,6 +196,10 @@ target_sources(mbedcrypto PRIVATE "${current_dir}/port/esp_mem.c"
                             "${current_dir}/port/esp_timing.c"
                             "${current_dir}/port/esp_hardware.c")
 
+if(CONFIG_MBEDTLS_MPI_EXP_MOD_ALT)
+    target_sources(mbedcrypto PRIVATE "${current_dir}/port/esp_bignum.c")
+endif()
+
 if(CONFIG_SOC_AES_SUPPORTED)
     target_sources(mbedcrypto PRIVATE "${current_dir}/port/aes/esp_aes_xts.c"
                                   "${current_dir}/port/aes/esp_aes_common.c"
