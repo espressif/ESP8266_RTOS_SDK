@@ -639,6 +639,13 @@ config MBEDTLS_SHA3_C
         Enabling this configuration option increases the flash footprint
         by almost 4KB.
 
+config MBEDTLS_MPI_EXP_MOD_ALT
+    bool "Enable the alternative exponentiation"
+    default y
+    help
+        Perform an exponentiation by the algorithm of mbedtls V2,
+        which is faster when calling "mbedtls_mpi_exp_mod()".
+
 choice MBEDTLS_TLS_MODE
     bool "TLS Protocol Role"
     default MBEDTLS_TLS_SERVER_AND_CLIENT
