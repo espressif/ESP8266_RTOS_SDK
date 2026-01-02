@@ -18,13 +18,52 @@ import argparse
 import os
 import sys
 
+print(f"Using python {sys.version} located at {sys.executable}")
+
 try:
-    import pkg_resources
-except Exception:
-    print('pkg_resources cannot be imported probably because the pip package is not installed and/or using a '
+    from importlib.metadata import version, PackageNotFoundError
+except Exception as e:
+    print(str(e))
+    print('version, PackageNotFoundError from importlib.metadata cannot be imported probably because the pip package is not installed and/or using a '
           'legacy Python interpreter. Please refer to the Get Started section of the ESP-IDF Programming Guide for '
-          'setting up the required packages.')
+          'setting up the required packages. Also note that this version of check_python_dependencies.py has migrated '
+          'from using pkg_resources to importlib and packaging since pkg_resources has been removed from python.')
     sys.exit(1)
+
+try:
+    from packaging.requirements import Requirement
+except Exception as e:
+    print(str(e))
+    print('Requirement from packaging.requirements cannot be imported probably because the pip package is not installed and/or using a '
+          'legacy Python interpreter. Please refer to the Get Started section of the ESP-IDF Programming Guide for '
+          'setting up the required packages. Also note that this version of check_python_dependencies.py has migrated '
+          'from using pkg_resources to importlib and packaging since pkg_resources has been removed from python.')
+    sys.exit(1)
+
+try:
+    from packaging.specifiers import SpecifierSet
+except Exception as e:
+    print(str(e))
+    print('SpecifierSet from packaging.specifiers cannot be imported probably because the pip package is not installed and/or using a '
+          'legacy Python interpreter. Please refer to the Get Started section of the ESP-IDF Programming Guide for '
+          'setting up the required packages. Also note that this version of check_python_dependencies.py has migrated '
+          'from using pkg_resources to importlib and packaging since pkg_resources has been removed from python.')
+    sys.exit(1)
+
+def require(requirement_line: str):
+    if requirement_line != '#':
+        return void
+
+    req = Requirement(requirement_line)
+    try:
+        installed_version = version(req.name)
+    except PackageNotFoundError:
+        print(f"Package {req.name} is not installed")
+        sys.exit(1)
+
+    if installed_version not in req.specifier:
+        print(f"{req.name}{req.specifier} required, but {installed_version} is installed")
+        sys.exit(1)
 
 
 def escape_backslash(path):
@@ -56,7 +95,7 @@ if __name__ == "__main__":
         for line in f:
             line = line.strip()
             try:
-                pkg_resources.require(line)
+                require(line)
             except Exception:
                 not_satisfied.append(line)
 
