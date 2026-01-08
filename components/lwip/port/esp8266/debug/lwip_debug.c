@@ -101,7 +101,9 @@ static void dbg_lwip_tcp_pcb_one_show(struct tcp_pcb* pcb)
     ESP_LWIP_LOGI("snd_lbb=%d snd_wnd=%d snd_wnd_max=%d", pcb->snd_lbb, pcb->snd_wnd, pcb->snd_wnd_max);
     //ESP_LWIP_LOGI("acked=%d", pcb->acked);
     ESP_LWIP_LOGI("snd_buf=%d snd_queuelen=%d", pcb->snd_buf, pcb->snd_queuelen);
+#if TCP_OVERSIZE
     ESP_LWIP_LOGI("unsent_oversize=%d", pcb->unsent_oversize);
+#endif
     ESP_LWIP_LOGI("keep_idle=%d keep_intvl=%d keep_cnt=%d", pcb->keep_idle, pcb->keep_intvl, pcb->keep_cnt);
     ESP_LWIP_LOGI("persist_cnt=%d persist_backoff=%d", pcb->persist_cnt, pcb->persist_backoff);
     ESP_LWIP_LOGI("keep_cnt_sent=%d", pcb->keep_cnt_sent);
