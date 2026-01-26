@@ -263,9 +263,13 @@ esp_err_t bootloader_flash_erase_sector(size_t sector)
 
 #include "esp_err.h"
 #include "esp_log.h"
+#include "esp8266/rom_functions.h"
 
 #ifndef BOOTLOADER_BUILD
 #include "esp_spi_flash.h"
+#else
+#include "bootloader_flash.h"
+#include "priv/esp_spi_flash_raw.h"
 #endif
 
 #ifdef CONFIG_SOC_FULL_ICACHE
@@ -274,18 +278,11 @@ esp_err_t bootloader_flash_erase_sector(size_t sector)
 #define SOC_CACHE_SIZE 0 // 16KB
 #endif
 
-extern void Cache_Read_Disable();
-extern void Cache_Read_Enable(uint8_t map, uint8_t p, uint8_t v);
+#define XMC_SUPPORT CONFIG_BOOTLOADER_FLASH_XMC_SUPPORT
+
+#define BYTESHIFT(VAR, IDX)    (((VAR) >> ((IDX) * 8)) & 0xFF)
 
 static const char *TAG = "bootloader_flash";
-
-typedef enum { SPI_FLASH_RESULT_OK = 0,
-               SPI_FLASH_RESULT_ERR = 1,
-               SPI_FLASH_RESULT_TIMEOUT = 2 } SpiFlashOpResult;
-
-SpiFlashOpResult SPIRead(uint32_t addr, void *dst, uint32_t size);
-SpiFlashOpResult SPIWrite(uint32_t addr, const uint8_t *src, uint32_t size);
-SpiFlashOpResult SPIEraseSector(uint32_t sector_num);
 
 static bool mapped;
 
@@ -405,5 +402,151 @@ esp_err_t bootloader_flash_erase_sector(size_t sector)
 
     return ESP_OK;
 }
+
+#ifdef BOOTLOADER_BUILD
+uint32_t bootloader_read_flash_id(void)
+{
+    uint32_t id = spi_flash_get_id_raw(&g_rom_flashchip);
+    id = ((id & 0xff) << 16) | ((id >> 16) & 0xff) | (id & 0xff00);
+    return id;
+}
+
+#if XMC_SUPPORT
+static bool is_xmc_chip_strict(uint32_t rdid)
+{
+    uint32_t vendor_id = BYTESHIFT(rdid, 2);
+    uint32_t mfid = BYTESHIFT(rdid, 1);
+    uint32_t cpid = BYTESHIFT(rdid, 0);
+
+    if (vendor_id != XMC_VENDOR_ID) {
+        return false;
+    }
+
+    bool matched = false;
+    if (mfid == 0x40) {
+        if (cpid >= 0x13 && cpid <= 0x20) {
+            matched = true;
+        }
+    } else if (mfid == 0x41) {
+        if (cpid >= 0x17 && cpid <= 0x20) {
+            matched = true;
+        }
+    } else if (mfid == 0x50) {
+        if (cpid >= 0x15 && cpid <= 0x16) {
+            matched =  true;
+        }
+    }
+    return matched;
+}
+
+bool bootloader_execute_flash_command(uint8_t command, uint32_t mosi_data, uint8_t mosi_len, uint8_t miso_len)
+{
+    bool ret;
+    spi_cmd_t cmd;
+
+    cmd.cmd        = command;
+    cmd.cmd_len    = 1;
+    cmd.addr       = NULL;
+    cmd.addr_len   = 0;
+    cmd.dummy_bits = 0;
+    cmd.data       = NULL;
+    cmd.data_len   = 0;
+
+    ret = spi_user_cmd_raw(&g_rom_flashchip, SPI_TX, &cmd);
+    if (!ret) {
+        ESP_LOGE(TAG, "failed to write cmd=%02x", command);
+    }
+
+    return ret;
+}
+
+uint32_t bootloader_flash_read_sfdp(uint32_t sfdp_addr, unsigned int miso_byte_num)
+{
+    bool ret;
+    spi_cmd_t cmd;
+    uint32_t data = 0;
+    uint32_t addr = sfdp_addr << 8;
+
+    cmd.cmd        = CMD_RDSFDP;
+    cmd.cmd_len    = 1;
+    cmd.addr       = &addr;
+    cmd.addr_len   = 3;
+    cmd.dummy_bits = 8;
+    cmd.data       = &data;
+    cmd.data_len   = miso_byte_num;
+
+    ret = spi_user_cmd_raw(&g_rom_flashchip, SPI_RX, &cmd);
+    if (!ret) {
+        ESP_LOGE(TAG, "failed to read sfdp");
+    }
+
+    return data;
+}
+
+esp_err_t bootloader_flash_xmc_startup(void)
+{
+    extern void ets_rom_delay_us(uint16_t us);
+
+    uint32_t id = bootloader_read_flash_id();
+
+    // If the RDID value is a valid XMC one, may skip the flow
+    const bool fast_check = true;
+    if (fast_check && is_xmc_chip_strict(id)) {
+        ESP_LOGD(TAG, "XMC chip detected by RDID (%08X), skip.", id);
+        return ESP_OK;
+    }
+
+    // Check the Manufacturer ID in SFDP registers (JEDEC standard). If not XMC chip, no need to run the flow
+    const int sfdp_mfid_addr = 0x10;
+    uint8_t mf_id = (bootloader_flash_read_sfdp(sfdp_mfid_addr, 1) & 0xff);
+    if (mf_id != XMC_VENDOR_ID) {
+        ESP_LOGD(TAG, "non-XMC chip detected by SFDP Read (%02X), skip.", mf_id);
+        return ESP_OK;
+    }
+
+    ESP_LOGI(TAG, "XM25QHxxC startup flow");
+    // Enter DPD
+    bootloader_execute_flash_command(0xB9, 0, 0, 0);
+    // Enter UDPD
+    bootloader_execute_flash_command(0x79, 0, 0, 0);
+    // Exit UDPD
+    bootloader_execute_flash_command(0xFF, 0, 0, 0);
+    // Delay tXUDPD
+    ets_rom_delay_us(2000);
+    // Release Power-down
+    bootloader_execute_flash_command(0xAB, 0, 0, 0);
+    ets_rom_delay_us(20);
+    // Read flash ID and check again
+    id = bootloader_read_flash_id();
+    if (!is_xmc_chip_strict(id)) {
+        ESP_LOGE(TAG, "XMC flash startup fail");
+        return ESP_FAIL;
+    }
+
+    return ESP_OK;
+}
+#else
+static bool is_xmc_chip(uint32_t rdid)
+{
+    uint32_t vendor_id = (rdid >> 16) &0xff;
+    
+    return vendor_id == XMC_VENDOR_ID;
+}
+
+esp_err_t bootloader_flash_xmc_startup(void)
+{
+    uint32_t id = bootloader_read_flash_id();
+
+    if (is_xmc_chip(id)) {
+        ESP_LOGE(TAG, "XMC chip detected(%08X) while support disable.", id);
+        return ESP_FAIL;
+    } else {
+        ESP_LOGI(TAG, "flash chip is %08X", id);
+    }
+
+    return ESP_OK;
+}
+#endif
+#endif
 
 #endif

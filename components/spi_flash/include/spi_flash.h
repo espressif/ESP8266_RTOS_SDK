@@ -204,6 +204,15 @@ int esp_patition_table_init_data(void *partition_info);
 int esp_patition_copy_ota1_to_ota0(const void *partition_info);
 #endif
 
+#ifdef CONFIG_ENABLE_TH25Q16HB_PATCH_0
+/**
+ * @brief Apply TH25Q16HB patch 0 to avoid some hardware issues.
+ *
+ * @return 0 if success or others if failed
+ */
+int th25q16hb_apply_patch_0(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

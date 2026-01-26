@@ -9,3 +9,4 @@ PROVIDE ( gpio_input_get = 0x40004cf0 );
 PROVIDE ( xthal_get_ccount = 0x4000dd38 );
 PROVIDE ( uart_div_modify = 0x400039d8 );
 PROVIDE ( ets_io_vprintf = 0x40001f00 );
+PROVIDE ( ets_rom_delay_us = 0x40002ecc );

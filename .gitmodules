@@ -16,4 +16,4 @@
 
 [submodule "components/coap/libcoap"]
 	path = components/coap/libcoap
-	url = ../../obgm/libcoap.git
+	url = https://jihulab.com/esp-mirror/obgm/libcoap.git

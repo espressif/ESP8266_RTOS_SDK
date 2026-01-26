@@ -9,8 +9,8 @@ The application creates UDP socket and sends message to the predefined port and 
 
 In order to create UDP server that communicates with UDP Client example, choose one of the following options.
 
-There are many host-side tools which can be used to interact with the UDP/TCP server/client. 
-One command line tool is [netcat](http://netcat.sourceforge.net) which can send and receive many kinds of packets. 
+There are many host-side tools which can be used to interact with the UDP/TCP server/client.
+One command line tool is [netcat](http://netcat.sourceforge.net) which can send and receive many kinds of packets.
 Note: please replace `192.168.0.167 3333` with desired IPV4/IPV6 address (displayed in monitor console) and port number in the following commands.
 
 In addition to those tools, simple Python scripts can be found under sockets/scripts directory. Every script is designed to interact with one of the examples.
@@ -40,7 +40,7 @@ PORT = 3333;
 
 ## Hardware Required
 
-This example can be run on any commonly available ESP32 development board.
+This example can be run on any commonly available ESP8266 development board.
 
 ## Configure the project
 

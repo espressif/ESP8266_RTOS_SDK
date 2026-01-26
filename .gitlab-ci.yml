@@ -1,4 +1,5 @@
 stages:
+  - check
   - build
   - deploy
 
@@ -83,6 +84,9 @@ push_master_to_github:
     # and then pushes that ref to a corresponding github branch
     - eval $(git for-each-ref --shell bash --format 'if [ $CI_COMMIT_SHA == %(objectname) ]; then git checkout -B %(refname:strip=3); git push --follow-tags github %(refname:strip=3); fi;' $GITHUB_PUSH_REFS)
 
+include:
+  - local: tools/ci/pre_commit.yml
+
 build_docs:
   stage: build
   image: $ESP_IDF_DOC_ENV_IMAGE
@@ -105,13 +109,14 @@ build_docs:
       - $BOT_LABEL_BUILD_DOCS
       - $BOT_LABEL_REGULAR_TEST
   script:
+    - source /opt/pyenv/activate && pyenv global 3.6.10
+    - /opt/pyenv/pyenv-1.2.16/versions/3.6.10/bin/python -m pip install --user -r $CI_PROJECT_DIR/docs/requirements.txt
     - cd docs
     - cd en
     - make gh-linkcheck
     - make html
     - ../check_doc_warnings.sh
 
-    
 .build_examples_make_template: &build_examples_make_template
   <<: *build_template
   # This is a workaround for a rarely encountered issue with building examples in CI.

@@ -1,0 +1,26 @@
+.check_pre_commit_template:
+  stage: check  # or "pre-check", depending on your pipeline structure
+  image: python:3.8
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"  # Run this job only for merge request pipelines.
+  script:
+    - pip install pre-commit
+    - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME --depth=1  # Fetch target branch latest commit
+    - git fetch origin $CI_COMMIT_REF_NAME --depth=1  # Fetch source branch latest commit
+    - |
+      echo "Target branch: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+      echo "Source branch: $CI_COMMIT_REF_NAME"
+
+      MODIFIED_FILES=$(git diff --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME..origin/$CI_COMMIT_REF_NAME)
+      echo "Modified files to check:"
+      echo "$MODIFIED_FILES"
+
+      if [ -n "$MODIFIED_FILES" ]; then
+          CI=true pre-commit run --files $MODIFIED_FILES
+      else
+          echo "No modified files to check."
+      fi
+
+check_pre_commit:
+  extends:
+    - .check_pre_commit_template  # All configured pre-commit hooks will run under this job

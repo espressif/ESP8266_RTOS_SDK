@@ -9,8 +9,8 @@ The application creates UDP socket with the specified port number and waits for 
 
 In order to create UDP client that communicates with UDP server example, choose one of the following options.
 
-There are many host-side tools which can be used to interact with the UDP/TCP server/client. 
-One command line tool is [netcat](http://netcat.sourceforge.net) which can send and receive many kinds of packets. 
+There are many host-side tools which can be used to interact with the UDP/TCP server/client.
+One command line tool is [netcat](http://netcat.sourceforge.net) which can send and receive many kinds of packets.
 Note: please replace `192.168.0.167 3333` with desired IPV4/IPV6 address (displayed in monitor console) and port number in the following commands.
 
 In addition to those tools, simple Python scripts can be found under sockets/scripts directory. Every script is designed to interact with one of the examples.
@@ -42,7 +42,7 @@ IPV6 = 'FE80::32AE:A4FF:FE80:5288'
 
 ## Hardware Required
 
-This example can be run on any commonly available ESP32 development board.
+This example can be run on any commonly available ESP8266 development board.
 
 ## Configure the project
 

@@ -118,53 +118,75 @@ build_example () {
     local EXAMPLE_DIR=$(dirname "${MAKE_FILE}")
     local EXAMPLE_NAME=$(basename "${EXAMPLE_DIR}")
 
-    local EXAMPLE_BUILD_DIR="${ID}_${EXAMPLE_NAME}"
+    local EXAMPLE_BUILD_DIRS=()
 
-    if [[ -f "example_builds/${EXAMPLE_BUILD_DIR}/build/ci_build_success" ]]; then
-        echo "Project ${EXAMPLE_BUILD_DIR} has been built and skip building ..."
+    # count number of CI sdkconfig files
+    SDKCONFIG_CI_FILES=$( find ${EXAMPLE_DIR}/ -type f -name sdkconfig.ci.* | sort )
+    if [[ -z ${SDKCONFIG_CI_FILES} ]]; then
+        EXAMPLE_BUILD_DIRS[0]="${ID}_${EXAMPLE_NAME}"
     else
-        echo "Building ${EXAMPLE_BUILD_DIR}..."
-        mkdir -p "example_builds/${EXAMPLE_BUILD_DIR}"
-        cp -r "${EXAMPLE_DIR}/"* "example_builds/${EXAMPLE_BUILD_DIR}/"
-        pushd "example_builds/${EXAMPLE_BUILD_DIR}"
-            # be stricter in the CI build than the default IDF settings
-            export EXTRA_CFLAGS="-Werror -Werror=deprecated-declarations"
-            export EXTRA_CXXFLAGS=${EXTRA_CFLAGS}
-
-            # sdkconfig files are normally not checked into git, but may be present when
-            # a developer runs this script locally
-            rm -f sdkconfig
-
-            # If sdkconfig.ci file is present, append it to sdkconfig.defaults,
-            # replacing environment variables
-            if [[ -f "$SDKCONFIG_DEFAULTS_CI" ]]; then
-                cat $SDKCONFIG_DEFAULTS_CI | $IDF_PATH/tools/ci/envsubst.py >> sdkconfig.defaults
-            fi
-
-            # build non-verbose first
-            local BUILDLOG=${LOG_PATH}/ex_${EXAMPLE_BUILD_DIR}_log.txt
-            touch ${BUILDLOG}
-
-            local FLASH_ARGS=build/download.config
-
-            make clean >>${BUILDLOG} 2>&1 &&
-            make defconfig >>${BUILDLOG} 2>&1 &&
-            make all -j4 >>${BUILDLOG} 2>&1 &&
-            make ota >>${BUILDLOG} 2>&1 &&
-            make print_flash_cmd >${FLASH_ARGS}.full 2>>${BUILDLOG} &&
-            touch build/ci_build_success ||
-            {
-                RESULT=$?; FAILED_EXAMPLES+=" ${EXAMPLE_NAME}" ;
-            }
-
-            tail -n 1 ${FLASH_ARGS}.full > ${FLASH_ARGS} || :
-            test -s ${FLASH_ARGS} || die "Error: ${FLASH_ARGS} file is empty"
-
-            cat ${BUILDLOG}
-        popd
-
-        grep -i "error\|warning" "${BUILDLOG}" 2>&1 >> "${LOG_SUSPECTED}" || :
+        COUNT=0
+        for CI_FILE in ${SDKCONFIG_CI_FILES}
+        do
+            EXAMPLE_BUILD_DIRS[COUNT]="${ID}_${EXAMPLE_NAME}_${CI_FILE##*.}"
+            COUNT=$(( $COUNT + 1 ))
+        done
     fi
+    
+    for EXAMPLE_BUILD_DIR in ${EXAMPLE_BUILD_DIRS[*]}
+    do
+        if [[ -f "example_builds/${EXAMPLE_BUILD_DIR}/build/ci_build_success" ]]; then
+            echo "Project ${EXAMPLE_BUILD_DIR} has been built and skip building ..."
+        else
+            echo "Building ${EXAMPLE_BUILD_DIR}..."
+            mkdir -p "example_builds/${EXAMPLE_BUILD_DIR}"
+            cp -r "${EXAMPLE_DIR}/"* "example_builds/${EXAMPLE_BUILD_DIR}/"
+
+            if [[ -n ${SDKCONFIG_CI_FILES} ]]; then
+                cp "example_builds/${EXAMPLE_BUILD_DIR}/sdkconfig.ci.${EXAMPLE_BUILD_DIR##*_}" "example_builds/${EXAMPLE_BUILD_DIR}/sdkconfig.ci"
+                rm example_builds/${EXAMPLE_BUILD_DIR}/sdkconfig.ci.*
+            fi
+        
+            pushd "example_builds/${EXAMPLE_BUILD_DIR}"
+                # be stricter in the CI build than the default IDF settings
+                export EXTRA_CFLAGS="-Werror -Werror=deprecated-declarations"
+                export EXTRA_CXXFLAGS=${EXTRA_CFLAGS}
+
+                # sdkconfig files are normally not checked into git, but may be present when
+                # a developer runs this script locally
+                rm -f sdkconfig
+
+                # If sdkconfig.ci file is present, append it to sdkconfig.defaults,
+                # replacing environment variables
+                if [[ -f "$SDKCONFIG_DEFAULTS_CI" ]]; then
+                    cat $SDKCONFIG_DEFAULTS_CI | $IDF_PATH/tools/ci/envsubst.py >> sdkconfig.defaults
+                fi
+
+                # build non-verbose first
+                local BUILDLOG=${LOG_PATH}/ex_${EXAMPLE_BUILD_DIR}_log.txt
+                touch ${BUILDLOG}
+
+                local FLASH_ARGS=build/download.config
+
+                make clean >>${BUILDLOG} 2>&1 &&
+                make defconfig >>${BUILDLOG} 2>&1 &&
+                make all -j4 >>${BUILDLOG} 2>&1 &&
+                make ota >>${BUILDLOG} 2>&1 &&
+                make print_flash_cmd >${FLASH_ARGS}.full 2>>${BUILDLOG} &&
+                touch build/ci_build_success ||
+                {
+                    RESULT=$?; FAILED_EXAMPLES+=" ${EXAMPLE_NAME}" ;
+                }
+
+                tail -n 1 ${FLASH_ARGS}.full > ${FLASH_ARGS} || :
+                test -s ${FLASH_ARGS} || die "Error: ${FLASH_ARGS} file is empty"
+
+                cat ${BUILDLOG}
+            popd
+
+            grep -i "error\|warning" "${BUILDLOG}" 2>&1 >> "${LOG_SUSPECTED}" || :
+        fi
+    done
 }
 
 EXAMPLE_NUM=0

@@ -5,6 +5,10 @@ if(BOOTLOADER_BUILD)
     set(srcs "${srcs}" "port/port.c")
     set(priv_requires "bootloader_support")
 else()
+    if(CONFIG_ENABLE_TH25Q16HB_PATCH_0)
+        list(APPEND srcs "src/patch/th25q16hb.c")
+    endif()
+
     set(priv_requires "esp8266" "freertos" "bootloader_support")
 endif()
 

@@ -825,8 +825,14 @@ esp_err_t tcpip_adapter_set_dns_info(tcpip_adapter_if_t tcpip_if, tcpip_adapter_
         return ESP_ERR_TCPIP_ADAPTER_INVALID_PARAMS;
     }
 
+#if CONFIG_LWIP_IPV6
+    if (!IP_IS_V4(&dns->ip) && !IP_IS_V6(&dns->ip)) {
+        IP_SET_TYPE_VAL(dns->ip, IPADDR_TYPE_V4);
+    }
+#else
     ESP_LOGD(TAG, "set dns if=%d type=%d dns=%x", tcpip_if, type, ip_2_ip4(&(dns->ip))->addr);
     IP_SET_TYPE_VAL(dns->ip, IPADDR_TYPE_V4);
+#endif
 
     if (tcpip_if == TCPIP_ADAPTER_IF_STA || tcpip_if == TCPIP_ADAPTER_IF_ETH) {
         dns_setserver(type, &(dns->ip));

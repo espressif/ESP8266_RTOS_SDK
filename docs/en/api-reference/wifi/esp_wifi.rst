@@ -10,7 +10,7 @@ The WiFi libraries provide support for configuring and monitoring the ESP8266 Wi
 - AP mode (aka Soft-AP mode or Access Point mode). Stations connect to the ESP8266.
 - Combined AP-STA mode (ESP8266 is concurrently an access point and a station connected to another access point).
 
-- Various security modes for the above (WPA, WPA2, WEP, etc.)
+- Various security modes for the above (WPA, WPA2, WPA3, WEP, etc.)
 - Scanning for access points (active & passive scanning).
 - Promiscuous mode monitoring of IEEE802.11 WiFi packets.
 
