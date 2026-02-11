@@ -1287,6 +1287,9 @@ class BaseFirmwareImage(object):
     def save_segment(self, f, segment, checksum=None):
         """ Save the next segment to the image file, return next checksum value if provided """
         f.write(struct.pack('<II', segment.addr, len(segment.data)))
+        # Ensure segment.data is in bytes
+        if isinstance(segment.data, str):
+            segment.data = segment.data.encode('utf-8')  # Encode string to bytes
         f.write(segment.data)
         if checksum is not None:
             return ESPLoader.checksum(segment.data, checksum)
