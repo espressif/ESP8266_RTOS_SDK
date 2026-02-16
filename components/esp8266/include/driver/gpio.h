@@ -21,6 +21,7 @@
 #include "esp8266/eagle_soc.h"
 #include "esp8266/pin_mux_register.h"
 #include "esp8266/gpio_register.h"
+#include "rom/gpio.h"
 
 #ifdef __cplusplus
 extern "C" {
