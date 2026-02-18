@@ -421,7 +421,7 @@ esp_err_t gpio_isr_register(void (*fn)(void *), void *arg, int no_use, gpio_isr_
 
 esp_err_t gpio_install_isr_service(int no_use)
 {
-    GPIO_CHECK(gpio_isr_func == NULL, "GPIO isr service already installed", ESP_FAIL);
+    GPIO_CHECK(gpio_isr_func == NULL, "GPIO isr service already installed", ESP_ERR_INVALID_STATE);
 
     esp_err_t ret;
     ENTER_CRITICAL();
