@@ -37,6 +37,12 @@
 
 #include "esp_newlib.h"
 
+#ifdef NDEBUG
+#define verify(expr) if(!(expr)) abort()
+#else
+#define verify(expr) assert(expr)
+#endif
+
 extern esp_err_t esp_pthread_init(void);
 extern void chip_boot(void);
 extern int base_gpio_init(void);
@@ -69,10 +75,10 @@ static void user_init_entry(void *param)
         func[0]();
 
     esp_phy_init_clk();
-    assert(base_gpio_init() == 0);
+    verify(base_gpio_init() == 0);
 
     if (esp_reset_reason_early() != ESP_RST_FAST_SW) {
-        assert(esp_mac_init() == ESP_OK);
+        verify(esp_mac_init() == ESP_OK);
     }
 
 #if CONFIG_RESET_REASON
@@ -83,7 +89,7 @@ static void user_init_entry(void *param)
     esp_task_wdt_init();
 #endif
 
-    assert(esp_pthread_init() == 0);
+    verify(esp_pthread_init() == 0);
 
 #ifdef CONFIG_BOOTLOADER_FAST_BOOT
     REG_CLR_BIT(DPORT_CTL_REG, DPORT_CTL_DOUBLE_CLK);
@@ -164,12 +170,12 @@ void call_start_cpu(size_t start_addr)
 
 #ifdef CONFIG_INIT_OS_BEFORE_START
     extern int __esp_os_init(void);
-    assert(__esp_os_init() == 0);
+    verify(__esp_os_init() == 0);
 #endif
 
-    assert(esp_newlib_init() == 0);
+    verify(esp_newlib_init() == 0);
 
-    assert(xTaskCreate(user_init_entry, "uiT", ESP_TASK_MAIN_STACK, NULL, ESP_TASK_MAIN_PRIO, NULL) == pdPASS);
+    verify(xTaskCreate(user_init_entry, "uiT", ESP_TASK_MAIN_STACK, NULL, ESP_TASK_MAIN_PRIO, NULL) == pdPASS);
 
     vTaskStartScheduler();
 }
