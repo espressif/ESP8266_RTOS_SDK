@@ -54,6 +54,21 @@ static const char *I2S_TAG = "i2s";
 #define I2S_FULL_DUPLEX_SLAVE_MODE_MASK   (I2S_MODE_TX | I2S_MODE_RX | I2S_MODE_SLAVE)
 #define I2S_FULL_DUPLEX_MASTER_MODE_MASK  (I2S_MODE_TX | I2S_MODE_RX | I2S_MODE_MASTER)
 
+void rom_i2c_writeReg_Mask(int, int, int, int, int, int);
+
+#define i2c_bbpll                            0x67
+#define i2c_bbpll_en_audio_clock_out            4
+#define i2c_bbpll_en_audio_clock_out_msb        7
+#define i2c_bbpll_en_audio_clock_out_lsb        7
+#define i2c_bbpll_hostid                        4
+
+#define i2c_writeReg_Mask(block, host_id, reg_add, Msb, Lsb, indata)  rom_i2c_writeReg_Mask(block, host_id, reg_add, Msb, Lsb, indata)
+#define i2c_readReg_Mask(block, host_id, reg_add, Msb, Lsb)  rom_i2c_readReg_Mask(block, host_id, reg_add, Msb, Lsb)
+#define i2c_writeReg_Mask_def(block, reg_add, indata) \
+      i2c_writeReg_Mask(block, block##_hostid,  reg_add,  reg_add##_msb,  reg_add##_lsb,  indata)
+#define i2c_readReg_Mask_def(block, reg_add) \
+      i2c_readReg_Mask(block, block##_hostid,  reg_add,  reg_add##_msb,  reg_add##_lsb)
+
 typedef struct lldesc {
     uint32_t                blocksize : 12;
     uint32_t                datalen   : 12;
@@ -821,6 +836,8 @@ esp_err_t i2s_driver_uninstall(i2s_port_t i2s_num)
     i2s_stop(i2s_num);
     dma_intr_register(NULL, NULL);
 
+    i2c_writeReg_Mask_def(i2c_bbpll, i2c_bbpll_en_audio_clock_out, 0);
+
     if (p_i2s_obj[i2s_num]->tx != NULL && p_i2s_obj[i2s_num]->mode & I2S_MODE_TX) {
         i2s_destroy_dma_queue(i2s_num, p_i2s_obj[i2s_num]->tx);
         p_i2s_obj[i2s_num]->tx = NULL;
@@ -883,6 +900,9 @@ esp_err_t i2s_driver_install(i2s_port_t i2s_num, const i2s_config_t *i2s_config,
         } else {
             p_i2s_obj[i2s_num]->i2s_queue = NULL;
         }
+
+        // enable clock generation for peripheral
+        i2c_writeReg_Mask_def(i2c_bbpll, i2c_bbpll_en_audio_clock_out, 1);
 
         // set clock and start
         return i2s_set_clk(i2s_num, i2s_config->sample_rate, i2s_config->bits_per_sample, p_i2s_obj[i2s_num]->channel_num);
