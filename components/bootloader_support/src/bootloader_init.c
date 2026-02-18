@@ -568,8 +568,10 @@ void __assert_func(const char *file, int line, const char *func, const char *exp
 #  endif
 #endif
 
-#ifndef ESP8266_MODIFY_UART_BAUDRATE
-#  define ESP8266_MODIFY_UART_BAUDRATE 1
+#ifndef CONFIG_CONSOLE_UART_NONE
+#  ifndef ESP8266_MODIFY_UART_BAUDRATE
+#    define ESP8266_MODIFY_UART_BAUDRATE 1
+#  endif
 #endif
 
 extern int _bss_start;
