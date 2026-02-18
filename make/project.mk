@@ -337,13 +337,15 @@ IDF_VER := $(shell echo "$(IDF_VER_T)"  | cut -c 1-31)
 
 # Set default LDFLAGS
 EXTRA_LDFLAGS ?=
+APPLICATION_LDFLAGS ?=
 LDFLAGS ?= -nostdlib \
-	-u call_user_start_cpu0	\
+	-u call_user_start_cpu0 \
 	$(EXTRA_LDFLAGS) \
-	-Wl,--gc-sections	\
-	-Wl,-static	\
-	-Wl,--start-group	\
+	-Wl,--gc-sections \
+	-Wl,-static \
+	-Wl,--start-group \
 	$(COMPONENT_LDFLAGS) \
+	$(APPLICATION_LDFLAGS) \
 	-lgcc \
 	-lstdc++ \
 	-lgcov \
