@@ -23,6 +23,7 @@ extern "C" {
 #include <stdbool.h>
 #include "esp_err.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 
 #define UART_FIFO_LEN           (128)        /*!< Length of the hardware FIFO buffers */
