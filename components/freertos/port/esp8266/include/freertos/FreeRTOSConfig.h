@@ -180,7 +180,12 @@ uint32_t esp_get_time(void);
 
 #endif /* CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS */
 
+#ifdef ESP_ENABLE_ESP_OS_TICKS
+/*see note in port.c*/
 #define traceINCREASE_TICK_COUNT(_ticks)    esp_increase_tick_cnt(_ticks)
+#else
+#define traceINCREASE_TICK_COUNT(_ticks)
+#endif
 
 #ifndef configIDLE_TASK_STACK_SIZE
 #define configIDLE_TASK_STACK_SIZE CONFIG_FREERTOS_IDLE_TASK_STACKSIZE

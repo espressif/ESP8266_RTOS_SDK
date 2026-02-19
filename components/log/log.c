@@ -60,17 +60,19 @@ static const char s_log_prefix[ESP_LOG_MAX] = {
 uint32_t IRAM_ATTR esp_log_early_timestamp()
 {
 #ifndef BOOTLOADER_BUILD
-    extern uint64_t g_esp_os_us;
+    //extern volatile uint64_t g_esp_os_us;
+	extern int64_t esp_timer_get_time(void);
     extern uint32_t g_esp_boot_ccount;
 
-    const uint32_t ticks_per_ms = g_esp_ticks_per_us * 1000;
-    const uint32_t ms = g_esp_os_us / 1000 + g_esp_boot_ccount / ((CRYSTAL_USED * 2) * 1000);
+    const uint32_t ms = esp_timer_get_time() / 1000 + g_esp_boot_ccount / ((CRYSTAL_USED * 2) * 1000);
+    return ms;
 #else
     const uint32_t ticks_per_ms = ((CRYSTAL_USED * 2) * 1000);
     const uint32_t ms = 0;
+    return soc_get_ccount() / ticks_per_ms + ms;
 #endif
 
-    return soc_get_ccount() / ticks_per_ms + ms;
+
 }
 
 #ifndef BOOTLOADER_BUILD
