@@ -633,6 +633,31 @@ static void uart_rx_intr_handler_default(void *param)
                     uart_enable_intr_mask(uart_num, UART_TXFIFO_EMPTY_INT_ENA_M);
                 }
             }
+        } else if (uart_intr_status & UART_FRM_ERR_INT_ST_M) {
+            // on any error, discard rx fifo contents and clear all rx events
+            uart_reset_rx_fifo(uart_num);
+            uart_reg->int_clr.val = (UART_FRM_ERR_INT_CLR_M
+                                   | UART_PARITY_ERR_INT_CLR_M
+                                   | UART_RXFIFO_OVF_INT_CLR_M
+                                   | UART_RXFIFO_FULL_INT_CLR_M);
+            uart_event.type = UART_FRAME_ERR;
+            notify = UART_SELECT_ERROR_NOTIF;
+        } else if (uart_intr_status & UART_PARITY_ERR_INT_ST_M) {
+            uart_reset_rx_fifo(uart_num);
+            uart_reg->int_clr.val = (UART_FRM_ERR_INT_CLR_M
+                                   | UART_PARITY_ERR_INT_CLR_M
+                                   | UART_RXFIFO_OVF_INT_CLR_M
+                                   | UART_RXFIFO_FULL_INT_CLR_M);
+            uart_event.type = UART_PARITY_ERR;
+            notify = UART_SELECT_ERROR_NOTIF;
+        } else if (uart_intr_status & UART_RXFIFO_OVF_INT_ST_M) {
+            uart_reset_rx_fifo(uart_num);
+            uart_reg->int_clr.val = (UART_FRM_ERR_INT_CLR_M
+                                   | UART_PARITY_ERR_INT_CLR_M
+                                   | UART_RXFIFO_OVF_INT_CLR_M
+                                   | UART_RXFIFO_FULL_INT_CLR_M);
+            uart_event.type = UART_FIFO_OVF;
+            notify = UART_SELECT_ERROR_NOTIF;
         } else if ((uart_intr_status & UART_RXFIFO_TOUT_INT_ST_M)
                    || (uart_intr_status & UART_RXFIFO_FULL_INT_ST_M)
                   ) {
@@ -670,20 +695,6 @@ static void uart_rx_intr_handler_default(void *param)
                 uart_disable_intr_mask(uart_num, UART_RXFIFO_FULL_INT_ENA_M | UART_RXFIFO_TOUT_INT_ENA_M);
                 uart_clear_intr_status(uart_num, UART_RXFIFO_FULL_INT_CLR_M | UART_RXFIFO_TOUT_INT_CLR_M);
             }
-        } else if (uart_intr_status & UART_RXFIFO_OVF_INT_ST_M) {
-            // When fifo overflows, we reset the fifo.
-            uart_reset_rx_fifo(uart_num);
-            uart_reg->int_clr.rxfifo_ovf = 1;
-            uart_event.type = UART_FIFO_OVF;
-            notify = UART_SELECT_ERROR_NOTIF;
-        } else if (uart_intr_status & UART_FRM_ERR_INT_ST_M) {
-            uart_reg->int_clr.frm_err = 1;
-            uart_event.type = UART_FRAME_ERR;
-            notify = UART_SELECT_ERROR_NOTIF;
-        } else if (uart_intr_status & UART_PARITY_ERR_INT_ST_M) {
-            uart_reg->int_clr.parity_err = 1;
-            uart_event.type = UART_PARITY_ERR;
-            notify = UART_SELECT_ERROR_NOTIF;
         } else {
             uart_reg->int_clr.val = uart_intr_status; // simply clear all other intr status
             uart_event.type = UART_EVENT_MAX;
