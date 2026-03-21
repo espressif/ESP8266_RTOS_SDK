@@ -21,7 +21,7 @@ function idf_export_main() {
         return 1
     fi
 
-    if [[ -z "${IDF_PATH}" ]]
+    if [[ -z "${IDF_PATH-}" ]]
     then
         # If using bash, try to guess IDF_PATH from script location
         if [[ -n "${BASH_SOURCE}" ]]
