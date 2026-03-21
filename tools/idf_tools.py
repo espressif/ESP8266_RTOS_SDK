@@ -1038,6 +1038,11 @@ def action_install(args):
         assert tool_version is not None
         tool_obj.find_installed_versions()
         tool_spec = '{}@{}'.format(tool_name, tool_version)
+
+        if tool_version == tool_obj.version_in_path:
+            info('Skipping {} (already in PATH)'.format(tool_spec))
+            continue
+
         if tool_version in tool_obj.versions_installed:
             info('Skipping {} (already installed)'.format(tool_spec))
             continue
