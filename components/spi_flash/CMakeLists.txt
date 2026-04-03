@@ -1,4 +1,4 @@
-set(srcs "src/partition"
+set(srcs "src/partition.c"
          "src/spi_flash_raw.c"
          "src/spi_flash.c")
 if(BOOTLOADER_BUILD)
