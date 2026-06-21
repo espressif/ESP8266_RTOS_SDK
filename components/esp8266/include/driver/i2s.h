@@ -15,6 +15,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "esp_err.h"
 
 #ifdef __cplusplus
@@ -51,11 +52,14 @@ typedef enum {
  * @brief I2S channel format type
  */
 typedef enum {
-    I2S_CHANNEL_FMT_RIGHT_LEFT = 0x00,
-    I2S_CHANNEL_FMT_ALL_RIGHT,
-    I2S_CHANNEL_FMT_ALL_LEFT,
-    I2S_CHANNEL_FMT_ONLY_RIGHT,
-    I2S_CHANNEL_FMT_ONLY_LEFT,
+    I2S_CHANNEL_FMT_RIGHT_LEFT = 0x00, //будет чередовать правый и левый канал счередованием внутри 32бит блока  "Пк" -16бит + "Лк"-16бит =32 бит dma блок 
+    // "Пк"-24бит =32 бит dma блок +"Лк"-24бит =32 бит dma блок
+    I2S_CHANNEL_FMT_ALL_RIGHT, //будет чередовать правый и левый канал  "Пк" -16бит + "Лк"-16бит =32 бит dma блок 
+     // "Пк"-24бит =32 бит dma блок +"Лк"-24бит =32 бит dma блок
+    I2S_CHANNEL_FMT_ALL_LEFT, //будет чередовать левый и правый канал  "Лк" -16бит + "Пк"-16бит =32 бит dma блок 
+     // "Лк"-24бит =32 бит dma блок +"Пк"-24бит =32 бит dma блок
+    I2S_CHANNEL_FMT_ONLY_RIGHT,// только правый канал при 16 бит запакует два 16 бит семпла в 32 бит блок dma, при 24 бит один сэмпл засунет в 32 бит  блок dma
+    I2S_CHANNEL_FMT_ONLY_LEFT,// только левый канал при 16 бит запакует два 16 бит семпла в 32 бит блок dma, при 24 бит один сэмпл засунет в 32 бит  блок dma
 } i2s_channel_fmt_t;
 
 /**
@@ -110,9 +114,17 @@ typedef struct {
 
 /**
  * @brief I2S pin enable for i2s_set_pin
+ *
+ * NOTE: fields are `int` (not `bool`) to support the `1/-1` sentinel pattern
+ * used by other SDK drivers (e.g. ir_tx.c uses `1` to enable a pin and `-1`
+ * to skip it). The i2s_set_pin implementation uses a truthy test (any nonzero
+ * value enables the pin), so all of the following work: 0/1, true/false,
+ * 1/-1, MY_FLAG_MACRO!=0. Changing to `bool` would break this pattern and
+ * is therefore avoided — fix #15 (truthy test instead of `== true`) is the
+ * correct and sufficient fix for the original bug.
  */
 typedef struct {
-    int bck_o_en;      /*!< BCK out pin*/
+    int bck_o_en;      /*!< BCK out pin (any nonzero = enable, 0 = skip)*/
     int ws_o_en;       /*!< WS out pin*/
     int bck_i_en;      /*!< BCK in pin*/
     int ws_i_en;       /*!< WS in pin*/
@@ -182,30 +194,6 @@ esp_err_t i2s_driver_uninstall(i2s_port_t i2s_num);
  */
 esp_err_t i2s_write(i2s_port_t i2s_num, const void *src, size_t size, size_t *bytes_written, TickType_t ticks_to_wait);
 
-/**
- * @brief Write data to I2S DMA transmit buffer while expanding the number of bits per sample. For example, expanding 16-bit PCM to 32-bit PCM.
- *
- * @note many ticks pass without space becoming available in the DMA
- *       transmit buffer, then the function will return (note that if the
- *       data is written to the DMA buffer in pieces, the overall operation
- *       may still take longer than this timeout.) Pass portMAX_DELAY for no
- *       timeout.
- *       Format of the data in source buffer is determined by the I2S
- *       configuration (see i2s_config_t).
- *
- * @param i2s_num             I2S_NUM_0
- * @param src                 Source address to write from
- * @param size                Size of data in bytes
- * @param src_bits            Source audio bit
- * @param aim_bits            Bit wanted, no more than 32, and must be greater than src_bits
- * @param[out] bytes_written  Number of bytes written, if timeout, the result will be less than the size passed in.
- * @param ticks_to_wait       TX buffer wait timeout in RTOS ticks. If this
- *
- * @return
- *     - ESP_OK              Success
- *     - ESP_ERR_INVALID_ARG Parameter error
- */
-esp_err_t i2s_write_expand(i2s_port_t i2s_num, const void *src, size_t size, size_t src_bits, size_t aim_bits, size_t *bytes_written, TickType_t ticks_to_wait);
 
 /**
  * @brief Read data from I2S DMA receive buffer
