@@ -167,7 +167,7 @@ check-lxdialog  := $(SRCDIR)/lxdialog/check-lxdialog.sh
 CFLAGS += $(shell $(CONFIG_SHELL) $(check-lxdialog) -ccflags) \
                     -DLOCALE -MMD -MP
 
-CFLAGS += -I "." -I "${SRCDIR}"
+CFLAGS += -I "/usr/local/include" -I "." -I "${SRCDIR}"
 
 %.o: $(SRCDIR)/%.c
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
