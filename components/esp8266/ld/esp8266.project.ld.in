@@ -175,7 +175,6 @@ SECTIONS
     *(.fini.literal)
     *(.fini)
     *(.gnu.version)
-    . = ALIGN (64K);
     _text_end = ABSOLUTE(.);
     _etext = .;
 
@@ -186,7 +185,7 @@ SECTIONS
     _flash_cache_start = ABSOLUTE(0);
   } >iram0_2_seg
 
-  .flash.rodata ALIGN(4) :
+  .flash.rodata ALIGN(0x10000) :
   {
     _rodata_start = ABSOLUTE(.);
 
