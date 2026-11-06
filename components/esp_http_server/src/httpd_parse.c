@@ -213,7 +213,8 @@ static esp_err_t cb_header_field(http_parser *parser, const char *at, size_t len
     } else if (parser_data->status == PARSING_HDR_VALUE) {
         /* NULL terminate last header (key: value) pair */
         size_t offset = parser_data->last.at - ra->scratch;
-        ra->scratch[offset + parser_data->last.length] = '\0';
+        size_t nul = offset + parser_data->last.length;
+        ra->scratch[nul < sizeof(ra->scratch) ? nul : sizeof(ra->scratch) - 1] = '\0';
 
         /* Store current values of the parser callback arguments */
         parser_data->last.at     = at;
@@ -281,7 +282,8 @@ static esp_err_t cb_headers_complete(http_parser *parser)
     } else if (parser_data->status == PARSING_HDR_VALUE) {
         /* NULL terminate last header (key: value) pair */
         size_t offset = parser_data->last.at - ra->scratch;
-        ra->scratch[offset + parser_data->last.length] = '\0';
+        size_t nul = offset + parser_data->last.length;
+        ra->scratch[nul < sizeof(ra->scratch) ? nul : sizeof(ra->scratch) - 1] = '\0';
 
         /* Reach end of last header */
         parser_data->last.at += parser_data->last.length;
